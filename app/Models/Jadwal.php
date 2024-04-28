@@ -2,12 +2,44 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Jadwal extends Model
 {
     use HasFactory;
 
     protected $guarded = ['id'];
+
+    /**
+     * Get all of the presensi for the Jadwal
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function presensi(): HasMany
+    {
+        return $this->hasMany(Presensi::class, 'jadwal_id', 'id');
+    }
+
+    /**
+     * Get the user that owns the Jadwal
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'user_id', 'id');
+    }
+
+    /**
+     * Get the shift that owns the Jadwal
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function shift(): BelongsTo
+    {
+        return $this->belongsTo(Shift::class, 'shift_id', 'id');
+    }
 }
