@@ -16,6 +16,12 @@ class DatabaseSeeder extends Seeder
             PermissionSeeder::class,
             RoleSeeder::class,
             AccountSeeder::class,
+
+            /* ==== Pengaturan Karyawan ==== */
+            JabatanSeeder::class,
+            KelompokGajiSeeder::class,
+            KompetensiSeeder::class,
+            UnitKerjaSeeder::class,
         ]);
     }
 }

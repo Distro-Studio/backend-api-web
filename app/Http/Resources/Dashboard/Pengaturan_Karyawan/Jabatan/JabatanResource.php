@@ -1,0 +1,84 @@
+<?php
+
+namespace App\Http\Resources\Dashboard\Pengaturan_Karyawan\Jabatan;
+
+use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
+use Illuminate\Http\Resources\Json\JsonResource;
+
+class JabatanResource extends JsonResource
+{
+    public $status;
+    public $message;
+    public $data;
+
+    public function __construct($status, $message, $data)
+    {
+        parent::__construct($data);
+        $this->status = $status;
+        $this->message = $message;
+    }
+
+    // public function toArray(Request $request): array
+    // {
+    //     return [
+    //         'status' => $this->status,
+    //         'message' => $this->message,
+    //         'data'  => [
+    //             'id' => 'J00' . $this->id,
+    //             'nama_jabatan' => $this->nama_jabatan,
+    //             'is_struktural' => $this->is_struktural,
+    //             'tunjangan' => $this->tunjangan,
+    //             'created_at' => $this->created_at,
+    //             'updated_at' => $this->updated_at
+    //         ]
+    //     ];
+    // }
+
+    public function toArray($request)
+    {
+        // Check if the resource is a paginator instance and adapt the response accordingly
+        if ($this->resource instanceof \Illuminate\Pagination\LengthAwarePaginator) {
+            return [
+                'status' =>  $this->status,
+                'message' => $this->message,
+                'data' => $this->formatData($this->resource->getCollection()),
+                'links' => [
+                    'first' => $this->resource->url(1),
+                    'last' => $this->resource->url($this->resource->lastPage()),
+                    'prev' => $this->resource->previousPageUrl(),
+                    'next' => $this->resource->nextPageUrl(),
+                ],
+                'meta' => [
+                    'current_page' => $this->resource->currentPage(),
+                    'from' => $this->resource->firstItem(),
+                    'last_page' => $this->resource->lastPage(),
+                    'per_page' => $this->resource->perPage(),
+                    'to' => $this->resource->lastItem(),
+                    'total' => $this->resource->total(),
+                ],
+            ];
+        } else {
+            return [
+                'status' =>  $this->status,
+                'message' => $this->message,
+                'data' => $this->formatData(collect([$this->resource])),
+            ];
+        }
+    }
+
+
+    protected function formatData(Collection $collection)
+    {
+        return $collection->transform(function ($jabatan) {
+            return [
+                'id' => 'J00' . $jabatan->id,
+                'nama_jabatan' => $jabatan->nama_jabatan,
+                'is_struktural' => $jabatan->is_struktural,
+                'tunjangan' => $jabatan->tunjangan,
+                'created_at' => $jabatan->created_at,
+                'updated_at' => $jabatan->updated_at
+            ];
+        });
+    }
+}

@@ -1,0 +1,55 @@
+<?php
+
+namespace Database\Seeders;
+
+use Carbon\Carbon;
+use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+
+class KompetensiSeeder extends Seeder
+{
+
+    public function run(): void
+    {
+        $namaKompetensi = [
+            'Dokter Spesialis Jantung',
+            'Dokter Spesialis Penyakit Dalam',
+            'Dokter Spesialis Anak',
+            'Dokter Spesialis Bedah',
+            'Perawat',
+            'Bidan',
+            'Ahli Gizi',
+            'Tenaga Farmasi',
+            'Petugas Laboratorium',
+            'Ahli Radiologi',
+            'Fisioterapis',
+            'Petugas Administrasi',
+            'Petugas Kebersihan',
+        ];
+
+        $jenisKompetensi = [
+            'Medis',
+            'Non Medis',
+        ];
+
+        for ($i = 0; $i < 13; $i++) {
+            $nama_kompetensi = $namaKompetensi[rand(0, count($namaKompetensi) - 1)];
+            $jenis_kompetensi = $jenisKompetensi[rand(0, count($jenisKompetensi) - 1)];
+            $total_tunjangan = rand(500000, 3000000);
+            $created_at = Carbon::now()->subDays(rand(0, 365));
+            $updated_at = Carbon::now();
+
+            // Periksa duplikasi nama unit
+            if (!DB::table('kompetensis')->where('nama_kompetensi', $nama_kompetensi)->exists()) {
+                DB::table('kompetensis')->insert([
+                    'nama_kompetensi' => $nama_kompetensi,
+                    'jenis_kompetensi' => $jenis_kompetensi,
+                    'total_tunjangan' => $total_tunjangan,
+                    'created_at' => $created_at,
+                    'updated_at' => $updated_at,
+                ]);
+            }
+        }
+    }
+}
