@@ -2,18 +2,19 @@
 
 namespace App\Http\Controllers\SuperAdmin\Pengaturan\Akun\Roles;
 
-use App\Exports\Pengaturan\Akun\Roles\RolesExport;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Spatie\Permission\Models\Role;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Gate;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Http\Requests\StoreRoleRequest;
 use App\Http\Requests\UpdateRoleRequest;
 use Illuminate\Support\Facades\Validator;
+use App\Exports\Pengaturan\Akun\Roles\RolesExport;
+use App\Imports\Pengaturan\Akun\Roles\RolesImport;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
 use App\Http\Resources\Dashboard\Pengaturan_Akun\Role\RoleResource;
-use App\Imports\Pengaturan\Akun\Roles\RolesImport;
 
 class SA_RolesController extends Controller
 {
@@ -31,6 +32,10 @@ class SA_RolesController extends Controller
 
     public function index(Request $request)
     {
+        if (!Gate::allows('view.role')) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
+
         $role = Role::query();
 
         // Filter data Role berdasarkan parameter 'deskripsi'
@@ -65,6 +70,10 @@ class SA_RolesController extends Controller
 
     public function store(StoreRoleRequest $request)
     {
+        if (!Gate::allows('create.role')) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
+
         $data = $request->validated();
 
         $role = Role::create($data);
@@ -74,6 +83,10 @@ class SA_RolesController extends Controller
 
     public function update(Role $role, UpdateRoleRequest $request)
     {
+        if (!Gate::allows('edit.role', $role)) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
+
         $data = $request->validated();
 
         $role->update($data);
@@ -84,6 +97,10 @@ class SA_RolesController extends Controller
 
     public function bulkDelete(Request $request)
     {
+        if (!Gate::allows('delete.role')) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
+
         $dataRole = Validator::make($request->all(), [
             'ids' => 'required|array|min:1',
             'ids.*' => 'integer|exists:roles,id'
@@ -104,12 +121,20 @@ class SA_RolesController extends Controller
 
     public function exportRoles()
     {
+        if (!Gate::allows('export.role')) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
+
         $role = Role::all();
         return Excel::download(new RolesExport, 'roles.xlsx');
     }
 
     // public function importRoles(Request $request)
     // {
+    // if (!Gate::allows('import.role')) {
+    //     return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+    // }
+
     //     $import = Excel::import(new RolesImport, $request->file('roles_file'));
 
     //     if ($import->failures()->count() > 0) {

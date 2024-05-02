@@ -13,32 +13,7 @@ class PermissionSeeder extends Seeder
      */
     public function run(): void
     {
-        $permissions = [
-            'create.role',
-            'edit.role',
-            'delete.role',
-            'view.role',
-
-            'create.unitkerja',
-            'edit.unitkerja',
-            'delete.unitkerja',
-            'view.unitkerja',
-
-            'create.jabatan',
-            'edit.jabatan',
-            'delete.jabatan',
-            'view.jabatan',
-
-            'create.profesi',
-            'edit.profesi',
-            'delete.profesi',
-            'view.profesi',
-
-            'create.kelompokgaji',
-            'edit.kelompokgaji',
-            'delete.kelompokgaji',
-            'view.kelompokgaji',
-
+        $kelolaUsers = [
             'create.user',
             'edit.user',
             'delete.user',
@@ -50,8 +25,45 @@ class PermissionSeeder extends Seeder
             'view.data_karyawan',
         ];
 
-        foreach ($permissions as $permission) {
-            Permission::create(['name' => $permission]);
+        $kelolaMasterSettings = [
+            'create.role',
+            'edit.role',
+            'delete.role',
+            'view.role',
+            'import.role',
+            'export.role',
+
+            'create.unitkerja',
+            'edit.unitkerja',
+            'delete.unitkerja',
+            'view.unitkerja',
+            'import.unitkerja',
+            'export.unitkerja',
+
+            'create.jabatan',
+            'edit.jabatan',
+            'delete.jabatan',
+            'view.jabatan',
+            'import.jabatan',
+            'export.jabatan',
+
+            'create.kompetensi',
+            'edit.kompetensi',
+            'delete.kompetensi',
+            'view.kompetensi',
+            'import.kompetensi',
+            'export.kompetensi',
+
+            'create.kelompokgaji',
+            'edit.kelompokgaji',
+            'delete.kelompokgaji',
+            'view.kelompokgaji',
+            'import.kelompokgaji',
+            'export.kelompokgaji',
+        ];
+
+        foreach ($kelolaMasterSettings as $kelolaMasterSetting) {
+            Permission::create(['name' => $kelolaMasterSetting]);
         }
     }
 }

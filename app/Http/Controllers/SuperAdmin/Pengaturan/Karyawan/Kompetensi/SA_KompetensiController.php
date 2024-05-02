@@ -6,14 +6,15 @@ use App\Models\Kompetensi;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Gate;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Validator;
 use App\Http\Requests\StoreKompetensiRequest;
 use App\Http\Requests\UpdateKompetensiRequest;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
 use App\Exports\Pengaturan\Karyawan\Kompetensi\KompetensiExport;
-use App\Http\Resources\Dashboard\Pengaturan_Karyawan\Kompetensi\KompetensiResource;
 use App\Imports\Pengaturan\Karyawan\Kompetensi\KompetensiImport;
+use App\Http\Resources\Dashboard\Pengaturan_Karyawan\Kompetensi\KompetensiResource;
 
 class SA_KompetensiController extends Controller
 {
@@ -31,6 +32,9 @@ class SA_KompetensiController extends Controller
 
     public function index(Request $request)
     {
+        if (!Gate::allows('view.kompetensi')) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
         $kompetensi = Kompetensi::query();
 
         // Filter data Jabatan berdasarkan parameter 'kode-gaji'
@@ -65,6 +69,10 @@ class SA_KompetensiController extends Controller
 
     public function store(StoreKompetensiRequest $request)
     {
+        if (!Gate::allows('create.kompetensi')) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
+
         $data = $request->validated();
 
         $kompetensi = Kompetensi::create($data);
@@ -74,6 +82,10 @@ class SA_KompetensiController extends Controller
 
     public function update(Kompetensi $kompetensi, UpdateKompetensiRequest $request)
     {
+        if (!Gate::allows('edit.kompetensi', $kompetensi)) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
+
         $data = $request->validated();
 
         $kompetensi->update($data);
@@ -84,6 +96,10 @@ class SA_KompetensiController extends Controller
 
     public function bulkDelete(Request $request)
     {
+        if (!Gate::allows('delete.kompetensi')) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
+
         $dataKompetensi = Validator::make($request->all(), [
             'ids' => 'required|array|min:1',
             'ids.*' => 'integer|exists:kompetensis,id'
@@ -106,12 +122,20 @@ class SA_KompetensiController extends Controller
 
     public function exportKompetensi()
     {
+        if (!Gate::allows('export.kompetensi')) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
+
         $Kompetensi = Kompetensi::all();
         return Excel::download(new KompetensiExport, 'kompetensis.xlsx');
     }
 
     // public function importKompetensi(Request $request)
     // {
+    //     if (!Gate::allows('import.kompetensi')) {
+    //         return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+    //     }
+
     //     $import = Excel::import(new KompetensiImport, $request->file('kompetensi_file'));
 
     //     if ($import->failures()->count() > 0) {

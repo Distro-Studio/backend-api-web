@@ -2,16 +2,17 @@
 
 namespace App\Http\Controllers\SuperAdmin\Pengaturan\Karyawan\KelompokGaji;
 
-use App\Exports\Pengaturan\Karyawan\KelompokGaji\KelompokGajiExport;
 use App\Models\KelompokGaji;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Gate;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Validator;
 use App\Http\Requests\StoreKelompokGajiRequest;
 use App\Http\Requests\UpdateKelompokGajiRequest;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
+use App\Exports\Pengaturan\Karyawan\KelompokGaji\KelompokGajiExport;
 use App\Http\Resources\Dashboard\Pengaturan_Karyawan\KelompokGaji\KelompokGajiResource;
 
 class SA_KelompokGajiController extends Controller
@@ -30,6 +31,10 @@ class SA_KelompokGajiController extends Controller
 
     public function index(Request $request)
     {
+        if (!Gate::allows('view.kelompokgaji')) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
+
         $kelompok_gaji = KelompokGaji::query();
 
         // Filter data Jabatan berdasarkan parameter 'kode-gaji'
@@ -63,6 +68,10 @@ class SA_KelompokGajiController extends Controller
 
     public function store(StoreKelompokGajiRequest $request)
     {
+        if (!Gate::allows('create.kelompokgaji')) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
+
         $data = $request->validated();
 
         $kelompk_gaji = KelompokGaji::create($data);
@@ -72,6 +81,10 @@ class SA_KelompokGajiController extends Controller
 
     public function update(KelompokGaji $KelompokGaji, UpdateKelompokGajiRequest $request)
     {
+        if (!Gate::allows('edit.kelompokgaji', $KelompokGaji)) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
+
         $data = $request->validated();
 
         $KelompokGaji->update($data);
@@ -82,6 +95,10 @@ class SA_KelompokGajiController extends Controller
 
     public function bulkDelete(Request $request)
     {
+        if (!Gate::allows('delete.kelompokgaji')) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
+
         $dataKelompokGaji = Validator::make($request->all(), [
             'ids' => 'required|array|min:1',
             'ids.*' => 'integer|exists:jabatans,id'
@@ -104,12 +121,20 @@ class SA_KelompokGajiController extends Controller
 
     public function exportKelompokGaji()
     {
+        if (!Gate::allows('export.kelompokgaji')) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
+
         $KelompokGaji = KelompokGaji::all();
         return Excel::download(new KelompokGajiExport, 'kelompok-gajis.xlsx');
     }
 
     // public function importJabatan(Request $request)
     // {
+    // if (!Gate::allows('import.kelompokgaji')) {
+    //     return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+    // }
+
     //     $import = Excel::import(new KelompokGajiImport, $request->file('kelompok_gaji_file'));
 
     //     if ($import->failures()->count() > 0) {

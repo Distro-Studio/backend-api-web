@@ -17,7 +17,7 @@ class RoleSeeder extends Seeder
         $created_at = Carbon::now()->subDays(rand(0, 365));
         $updated_at = Carbon::now();
 
-        Role::create([
+        $roleSuperAdmin = Role::create([
             'name' => 'Super Admin',
             'description' => 'drew between importance against attention cookies change tool rhythm merely twelve draw remember pipe handsome policeman mixture hay industrial birthday front himself iron declared',
             'created_at' => $created_at,
@@ -30,7 +30,7 @@ class RoleSeeder extends Seeder
             'created_at' => $created_at,
             'updated_at' => $updated_at,
         ]);
-        
+
         Role::create([
             'name' => 'Admin',
             'description' => 'satellites native some bottle blanket extra continued young married lost far great door short quick example tin teeth variety shadow does line met these',
@@ -45,32 +45,54 @@ class RoleSeeder extends Seeder
             'updated_at' => $updated_at,
         ]);
 
-        // $roleDirektur->givePermissionTo([
-        //     'create.unitkerja',
-        //     'edit.unitkerja',
-        //     'delete.unitkerja',
-        //     'view.unitkerja',
+        $roleSuperAdmin->givePermissionTo([
+            // ! Master Settings
+            'create.role',
+            'edit.role',
+            'delete.role',
+            'view.role',
+            'import.role',
+            'export.role',
 
-        //     'create.jabatan',
-        //     'edit.jabatan',
-        //     'delete.jabatan',
-        //     'view.jabatan',
+            'create.unitkerja',
+            'edit.unitkerja',
+            'delete.unitkerja',
+            'view.unitkerja',
+            'import.unitkerja',
+            'export.unitkerja',
 
-        //     'create.profesi',
-        //     'edit.profesi',
-        //     'delete.profesi',
-        //     'view.profesi',
+            'create.jabatan',
+            'edit.jabatan',
+            'delete.jabatan',
+            'view.jabatan',
+            'import.jabatan',
+            'export.jabatan',
 
-        //     'create.kelompokgaji',
-        //     'edit.kelompokgaji',
-        //     'delete.kelompokgaji',
-        //     'view.kelompokgaji',
+            'create.kompetensi',
+            'edit.kompetensi',
+            'delete.kompetensi',
+            'view.kompetensi',
+            'import.kompetensi',
+            'export.kompetensi',
 
-        //     'create.data_karyawan',
-        //     'edit.data_karyawan',
-        //     'delete.data_karyawan',
-        //     'view.data_karyawan',
-        // ]);
+            'create.kelompokgaji',
+            'edit.kelompokgaji',
+            'delete.kelompokgaji',
+            'view.kelompokgaji',
+            'import.kelompokgaji',
+            'export.kelompokgaji',
+
+            // ! User Settings
+            // 'create.user',
+            // 'edit.user',
+            // 'delete.user',
+            // 'view.user',
+
+            // 'create.data_karyawan',
+            // 'edit.data_karyawan',
+            // 'delete.data_karyawan',
+            // 'view.data_karyawan',
+        ]);
 
         // $roleAdmin->givePermissionTo([
         //     'create.user',

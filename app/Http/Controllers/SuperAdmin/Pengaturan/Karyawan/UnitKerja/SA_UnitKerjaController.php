@@ -2,18 +2,21 @@
 
 namespace App\Http\Controllers\SuperAdmin\Pengaturan\Karyawan\UnitKerja;
 
-use App\Exports\Pengaturan\Karyawan\UnitKerja\UnitKerjaExport;
+use App\Models\User;
 use App\Models\UnitKerja;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Gate;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Validator;
 use App\Http\Requests\StoreUnitKerjaRequest;
 use App\Http\Requests\UpdateUnitKerjaRequest;
+use App\Exports\Pengaturan\Karyawan\UnitKerja\UnitKerjaExport;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
-use App\Http\Resources\Dashboard\Pengaturan_Karyawan\UnitKerja\UnitKerjaResource;
 use App\Imports\Pengaturan\Karyawan\UnitKerja\UnitKerjaImport;
+use App\Http\Resources\Dashboard\Pengaturan_Karyawan\UnitKerja\UnitKerjaResource;
+use Spatie\Permission\Middleware\RoleMiddleware;
 
 class SA_UnitKerjaController extends Controller
 {
@@ -31,6 +34,11 @@ class SA_UnitKerjaController extends Controller
 
     public function index(Request $request)
     {
+        // $this->middleware(RoleMiddleware::class, ['roles' => ['Super Admin']]);
+        if (!Gate::allows('view.unitkerja')) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
+
         $unit_kerja = UnitKerja::query();
 
         // Filter data Jabatan berdasarkan parameter 'kode-gaji'
@@ -64,6 +72,10 @@ class SA_UnitKerjaController extends Controller
 
     public function store(StoreUnitKerjaRequest $request)
     {
+        if (!Gate::allows('create.unitkerja')) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
+
         $data = $request->validated();
 
         $unit_kerja = UnitKerja::create($data);
@@ -73,6 +85,10 @@ class SA_UnitKerjaController extends Controller
 
     public function update(UnitKerja $UnitKerja, UpdateUnitKerjaRequest $request)
     {
+        if (!Gate::allows('edit.unitkerja', $UnitKerja)) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
+
         $data = $request->validated();
 
         $UnitKerja->update($data);
@@ -83,6 +99,10 @@ class SA_UnitKerjaController extends Controller
 
     public function bulkDelete(Request $request)
     {
+        if (!Gate::allows('delete.unitkerja')) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
+
         $dataKompetensi = Validator::make($request->all(), [
             'ids' => 'required|array|min:1',
             'ids.*' => 'integer|exists:unit_kerjas,id'
@@ -105,6 +125,9 @@ class SA_UnitKerjaController extends Controller
 
     public function exportUnitKerja()
     {
+        if (!Gate::allows('export.unitkerja')) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
         $UnitKerja = UnitKerja::all();
         return Excel::download(new UnitKerjaExport, 'unit-kerja.xlsx');
     }

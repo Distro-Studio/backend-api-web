@@ -6,16 +6,17 @@ use App\Models\Jabatan;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Gate;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Validator;
 use App\Http\Requests\StoreJabatanRequest;
 use App\Http\Requests\UpdateJabatanRequest;
 use Illuminate\Contracts\Database\Query\Builder;
 use App\Exports\Pengaturan\Karyawan\Jabatan\JabatanExport;
-use App\Http\Resources\Dashboard\Pengaturan_Karyawan\Jabatan\JabatanCollection;
 use App\Imports\Pengaturan\Karyawan\Jabatan\JabatanImport;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
 use App\Http\Resources\Dashboard\Pengaturan_Karyawan\Jabatan\JabatanResource;
+use App\Http\Resources\Dashboard\Pengaturan_Karyawan\Jabatan\JabatanCollection;
 use App\Http\Resources\Dashboard\Pengaturan_Karyawan\Jabatan\JabatanCollectionResource;
 
 class SA_JabatanController extends Controller
@@ -34,6 +35,10 @@ class SA_JabatanController extends Controller
 
     public function index(Request $request)
     {
+        if (!Gate::allows('view.jabatan')) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
+
         $jabatan = Jabatan::query();
 
         // Filter data Jabatan berdasarkan parameter 'is_struktural'
@@ -67,6 +72,10 @@ class SA_JabatanController extends Controller
 
     public function store(StoreJabatanRequest $request)
     {
+        if (!Gate::allows('create.jabatan')) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
+
         $data = $request->validated();
 
         $jabatan = Jabatan::create($data);
@@ -76,6 +85,10 @@ class SA_JabatanController extends Controller
 
     public function update(Jabatan $jabatan, UpdateJabatanRequest $request)
     {
+        if (!Gate::allows('edit.jabatan', $jabatan)) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
+
         $data = $request->validated();
 
         $jabatan->update($data);
@@ -86,6 +99,10 @@ class SA_JabatanController extends Controller
 
     public function bulkDelete(Request $request)
     {
+        if (!Gate::allows('delete.jabatan')) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
+
         $dataJabatan = Validator::make($request->all(), [
             'ids' => 'required|array|min:1',
             'ids.*' => 'integer|exists:jabatans,id'
@@ -108,12 +125,20 @@ class SA_JabatanController extends Controller
 
     public function exportJabatan()
     {
+        if (!Gate::allows('export.jabatan')) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
+
         $jabatans = Jabatan::all();
         return Excel::download(new JabatanExport, 'jabatans.xlsx');
     }
 
     // public function importJabatan(Request $request)
     // {
+    // if (!Gate::allows('import.jabatan')) {
+    //     return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+    // }
+
     //     $import = Excel::import(new JabatanImport, $request->file('jabatan_file'));
 
     //     if ($import->failures()->count() > 0) {
