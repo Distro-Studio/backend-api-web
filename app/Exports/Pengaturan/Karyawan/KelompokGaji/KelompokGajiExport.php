@@ -24,12 +24,12 @@ class KelompokGajiExport implements FromCollection
         ];
     }
 
-    public function map($jabatan): array
+    public function map($kelompok_gajis): array
     {
         return [
-            $jabatan->id,
-            $jabatan->nama_kelompok,
-            $jabatan->besaran_gaji,
+            $kelompok_gajis->id,
+            $kelompok_gajis->nama_kelompok,
+            $kelompok_gajis->besaran_gaji,
         ];
     }
 }

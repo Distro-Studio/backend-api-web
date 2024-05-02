@@ -23,11 +23,11 @@ class UnitKerjaExport implements FromCollection
         ];
     }
 
-    public function map($jabatan): array
+    public function map($unit_kerjas): array
     {
         return [
-            $jabatan->id,
-            $jabatan->nama_unit,
+            $unit_kerjas->id,
+            $unit_kerjas->nama_unit,
         ];
     }
 }

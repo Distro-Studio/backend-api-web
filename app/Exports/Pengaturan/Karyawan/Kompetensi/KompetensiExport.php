@@ -25,13 +25,13 @@ class KompetensiExport implements FromCollection
         ];
     }
 
-    public function map($jabatan): array
+    public function map($kompetensis): array
     {
         return [
-            $jabatan->id,
-            $jabatan->nama_kompetensi,
-            $jabatan->jenis_kompetensi,
-            $jabatan->total_tunjangan,
+            $kompetensis->id,
+            $kompetensis->nama_kompetensi,
+            $kompetensis->jenis_kompetensi,
+            $kompetensis->total_tunjangan,
         ];
     }
 }
