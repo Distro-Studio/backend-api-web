@@ -1,12 +1,12 @@
 <?php
 
-namespace App\Http\Resources\Dashboard\Pengaturan_Karyawan\Jabatan;
+namespace App\Http\Resources\Dashboard\Pengaturan_Karyawan;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-class JabatanResource extends JsonResource
+class KelompokGajiResource extends JsonResource
 {
     public $status;
     public $message;
@@ -18,22 +18,6 @@ class JabatanResource extends JsonResource
         $this->status = $status;
         $this->message = $message;
     }
-
-    // public function toArray(Request $request): array
-    // {
-    //     return [
-    //         'status' => $this->status,
-    //         'message' => $this->message,
-    //         'data'  => [
-    //             'id' => 'J00' . $this->id,
-    //             'nama_jabatan' => $this->nama_jabatan,
-    //             'is_struktural' => $this->is_struktural,
-    //             'tunjangan' => $this->tunjangan,
-    //             'created_at' => $this->created_at,
-    //             'updated_at' => $this->updated_at
-    //         ]
-    //     ];
-    // }
 
     public function toArray($request)
     {
@@ -70,14 +54,13 @@ class JabatanResource extends JsonResource
 
     protected function formatData(Collection $collection)
     {
-        return $collection->transform(function ($jabatan) {
+        return $collection->transform(function ($kelompok_gaji) {
             return [
-                'id' => 'J00' . $jabatan->id,
-                'nama_jabatan' => $jabatan->nama_jabatan,
-                'is_struktural' => $jabatan->is_struktural,
-                'tunjangan' => $jabatan->tunjangan,
-                'created_at' => $jabatan->created_at,
-                'updated_at' => $jabatan->updated_at
+                'id' => $kelompok_gaji->id,
+                'nama_kelompok' => $kelompok_gaji->nama_kelompok,
+                'besaran_gaji' => $kelompok_gaji->besaran_gaji,
+                'created_at' => $kelompok_gaji->created_at,
+                'updated_at' => $kelompok_gaji->updated_at
             ];
         });
     }

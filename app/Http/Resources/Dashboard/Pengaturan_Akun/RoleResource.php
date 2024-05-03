@@ -1,12 +1,12 @@
 <?php
 
-namespace App\Http\Resources\Dashboard\Pengaturan_Karyawan\KelompokGaji;
+namespace App\Http\Resources\Dashboard\Pengaturan_Akun;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-class KelompokGajiResource extends JsonResource
+class RoleResource extends JsonResource
 {
     public $status;
     public $message;
@@ -54,13 +54,13 @@ class KelompokGajiResource extends JsonResource
 
     protected function formatData(Collection $collection)
     {
-        return $collection->transform(function ($kelompok_gaji) {
+        return $collection->transform(function ($roles) {
             return [
-                'id' => $kelompok_gaji->id,
-                'nama_kelompok' => $kelompok_gaji->nama_kelompok,
-                'besaran_gaji' => $kelompok_gaji->besaran_gaji,
-                'created_at' => $kelompok_gaji->created_at,
-                'updated_at' => $kelompok_gaji->updated_at
+                'id' => $roles->id,
+                'name' => $roles->name,
+                'description' => $roles->description,
+                'created_at' => $roles->created_at,
+                'updated_at' => $roles->updated_at
             ];
         });
     }

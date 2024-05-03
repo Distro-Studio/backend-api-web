@@ -1,16 +1,16 @@
 <?php
 
-namespace App\Http\Controllers\SuperAdmin\Pengaturan\Akun\Permissions;
+namespace App\Http\Controllers\Dashboard\Pengaturan\Akun;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use App\Http\Controllers\Controller;
-use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
-use Illuminate\Support\Facades\Validator;
-use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
+use App\Http\Controllers\Controller;
+use Spatie\Permission\Models\Permission;
+use Illuminate\Support\Facades\Validator;
+use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
 
-class SA_PermissionsController extends Controller
+class PermissionsController extends Controller
 {
     public function getAllPermissions()
     {

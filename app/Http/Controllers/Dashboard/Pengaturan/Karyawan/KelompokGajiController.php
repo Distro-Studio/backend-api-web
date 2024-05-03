@@ -1,54 +1,50 @@
 <?php
 
-namespace App\Http\Controllers\SuperAdmin\Pengaturan\Karyawan\Jabatan;
+namespace App\Http\Controllers\Dashboard\Pengaturan\Karyawan;
 
-use App\Models\Jabatan;
+use App\Models\KelompokGaji;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Gate;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Validator;
-use App\Http\Requests\StoreJabatanRequest;
-use App\Http\Requests\UpdateJabatanRequest;
-use Illuminate\Contracts\Database\Query\Builder;
-use App\Exports\Pengaturan\Karyawan\Jabatan\JabatanExport;
-use App\Imports\Pengaturan\Karyawan\Jabatan\JabatanImport;
+use App\Http\Requests\StoreKelompokGajiRequest;
+use App\Http\Requests\UpdateKelompokGajiRequest;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
-use App\Http\Resources\Dashboard\Pengaturan_Karyawan\Jabatan\JabatanResource;
-use App\Http\Resources\Dashboard\Pengaturan_Karyawan\Jabatan\JabatanCollection;
-use App\Http\Resources\Dashboard\Pengaturan_Karyawan\Jabatan\JabatanCollectionResource;
+use App\Exports\Pengaturan\Karyawan\KelompokGaji\KelompokGajiExport;
+use App\Http\Resources\Dashboard\Pengaturan_Karyawan\KelompokGajiResource;
 
-class SA_JabatanController extends Controller
+class KelompokGajiController extends Controller
 {
     /* ============================= For Dropdown ============================= */
-    public function getAllJabatan()
+    public function getAllKelompokGaji()
     {
-        $dataJabatan = Jabatan::all();
+        $kelompk_gaji = KelompokGaji::all();
         return response()->json([
             'status' => Response::HTTP_OK,
-            'message' => 'Retrieving all Jabatan for dropdown',
-            'data' => $dataJabatan
+            'message' => 'Retrieving all KelompokGaji for dropdown',
+            'data' => $kelompk_gaji
         ], Response::HTTP_OK);
     }
     /* ============================= For Dropdown ============================= */
 
     public function index(Request $request)
     {
-        if (!Gate::allows('view.jabatan')) {
+        if (!Gate::allows('view.kelompokgaji')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
-        $jabatan = Jabatan::query();
+        $kelompok_gaji = KelompokGaji::query();
 
-        // Filter data Jabatan berdasarkan parameter 'is_struktural'
-        if ($request->has('is_struktural')) {
-            $jabatan = $jabatan->where('is_struktural', $request->is_struktural);
+        // Filter data Jabatan berdasarkan parameter 'kode-gaji'
+        if ($request->has('kode-gaji')) {
+            $kelompok_gaji = $kelompok_gaji->where('nama_kelompok', $request->nama_kelompok);
         }
 
         // Terapkan pencarian jika parameter 'search' ada
         if ($request->has('search')) {
-            $jabatan = $jabatan->where('nama_jabatan', 'like', '%' . $request->search . '%');
+            $kelompok_gaji = $kelompok_gaji->where('nama_kelompok', 'like', '%' . $request->search . '%');
         }
 
         // Urutkan data Jabatan
@@ -57,89 +53,89 @@ class SA_JabatanController extends Controller
             $sortOrder = $request->get('order', 'asc');
 
             foreach ($sortFields as $sortField) {
-                $jabatan = $jabatan->orderBy($sortField, $sortOrder);
+                $kelompok_gaji = $kelompok_gaji->orderBy($sortField, $sortOrder);
             }
         }
 
-        $dataJabatan = $jabatan->paginate(10);
+        $dataKelompokGaji = $kelompok_gaji->paginate(10);
 
-        if ($dataJabatan->isEmpty()) {
-            return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data Jabatan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+        if ($dataKelompokGaji->isEmpty()) {
+            return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data Kelompok Gaji tidak ditemukan.'), Response::HTTP_NOT_FOUND);
         }
 
-        return response()->json(new JabatanResource(Response::HTTP_OK, 'Data Jabatan berhasil ditampilkan.', $dataJabatan), Response::HTTP_OK);
+        return response()->json(new KelompokGajiResource(Response::HTTP_OK, 'Data Kelompok Gaji berhasil ditampilkan.', $dataKelompokGaji), Response::HTTP_OK);
     }
 
-    public function store(StoreJabatanRequest $request)
+    public function store(StoreKelompokGajiRequest $request)
     {
-        if (!Gate::allows('create.jabatan')) {
+        if (!Gate::allows('create.kelompokgaji')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
         $data = $request->validated();
 
-        $jabatan = Jabatan::create($data);
-        $successMessage = "Data Jabatan '{$jabatan->nama_jabatan}' berhasil dibuat.";
-        return response()->json(new JabatanResource(Response::HTTP_OK, $successMessage, $jabatan), Response::HTTP_OK);
+        $kelompk_gaji = KelompokGaji::create($data);
+        $successMessage = "Data Kelompok Gaji '{$kelompk_gaji->nama_kelompok}' berhasil dibuat.";
+        return response()->json(new KelompokGajiResource(Response::HTTP_OK, $successMessage, $kelompk_gaji), Response::HTTP_OK);
     }
 
-    public function update(Jabatan $jabatan, UpdateJabatanRequest $request)
+    public function update(KelompokGaji $KelompokGaji, UpdateKelompokGajiRequest $request)
     {
-        if (!Gate::allows('edit.jabatan', $jabatan)) {
+        if (!Gate::allows('edit.kelompokgaji', $KelompokGaji)) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
         $data = $request->validated();
 
-        $jabatan->update($data);
-        $updatedJabatan = $jabatan->fresh();
-        $successMessage = "Data Jabatan '{$updatedJabatan->nama_jabatan}' berhasil diubah.";
-        return response()->json(new JabatanResource(Response::HTTP_OK, $successMessage, $jabatan), Response::HTTP_OK);
+        $KelompokGaji->update($data);
+        $updatedKelompokGaji = $KelompokGaji->fresh();
+        $successMessage = "Data Kelompok Gaji '{$updatedKelompokGaji->nama_kelompok}' berhasil diubah.";
+        return response()->json(new KelompokGajiResource(Response::HTTP_OK, $successMessage, $KelompokGaji), Response::HTTP_OK);
     }
 
     public function bulkDelete(Request $request)
     {
-        if (!Gate::allows('delete.jabatan')) {
+        if (!Gate::allows('delete.kelompokgaji')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
-        $dataJabatan = Validator::make($request->all(), [
+        $dataKelompokGaji = Validator::make($request->all(), [
             'ids' => 'required|array|min:1',
             'ids.*' => 'integer|exists:jabatans,id'
         ]);
 
-        if ($dataJabatan->fails()) {
-            return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, $dataJabatan->errors()), Response::HTTP_BAD_REQUEST);
+        if ($dataKelompokGaji->fails()) {
+            return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, $dataKelompokGaji->errors()), Response::HTTP_BAD_REQUEST);
         }
 
         $ids = $request->input('ids');
-        Jabatan::destroy($ids);
+        KelompokGaji::destroy($ids);
 
-        $deletedCount = Jabatan::whereIn('id', $ids)->delete();
+        $deletedCount = KelompokGaji::whereIn('id', $ids)->delete();
         // $message = sprintf('Deleted %d Jabatan%s', $deletedCount, $deletedCount > 1 ? 's' : '');
 
-        $message = 'Jabatan berhasil dihapus.';
+        $message = 'Kelompok Gaji berhasil dihapus.';
 
         return response()->json(new WithoutDataResource(Response::HTTP_OK, $message), Response::HTTP_OK);
     }
 
-    public function exportJabatan()
+    public function exportKelompokGaji()
     {
-        if (!Gate::allows('export.jabatan')) {
+        if (!Gate::allows('export.kelompokgaji')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
-        $jabatans = Jabatan::all();
-        return Excel::download(new JabatanExport, 'jabatans.xlsx');
+        $KelompokGaji = KelompokGaji::all();
+        return Excel::download(new KelompokGajiExport, 'kelompok-gajis.xlsx');
     }
 
     // public function importJabatan(Request $request)
     // {
-    // if (!Gate::allows('import.jabatan')) {
+    // if (!Gate::allows('import.kelompokgaji')) {
     //     return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
     // }
 
-    //     $import = Excel::import(new JabatanImport, $request->file('jabatan_file'));
+    //     $import = Excel::import(new KelompokGajiImport, $request->file('kelompok_gaji_file'));
 
     //     if ($import->failures()->count() > 0) {
     //         // Handle import failures with validation errors (consider logging specific errors)

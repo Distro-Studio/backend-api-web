@@ -1,12 +1,12 @@
 <?php
 
-namespace App\Http\Resources\Dashboard\Pengaturan_Akun\Role;
+namespace App\Http\Resources\Dashboard\Pengaturan_Karyawan;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-class RoleResource extends JsonResource
+class KompetensiResource extends JsonResource
 {
     public $status;
     public $message;
@@ -54,13 +54,14 @@ class RoleResource extends JsonResource
 
     protected function formatData(Collection $collection)
     {
-        return $collection->transform(function ($roles) {
+        return $collection->transform(function ($kompetensi) {
             return [
-                'id' => $roles->id,
-                'name' => $roles->name,
-                'description' => $roles->description,
-                'created_at' => $roles->created_at,
-                'updated_at' => $roles->updated_at
+                'id' => 'KP00' . $kompetensi->id,
+                'nama_kompetensi' => $kompetensi->nama_kompetensi,
+                'jenis_kompetensi' => $kompetensi->jenis_kompetensi,
+                'total_tunjangan' => $kompetensi->total_tunjangan,
+                'created_at' => $kompetensi->created_at,
+                'updated_at' => $kompetensi->updated_at
             ];
         });
     }

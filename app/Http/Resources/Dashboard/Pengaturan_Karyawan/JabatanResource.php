@@ -1,12 +1,12 @@
 <?php
 
-namespace App\Http\Resources\Dashboard\Pengaturan_Karyawan\UnitKerja;
+namespace App\Http\Resources\Dashboard\Pengaturan_Karyawan;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-class UnitKerjaResource extends JsonResource
+class JabatanResource extends JsonResource
 {
     public $status;
     public $message;
@@ -54,13 +54,14 @@ class UnitKerjaResource extends JsonResource
 
     protected function formatData(Collection $collection)
     {
-        return $collection->transform(function ($unit_kerja) {
+        return $collection->transform(function ($jabatan) {
             return [
-                'id' => 'UK00' . $unit_kerja->id,
-                'nama_unit' => $unit_kerja->nama_unit,
-                'jenis_karyawan' => $unit_kerja->jenis_karyawan,
-                'created_at' => $unit_kerja->created_at,
-                'updated_at' => $unit_kerja->updated_at
+                'id' => 'J00' . $jabatan->id,
+                'nama_jabatan' => $jabatan->nama_jabatan,
+                'is_struktural' => $jabatan->is_struktural,
+                'tunjangan' => $jabatan->tunjangan,
+                'created_at' => $jabatan->created_at,
+                'updated_at' => $jabatan->updated_at
             ];
         });
     }

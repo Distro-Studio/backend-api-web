@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\SuperAdmin\Pengaturan\Karyawan\Kompetensi;
+namespace App\Http\Controllers\Dashboard\Pengaturan\Karyawan;
 
 use App\Models\Kompetensi;
 use Illuminate\Http\Request;
@@ -13,10 +13,9 @@ use App\Http\Requests\StoreKompetensiRequest;
 use App\Http\Requests\UpdateKompetensiRequest;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
 use App\Exports\Pengaturan\Karyawan\Kompetensi\KompetensiExport;
-use App\Imports\Pengaturan\Karyawan\Kompetensi\KompetensiImport;
-use App\Http\Resources\Dashboard\Pengaturan_Karyawan\Kompetensi\KompetensiResource;
+use App\Http\Resources\Dashboard\Pengaturan_Karyawan\KompetensiResource;
 
-class SA_KompetensiController extends Controller
+class KompetensiController extends Controller
 {
     /* ============================= For Dropdown ============================= */
     public function getAllKompetensi()

@@ -1,8 +1,7 @@
 <?php
 
-namespace App\Http\Controllers\SuperAdmin\Pengaturan\Karyawan\UnitKerja;
+namespace App\Http\Controllers\Dashboard\Pengaturan\Karyawan;
 
-use App\Models\User;
 use App\Models\UnitKerja;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -12,13 +11,13 @@ use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Validator;
 use App\Http\Requests\StoreUnitKerjaRequest;
 use App\Http\Requests\UpdateUnitKerjaRequest;
-use App\Exports\Pengaturan\Karyawan\UnitKerja\UnitKerjaExport;
-use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
-use App\Imports\Pengaturan\Karyawan\UnitKerja\UnitKerjaImport;
-use App\Http\Resources\Dashboard\Pengaturan_Karyawan\UnitKerja\UnitKerjaResource;
 use Spatie\Permission\Middleware\RoleMiddleware;
+use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
+use App\Http\Resources\Dashboard\Pengaturan_Karyawan\UnitKerjaResource;
+use App\Exports\Pengaturan\Karyawan\UnitKerja\UnitKerjaExport;
+use App\Imports\Pengaturan\Karyawan\UnitKerja\UnitKerjaImport;
 
-class SA_UnitKerjaController extends Controller
+class UnitKerjaController extends Controller
 {
     /* ============================= For Dropdown ============================= */
     public function getAllKompetensi()

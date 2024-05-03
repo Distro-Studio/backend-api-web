@@ -1,17 +1,16 @@
 <?php
 
-namespace App\Http\Controllers\SuperAdmin\Pengaturan\Akun\Password;
+namespace App\Http\Controllers\Dashboard\Pengaturan\Akun;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\UpdateUserPasswordRequest;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use App\Http\Resources\Dashboard\User\UserResource;
+use App\Http\Requests\UpdateUserPasswordRequest;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
 
-class SA_UserController extends Controller
+class UserPasswordController extends Controller
 {
     public function updatePassword(UpdateUserPasswordRequest $request)
     {

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\SuperAdmin\Pengaturan\Akun\Roles;
+namespace App\Http\Controllers\Dashboard\Pengaturan\Akun;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -13,10 +13,10 @@ use App\Http\Requests\UpdateRoleRequest;
 use Illuminate\Support\Facades\Validator;
 use App\Exports\Pengaturan\Akun\Roles\RolesExport;
 use App\Imports\Pengaturan\Akun\Roles\RolesImport;
+use App\Http\Resources\Dashboard\Pengaturan_Akun\RoleResource;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
-use App\Http\Resources\Dashboard\Pengaturan_Akun\Role\RoleResource;
 
-class SA_RolesController extends Controller
+class RolesController extends Controller
 {
     /* ============================= For Dropdown ============================= */
     public function getAllRoles()
