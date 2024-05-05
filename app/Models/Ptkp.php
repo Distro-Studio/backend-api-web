@@ -18,7 +18,7 @@ class Ptkp extends Model
      *
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function data_karyawan(): HasMany
+    public function data_karyawans(): HasMany
     {
         return $this->hasMany(DataKaryawan::class, 'ptkp_id', 'id');
     }
@@ -28,8 +28,18 @@ class Ptkp extends Model
      *
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function kategori_ter(): BelongsTo
+    public function kategori_ters(): BelongsTo
     {
         return $this->belongsTo(KategoriTer::class, 'kategori_ter_id', 'id');
+    }
+
+    /**
+     * Get all of the ters for the Ptkp
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function ters(): HasMany
+    {
+        return $this->hasMany(Ter::class, 'ptkp_id', 'id');
     }
 }

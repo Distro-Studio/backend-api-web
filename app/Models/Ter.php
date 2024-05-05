@@ -17,8 +17,18 @@ class Ter extends Model
      *
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function kategori_ter(): BelongsTo
+    public function kategori_ters(): BelongsTo
     {
         return $this->belongsTo(KategoriTer::class, 'kategori_ter_id', 'id');
+    }
+
+    /**
+     * Get the ptkps that owns the Ter
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function ptkps(): BelongsTo
+    {
+        return $this->belongsTo(Ptkp::class, 'ptkp_id', 'id');
     }
 }

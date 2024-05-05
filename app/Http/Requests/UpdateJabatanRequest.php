@@ -22,7 +22,7 @@ class UpdateJabatanRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'nama_jabatan' => 'required|string|max:255|unique:jabatans,nama_jabatan',
+            'nama_jabatan' => 'required|string|max:255',
             'is_struktural' => 'boolean',
             'tunjangan' => 'nullable|numeric'
         ];

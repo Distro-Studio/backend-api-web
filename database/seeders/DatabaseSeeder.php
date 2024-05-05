@@ -3,7 +3,10 @@
 namespace Database\Seeders;
 
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+
 use Illuminate\Database\Seeder;
+use Database\Seeders\Pengaturan_Finance\TERSeeder;
+use Database\Seeders\Pengaturan_Finance\PremiSeeder;
 
 class DatabaseSeeder extends Seeder
 {
@@ -22,6 +25,12 @@ class DatabaseSeeder extends Seeder
             KelompokGajiSeeder::class,
             KompetensiSeeder::class,
             UnitKerjaSeeder::class,
+
+            /* ==== Pengaturan Finance ==== */
+            KategoriTERSeeder::class,
+            PTKPSeeder::class,
+            PremiSeeder::class,
+            TERSeeder::class,
         ]);
     }
 }

@@ -11,8 +11,8 @@ use Maatwebsite\Excel\Facades\Excel;
 use App\Http\Requests\StoreRoleRequest;
 use App\Http\Requests\UpdateRoleRequest;
 use Illuminate\Support\Facades\Validator;
-use App\Exports\Pengaturan\Akun\Roles\RolesExport;
-use App\Imports\Pengaturan\Akun\Roles\RolesImport;
+use App\Exports\Pengaturan\Akun\RolesExport;
+use App\Imports\Pengaturan\Akun\RolesImport;
 use App\Http\Resources\Dashboard\Pengaturan_Akun\RoleResource;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
 
@@ -143,7 +143,7 @@ class RolesController extends Controller
     //     }
 
     //     // More informative success message
-    //     $message = 'Data Role berhasil di import ' . $import->count() . ' record(s) kedalam table.';
+    //     $message = 'Data Role berhasil di import kedalam table.';
     //     return response()->json(new WithoutDataResource(Response::HTTP_OK, $message), Response::HTTP_OK);
     // }
 }

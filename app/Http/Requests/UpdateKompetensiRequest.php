@@ -22,7 +22,7 @@ class UpdateKompetensiRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'nama_kompetensi' => 'required|string|max:225|unique:kompetensis,nama_kompetensi',
+            'nama_kompetensi' => 'required|string|max:225',
             'jenis_kompetensi' => 'required|string|max:225',
             'total_tunjangan' => 'required|numeric',
         ];

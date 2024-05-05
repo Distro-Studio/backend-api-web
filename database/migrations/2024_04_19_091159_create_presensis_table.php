@@ -11,15 +11,19 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('lemburs', function (Blueprint $table) {
+        Schema::create('presensis', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained('users');
-            $table->foreignId('shift_id')->constrained('shifts');
-            $table->string('kompensasi');
-            $table->string('type');
+            $table->date('tanggal');
+            $table->foreignId('jadwal_id')->constrained('jadwals');
+            $table->time('jam_masuk');
+            $table->time('jam_keluar');
             $table->string('durasi');
-            $table->text('catatan');
-            $table->integer('status')->default(1);
+            $table->string('lat');
+            $table->string('long');
+            $table->string('foto');
+            $table->string('absensi'); //(hadir,izin,sakit)
+            $table->string('kategori');
             $table->timestamps();
         });
     }
@@ -29,6 +33,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('lemburs');
+        Schema::dropIfExists('presensis');
     }
 };

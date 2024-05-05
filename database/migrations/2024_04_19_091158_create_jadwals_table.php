@@ -11,12 +11,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('premis', function (Blueprint $table) {
+        Schema::create('jadwals', function (Blueprint $table) {
             $table->id();
-            $table->string('nama_premi');
-            $table->string('jenis_premi')->nullable();
-            $table->string('besaran_premi', 20)->default('0');
+            $table->foreignId('user_id');
+            $table->date('tanggal');
+            $table->foreignId('shift_id');
             $table->timestamps();
+
+            $table->foreign('user_id')->on('users')->references('id');
+            $table->foreign('shift_id')->on('shifts')->references('id');
         });
     }
 
@@ -25,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('premis');
+        Schema::dropIfExists('jadwals');
     }
 };

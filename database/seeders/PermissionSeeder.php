@@ -26,6 +26,7 @@ class PermissionSeeder extends Seeder
         ];
 
         $kelolaMasterSettings = [
+            // Akun
             'create.role',
             'edit.role',
             'delete.role',
@@ -33,6 +34,7 @@ class PermissionSeeder extends Seeder
             'import.role',
             'export.role',
 
+            // Karyawan
             'create.unitkerja',
             'edit.unitkerja',
             'delete.unitkerja',
@@ -60,6 +62,31 @@ class PermissionSeeder extends Seeder
             'view.kelompokgaji',
             'import.kelompokgaji',
             'export.kelompokgaji',
+
+            // Finance
+            'create.premi',
+            'edit.premi',
+            'delete.premi',
+            'view.premi',
+            'import.premi',
+            'export.premi',
+
+            'create.ter21',
+            'edit.ter21',
+            'delete.ter21',
+            'view.ter21',
+            'import.ter21',
+            'export.ter21',
+
+            'create.jadwalPenggajian',
+            'reset.jadwalPenggajian',
+
+            'create.runTHR',
+            'edit.runTHR',
+            'delete.runTHR',
+            'view.runTHR',
+            'import.runTHR',
+            'export.runTHR',
         ];
 
         foreach ($kelolaMasterSettings as $kelolaMasterSetting) {

@@ -11,11 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('premis', function (Blueprint $table) {
+        Schema::create('ptkps', function (Blueprint $table) {
             $table->id();
-            $table->string('nama_premi');
-            $table->string('jenis_premi')->nullable();
-            $table->string('besaran_premi', 20)->default('0');
+            $table->string('kode_ptkp');
+            $table->foreignId('kategori_ter_id')->constrained('kategori_ters');
             $table->timestamps();
         });
     }
@@ -25,6 +24,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('premis');
+        Schema::dropIfExists('ptkps');
     }
 };

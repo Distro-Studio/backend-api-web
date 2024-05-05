@@ -31,7 +31,7 @@ class UserResource extends JsonResource
             'email' => $this->email,
             'foto_profil' => $this->foto_profil,
             'data_completion_step' => $this->data_completion_step,
-            'roles' => $this->whenLoaded('roles'),
+            'roles' => $this->roles,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at
         ];

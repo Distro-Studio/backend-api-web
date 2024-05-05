@@ -46,7 +46,7 @@ class RoleSeeder extends Seeder
         ]);
 
         $roleSuperAdmin->givePermissionTo([
-            // ! Master Settings
+            // Akun
             'create.role',
             'edit.role',
             'delete.role',
@@ -54,6 +54,7 @@ class RoleSeeder extends Seeder
             'import.role',
             'export.role',
 
+            // Karyawan
             'create.unitkerja',
             'edit.unitkerja',
             'delete.unitkerja',
@@ -82,16 +83,30 @@ class RoleSeeder extends Seeder
             'import.kelompokgaji',
             'export.kelompokgaji',
 
-            // ! User Settings
-            // 'create.user',
-            // 'edit.user',
-            // 'delete.user',
-            // 'view.user',
+            // Finance
+            'create.premi',
+            'edit.premi',
+            'delete.premi',
+            'view.premi',
+            'import.premi',
+            'export.premi',
 
-            // 'create.data_karyawan',
-            // 'edit.data_karyawan',
-            // 'delete.data_karyawan',
-            // 'view.data_karyawan',
+            'create.ter21',
+            'edit.ter21',
+            'delete.ter21',
+            'view.ter21',
+            'import.ter21',
+            'export.ter21',
+
+            'create.jadwalPenggajian',
+            'reset.jadwalPenggajian',
+
+            'create.runTHR',
+            'edit.runTHR',
+            'delete.runTHR',
+            'view.runTHR',
+            'import.runTHR',
+            'export.runTHR',
         ]);
 
         // $roleAdmin->givePermissionTo([
@@ -100,10 +115,5 @@ class RoleSeeder extends Seeder
         //     'view.user',
         // ]);
 
-        // $roleKaryawan->givePermissionTo([
-        //     'view.kelompokgaji',
-        //     'view.user',
-        //     'edit.data_karyawan',
-        // ]);
     }
 }

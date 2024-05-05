@@ -22,7 +22,7 @@ class UpdateUnitKerjaRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'nama_unit' => 'required|string|max:225|unique:unit_kerjas,nama_unit',
+            'nama_unit' => 'required|string|max:225',
             'jenis_karyawan' => 'string|max:225',
         ];
     }

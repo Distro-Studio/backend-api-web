@@ -3,6 +3,9 @@
 use App\Http\Controllers\Dashboard\Pengaturan\Akun\PermissionsController;
 use App\Http\Controllers\Dashboard\Pengaturan\Akun\RolesController;
 use App\Http\Controllers\Dashboard\Pengaturan\Akun\UserPasswordController;
+use App\Http\Controllers\Dashboard\Pengaturan\Finance\JadwalPenggajianController;
+use App\Http\Controllers\Dashboard\Pengaturan\Finance\PremiController;
+use App\Http\Controllers\Dashboard\Pengaturan\Finance\TER21Controller;
 use App\Http\Controllers\Dashboard\Pengaturan\Karyawan\JabatanController;
 use App\Http\Controllers\Dashboard\Pengaturan\Karyawan\KelompokGajiController;
 use App\Http\Controllers\Dashboard\Pengaturan\Karyawan\KompetensiController;
@@ -82,6 +85,26 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
 
             /* ==================================== Setting Finance ==================================== */
+            // ! Premi ===========>
+            Route::get('/all-premis', [PremiController::class, 'getAllPremi']);
+            Route::post('/premis/bulk-delete', [PremiController::class, 'bulkDelete']);
+            Route::get('/premis/export', [PremiController::class, 'exportPremi']);
+            Route::post('/premis/import', [PremiController::class, 'importPremi']);
+            Route::apiResource('/premis', PremiController::class);
+
+            // ! TER21 ===========>
+            Route::get('/all-ter-pph-21', [TER21Controller::class, 'getAllTer']);
+            Route::post('/ter-pph-21/bulk-delete', [TER21Controller::class, 'bulkDelete']);
+            Route::get('/ter-pph-21/export', [TER21Controller::class, 'exportTER']);
+            Route::post('/ter-pph-21/import', [TER21Controller::class, 'importTER']);
+            Route::apiResource('/ter-pph-21', TER21Controller::class);
+
+            // ! Jadwal Penggajian ===========>
+            Route::post('/jadwal-penggajians', [JadwalPenggajianController::class, 'createJadwalPenggajian']);
+            // Route::post('/jadwal-penggajians/reset/{jadwalPenggajian}', [JadwalPenggajianController::class, 'resetJadwalPenggajian']);
+
+            // ! THR ===========>
+
             /* ==================================== Setting Finance ==================================== */
 
 

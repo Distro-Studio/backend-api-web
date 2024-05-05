@@ -11,7 +11,7 @@ use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Validator;
 use App\Http\Requests\StoreJabatanRequest;
 use App\Http\Requests\UpdateJabatanRequest;
-use App\Exports\Pengaturan\Karyawan\Jabatan\JabatanExport;
+use App\Exports\Pengaturan\Karyawan\JabatanExport;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
 use App\Http\Resources\Dashboard\Pengaturan_Karyawan\JabatanResource;
 

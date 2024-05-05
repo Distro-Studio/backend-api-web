@@ -22,7 +22,7 @@ class UpdateRoleRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => 'required|string|max:225|unique:roles,name',
+            'name' => 'required|string|max:225',
             'description' => 'string|max:225|nullable',
         ];
     }

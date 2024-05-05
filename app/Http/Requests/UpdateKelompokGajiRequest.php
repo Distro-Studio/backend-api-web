@@ -22,7 +22,7 @@ class UpdateKelompokGajiRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'nama_kelompok' => 'required|string|max:225|unique:kelompok_gajis,nama_kelompok',
+            'nama_kelompok' => 'required|string|max:225',
             'besaran_gaji' => 'required|numeric',
         ];
     }
