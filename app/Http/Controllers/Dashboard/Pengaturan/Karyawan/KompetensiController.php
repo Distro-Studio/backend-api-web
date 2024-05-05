@@ -11,8 +11,9 @@ use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Validator;
 use App\Http\Requests\StoreKompetensiRequest;
 use App\Http\Requests\UpdateKompetensiRequest;
+use App\Exports\Pengaturan\Karyawan\KompetensiExport;
+use App\Imports\Pengaturan\Karyawan\KompetensiImport;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
-use App\Exports\Pengaturan\Karyawan\Kompetensi\KompetensiExport;
 use App\Http\Resources\Dashboard\Pengaturan_Karyawan\KompetensiResource;
 
 class KompetensiController extends Controller

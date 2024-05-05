@@ -12,10 +12,10 @@ use Illuminate\Support\Facades\Validator;
 use App\Http\Requests\StoreUnitKerjaRequest;
 use App\Http\Requests\UpdateUnitKerjaRequest;
 use Spatie\Permission\Middleware\RoleMiddleware;
+use App\Exports\Pengaturan\Karyawan\UnitKerjaExport;
+use App\Imports\Pengaturan\Karyawan\UnitKerjaImport;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
 use App\Http\Resources\Dashboard\Pengaturan_Karyawan\UnitKerjaResource;
-use App\Exports\Pengaturan\Karyawan\UnitKerja\UnitKerjaExport;
-use App\Imports\Pengaturan\Karyawan\UnitKerja\UnitKerjaImport;
 
 class UnitKerjaController extends Controller
 {

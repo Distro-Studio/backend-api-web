@@ -11,8 +11,9 @@ use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Validator;
 use App\Http\Requests\StoreKelompokGajiRequest;
 use App\Http\Requests\UpdateKelompokGajiRequest;
+use App\Exports\Pengaturan\Karyawan\KelompokGajiExport;
+use App\Imports\Pengaturan\Karyawan\KelompokGajiImport;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
-use App\Exports\Pengaturan\Karyawan\KelompokGaji\KelompokGajiExport;
 use App\Http\Resources\Dashboard\Pengaturan_Karyawan\KelompokGajiResource;
 
 class KelompokGajiController extends Controller
