@@ -2,7 +2,10 @@
 
 namespace App\Http\Requests;
 
+use Illuminate\Http\Response;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Contracts\Validation\Validator;
+use Illuminate\Http\Exceptions\HttpResponseException;
 
 class StoreJadwalPenggajianRequest extends FormRequest
 {
@@ -33,5 +36,15 @@ class StoreJadwalPenggajianRequest extends FormRequest
             'tanggal.date' => 'Tanggal penjadwalan gaji wajib berisi tanggal.',
             // 'tanggal.unique' => 'Tanggal penjadwalan gaji wajib berisi tanggal.',
         ];
+    }
+
+    public function failedValidation(Validator $validator)
+    {
+        $reponse = [
+            'status' => Response::HTTP_BAD_REQUEST,
+            'message' => $validator->errors()
+        ];
+
+        throw new HttpResponseException(response()->json($reponse, Response::HTTP_BAD_REQUEST));
     }
 }

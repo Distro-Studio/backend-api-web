@@ -2,8 +2,10 @@
 
 namespace App\Http\Requests;
 
-use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Response;
+use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Contracts\Validation\Validator;
+use Illuminate\Http\Exceptions\HttpResponseException;
 
 class StoreTERRequest extends FormRequest
 {
@@ -43,5 +45,15 @@ class StoreTERRequest extends FormRequest
             'percentage_ter.required' => 'Persentase TER tidak diperbolehkan kosong.',
             'percentage_ter.numeric' => 'Persentase TER tidak diperbolehkan mengandung huruf.',
         ];
+    }
+
+    public function failedValidation(Validator $validator)
+    {
+        $reponse = [
+            'status' => Response::HTTP_BAD_REQUEST,
+            'message' => $validator->errors()
+        ];
+
+        throw new HttpResponseException(response()->json($reponse, Response::HTTP_BAD_REQUEST));
     }
 }

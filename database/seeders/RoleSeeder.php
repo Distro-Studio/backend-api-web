@@ -54,6 +54,10 @@ class RoleSeeder extends Seeder
             'import.role',
             'export.role',
 
+            'view.permission',
+            'create.permission',
+            'edit.permission',
+
             // Karyawan
             'create.unitkerja',
             'edit.unitkerja',
@@ -101,19 +105,34 @@ class RoleSeeder extends Seeder
             'create.jadwalPenggajian',
             'reset.jadwalPenggajian',
 
-            'create.runTHR',
-            'edit.runTHR',
-            'delete.runTHR',
-            'view.runTHR',
-            'import.runTHR',
-            'export.runTHR',
+            'create.THR',
+            'edit.THR',
+            'delete.THR',
+            'view.THR',
+            'import.THR',
+            'export.THR',
+
+            // Managemen Waktu
+            'create.shift',
+            'edit.shift',
+            'delete.shift',
+            'view.shift',
+            'import.shift',
+            'export.shift',
+
+            'create.hariLibur',
+            'edit.hariLibur',
+            'delete.hariLibur',
+            'view.hariLibur',
+            'import.hariLibur',
+            'export.hariLibur',
+
+            'create.cuti',
+            'edit.cuti',
+            'delete.cuti',
+            'view.cuti',
+            'import.cuti',
+            'export.cuti',
         ]);
-
-        // $roleAdmin->givePermissionTo([
-        //     'create.user',
-        //     'edit.user',
-        //     'view.user',
-        // ]);
-
     }
 }

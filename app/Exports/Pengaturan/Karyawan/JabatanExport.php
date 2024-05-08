@@ -3,13 +3,14 @@
 namespace App\Exports\Pengaturan\Karyawan;
 
 use App\Models\Jabatan;
+use Maatwebsite\Excel\Concerns\Exportable;
+use Maatwebsite\Excel\Concerns\WithMapping;
+use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\FromCollection;
 
-class JabatanExport implements FromCollection
+class JabatanExport implements FromCollection, WithHeadings, WithMapping
 {
-    /**
-    * @return \Illuminate\Support\Collection
-    */
+    use Exportable;
     public function collection()
     {
         return Jabatan::all();
@@ -18,20 +19,22 @@ class JabatanExport implements FromCollection
     public function headings(): array
     {
         return [
-            'ID',
-            'Nama Jabatan',
-            // 'Is Struktural', // Adjust column names as needed
-            'Tunjangan',
+            'nama_jabatan',
+            'is_struktural',
+            'tunjangan',
+            'created_at',
+            'updated_at'
         ];
     }
 
     public function map($jabatan): array
     {
         return [
-            $jabatan->id,
             $jabatan->nama_jabatan,
-            // $jabatan->is_struktural ? 'Ya' : 'Tidak', // Convert boolean to string
+            $jabatan->is_struktural ? 'Ya' : 'Tidak',
             $jabatan->tunjangan,
+            $jabatan->created_at,
+            $jabatan->updated_at,
         ];
     }
 }

@@ -58,7 +58,7 @@ class JabatanResource extends JsonResource
             return [
                 'id' => 'J00' . $jabatan->id,
                 'nama_jabatan' => $jabatan->nama_jabatan,
-                'is_struktural' => $jabatan->is_struktural,
+                'is_struktural' => $jabatan->is_struktural ? 'Ya' : 'Tidak',
                 'tunjangan' => $jabatan->tunjangan,
                 'created_at' => $jabatan->created_at,
                 'updated_at' => $jabatan->updated_at

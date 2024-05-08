@@ -14,12 +14,17 @@ use App\Http\Requests\UpdateJabatanRequest;
 use App\Exports\Pengaturan\Karyawan\JabatanExport;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
 use App\Http\Resources\Dashboard\Pengaturan_Karyawan\JabatanResource;
+use App\Imports\Pengaturan\Karyawan\JabatanImport;
 
 class JabatanController extends Controller
 {
     /* ============================= For Dropdown ============================= */
     public function getAllJabatan()
     {
+        if (!Gate::allows('view.jabatan')) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
+
         $dataJabatan = Jabatan::all();
         return response()->json([
             'status' => Response::HTTP_OK,
@@ -129,21 +134,18 @@ class JabatanController extends Controller
         return Excel::download(new JabatanExport, 'jabatans.xlsx');
     }
 
-    // public function importJabatan(Request $request)
-    // {
-    // if (!Gate::allows('import.jabatan')) {
-    //     return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
-    // }
+    public function importJabatan(Request $request)
+    {
+        if (!Gate::allows('import.jabatan')) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
 
-    //     $import = Excel::import(new JabatanImport, $request->file('jabatan_file'));
+        try {
+            Excel::import(new JabatanImport, $request->file('jabatan_file'));
+        } catch (\Exception $e) {
+            return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
+        }
 
-    //     if ($import->failures()->count() > 0) {
-    //         // Handle import failures with validation errors (consider logging specific errors)
-    //         return response()->json($import->failures(), Response::HTTP_UNPROCESSABLE_ENTITY);
-    //     }
-
-    //     // More informative success message
-    //     $message = 'Data Jabatan berhasil di import ' . $import->count() . ' record(s) kedalam table.';
-    //     return response()->json(new WithoutDataResource(Response::HTTP_OK, $message), Response::HTTP_OK);
-    // }
+        return response()->json(new WithoutDataResource(Response::HTTP_OK, 'Data Jabatan berhasil di import kedalam table.'), Response::HTTP_OK);
+    }
 }

@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('nama');
             $table->integer('durasi');
-            $table->string('waktu');
+            $table->string('waktu')->nullable();
             $table->timestamps();
         });
     }

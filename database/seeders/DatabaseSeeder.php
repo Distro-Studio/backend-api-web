@@ -7,6 +7,9 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 use Database\Seeders\Pengaturan_Finance\TERSeeder;
 use Database\Seeders\Pengaturan_Finance\PremiSeeder;
+use Database\Seeders\Pengaturan_Managemen_Waktu\CutiSeeder;
+use Database\Seeders\Pengaturan_Managemen_Waktu\HariLiburSeeder;
+use Database\Seeders\Pengaturan_Managemen_Waktu\ShiftSeeder;
 
 class DatabaseSeeder extends Seeder
 {
@@ -31,6 +34,11 @@ class DatabaseSeeder extends Seeder
             PTKPSeeder::class,
             PremiSeeder::class,
             TERSeeder::class,
+
+            /* ==== Pengaturan Managemen Waktu ==== */
+            ShiftSeeder::class,
+            HariLiburSeeder::class,
+            CutiSeeder::class,
         ]);
     }
 }

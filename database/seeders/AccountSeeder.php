@@ -23,22 +23,14 @@ class AccountSeeder extends Seeder
         ]);
         $roleSuperAdmin->assignRole('Super Admin');
 
-        // $roleDirektur = User::create([
-        //     'name' => 'Winifred Hanson',
-        //     'email' => 'winifred@dir.rski.hosp',
-        //     'username' => 'winifredH',
-        //     'data_completion_step' => 0,
-        //     'password' => Hash::make('password'),
-        // ]);
-        // $roleDirektur->assignRole('Direktur');
-
-        // $roleAdmin = User::create([
-        //     'name' => 'Joyce Mills',
-        //     'email' => 'joyce@adm.rski.hosp',
-        //     'username' => 'joyceM',
-        //     'data_completion_step' => 1,
-        //     'password' => Hash::make('password'),
-        // ]);
-        // $roleAdmin->assignRole('Admin');
+        // ! TESTER
+        $roleKaryawan = User::create([
+            'name' => 'Joyce Mills',
+            'email' => 'joyce@adm.rski.hosp',
+            'username' => 'joyceM',
+            'data_completion_step' => 1,
+            'password' => Hash::make('password'),
+        ]);
+        $roleKaryawan->assignRole('Karyawan');
     }
 }

@@ -3,13 +3,14 @@
 namespace App\Exports\Pengaturan\Finance;
 
 use App\Models\Premi;
+use Maatwebsite\Excel\Concerns\Exportable;
+use Maatwebsite\Excel\Concerns\WithMapping;
+use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\FromCollection;
 
-class PremiExport implements FromCollection
+class PremiExport implements FromCollection, WithHeadings, WithMapping
 {
-    /**
-     * @return \Illuminate\Support\Collection
-     */
+    use Exportable;
     public function collection()
     {
         return Premi::all();
@@ -18,20 +19,22 @@ class PremiExport implements FromCollection
     public function headings(): array
     {
         return [
-            'ID',
-            'Nama Premi',
-            'Jenis Premi',
-            'Rate Premi',
+            'nama_premi',
+            'jenis_premi',
+            'besaran_premi',
+            'created_at',
+            'updated_at',
         ];
     }
 
     public function map($premi): array
     {
         return [
-            $premi->id,
             $premi->nama_premi,
             $premi->jenis_premi,
             $premi->besaran_premi,
+            $premi->created_at,
+            $premi->updated_at,
         ];
     }
 }

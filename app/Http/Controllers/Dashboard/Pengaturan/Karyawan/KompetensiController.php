@@ -21,6 +21,10 @@ class KompetensiController extends Controller
     /* ============================= For Dropdown ============================= */
     public function getAllKompetensi()
     {
+        if (!Gate::allows('view.kompetensi')) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
+
         $kompetensi = Kompetensi::get();
         return response()->json([
             'status' => Response::HTTP_OK,
@@ -130,21 +134,18 @@ class KompetensiController extends Controller
         return Excel::download(new KompetensiExport, 'kompetensis.xlsx');
     }
 
-    // public function importKompetensi(Request $request)
-    // {
-    //     if (!Gate::allows('import.kompetensi')) {
-    //         return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
-    //     }
+    public function importKompetensi(Request $request)
+    {
+        if (!Gate::allows('import.kompetensi')) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
 
-    //     $import = Excel::import(new KompetensiImport, $request->file('kompetensi_file'));
+        try {
+            Excel::import(new KompetensiImport, $request->file('kompetensi_file'));
+        } catch (\Exception $e) {
+            return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
+        }
 
-    //     if ($import->failures()->count() > 0) {
-    //         // Handle import failures with validation errors (consider logging specific errors)
-    //         return response()->json($import->failures(), Response::HTTP_UNPROCESSABLE_ENTITY);
-    //     }
-
-    //     // More informative success message
-    //     $message = 'Data Kompetensi ' . $import->count() . ' record(s) berhasil di import kedalam table.';
-    //     return response()->json(new WithoutDataResource(Response::HTTP_OK, $message), Response::HTTP_OK);
-    // }
+        return response()->json(new WithoutDataResource(Response::HTTP_OK, 'Data Kompetensi berhasil di import kedalam table.'), Response::HTTP_OK);
+    }
 }

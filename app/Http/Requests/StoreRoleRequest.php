@@ -2,7 +2,10 @@
 
 namespace App\Http\Requests;
 
+use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Http\Exceptions\HttpResponseException;
+use Illuminate\Http\Response;
 
 class StoreRoleRequest extends FormRequest
 {
@@ -37,5 +40,15 @@ class StoreRoleRequest extends FormRequest
             'description.string' => 'Deskripsi Role tidak diperbolehkan mengandung angka.',
             'description.max' => 'Deskripsi Role melebihi batas maksimum panjang karakter.',
         ];
+    }
+
+    public function failedValidation(Validator $validator)
+    {
+        $reponse = [
+            'status' => Response::HTTP_BAD_REQUEST,
+            'message' => $validator->errors()
+        ];
+
+        throw new HttpResponseException(response()->json($reponse, Response::HTTP_BAD_REQUEST));
     }
 }

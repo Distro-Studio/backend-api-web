@@ -33,13 +33,15 @@ class UserResource extends JsonResource
             'data_completion_step' => $this->data_completion_step,
             'roles' => $this->roles,
             'created_at' => $this->created_at,
-            'updated_at' => $this->updated_at
+            'updated_at' => $this->updated_at,
         ];
 
-        // TODO: For debug token in local
-        if (app()->environment() === 'local' && session()->has('debug_token')) {
-            $data['debug_token'] = session()->get('debug_token');
-        }
+        // if (app()->environment() === 'local' && session()->has('debug_token')) {
+        //     $data['debug_token'] = session()->get('debug_token');
+        // }
+        // if (session()->has('token_login')) {
+        //     $data['token_login'] = session()->get('token_login');
+        // }
 
         return [
             'status' => $this->status,

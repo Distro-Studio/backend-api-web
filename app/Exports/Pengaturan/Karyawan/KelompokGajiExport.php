@@ -3,13 +3,14 @@
 namespace App\Exports\Pengaturan\Karyawan;
 
 use App\Models\KelompokGaji;
+use Maatwebsite\Excel\Concerns\Exportable;
+use Maatwebsite\Excel\Concerns\WithMapping;
+use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\FromCollection;
 
-class KelompokGajiExport implements FromCollection
+class KelompokGajiExport implements FromCollection, WithHeadings, WithMapping
 {
-    /**
-    * @return \Illuminate\Support\Collection
-    */
+    use Exportable;
     public function collection()
     {
         return KelompokGaji::all();
@@ -18,18 +19,20 @@ class KelompokGajiExport implements FromCollection
     public function headings(): array
     {
         return [
-            'ID',
-            'Kode Gaji',
-            'Besaran Gaji',
+            'nama_kelompok',
+            'besaran_gaji',
+            'created_at',
+            'updated_at',
         ];
     }
 
-    public function map($kelompok_gajis): array
+    public function map($kelompok_gaji): array
     {
         return [
-            $kelompok_gajis->id,
-            $kelompok_gajis->nama_kelompok,
-            $kelompok_gajis->besaran_gaji,
+            $kelompok_gaji->nama_kelompok,
+            $kelompok_gaji->besaran_gaji,
+            $kelompok_gaji->created_at,
+            $kelompok_gaji->updated_at,
         ];
     }
 }

@@ -22,6 +22,10 @@ class TER21Controller extends Controller
     /* ============================= For Dropdown ============================= */
     public function getAllTer()
     {
+        if (!Gate::allows('view.ter21')) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
+
         $dataTer = Ter::with(['kategori_ters', 'ptkps'])->get();
         return response()->json([
             'status' => Response::HTTP_OK,
@@ -130,21 +134,18 @@ class TER21Controller extends Controller
         return Excel::download(new TER21Export, 'ter-pph21.xlsx');
     }
 
-    // public function importTER(Request $request)
-    // {
-    //     if (!Gate::allows('import.ter21')) {
-    //         return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
-    //     }
+    public function importTER(Request $request)
+    {
+        if (!Gate::allows('import.ter21')) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
 
-    //     $import = Excel::import(new TER21Import, $request->file('ter_pph_file'));
+        try {
+            Excel::import(new TER21Import, $request->file('ter_file'));
+        } catch (\Exception $e) {
+            return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
+        }
 
-    //     if ($import->failures()->count() > 0) {
-    //         // Handle import failures with validation errors (consider logging specific errors)
-    //         return response()->json($import->failures(), Response::HTTP_UNPROCESSABLE_ENTITY);
-    //     }
-
-    //     // More informative success message
-    //     $message = 'Data Ter PPH21 berhasil di import kedalam table.';
-    //     return response()->json(new WithoutDataResource(Response::HTTP_OK, $message), Response::HTTP_OK);
-    // }
+        return response()->json(new WithoutDataResource(Response::HTTP_OK, 'Data Ter PPH21 berhasil di import kedalam table.'), Response::HTTP_OK);
+    }
 }

@@ -3,13 +3,15 @@
 namespace App\Exports\Pengaturan\Akun;
 
 use Spatie\Permission\Models\Role;
+use Maatwebsite\Excel\Concerns\Exportable;
 use Maatwebsite\Excel\Concerns\FromCollection;
+use Maatwebsite\Excel\Concerns\WithHeadings;
+use Maatwebsite\Excel\Concerns\WithMapping;
 
-class RolesExport implements FromCollection
+class RolesExport implements FromCollection, WithHeadings, WithMapping
 {
-    /**
-    * @return \Illuminate\Support\Collection
-    */
+    use Exportable;
+
     public function collection()
     {
         return Role::all();
@@ -18,18 +20,20 @@ class RolesExport implements FromCollection
     public function headings(): array
     {
         return [
-            'ID',
-            'Nama Role',
-            'Deskripsi',
+            'name',
+            'description',
+            'created_at',
+            'updated_at',
         ];
     }
 
     public function map($roles): array
     {
         return [
-            $roles->id,
             $roles->name,
             $roles->description,
+            $roles->created_at,
+            $roles->updated_at,
         ];
     }
 }

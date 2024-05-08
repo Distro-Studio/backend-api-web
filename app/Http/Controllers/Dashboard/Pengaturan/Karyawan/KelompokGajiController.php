@@ -21,6 +21,10 @@ class KelompokGajiController extends Controller
     /* ============================= For Dropdown ============================= */
     public function getAllKelompokGaji()
     {
+        if (!Gate::allows('view.kelompokgaji')) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
+
         $kelompk_gaji = KelompokGaji::all();
         return response()->json([
             'status' => Response::HTTP_OK,
@@ -38,19 +42,31 @@ class KelompokGajiController extends Controller
 
         $kelompok_gaji = KelompokGaji::query();
 
-        // Filter data Jabatan berdasarkan parameter 'kode-gaji'
-        if ($request->has('kode-gaji')) {
+        // Filter
+        if ($request->has('nama_kelompok')) {
             $kelompok_gaji = $kelompok_gaji->where('nama_kelompok', $request->nama_kelompok);
         }
 
-        // Terapkan pencarian jika parameter 'search' ada
+        if ($request->has('range_min')) {
+            $kelompok_gaji = $kelompok_gaji->where('besaran_gaji', '>=', $request->range_min);
+        }
+
+        if ($request->has('range_max')) {
+            $kelompok_gaji = $kelompok_gaji->where('besaran_gaji', '<=', $request->range_max);
+        }
+
+        if ($request->has('range_min') && $request->has('range_max')) {
+            $kelompok_gaji = $kelompok_gaji->whereBetween('besaran_gaji', [$request->range_min, $request->range_max]);
+        }
+
+        // Search
         if ($request->has('search')) {
             $kelompok_gaji = $kelompok_gaji->where('nama_kelompok', 'like', '%' . $request->search . '%');
         }
 
-        // Urutkan data Jabatan
+        // Sort
         if ($request->has('sort')) {
-            $sortFields = explode(',', $request->sort); // Pecah parameter 'sort' menjadi array
+            $sortFields = explode(',', $request->sort);
             $sortOrder = $request->get('order', 'asc');
 
             foreach ($sortFields as $sortField) {
@@ -130,21 +146,18 @@ class KelompokGajiController extends Controller
         return Excel::download(new KelompokGajiExport, 'kelompok-gajis.xlsx');
     }
 
-    // public function importJabatan(Request $request)
-    // {
-    // if (!Gate::allows('import.kelompokgaji')) {
-    //     return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
-    // }
+    public function importKelompokGaji(Request $request)
+    {
+        if (!Gate::allows('import.kelompokgaji')) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
 
-    //     $import = Excel::import(new KelompokGajiImport, $request->file('kelompok_gaji_file'));
+        try {
+            Excel::import(new KelompokGajiImport, $request->file('kelompok_gaji_file'));
+        } catch (\Exception $e) {
+            return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
+        }
 
-    //     if ($import->failures()->count() > 0) {
-    //         // Handle import failures with validation errors (consider logging specific errors)
-    //         return response()->json($import->failures(), Response::HTTP_UNPROCESSABLE_ENTITY);
-    //     }
-
-    //     // More informative success message
-    //     $message = 'Data Jabatan berhasil di import ' . $import->count() . ' record(s) kedalam table.';
-    //     return response()->json(new WithoutDataResource(Response::HTTP_OK, $message), Response::HTTP_OK);
-    // }
+        return response()->json(new WithoutDataResource(Response::HTTP_OK, 'Data Kelompok Gaji berhasil di import kedalam table.'), Response::HTTP_OK);
+    }
 }

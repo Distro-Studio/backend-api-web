@@ -3,13 +3,14 @@
 namespace App\Exports\Pengaturan\Karyawan;
 
 use App\Models\Kompetensi;
+use Maatwebsite\Excel\Concerns\Exportable;
+use Maatwebsite\Excel\Concerns\WithMapping;
+use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\FromCollection;
 
-class KompetensiExport implements FromCollection
+class KompetensiExport implements FromCollection, WithHeadings, WithMapping
 {
-    /**
-    * @return \Illuminate\Support\Collection
-    */
+    use Exportable;
     public function collection()
     {
         return Kompetensi::all();
@@ -18,20 +19,22 @@ class KompetensiExport implements FromCollection
     public function headings(): array
     {
         return [
-            'Kode Kompetensi',
-            'Nama Kompetensi',
-            'Jenis Kompetensi',
-            'Tunjangan',
+            'nama_kompetensi',
+            'jenis_kompetensi',
+            'total_tunjangan',
+            'created_at',
+            'updated_at',
         ];
     }
 
-    public function map($kompetensis): array
+    public function map($kompetensi): array
     {
         return [
-            $kompetensis->id,
-            $kompetensis->nama_kompetensi,
-            $kompetensis->jenis_kompetensi,
-            $kompetensis->total_tunjangan,
+            $kompetensi->nama_kompetensi,
+            $kompetensi->jenis_kompetensi,
+            $kompetensi->total_tunjangan,
+            $kompetensi->created_at,
+            $kompetensi->updated_at,
         ];
     }
 }

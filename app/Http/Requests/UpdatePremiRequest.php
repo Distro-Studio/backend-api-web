@@ -2,7 +2,10 @@
 
 namespace App\Http\Requests;
 
+use Illuminate\Http\Response;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Contracts\Validation\Validator;
+use Illuminate\Http\Exceptions\HttpResponseException;
 
 class UpdatePremiRequest extends FormRequest
 {
@@ -38,5 +41,15 @@ class UpdatePremiRequest extends FormRequest
             'besaran_premi.required' => 'Jumlah Premi tidak diperbolehkan kosong.',
             'besaran_premi.numeric' => 'Jumlah Premi tidak diperbolehkan mengandung huruf.',
         ];
+    }
+
+    public function failedValidation(Validator $validator)
+    {
+        $reponse = [
+            'status' => Response::HTTP_BAD_REQUEST,
+            'message' => $validator->errors()
+        ];
+
+        throw new HttpResponseException(response()->json($reponse, Response::HTTP_BAD_REQUEST));
     }
 }

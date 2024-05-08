@@ -3,13 +3,14 @@
 namespace App\Exports\Pengaturan\Karyawan;
 
 use App\Models\UnitKerja;
+use Maatwebsite\Excel\Concerns\Exportable;
+use Maatwebsite\Excel\Concerns\WithMapping;
+use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\FromCollection;
 
-class UnitKerjaExport implements FromCollection
+class UnitKerjaExport implements FromCollection, WithHeadings, WithMapping
 {
-    /**
-    * @return \Illuminate\Support\Collection
-    */
+    use Exportable;
     public function collection()
     {
         return UnitKerja::all();
@@ -18,20 +19,20 @@ class UnitKerjaExport implements FromCollection
     public function headings(): array
     {
         return [
-            'ID',
-            'Nama Unit',
-            'Jenis Karyawan',
+            'nama_unit',
+            'jenis_karyawan',
+            'created_at',
+            'updated_at',
         ];
     }
 
-    public function map($unit_kerjas): array
+    public function map($unit_kerja): array
     {
         return [
-            $unit_kerjas->id,
-            $unit_kerjas->nama_unit,
-
-            // TODO: Buat boolean data
-            // $unit_kerjas->jenis_karyawan,
+            $unit_kerja->nama_unit,
+            $unit_kerja->jenis_karyawan ? 'Shift' : 'Non-Shift',
+            $unit_kerja->created_at,
+            $unit_kerja->updated_at,
         ];
     }
 }

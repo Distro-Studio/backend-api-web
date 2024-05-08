@@ -21,6 +21,10 @@ class PremiController extends Controller
     /* ============================= For Dropdown ============================= */
     public function getAllPremi()
     {
+        if (!Gate::allows('view.premi')) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
+
         $dataPremi = Premi::all();
         return response()->json([
             'status' => Response::HTTP_OK,
@@ -130,21 +134,18 @@ class PremiController extends Controller
         return Excel::download(new PremiExport, 'premis.xlsx');
     }
 
-    // public function importPremi(Request $request)
-    // {
-    //     if (!Gate::allows('import.premi')) {
-    //         return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
-    //     }
+    public function importPremi(Request $request)
+    {
+        if (!Gate::allows('import.premi')) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
 
-    //     $import = Excel::import(new PremiImport, $request->file('premi_file'));
+        try {
+            Excel::import(new PremiImport, $request->file('premi_file'));
+        } catch (\Exception $e) {
+            return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
+        }
 
-    //     if ($import->failures()->count() > 0) {
-    //         // Handle import failures with validation errors (consider logging specific errors)
-    //         return response()->json($import->failures(), Response::HTTP_UNPROCESSABLE_ENTITY);
-    //     }
-
-    //     // More informative success message
-    //     $message = 'Data Premi berhasil di import ' . $import->count() . ' record(s) kedalam table.';
-    //     return response()->json(new WithoutDataResource(Response::HTTP_OK, $message), Response::HTTP_OK);
-    // }
+        return response()->json(new WithoutDataResource(Response::HTTP_OK, 'Data Premi berhasil di import kedalam table.'), Response::HTTP_OK);
+    }
 }

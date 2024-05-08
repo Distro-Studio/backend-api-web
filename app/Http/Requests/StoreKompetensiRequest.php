@@ -2,7 +2,10 @@
 
 namespace App\Http\Requests;
 
+use Illuminate\Http\Response;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Contracts\Validation\Validator;
+use Illuminate\Http\Exceptions\HttpResponseException;
 
 class StoreKompetensiRequest extends FormRequest
 {
@@ -41,5 +44,15 @@ class StoreKompetensiRequest extends FormRequest
             'total_tunjangan.required' => 'Jumlah Tunjangan tidak diperbolehkan kosong.',
             'total_tunjangan.numeric' => 'Jumlah Tunjangan tidak diperbolehkan mengandung huruf.',
         ];
+    }
+
+    public function failedValidation(Validator $validator)
+    {
+        $reponse = [
+            'status' => Response::HTTP_BAD_REQUEST,
+            'message' => $validator->errors()
+        ];
+
+        throw new HttpResponseException(response()->json($reponse, Response::HTTP_BAD_REQUEST));
     }
 }
