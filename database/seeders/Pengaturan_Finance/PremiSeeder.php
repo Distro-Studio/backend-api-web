@@ -12,11 +12,6 @@ class PremiSeeder extends Seeder
     public function run(): void
     {
         for ($i = 0; $i < 20; $i++) {
-            $jenisPremi = [
-                "Nominal",
-                "Presentase",
-            ];
-
             $randomPremi = [
                 "Asuransi Jiwa Term Life (10 tahun)",
                 "Asuransi Jiwa dengan Manfaat Unit Link",
@@ -32,16 +27,15 @@ class PremiSeeder extends Seeder
                 "Asuransi Gadget (smartphone)",
             ];
 
-            $JenisPremi = rand(0, count($jenisPremi) - 1);
-            $randomJenisPremi = $jenisPremi[$JenisPremi];
+            $JenisPremi = rand(0, 1);
 
             $randomIndex = rand(0, count($randomPremi) - 1);
             $randomCharacter = $randomPremi[$randomIndex];
 
             $premi = [
                 'nama_premi' => $randomCharacter,
-                'jenis_premi' => $randomJenisPremi,
-                'besaran_premi' => ($randomJenisPremi === 'Presentase') ? rand(0, 100) : rand(500000, 5000000),
+                'jenis_premi' => $JenisPremi,
+                'besaran_premi' => ($JenisPremi === 0) ? rand(0, 100) : rand(500000, 5000000),
                 'created_at' => Carbon::now()->subDays(rand(0, 365)),
                 'updated_at' => Carbon::now(),
             ];

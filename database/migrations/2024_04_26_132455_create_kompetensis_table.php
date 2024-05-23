@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('kompetensis', function (Blueprint $table) {
             $table->id();
             $table->string('nama_kompetensi');
-            $table->string('jenis_kompetensi');
+            $table->boolean('jenis_kompetensi');
             $table->integer('total_tunjangan')->nullable();
             $table->timestamps();
         });

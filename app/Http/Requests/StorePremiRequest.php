@@ -34,13 +34,13 @@ class StorePremiRequest extends FormRequest
     public function messages()
     {
         return [
-            'nama_premi.required' => 'Nama Premi tidak diperbolehkan kosong.',
-            'nama_premi.string' => 'Nama Premi tidak diperbolehkan mengandung angka.',
-            'nama_premi.max' => 'Nama Premi melebihi batas maksimum panjang karakter.',
-            'nama_premi.unique' => 'Nama Premi tersebut sudah pernah dibuat.',
+            'nama_premi.required' => 'Nama premi tidak diperbolehkan kosong.',
+            'nama_premi.string' => 'Nama premi tidak diperbolehkan mengandung angka.',
+            'nama_premi.max' => 'Nama premi melebihi batas maksimum panjang karakter.',
+            'nama_premi.unique' => 'Nama premi tersebut sudah pernah dibuat.',
             'jenis_premi.required' => 'Silahkan pilih jenis premi terlebih dahulu.',
-            'besaran_premi.required' => 'Jumlah Premi tidak diperbolehkan kosong.',
-            'besaran_premi.numeric' => 'Jumlah Premi tidak diperbolehkan mengandung huruf.',
+            'besaran_premi.required' => 'Jumlah premi tidak diperbolehkan kosong.',
+            'besaran_premi.numeric' => 'Jumlah premi tidak diperbolehkan mengandung huruf.',
         ];
     }
 

@@ -11,8 +11,17 @@ use Maatwebsite\Excel\Concerns\FromCollection;
 class JabatanExport implements FromCollection, WithHeadings, WithMapping
 {
     use Exportable;
+    protected $ids;
+
+    public function __construct(array $ids = [])
+    {
+        $this->ids = $ids;
+    }
     public function collection()
     {
+        if (!empty($this->ids)) {
+            return Jabatan::whereIn('id', $this->ids)->get();
+        }
         return Jabatan::all();
     }
 

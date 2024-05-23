@@ -11,8 +11,17 @@ use Maatwebsite\Excel\Concerns\FromCollection;
 class UnitKerjaExport implements FromCollection, WithHeadings, WithMapping
 {
     use Exportable;
+    protected $ids;
+
+    public function __construct(array $ids = [])
+    {
+        $this->ids = $ids;
+    }
     public function collection()
     {
+        if (!empty($this->ids)) {
+            return UnitKerja::whereIn('id', $this->ids)->get();
+        }
         return UnitKerja::all();
     }
 

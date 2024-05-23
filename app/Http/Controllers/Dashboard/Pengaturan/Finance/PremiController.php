@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Gate;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Validator;
 use App\Exports\Pengaturan\Finance\PremiExport;
+use App\Http\Requests\Excel_Import\ImportPremiRequest;
 use App\Http\Requests\StorePremiRequest;
 use App\Http\Requests\UpdatePremiRequest;
 use App\Http\Resources\Dashboard\Pengaturan_Finance\PremiResource;
@@ -21,14 +22,14 @@ class PremiController extends Controller
     /* ============================= For Dropdown ============================= */
     public function getAllPremi()
     {
-        if (!Gate::allows('view.premi')) {
+        if (!Gate::allows('view premi')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
         $dataPremi = Premi::all();
         return response()->json([
             'status' => Response::HTTP_OK,
-            'message' => 'Retrieving all Premi for dropdown',
+            'message' => 'Retrieving all premi for dropdown',
             'data' => $dataPremi
         ], Response::HTTP_OK);
     }
@@ -36,57 +37,46 @@ class PremiController extends Controller
 
     public function index(Request $request)
     {
-        if (!Gate::allows('view.premi')) {
+        if (!Gate::allows('view premi')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
         $premi = Premi::query();
 
-        // Filter data Premi berdasarkan parameter 'jenis_premi'
+        // Filter
         if ($request->has('jenis_premi')) {
             $premi = $premi->where('jenis_premi', $request->jenis_premi);
         }
 
-        // Terapkan pencarian jika parameter 'search' ada
+        // Search
         if ($request->has('search')) {
             $premi = $premi->where('nama_premi', 'like', '%' . $request->search . '%');
         }
 
-        // Urutkan data Premi
-        if ($request->has('sort')) {
-            $sortFields = explode(',', $request->sort); // Pecah parameter 'sort' menjadi array
-            $sortOrder = $request->get('order', 'asc');
-
-            foreach ($sortFields as $sortField) {
-                $premi = $premi->orderBy($sortField, $sortOrder);
-            }
-        }
-
         $dataPremi = $premi->paginate(10);
-
         if ($dataPremi->isEmpty()) {
-            return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data Premi tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+            return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data premi tidak ditemukan.'), Response::HTTP_NOT_FOUND);
         }
 
-        return response()->json(new PremiResource(Response::HTTP_OK, 'Data Premi berhasil ditampilkan.', $dataPremi), Response::HTTP_OK);
+        return response()->json(new PremiResource(Response::HTTP_OK, 'Data premi berhasil ditampilkan.', $dataPremi), Response::HTTP_OK);
     }
 
     public function store(StorePremiRequest $request)
     {
-        if (!Gate::allows('create.premi')) {
+        if (!Gate::allows('create premi')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
         $data = $request->validated();
 
         $premi = Premi::create($data);
-        $successMessage = "Data Premi '{$premi->nama_premi}' berhasil dibuat.";
+        $successMessage = "Data premi '{$premi->nama_premi}' berhasil dibuat.";
         return response()->json(new PremiResource(Response::HTTP_OK, $successMessage, $premi), Response::HTTP_OK);
     }
 
     public function update(Premi $premi, UpdatePremiRequest $request)
     {
-        if (!Gate::allows('edit.premi', $premi)) {
+        if (!Gate::allows('edit premi', $premi)) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
@@ -94,13 +84,13 @@ class PremiController extends Controller
 
         $premi->update($data);
         $updatedPremi = $premi->fresh();
-        $successMessage = "Data Premi '{$updatedPremi->nama_premi}' berhasil diubah.";
+        $successMessage = "Data premi '{$updatedPremi->nama_premi}' berhasil diubah.";
         return response()->json(new PremiResource(Response::HTTP_OK, $successMessage, $premi), Response::HTTP_OK);
     }
 
     public function bulkDelete(Request $request)
     {
-        if (!Gate::allows('delete.premi')) {
+        if (!Gate::allows('delete premi')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
@@ -119,33 +109,43 @@ class PremiController extends Controller
         $deletedCount = Premi::whereIn('id', $ids)->delete();
         // $message = sprintf('Deleted %d Jabatan%s', $deletedCount, $deletedCount > 1 ? 's' : '');
 
-        $message = 'Data Premi berhasil dihapus.';
+        $message = 'Data premi berhasil dihapus.';
 
         return response()->json(new WithoutDataResource(Response::HTTP_OK, $message), Response::HTTP_OK);
     }
 
-    public function exportPremi()
+    public function exportPremi(Request $request)
     {
-        if (!Gate::allows('export.premi')) {
-            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
-        }
-
-        $premis = Premi::all();
-        return Excel::download(new PremiExport, 'premis.xlsx');
-    }
-
-    public function importPremi(Request $request)
-    {
-        if (!Gate::allows('import.premi')) {
+        if (!Gate::allows('export premi')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
         try {
-            Excel::import(new PremiImport, $request->file('premi_file'));
+            $ids = $request->input('ids', []);
+            return Excel::download(new PremiExport($ids), 'premis.xlsx');
+        } catch (\Exception $e) {
+            return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya terjadi error. Message: ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
+        } catch (\Error $e) {
+            return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya terjadi error. Message: ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
+        }
+
+        return response()->json(new WithoutDataResource(Response::HTTP_OK, 'Data premi berhasil di download.'), Response::HTTP_OK);
+    }
+
+    public function importPremi(ImportPremiRequest $request)
+    {
+        if (!Gate::allows('import premi')) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
+
+        $file = $request->validated();
+
+        try {
+            Excel::import(new PremiImport, $file['premi_file']);
         } catch (\Exception $e) {
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
         }
 
-        return response()->json(new WithoutDataResource(Response::HTTP_OK, 'Data Premi berhasil di import kedalam table.'), Response::HTTP_OK);
+        return response()->json(new WithoutDataResource(Response::HTTP_OK, 'Data premi berhasil di import kedalam table.'), Response::HTTP_OK);
     }
 }

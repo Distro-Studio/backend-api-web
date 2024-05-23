@@ -16,17 +16,17 @@ class TransferKaryawan extends Model
      *
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function user(): BelongsTo
+    public function users(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id', 'id');
     }
-
+    
     /**
      * Get the unit_kerja_from that owns the TransferKaryawan
      *
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function unit_kerja_from(): BelongsTo
+    public function unit_kerja_froms(): BelongsTo
     {
         return $this->belongsTo(UnitKerja::class, 'unit_kerja_from', 'id');
     }
@@ -36,7 +36,7 @@ class TransferKaryawan extends Model
      *
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function unit_kerja_to(): BelongsTo
+    public function unit_kerja_tos(): BelongsTo
     {
         return $this->belongsTo(UnitKerja::class, 'unit_kerja_to', 'id');
     }
@@ -46,7 +46,7 @@ class TransferKaryawan extends Model
      *
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function jabatan_from(): BelongsTo
+    public function jabatan_froms(): BelongsTo
     {
         return $this->belongsTo(Jabatan::class, 'jabatan_from', 'id');
     }
@@ -56,7 +56,7 @@ class TransferKaryawan extends Model
      *
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function jabatan_to(): BelongsTo
+    public function jabatan_tos(): BelongsTo
     {
         return $this->belongsTo(Jabatan::class, 'jabatan_to', 'id');
     }

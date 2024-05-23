@@ -13,6 +13,7 @@ use App\Http\Requests\UpdateTERRequest;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 use App\Exports\Pengaturan\Finance\TER21Export;
+use App\Http\Requests\Excel_Import\ImportTER21Request;
 use App\Imports\Pengaturan\Finance\TER21Import;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
 use App\Http\Resources\Dashboard\Pengaturan_Finance\TER21Resource;
@@ -22,7 +23,7 @@ class TER21Controller extends Controller
     /* ============================= For Dropdown ============================= */
     public function getAllTer()
     {
-        if (!Gate::allows('view.ter21')) {
+        if (!Gate::allows('view ter21')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
@@ -37,33 +38,42 @@ class TER21Controller extends Controller
 
     public function index(Request $request)
     {
-        if (!Gate::allows('view.ter21')) {
+        if (!Gate::allows('view ter21')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
         $ter = Ter::query();
 
-        // Filter data Ter berdasarkan parameter 'jenis_premi'
-        if ($request->has('jenis_premi')) {
-            $ter = $ter->where('jenis_premi', $request->jenis_premi);
+        // Filter
+        if ($request->has('nama_kategori_ter')) {
+            $namaKategoriTer = $request->nama_kategori_ter;
+
+            $ter = $ter->with('kategori_ters:id,nama_kategori_ter')
+                ->whereHas('kategori_ters', function ($query) use ($namaKategoriTer) {
+                    $query->where('nama_kategori_ter', '=', $namaKategoriTer);
+                });
         }
 
-        // Terapkan pencarian jika parameter 'search' ada
-        if ($request->has('search')) {
-            $ter = $ter->where('nama_premi', 'like', '%' . $request->search . '%');
+        if ($request->has('kode_ptkp')) {
+            $namaKategoriTer = $request->kode_ptkp;
+
+            $ter = $ter->with('ptkps:id,kode_ptkp')
+                ->whereHas('ptkps', function ($query) use ($namaKategoriTer) {
+                    $query->where('kode_ptkp', '=', $namaKategoriTer);
+                });
         }
 
-        // Urutkan data Premi
-        if ($request->has('sort')) {
-            $sortFields = explode(',', $request->sort); // Pecah parameter 'sort' menjadi array
-            $sortOrder = $request->get('order', 'asc');
+        // Search
+        if ($request->has('nama_kategori_ter')) {
+            $namaKategoriTer = $request->nama_kategori_ter;
 
-            foreach ($sortFields as $sortField) {
-                $ter = $ter->orderBy($sortField, $sortOrder);
-            }
+            $ter = $ter->with('kategori_ters:id,nama_kategori_ter')
+                ->whereHas('kategori_ters', function ($query) use ($namaKategoriTer) {
+                    $query->where('nama_kategori_ter', 'like', "%{$namaKategoriTer}%");
+                });
         }
 
-        $dataTer = $ter->with(['kategori_ters', 'ptkps'])->paginate(10);
+        $dataTer = $ter->paginate(10);
         if ($dataTer->isEmpty()) {
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data Ter PPH21 tidak ditemukan.'), Response::HTTP_NOT_FOUND);
         }
@@ -73,7 +83,7 @@ class TER21Controller extends Controller
 
     public function store(StoreTERRequest $request)
     {
-        if (!Gate::allows('create.ter21')) {
+        if (!Gate::allows('create ter21')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
@@ -86,7 +96,7 @@ class TER21Controller extends Controller
 
     public function update(Ter $ter_pph_21, UpdateTERRequest $request)
     {
-        if (!Gate::allows('edit.ter21', $ter_pph_21)) {
+        if (!Gate::allows('edit ter21', $ter_pph_21)) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
@@ -100,7 +110,7 @@ class TER21Controller extends Controller
 
     public function bulkDelete(Request $request)
     {
-        if (!Gate::allows('delete.ter21')) {
+        if (!Gate::allows('delete ter21')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
@@ -124,24 +134,34 @@ class TER21Controller extends Controller
         return response()->json(new WithoutDataResource(Response::HTTP_OK, $message), Response::HTTP_OK);
     }
 
-    public function exportTER()
+    public function exportTER(Request $request)
     {
-        if (!Gate::allows('export.ter21')) {
-            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
-        }
-
-        $ter = Ter::all();
-        return Excel::download(new TER21Export, 'ter-pph21.xlsx');
-    }
-
-    public function importTER(Request $request)
-    {
-        if (!Gate::allows('import.ter21')) {
+        if (!Gate::allows('export ter21')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
         try {
-            Excel::import(new TER21Import, $request->file('ter_file'));
+            $ids = $request->input('ids', []);
+            return Excel::download(new TER21Export($ids), 'ter-pph-21.xlsx');
+        } catch (\Exception $e) {
+            return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya terjadi error. Message: ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
+        } catch (\Error $e) {
+            return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya terjadi error. Message: ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
+        }
+
+        return response()->json(new WithoutDataResource(Response::HTTP_OK, 'Data TER berhasil di download.'), Response::HTTP_OK);
+    }
+
+    public function importTER(ImportTER21Request $request)
+    {
+        if (!Gate::allows('import ter21')) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
+
+        $file = $request->validated();
+
+        try {
+            Excel::import(new TER21Import, $file['ter_pph_file']);
         } catch (\Exception $e) {
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
         }

@@ -12,6 +12,7 @@ use App\Http\Requests\StoreCutiRequest;
 use App\Http\Requests\UpdateCutiRequest;
 use Illuminate\Support\Facades\Validator;
 use App\Exports\Pengaturan\Managemen_Waktu\CutiExport;
+use App\Http\Requests\Excel_Import\ImportCutiRequest;
 use App\Imports\Pengaturan\Managemen_Waktu\CutiImport;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
 use App\Http\Resources\Dashboard\Pengaturan_Managemen_Waktu\CutiResource;
@@ -22,14 +23,14 @@ class CutiController extends Controller
     /* ============================= For Dropdown ============================= */
     public function getAllCuti()
     {
-        if (!Gate::allows('view.cuti')) {
+        if (!Gate::allows('view cuti')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
         $cuti = TipeCuti::get();
         return response()->json([
             'status' => Response::HTTP_OK,
-            'message' => 'Retrieving all Cuti for dropdown',
+            'message' => 'Retrieving all cuti for dropdown',
             'data' => $cuti
         ], Response::HTTP_OK);
     }
@@ -38,7 +39,7 @@ class CutiController extends Controller
     public function index(Request $request)
     {
         // $this->middleware(RoleMiddleware::class, ['roles' => ['Super Admin']]);
-        if (!Gate::allows('view.cuti')) {
+        if (!Gate::allows('view cuti')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
@@ -54,35 +55,25 @@ class CutiController extends Controller
             $cuti = $cuti->where('nama', 'like', '%' . $request->search . '%');
         }
 
-        // Sort
-        if ($request->has('sort')) {
-            $sortFields = explode(',', $request->sort);
-            $sortOrder = $request->get('order', 'asc');
-
-            foreach ($sortFields as $sortField) {
-                $cuti = $cuti->orderBy($sortField, $sortOrder);
-            }
-        }
-
         $dataCuti = $cuti->paginate(10);
 
         if ($dataCuti->isEmpty()) {
-            return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data Cuti tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+            return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data cuti tidak ditemukan.'), Response::HTTP_NOT_FOUND);
         }
 
-        return response()->json(new CutiResource(Response::HTTP_OK, 'Data Cuti berhasil ditampilkan.', $dataCuti), Response::HTTP_OK);
+        return response()->json(new CutiResource(Response::HTTP_OK, 'Data cuti berhasil ditampilkan.', $dataCuti), Response::HTTP_OK);
     }
 
     public function store(StoreCutiRequest $request)
     {
-        if (!Gate::allows('create.cuti')) {
+        if (!Gate::allows('create cuti')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
         $data = $request->validated();
 
         $cuti = TipeCuti::create($data);
-        $successMessage = "Data Cuti berhasil dibuat.";
+        $successMessage = "Data cuti berhasil dibuat.";
         return response()->json(new CutiResource(Response::HTTP_OK, $successMessage, $cuti), Response::HTTP_OK);
     }
 
@@ -96,13 +87,13 @@ class CutiController extends Controller
 
         $cuti->update($data);
         $updatedCuti = $cuti->fresh();
-        $successMessage = "Data Cuti '{$updatedCuti->nama}' berhasil diubah.";
+        $successMessage = "Data cuti '{$updatedCuti->nama}' berhasil diubah.";
         return response()->json(new CutiResource(Response::HTTP_OK, $successMessage, $cuti), Response::HTTP_OK);
     }
 
     public function bulkDelete(Request $request)
     {
-        if (!Gate::allows('delete.cuti')) {
+        if (!Gate::allows('delete cuti')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
@@ -119,34 +110,44 @@ class CutiController extends Controller
         TipeCuti::destroy($ids);
 
         $deletedCount = TipeCuti::whereIn('id', $ids)->delete();
-        // $message = sprintf('Deleted %d Jabatan%s', $deletedCount, $deletedCount > 1 ? 's' : '');
 
-        $message = 'Data Cuti berhasil dihapus.';
+        $message = 'Data cuti berhasil dihapus.';
 
         return response()->json(new WithoutDataResource(Response::HTTP_OK, $message), Response::HTTP_OK);
     }
 
-    public function exportCuti()
+    public function exportCuti(Request $request)
     {
-        if (!Gate::allows('export.cuti')) {
-            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
-        }
-        $cuti = Cuti::all();
-        return Excel::download(new CutiExport, 'cutis.xlsx');
-    }
-
-    public function importCuti(Request $request)
-    {
-        if (!Gate::allows('import.cuti')) {
+        if (!Gate::allows('export cuti')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
         try {
-            Excel::import(new CutiImport, $request->file('cuti_file'));
+            $ids = $request->input('ids', []);
+            return Excel::download(new CutiExport($ids), 'cutis.xlsx');
+        } catch (\Exception $e) {
+            return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya terjadi error. Message: ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
+        } catch (\Error $e) {
+            return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya terjadi error. Message: ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
+        }
+
+        return response()->json(new WithoutDataResource(Response::HTTP_OK, 'Data cuti berhasil di download.'), Response::HTTP_OK);
+    }
+
+    public function importCuti(ImportCutiRequest $request)
+    {
+        if (!Gate::allows('import cuti')) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
+
+        $file = $request->validated();
+
+        try {
+            Excel::import(new CutiImport, $file['cuti_file']);
         } catch (\Exception $e) {
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
         }
 
-        return response()->json(new WithoutDataResource(Response::HTTP_OK, 'Data Cuti berhasil di import kedalam table.'), Response::HTTP_OK);
+        return response()->json(new WithoutDataResource(Response::HTTP_OK, 'Data cuti berhasil di import kedalam table.'), Response::HTTP_OK);
     }
 }

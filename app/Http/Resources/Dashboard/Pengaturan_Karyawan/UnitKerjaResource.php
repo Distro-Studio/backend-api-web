@@ -58,7 +58,7 @@ class UnitKerjaResource extends JsonResource
             return [
                 'id' => 'UK00' . $unit_kerja->id,
                 'nama_unit' => $unit_kerja->nama_unit,
-                'jenis_karyawan' => $unit_kerja->jenis_karyawan ? 'Shift' : 'Non-Shift',
+                'jenis_karyawan' => $unit_kerja->jenis_karyawan,
                 'created_at' => $unit_kerja->created_at,
                 'updated_at' => $unit_kerja->updated_at
             ];

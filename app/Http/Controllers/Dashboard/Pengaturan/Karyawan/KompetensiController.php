@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Validator;
 use App\Http\Requests\StoreKompetensiRequest;
 use App\Http\Requests\UpdateKompetensiRequest;
 use App\Exports\Pengaturan\Karyawan\KompetensiExport;
+use App\Http\Requests\Excel_Import\ImportKompetensiRequest;
 use App\Imports\Pengaturan\Karyawan\KompetensiImport;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
 use App\Http\Resources\Dashboard\Pengaturan_Karyawan\KompetensiResource;
@@ -21,14 +22,14 @@ class KompetensiController extends Controller
     /* ============================= For Dropdown ============================= */
     public function getAllKompetensi()
     {
-        if (!Gate::allows('view.kompetensi')) {
+        if (!Gate::allows('view kompetensi')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
         $kompetensi = Kompetensi::get();
         return response()->json([
             'status' => Response::HTTP_OK,
-            'message' => 'Retrieving all Kompetensi for dropdown',
+            'message' => 'Retrieving all kompetensi for dropdown',
             'data' => $kompetensi
         ], Response::HTTP_OK);
     }
@@ -36,57 +37,47 @@ class KompetensiController extends Controller
 
     public function index(Request $request)
     {
-        if (!Gate::allows('view.kompetensi')) {
+        if (!Gate::allows('view kompetensi')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
         $kompetensi = Kompetensi::query();
 
-        // Filter data Jabatan berdasarkan parameter 'kode-gaji'
+        // Filter
         if ($request->has('jenis_kompetensi')) {
             $kompetensi = $kompetensi->where('jenis_kompetensi', $request->jenis_kompetensi);
         }
 
-        // Terapkan pencarian jika parameter 'search' ada
+        // Search
         if ($request->has('search')) {
             $kompetensi = $kompetensi->where('nama_kompetensi', 'like', '%' . $request->search . '%')
                 ->orWhere('jenis_kompetensi', 'like', '%' . $request->search . '%');
         }
 
-        // Urutkan data Jabatan
-        if ($request->has('sort')) {
-            $sortFields = explode(',', $request->sort); // Pecah parameter 'sort' menjadi array
-            $sortOrder = $request->get('order', 'asc');
-
-            foreach ($sortFields as $sortField) {
-                $kompetensi = $kompetensi->orderBy($sortField, $sortOrder);
-            }
-        }
-
         $dataKompetensi = $kompetensi->paginate(10);
 
         if ($dataKompetensi->isEmpty()) {
-            return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data Kompetensi tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+            return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data kompetensi tidak ditemukan.'), Response::HTTP_NOT_FOUND);
         }
 
-        return response()->json(new KompetensiResource(Response::HTTP_OK, 'Data Kompetensi berhasil ditampilkan.', $dataKompetensi), Response::HTTP_OK);
+        return response()->json(new KompetensiResource(Response::HTTP_OK, 'Data kompetensi berhasil ditampilkan.', $dataKompetensi), Response::HTTP_OK);
     }
 
     public function store(StoreKompetensiRequest $request)
     {
-        if (!Gate::allows('create.kompetensi')) {
+        if (!Gate::allows('create kompetensi')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
         $data = $request->validated();
 
         $kompetensi = Kompetensi::create($data);
-        $successMessage = "Data Kompetensi '{$kompetensi->nama_kompetensi}' berhasil dibuat.";
+        $successMessage = "Data kompetensi '{$kompetensi->nama_kompetensi}' berhasil dibuat.";
         return response()->json(new KompetensiResource(Response::HTTP_OK, $successMessage, $kompetensi), Response::HTTP_OK);
     }
 
     public function update(Kompetensi $kompetensi, UpdateKompetensiRequest $request)
     {
-        if (!Gate::allows('edit.kompetensi', $kompetensi)) {
+        if (!Gate::allows('edit kompetensi', $kompetensi)) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
@@ -94,13 +85,13 @@ class KompetensiController extends Controller
 
         $kompetensi->update($data);
         $updatedKompetensi = $kompetensi->fresh();
-        $successMessage = "Data Kompetensi '{$updatedKompetensi->nama_kompetensi}' berhasil diubah.";
+        $successMessage = "Data kompetensi '{$updatedKompetensi->nama_kompetensi}' berhasil diubah.";
         return response()->json(new KompetensiResource(Response::HTTP_OK, $successMessage, $kompetensi), Response::HTTP_OK);
     }
 
     public function bulkDelete(Request $request)
     {
-        if (!Gate::allows('delete.kompetensi')) {
+        if (!Gate::allows('delete kompetensi')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
@@ -116,36 +107,43 @@ class KompetensiController extends Controller
         $ids = $request->input('ids');
         Kompetensi::destroy($ids);
 
-        $deletedCount = Kompetensi::whereIn('id', $ids)->delete();
-        // $message = sprintf('Deleted %d Jabatan%s', $deletedCount, $deletedCount > 1 ? 's' : '');
-
-        $message = 'Kompetensi berhasil dihapus.';
+        $message = 'Data kompetensi berhasil dihapus.';
 
         return response()->json(new WithoutDataResource(Response::HTTP_OK, $message), Response::HTTP_OK);
     }
 
-    public function exportKompetensi()
+    public function exportKompetensi(Request $request)
     {
-        if (!Gate::allows('export.kompetensi')) {
-            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
-        }
-
-        $Kompetensi = Kompetensi::all();
-        return Excel::download(new KompetensiExport, 'kompetensis.xlsx');
-    }
-
-    public function importKompetensi(Request $request)
-    {
-        if (!Gate::allows('import.kompetensi')) {
+        if (!Gate::allows('export kompetensi')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
         try {
-            Excel::import(new KompetensiImport, $request->file('kompetensi_file'));
+            $ids = $request->input('ids', []);
+            return Excel::download(new KompetensiExport($ids), 'kompetensis.xlsx');
+        } catch (\Exception $e) {
+            return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya terjadi error. Message: ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
+        } catch (\Error $e) {
+            return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya terjadi error. Message: ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
+        }
+
+        return response()->json(new WithoutDataResource(Response::HTTP_OK, 'Data kompetensi berhasil di download.'), Response::HTTP_OK);
+    }
+
+    public function importKompetensi(ImportKompetensiRequest $request)
+    {
+        if (!Gate::allows('import kompetensi')) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
+
+        $file = $request->validated();
+
+        try {
+            Excel::import(new KompetensiImport, $file['kompetensi_file']);
         } catch (\Exception $e) {
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
         }
 
-        return response()->json(new WithoutDataResource(Response::HTTP_OK, 'Data Kompetensi berhasil di import kedalam table.'), Response::HTTP_OK);
+        return response()->json(new WithoutDataResource(Response::HTTP_OK, 'Data kompetensi berhasil di import kedalam table.'), Response::HTTP_OK);
     }
 }

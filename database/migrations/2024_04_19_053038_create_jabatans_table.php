@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('nama_jabatan');
             $table->boolean('is_struktural')->default(false);
-            $table->string('tunjangan',20)->default('0');
+            $table->integer('tunjangan');
             $table->timestamps();
         });
     }

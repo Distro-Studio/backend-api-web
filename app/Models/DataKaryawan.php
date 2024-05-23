@@ -18,7 +18,7 @@ class DataKaryawan extends Model
      *
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function user(): BelongsTo
+    public function users(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id', 'id');
     }
@@ -28,7 +28,7 @@ class DataKaryawan extends Model
      *
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function unit_kerja(): BelongsTo
+    public function unit_kerjas(): BelongsTo
     {
         return $this->belongsTo(UnitKerja::class, 'unit_kerja_id', 'id');
     }
@@ -38,7 +38,7 @@ class DataKaryawan extends Model
      *
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function jabatan(): BelongsTo
+    public function jabatans(): BelongsTo
     {
         return $this->belongsTo(Jabatan::class, 'jabatan_id', 'id');
     }
@@ -48,7 +48,7 @@ class DataKaryawan extends Model
      *
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function kompetensi(): BelongsTo
+    public function kompetensis(): BelongsTo
     {
         return $this->belongsTo(Kompetensi::class, 'kompetensi_id', 'id');
     }
@@ -58,7 +58,7 @@ class DataKaryawan extends Model
      *
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function kelompok_gaji(): BelongsTo
+    public function kelompok_gajis(): BelongsTo
     {
         return $this->belongsTo(KelompokGaji::class, 'kelompok_gaji_id', 'id');
     }
@@ -68,7 +68,7 @@ class DataKaryawan extends Model
      *
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function ptkp(): BelongsTo
+    public function ptkps(): BelongsTo
     {
         return $this->belongsTo(Ptkp::class, 'ptkp_id', 'id');
     }
@@ -78,7 +78,7 @@ class DataKaryawan extends Model
      *
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function penggajian(): HasMany
+    public function penggajians(): HasMany
     {
         return $this->hasMany(Penggajian::class, 'data_karyawan_id', 'id');
     }
@@ -86,10 +86,10 @@ class DataKaryawan extends Model
     /**
      * Get the data_keluarga associated with the DataKaryawan
      *
-     * @return \Illuminate\Database\Eloquent\Relations\HasOne
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function data_keluarga(): HasOne
+    public function data_keluargas(): HasMany
     {
-        return $this->hasOne(DataKeluarga::class, 'data_karyawan_id', 'id');
+        return $this->hasMany(DataKeluarga::class, 'data_karyawan_id', 'id');
     }
 }

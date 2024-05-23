@@ -34,11 +34,11 @@ class StoreJabatanRequest extends FormRequest
     public function messages()
     {
         return [
-            'nama_jabatan.required' => 'Nama Jabatan tidak diperbolehkan kosong.',
-            'nama_jabatan.string' => 'Nama Jabatan tidak diperbolehkan mengandung angka.',
-            'nama_jabatan.unique' => 'Nama Jabatan tersebut sudah pernah dibuat.',
-            'nama_jabatan.max' => 'Nama Jabatan melebihi batas maksimum panjang karakter.',
-            'tunjangan.required' => 'Jumlah Tunjangan tidak diperbolehkan kosong.',
+            'nama_jabatan.required' => 'Nama jabatan tidak diperbolehkan kosong.',
+            'nama_jabatan.string' => 'Nama jabatan tidak diperbolehkan mengandung angka.',
+            'nama_jabatan.unique' => 'Nama jabatan tersebut sudah pernah dibuat.',
+            'nama_jabatan.max' => 'Nama jabatan melebihi batas maksimum panjang karakter.',
+            'tunjangan.required' => 'Jumlah tunjangan tidak diperbolehkan kosong.',
             'tunjangan.numeric' => 'Tunjangan hanya diperbolehkan berisi angka.',
         ];
     }

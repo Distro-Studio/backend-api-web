@@ -4,6 +4,8 @@ namespace Database\Seeders;
 
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 
+use Database\Seeders\Karyawan\KaryawanSeeder;
+use Database\Seeders\Karyawan\KeluargaKaryawanSeeder;
 use Illuminate\Database\Seeder;
 use Database\Seeders\Pengaturan_Finance\TERSeeder;
 use Database\Seeders\Pengaturan_Finance\PremiSeeder;
@@ -39,6 +41,10 @@ class DatabaseSeeder extends Seeder
             ShiftSeeder::class,
             HariLiburSeeder::class,
             CutiSeeder::class,
+
+            /* ==== Karyawan ==== */
+            KaryawanSeeder::class,
+            KeluargaKaryawanSeeder::class,
         ]);
     }
 }

@@ -23,12 +23,12 @@ class StoreKelompokGajiRequest extends FormRequest
     public function messages()
     {
         return [
-            'nama_kelompok.required' => 'Kode Kelompok Gaji tidak diperbolehkan kosong.',
-            'nama_kelompok.string' => 'Kode Kelompok Gaji tidak diperbolehkan mengandung angka.',
-            'nama_kelompok.unique' => 'Kode Kelompok Gaji tersebut sudah pernah dibuat.',
-            'nama_kelompok.max' => 'Kode Kelompok Gaji melebihi batas maksimum panjang karakter.',
-            'besaran_gaji.required' => 'Jumlah Gaji tidak diperbolehkan kosong.',
-            'besaran_gaji.numeric' => 'Jumlah Gaji tidak diperbolehkan mengandung huruf.',
+            'nama_kelompok.required' => 'Kode kelompok gaji tidak diperbolehkan kosong.',
+            'nama_kelompok.string' => 'Kode kelompok gaji tidak diperbolehkan mengandung angka.',
+            'nama_kelompok.unique' => 'Kode kelompok gaji tersebut sudah pernah dibuat.',
+            'nama_kelompok.max' => 'Kode kelompok gaji melebihi batas maksimum panjang karakter.',
+            'besaran_gaji.required' => 'Jumlah gaji tidak diperbolehkan kosong.',
+            'besaran_gaji.numeric' => 'Jumlah gaji tidak diperbolehkan mengandung huruf.',
         ];
     }
 

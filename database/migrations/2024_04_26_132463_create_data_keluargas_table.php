@@ -14,10 +14,12 @@ return new class extends Migration
         Schema::create('data_keluargas', function (Blueprint $table) {
             $table->id();
             $table->foreignId('data_karyawan_id')->constrained('data_karyawans');
-            $table->string('nama');
+            $table->string('nama_keluarga');
             $table->string('hubungan');
+            $table->string('pendidikan_terakhir');
+            $table->boolean('status_hidup')->default(false);
             $table->string('pekerjaan')->nullable();
-            $table->string('no_hp')->nullable();
+            $table->integer('no_hp')->nullable();
             $table->string('email')->nullable();
             $table->timestamps();
         });

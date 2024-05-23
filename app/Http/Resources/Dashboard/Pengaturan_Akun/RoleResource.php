@@ -58,10 +58,36 @@ class RoleResource extends JsonResource
             return [
                 'id' => $roles->id,
                 'name' => $roles->name,
-                'description' => $roles->description,
+                'deskripsi' => $roles->deskripsi,
+                'initialValues' => $this->formatPermissions($roles->permissions),
                 'created_at' => $roles->created_at,
                 'updated_at' => $roles->updated_at
             ];
         });
+    }
+
+    protected function formatPermissions($permissions)
+    {
+        if ($permissions->isEmpty()) {
+            return null;
+        }
+
+        $permissionTypes = ['view', 'create', 'edit', 'delete', 'import', 'export', 'reset'];
+
+        $groupedPermissions = $permissions->groupBy('group')->map(function ($group, $groupName) use ($permissionTypes) {
+            $permissionsArray = [];
+            foreach ($permissionTypes as $type) {
+                $hasPermission = $group->contains(function ($item) use ($type) {
+                    return str_contains($item->name, $type);
+                });
+                $permissionsArray[$type] = $hasPermission ? true : null;
+            }
+            return [
+                'name' => $groupName,
+                'permissions' => $permissionsArray
+            ];
+        });
+
+        return $groupedPermissions->values()->toArray();
     }
 }

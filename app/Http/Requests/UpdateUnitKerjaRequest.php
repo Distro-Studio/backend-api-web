@@ -33,12 +33,12 @@ class UpdateUnitKerjaRequest extends FormRequest
     public function messages()
     {
         return [
-            'nama_unit.required' => 'Nama Unit Kerja tidak diperbolehkan kosong.',
-            'nama_unit.max' => 'Nama Unit Kerja melebihi batas maksimum panjang karakter.',
-            'nama_unit.unique' => 'Nama Unit Kerja tersebut sudah pernah dibuat.',
-            'jenis_karyawan.required' => 'Jenis Karyawan tidak diperbolehkan kosong.',
-            'jenis_karyawan.string' => 'Jenis Karyawan tidak diperbolehkan mengandung angka.',
-            'jenis_karyawan.boolean' => 'Jenis Karyawan hanya dapat diisi Shift atau Non-Shift.',
+            'nama_unit.required' => 'Nama unit kerja tidak diperbolehkan kosong.',
+            'nama_unit.max' => 'Nama unit kerja melebihi batas maksimum panjang karakter.',
+            'nama_unit.unique' => 'Nama unit kerja tersebut sudah pernah dibuat.',
+            'jenis_karyawan.required' => 'Jenis karyawan tidak diperbolehkan kosong.',
+            'jenis_karyawan.string' => 'Jenis karyawan tidak diperbolehkan mengandung angka.',
+            'jenis_karyawan.boolean' => 'Jenis karyawan hanya dapat diisi Shift atau Non-Shift.',
         ];
     }
 

@@ -1,5 +1,11 @@
 <?php
 
+use App\Http\Controllers\Dashboard\Karyawan\AkunKaryawanController;
+use App\Http\Controllers\Dashboard\Karyawan\KaryawanController;
+use App\Http\Controllers\Dashboard\Karyawan\KeluargaKaryawanController;
+use App\Http\Controllers\Dashboard\Karyawan\PekerjaKontrakController;
+use App\Http\Controllers\Dashboard\Karyawan\RekamJejakController;
+use App\Http\Controllers\Dashboard\Karyawan\TransferKaryawanController;
 use App\Http\Controllers\Dashboard\Pengaturan\Akun\PermissionsController;
 use App\Http\Controllers\Dashboard\Pengaturan\Akun\RolesController;
 use App\Http\Controllers\Dashboard\Pengaturan\Akun\UserPasswordController;
@@ -14,7 +20,6 @@ use App\Http\Controllers\Dashboard\Pengaturan\ManagemenWaktu\CutiController;
 use App\Http\Controllers\Dashboard\Pengaturan\ManagemenWaktu\HariLiburController;
 use App\Http\Controllers\Dashboard\Pengaturan\ManagemenWaktu\ShiftController;
 use App\Http\Controllers\Publik\Auth\LoginController;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -31,108 +36,197 @@ use Illuminate\Support\Facades\Route;
 Route::post('/login', [LoginController::class, 'login']);
 
 Route::middleware(['auth:sanctum'])->group(function () {
-    Route::group(['prefix' => 'rski/dahsboard'], function () {
+    Route::group(['prefix' => 'rski/dashboard'], function () {
         Route::get('/logout', [LoginController::class, 'logout'])->middleware('web');
+        Route::get('/user-info', [LoginController::class, 'getInfoUserLogin']);
 
-        /* ==================================== User ==================================== */
-        /* ==================================== User ==================================== */
+        Route::group(['prefix' => '/karyawan'], function () {
+            // ! Data Karyawan ===========>
+            Route::get('/all-karyawan', [KaryawanController::class, 'getAllKaryawan']);
+            Route::post('/karyawan-filter', [KaryawanController::class, 'index']);
+            Route::post('/karyawan-search', [KaryawanController::class, 'index']);
+            Route::post('/karyawan-bulk-delete', [KaryawanController::class, 'bulkDelete']);
+            Route::get('/karyawan-export', [KaryawanController::class, 'exportKaryawan']);
+            Route::post('/karyawan-import', [KaryawanController::class, 'importKaryawan']);
+            Route::apiResource('/data-karyawan', KaryawanController::class);
 
+            // ! Akun Karyawan ===========>
+            Route::get('/all-akun-karyawan', [AkunKaryawanController::class, 'getAllAkunKaryawan']);
+            Route::post('/akun-karyawan/filter', [AkunKaryawanController::class, 'index']);
+            Route::post('/akun-karyawan/search', [AkunKaryawanController::class, 'index']);
+            // Route::post('/akun-karyawan/bulk-delete', [AkunKaryawanController::class, 'bulkDelete']);
+            Route::get('/akun-karyawan/export', [AkunKaryawanController::class, 'exportAkunKaryawan']);
+            Route::apiResource('/akun-karyawan', AkunKaryawanController::class);
 
-        /* ==================================== Setting Akun ==================================== */
-        // ! Roles ===========>
-        Route::get('/all-roles', [RolesController::class, 'getAllRoles']);
-        Route::post('/roles/bulk-delete', [RolesController::class, 'bulkDelete']);
-        Route::get('/roles/export', [RolesController::class, 'exportRoles']);
-        Route::post('/roles/import', [RolesController::class, 'importRoles']);
-        Route::apiResource('/roles', RolesController::class);
+            // ! Keluarga Karyawan ===========>
+            Route::get('/all-keluarga-karyawan', [KeluargaKaryawanController::class, 'getAllKeluargaKaryawan']);
+            Route::post('/keluarga-karyawan/filter', [KeluargaKaryawanController::class, 'index']);
+            Route::post('/keluarga-karyawan/search', [KeluargaKaryawanController::class, 'index']);
+            // Route::post('/keluarga-karyawan/bulk-delete', [KeluargaKaryawanController::class, 'bulkDelete']);
+            Route::get('/keluarga-karyawan/export', [KeluargaKaryawanController::class, 'exportKeluargaKaryawan']);
+            Route::apiResource('/keluarga-karyawan', KeluargaKaryawanController::class);
 
-        // ! Roles Permission ===========>
-        Route::get('/all-permissions', [PermissionsController::class, 'getAllPermissions']);
-        Route::put('/permissions/{role}', [PermissionsController::class, 'updatePermissions']);
+            // ! Pekerja Kontrak ===========>
+            Route::get('/all-pekerja-kontrak', [PekerjaKontrakController::class, 'getAllPekerjaKontrak']);
+            Route::post('/pekerja-kontrak/filter', [PekerjaKontrakController::class, 'index']);
+            Route::post('/pekerja-kontrak/search', [PekerjaKontrakController::class, 'index']);
+            Route::get('/pekerja-kontrak/export', [PekerjaKontrakController::class, 'exportPekerjaKontrak']);
+            Route::apiResource('/pekerja-kontrak', PekerjaKontrakController::class);
 
-        // ! Change Password User ===========>
-        Route::post('/users/change-passwords', [UserPasswordController::class, 'updatePassword']);
-        /* ==================================== Setting Akun ==================================== */
+            // ! Rekam Jejak ===========>
+            Route::get('/all-rekam-jejak', [RekamJejakController::class, 'getAllRekamJejak']);
+            Route::post('/rekam-jejak/filter', [RekamJejakController::class, 'index']);
+            Route::post('/rekam-jejak/search', [RekamJejakController::class, 'index']);
+            Route::post('/rekam-jejak/bulk-delete', [RekamJejakController::class, 'bulkDelete']);
+            Route::get('/rekam-jejak/export', [RekamJejakController::class, 'exportRekamJejak']);
+            Route::post('/rekam-jejak/import', [RekamJejakController::class, 'importRekamJejak']);
+            Route::apiResource('/rekam-jejak', RekamJejakController::class);
 
+            // ! Transfer Karyawan ===========>
+            Route::get('/all-transfer-karyawan', [TransferKaryawanController::class, 'getAllTransferKaryawan']);
+            Route::post('/transfer-karyawan/filter', [TransferKaryawanController::class, 'index']);
+            Route::post('/transfer-karyawan/search', [TransferKaryawanController::class, 'index']);
+            Route::get('/transfer-karyawan/export', [TransferKaryawanController::class, 'exportTransferKaryawan']);
+            Route::apiResource('/transfer-karyawan', TransferKaryawanController::class);
+        });
 
-        /* ==================================== Setting Karyawan ==================================== */
-        // ! Jabatan ===========>
-        Route::get('/all-jabatans', [JabatanController::class, 'getAllJabatan']);
-        Route::post('/jabatans/bulk-delete', [JabatanController::class, 'bulkDelete']);
-        Route::get('/jabatans/export', [JabatanController::class, 'exportJabatan']);
-        Route::post('/jabatans/import', [JabatanController::class, 'importJabatan']);
-        Route::apiResource('/jabatans', JabatanController::class);
+        Route::group(['prefix' => '/presensi'], function () {
+            // ! Presensi Hadir ===========>
+            // ! Presensi Tidak Hadir ===========>
+            // ! Presensi Libur ===========>
+            // ! Presensi Tabel ===========>
+        });
 
-        // ! Kelompok Gaji ===========>
-        Route::get('/all-kelompok-gajis', [KelompokGajiController::class, 'getAllKelompokGaji']);
-        Route::post('/kelompok-gajis/bulk-delete', [KelompokGajiController::class, 'bulkDelete']);
-        Route::get('/kelompok-gajis/export', [KelompokGajiController::class, 'exportKelompokGaji']);
-        Route::post('/kelompok-gajis/import', [KelompokGajiController::class, 'importKelompokGaji']);
-        Route::apiResource('/kelompok-gajis', KelompokGajiController::class);
+        Route::group(['prefix' => '/jadwal'], function () {
+            // ! Jadwal ===========>
+            // ! Tukar Jadwal ===========>
+            // ! Lembur ===========>
+            // ! Cuti ===========>
+        });
 
-        // ! Kompetensi ===========>
-        Route::get('/all-kompetensis', [KompetensiController::class, 'getAllKompetensi']);
-        Route::post('/kompetensis/bulk-delete', [KompetensiController::class, 'bulkDelete']);
-        Route::get('/kompetensis/export', [KompetensiController::class, 'exportKompetensi']);
-        Route::post('/kompetensis/import', [KompetensiController::class, 'importKompetensi']);
-        Route::apiResource('/kompetensis', KompetensiController::class);
+        Route::group(['prefix' => '/keuangan'], function () {
+        });
 
-        // ! Unit Kerja ===========>
-        Route::get('/all-unit-kerjas', [UnitKerjaController::class, 'getAllUnitKerja']);
-        Route::post('/unit-kerjas/bulk-delete', [UnitKerjaController::class, 'bulkDelete']);
-        Route::get('/unit-kerjas/export', [UnitKerjaController::class, 'exportUnitKerja']);
-        Route::post('/unit-kerjas/import', [UnitKerjaController::class, 'importUnitKerja']);
-        Route::apiResource('/unit-kerjas', UnitKerjaController::class);
-        /* ==================================== Setting Karyawan ==================================== */
+        Route::group(['prefix' => '/perusahaan'], function () {
+        });
 
+        Route::group(['prefix' => '/pengaturan'], function () {
+            /* ==================================== Setting Akun ==================================== */
+            // ! Roles ===========>
+            Route::get('/all-role', [RolesController::class, 'getAllRoles']);
+            Route::post('/role/filter', [RolesController::class, 'index']);
+            Route::post('/role/search', [RolesController::class, 'index']);
+            Route::post('/role/bulk-delete', [RolesController::class, 'bulkDelete']);
+            Route::get('/role/export', [RolesController::class, 'exportRoles']);
+            Route::post('/role/import', [RolesController::class, 'importRoles']);
+            Route::apiResource('/role', RolesController::class);
 
-        /* ==================================== Setting Finance ==================================== */
-        // ! Premi ===========>
-        Route::get('/all-premis', [PremiController::class, 'getAllPremi']);
-        Route::post('/premis/bulk-delete', [PremiController::class, 'bulkDelete']);
-        Route::get('/premis/export', [PremiController::class, 'exportPremi']);
-        Route::post('/premis/import', [PremiController::class, 'importPremi']);
-        Route::apiResource('/premis', PremiController::class);
+            // ! Roles Permission ===========>
+            Route::get('/all-permissions', [PermissionsController::class, 'getAllPermissions']);
+            Route::put('/permissions/{role}', [PermissionsController::class, 'updatePermissions']);
 
-        // ! TER21 ===========>
-        Route::get('/all-ter-pph-21', [TER21Controller::class, 'getAllTer']);
-        Route::post('/ter-pph-21/bulk-delete', [TER21Controller::class, 'bulkDelete']);
-        Route::get('/ter-pph-21/export', [TER21Controller::class, 'exportTER']);
-        Route::post('/ter-pph-21/import', [TER21Controller::class, 'importTER']);
-        Route::apiResource('/ter-pph-21', TER21Controller::class);
-
-        // ! Jadwal Penggajian ===========>
-        Route::post('/jadwal-penggajians', [JadwalPenggajianController::class, 'createJadwalPenggajian']);
-        // Route::post('/jadwal-penggajians/reset/{jadwalPenggajian}', [JadwalPenggajianController::class, 'resetJadwalPenggajian']);
-
-        // ! THR ===========>
-
-        /* ==================================== Setting Finance ==================================== */
-
-
-        /* ==================================== Setting Managemen Waktu ==================================== */
-        // ! Shift ===========>
-        Route::get('/all-shifts', [ShiftController::class, 'getAllShift']);
-        Route::post('/shifts/bulk-delete', [ShiftController::class, 'bulkDelete']);
-        Route::get('/shifts/export', [ShiftController::class, 'exportShift']);
-        Route::post('/shifts/import', [ShiftController::class, 'importShift']);
-        Route::apiResource('/shifts', ShiftController::class);
-
-        // ! Hari Libur ===========>
-        Route::get('/hari-libur/nasional', [HariLiburController::class, 'getNasionalHariLibur']);
-        Route::get('/all-hari-liburs', [HariLiburController::class, 'getAllHariLibur']);
-        Route::post('/hari-liburs/bulk-delete', [HariLiburController::class, 'bulkDelete']);
-        Route::get('/hari-liburs/export', [HariLiburController::class, 'exportHariLibur']);
-        Route::post('/hari-liburs/import', [HariLiburController::class, 'importHariLibur']);
-        Route::apiResource('/hari-liburs', HariLiburController::class);
+            // ! Change Password User ===========>
+            Route::post('/users/change-passwords', [UserPasswordController::class, 'updatePassword']);
+            /* ==================================== Setting Akun ==================================== */
 
 
-        // ! Cuti ===========>
-        Route::get('/all-cutis', [CutiController::class, 'getAllCuti']);
-        Route::post('/cutis/bulk-delete', [CutiController::class, 'bulkDelete']);
-        Route::get('/cutis/export', [CutiController::class, 'exportCuti']);
-        Route::post('/cutis/import', [CutiController::class, 'importCuti']);
-        Route::apiResource('/cutis', CutiController::class);
-        /* ==================================== Setting Managemen Waktu ==================================== */
+            /* ==================================== Setting Karyawan ==================================== */
+            // ! Jabatan ===========>
+            Route::get('/all-jabatan', [JabatanController::class, 'getAllJabatan']);
+            Route::post('/jabatan/filter', [JabatanController::class, 'index']);
+            Route::post('/jabatan/search', [JabatanController::class, 'index']);
+            Route::post('/jabatan/bulk-delete', [JabatanController::class, 'bulkDelete']);
+            Route::get('/jabatan/export', [JabatanController::class, 'exportJabatan']);
+            Route::post('/jabatan/import', [JabatanController::class, 'importJabatan']);
+            Route::apiResource('/jabatan', JabatanController::class);
+
+            // ! Kelompok Gaji ===========>
+            Route::get('/all-kelompok-gaji', [KelompokGajiController::class, 'getAllKelompokGaji']);
+            Route::post('/kelompok-gaji/filter', [KelompokGajiController::class, 'index']);
+            Route::post('/kelompok-gaji/search', [KelompokGajiController::class, 'index']);
+            Route::post('/kelompok-gaji/bulk-delete', [KelompokGajiController::class, 'bulkDelete']);
+            Route::get('/kelompok-gaji/export', [KelompokGajiController::class, 'exportKelompokGaji']);
+            Route::post('/kelompok-gaji/import', [KelompokGajiController::class, 'importKelompokGaji']);
+            Route::apiResource('/kelompok-gaji', KelompokGajiController::class);
+
+            // ! Kompetensi ===========>
+            Route::get('/all-kompetensi', [KompetensiController::class, 'getAllKompetensi']);
+            Route::post('/kompetensi/filter', [KompetensiController::class, 'index']);
+            Route::post('/kompetensi/search', [KompetensiController::class, 'index']);
+            Route::post('/kompetensi/bulk-delete', [KompetensiController::class, 'bulkDelete']);
+            Route::get('/kompetensi/export', [KompetensiController::class, 'exportKompetensi']);
+            Route::post('/kompetensi/import', [KompetensiController::class, 'importKompetensi']);
+            Route::apiResource('/kompetensi', KompetensiController::class);
+
+            // ! Unit Kerja ===========>
+            Route::get('/all-unit-kerja', [UnitKerjaController::class, 'getAllUnitKerja']);
+            Route::post('/unit-kerja/filter', [UnitKerjaController::class, 'index']);
+            Route::post('/unit-kerja/search', [UnitKerjaController::class, 'index']);
+            Route::post('/unit-kerja/bulk-delete', [UnitKerjaController::class, 'bulkDelete']);
+            Route::get('/unit-kerja/export', [UnitKerjaController::class, 'exportUnitKerja']);
+            Route::post('/unit-kerja/import', [UnitKerjaController::class, 'importUnitKerja']);
+            Route::apiResource('/unit-kerja', UnitKerjaController::class);
+            /* ==================================== Setting Karyawan ==================================== */
+
+
+            /* ==================================== Setting Finance ==================================== */
+            // ! Premi ===========>
+            Route::get('/all-premi', [PremiController::class, 'getAllPremi']);
+            Route::post('/premi/filter', [PremiController::class, 'index']);
+            Route::post('/premi/search', [PremiController::class, 'index']);
+            Route::post('/premi/bulk-delete', [PremiController::class, 'bulkDelete']);
+            Route::get('/premi/export', [PremiController::class, 'exportPremi']);
+            Route::post('/premi/import', [PremiController::class, 'importPremi']);
+            Route::apiResource('/premi', PremiController::class);
+
+            // ! TER21 ===========>
+            Route::get('/all-ter-pph-21', [TER21Controller::class, 'getAllTer']);
+            Route::post('/ter-pph-21/filter', [TER21Controller::class, 'index']);
+            Route::post('/ter-pph-21/search', [TER21Controller::class, 'index']);
+            Route::post('/ter-pph-21/bulk-delete', [TER21Controller::class, 'bulkDelete']);
+            Route::get('/ter-pph-21/export', [TER21Controller::class, 'exportTER']);
+            Route::post('/ter-pph-21/import', [TER21Controller::class, 'importTER']);
+            Route::apiResource('/ter-pph-21', TER21Controller::class);
+
+            // ! Jadwal Penggajian ===========>
+            Route::post('/jadwal-penggajians', [JadwalPenggajianController::class, 'createJadwalPenggajian']);
+            // Route::post('/jadwal-penggajians/reset/{jadwalPenggajian}', [JadwalPenggajianController::class, 'resetJadwalPenggajian']);
+
+            // ! THR ===========>
+            // TODO: Belum THR
+            /* ==================================== Setting Finance ==================================== */
+
+
+            /* ==================================== Setting Managemen Waktu ==================================== */
+            // ! Shift ===========>
+            Route::get('/all-shift', [ShiftController::class, 'getAllShift']);
+            Route::post('/shift/filter', [ShiftController::class, 'index']);
+            Route::post('/shift/search', [ShiftController::class, 'index']);
+            Route::post('/shift/bulk-delete', [ShiftController::class, 'bulkDelete']);
+            Route::get('/shift/export', [ShiftController::class, 'exportShift']);
+            Route::post('/shift/import', [ShiftController::class, 'importShift']);
+            Route::apiResource('/shift', ShiftController::class);
+
+            // ! Hari Libur ===========>
+            Route::get('/hari-libur/nasional', [HariLiburController::class, 'getNasionalHariLibur']);
+            Route::post('/hari-libur/filter', [HariLiburController::class, 'index']);
+            Route::post('/hari-libur/search', [HariLiburController::class, 'index']);
+            Route::get('/all-hari-libur', [HariLiburController::class, 'getAllHariLibur']);
+            Route::post('/hari-libur/bulk-delete', [HariLiburController::class, 'bulkDelete']);
+            Route::get('/hari-libur/export', [HariLiburController::class, 'exportHariLibur']);
+            Route::post('/hari-libur/import', [HariLiburController::class, 'importHariLibur']);
+            Route::apiResource('/hari-libur', HariLiburController::class);
+
+
+            // ! Cuti ===========>
+            Route::get('/all-cuti', [CutiController::class, 'getAllCuti']);
+            Route::post('/cuti/filter', [CutiController::class, 'index']);
+            Route::post('/cuti/search', [CutiController::class, 'index']);
+            Route::post('/cuti/bulk-delete', [CutiController::class, 'bulkDelete']);
+            Route::get('/cuti/export', [CutiController::class, 'exportCuti']);
+            Route::post('/cuti/import', [CutiController::class, 'importCuti']);
+            Route::apiResource('/cuti', CutiController::class);
+            /* ==================================== Setting Managemen Waktu ==================================== */
+        });
     });
 });

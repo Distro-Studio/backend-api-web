@@ -47,7 +47,7 @@ class User extends Authenticatable
      *
      * @return \Illuminate\Database\Eloquent\Relations\HasOne
      */
-    public function data_karyawan(): HasOne
+    public function data_karyawans(): HasOne
     {
         return $this->hasOne(DataKaryawan::class, 'user_id', 'id');
     }
@@ -57,7 +57,7 @@ class User extends Authenticatable
      *
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function cuti(): HasMany
+    public function cutis(): HasMany
     {
         return $this->hasMany(Cuti::class, 'user_id', 'id');
     }
@@ -67,7 +67,7 @@ class User extends Authenticatable
      *
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function run_thr(): HasMany
+    public function run_thrs(): HasMany
     {
         return $this->hasMany(RunThr::class, 'user_id', 'id');
     }
@@ -77,7 +77,7 @@ class User extends Authenticatable
      *
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function presensi(): HasMany
+    public function presensis(): HasMany
     {
         return $this->hasMany(Presensi::class, 'user_id', 'id');
     }
@@ -87,7 +87,7 @@ class User extends Authenticatable
      *
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function jadwal(): HasMany
+    public function jadwals(): HasMany
     {
         return $this->hasMany(Jadwal::class, 'user_id', 'id');
     }
@@ -97,7 +97,7 @@ class User extends Authenticatable
      *
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function lembur(): HasMany
+    public function lemburs(): HasMany
     {
         return $this->hasMany(Lembur::class, 'user_id', 'id');
     }
@@ -107,7 +107,7 @@ class User extends Authenticatable
      *
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function activity_log(): HasMany
+    public function activity_logs(): HasMany
     {
         return $this->hasMany(ActivityLog::class, 'user_id', 'id');
     }
@@ -117,7 +117,7 @@ class User extends Authenticatable
      *
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function track_record(): HasMany
+    public function track_records(): HasMany
     {
         return $this->hasMany(TrackRecord::class, 'user_id', 'id');
     }
@@ -127,7 +127,7 @@ class User extends Authenticatable
      *
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function tranfer_karyawan(): HasMany
+    public function tranfer_karyawans(): HasMany
     {
         return $this->hasMany(TransferKaryawan::class, 'user_id', 'id');
     }

@@ -13,6 +13,7 @@ use App\Http\Requests\StoreUnitKerjaRequest;
 use App\Http\Requests\UpdateUnitKerjaRequest;
 use Spatie\Permission\Middleware\RoleMiddleware;
 use App\Exports\Pengaturan\Karyawan\UnitKerjaExport;
+use App\Http\Requests\Excel_Import\ImportUnitKerjaRequest;
 use App\Imports\Pengaturan\Karyawan\UnitKerjaImport;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
 use App\Http\Resources\Dashboard\Pengaturan_Karyawan\UnitKerjaResource;
@@ -22,14 +23,14 @@ class UnitKerjaController extends Controller
     /* ============================= For Dropdown ============================= */
     public function getAllUnitKerja()
     {
-        if (!Gate::allows('view.unitkerja')) {
+        if (!Gate::allows('view unitKerja')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
         $unit_kerja = UnitKerja::get();
         return response()->json([
             'status' => Response::HTTP_OK,
-            'message' => 'Retrieving all Unit Kerja for dropdown',
+            'message' => 'Retrieving all unit kerja for dropdown',
             'data' => $unit_kerja
         ], Response::HTTP_OK);
     }
@@ -38,7 +39,7 @@ class UnitKerjaController extends Controller
     public function index(Request $request)
     {
         // $this->middleware(RoleMiddleware::class, ['roles' => ['Super Admin']]);
-        if (!Gate::allows('view.unitkerja')) {
+        if (!Gate::allows('view unitKerja')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
@@ -54,41 +55,30 @@ class UnitKerjaController extends Controller
             $unit_kerja = $unit_kerja->where('nama_unit', 'like', '%' . $request->search . '%');
         }
 
-        // Sort
-        if ($request->has('sort')) {
-            $sortFields = explode(',', $request->sort);
-            $sortOrder = $request->get('order', 'asc');
-
-            foreach ($sortFields as $sortField) {
-                $unit_kerja = $unit_kerja->orderBy($sortField, $sortOrder);
-            }
-        }
-
         $dataUnitKerja = $unit_kerja->paginate(10);
-
         if ($dataUnitKerja->isEmpty()) {
-            return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data Unit Kerja tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+            return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data unit kerja tidak ditemukan.'), Response::HTTP_NOT_FOUND);
         }
 
-        return response()->json(new UnitKerjaResource(Response::HTTP_OK, 'Data Unit Kerja berhasil ditampilkan.', $dataUnitKerja), Response::HTTP_OK);
+        return response()->json(new UnitKerjaResource(Response::HTTP_OK, 'Data unit kerja berhasil ditampilkan.', $dataUnitKerja), Response::HTTP_OK);
     }
 
     public function store(StoreUnitKerjaRequest $request)
     {
-        if (!Gate::allows('create.unitkerja')) {
+        if (!Gate::allows('create unitKerja')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
         $data = $request->validated();
 
         $unit_kerja = UnitKerja::create($data);
-        $successMessage = "Data Unit Kerja '{$unit_kerja->nama_unit}' berhasil dibuat.";
+        $successMessage = "Data unit kerja '{$unit_kerja->nama_unit}' berhasil dibuat.";
         return response()->json(new UnitKerjaResource(Response::HTTP_OK, $successMessage, $unit_kerja), Response::HTTP_OK);
     }
 
     public function update(UnitKerja $UnitKerja, UpdateUnitKerjaRequest $request)
     {
-        if (!Gate::allows('edit.unitkerja', $UnitKerja)) {
+        if (!Gate::allows('edit unitKerja', $UnitKerja)) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
@@ -96,13 +86,13 @@ class UnitKerjaController extends Controller
 
         $UnitKerja->update($data);
         $updatedUnitKerja = $UnitKerja->fresh();
-        $successMessage = "Data Unit Kerja '{$updatedUnitKerja->nama_unit}' berhasil diubah.";
+        $successMessage = "Data unit kerja '{$updatedUnitKerja->nama_unit}' berhasil diubah.";
         return response()->json(new UnitKerjaResource(Response::HTTP_OK, $successMessage, $UnitKerja), Response::HTTP_OK);
     }
 
     public function bulkDelete(Request $request)
     {
-        if (!Gate::allows('delete.unitkerja')) {
+        if (!Gate::allows('delete unitKerja')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
@@ -121,32 +111,43 @@ class UnitKerjaController extends Controller
         $deletedCount = UnitKerja::whereIn('id', $ids)->delete();
         // $message = sprintf('Deleted %d Jabatan%s', $deletedCount, $deletedCount > 1 ? 's' : '');
 
-        $message = 'Unit Kerja berhasil dihapus.';
+        $message = 'Data unit kerja berhasil dihapus.';
 
         return response()->json(new WithoutDataResource(Response::HTTP_OK, $message), Response::HTTP_OK);
     }
 
-    public function exportUnitKerja()
+    public function exportUnitKerja(Request $request)
     {
-        if (!Gate::allows('export.unitkerja')) {
-            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
-        }
-        $UnitKerja = UnitKerja::all();
-        return Excel::download(new UnitKerjaExport, 'unit-kerjas.xlsx');
-    }
-
-    public function importUnitKerja(Request $request)
-    {
-        if (!Gate::allows('import.unitkerja')) {
+        if (!Gate::allows('export unitKerja')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
         try {
-            Excel::import(new UnitKerjaImport, $request->file('unit_kerja_file'));
+            $ids = $request->input('ids', []);
+            return Excel::download(new UnitKerjaExport($ids), 'unit-kerjas.xlsx');
+        } catch (\Exception $e) {
+            return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya terjadi error. Message: ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
+        } catch (\Error $e) {
+            return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya terjadi error. Message: ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
+        }
+
+        return response()->json(new WithoutDataResource(Response::HTTP_OK, 'Data unit kerja berhasil di download.'), Response::HTTP_OK);
+    }
+
+    public function importUnitKerja(ImportUnitKerjaRequest $request)
+    {
+        if (!Gate::allows('import unitKerja')) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
+
+        $file = $request->validated();
+
+        try {
+            Excel::import(new UnitKerjaImport, $file['unit_kerja_file']);
         } catch (\Exception $e) {
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
         }
 
-        return response()->json(new WithoutDataResource(Response::HTTP_OK, 'Data Unit Kerja berhasil di import kedalam table.'), Response::HTTP_OK);
+        return response()->json(new WithoutDataResource(Response::HTTP_OK, 'Data unit kerja berhasil di import kedalam table.'), Response::HTTP_OK);
     }
 }

@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Validator;
 use App\Http\Requests\StoreKelompokGajiRequest;
 use App\Http\Requests\UpdateKelompokGajiRequest;
 use App\Exports\Pengaturan\Karyawan\KelompokGajiExport;
+use App\Http\Requests\Excel_Import\ImportKelompokGajiRequest;
 use App\Imports\Pengaturan\Karyawan\KelompokGajiImport;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
 use App\Http\Resources\Dashboard\Pengaturan_Karyawan\KelompokGajiResource;
@@ -21,14 +22,14 @@ class KelompokGajiController extends Controller
     /* ============================= For Dropdown ============================= */
     public function getAllKelompokGaji()
     {
-        if (!Gate::allows('view.kelompokgaji')) {
+        if (!Gate::allows('view kelompokGaji')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
         $kelompk_gaji = KelompokGaji::all();
         return response()->json([
             'status' => Response::HTTP_OK,
-            'message' => 'Retrieving all KelompokGaji for dropdown',
+            'message' => 'Retrieving all kelompok gaji for dropdown',
             'data' => $kelompk_gaji
         ], Response::HTTP_OK);
     }
@@ -36,7 +37,7 @@ class KelompokGajiController extends Controller
 
     public function index(Request $request)
     {
-        if (!Gate::allows('view.kelompokgaji')) {
+        if (!Gate::allows('view kelompokGaji')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
@@ -64,41 +65,31 @@ class KelompokGajiController extends Controller
             $kelompok_gaji = $kelompok_gaji->where('nama_kelompok', 'like', '%' . $request->search . '%');
         }
 
-        // Sort
-        if ($request->has('sort')) {
-            $sortFields = explode(',', $request->sort);
-            $sortOrder = $request->get('order', 'asc');
-
-            foreach ($sortFields as $sortField) {
-                $kelompok_gaji = $kelompok_gaji->orderBy($sortField, $sortOrder);
-            }
-        }
-
         $dataKelompokGaji = $kelompok_gaji->paginate(10);
 
         if ($dataKelompokGaji->isEmpty()) {
-            return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data Kelompok Gaji tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+            return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data kelompok gaji tidak ditemukan.'), Response::HTTP_NOT_FOUND);
         }
 
-        return response()->json(new KelompokGajiResource(Response::HTTP_OK, 'Data Kelompok Gaji berhasil ditampilkan.', $dataKelompokGaji), Response::HTTP_OK);
+        return response()->json(new KelompokGajiResource(Response::HTTP_OK, 'Data kelompok gaji berhasil ditampilkan.', $dataKelompokGaji), Response::HTTP_OK);
     }
 
     public function store(StoreKelompokGajiRequest $request)
     {
-        if (!Gate::allows('create.kelompokgaji')) {
+        if (!Gate::allows('create kelompokGaji')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
         $data = $request->validated();
 
         $kelompk_gaji = KelompokGaji::create($data);
-        $successMessage = "Data Kelompok Gaji '{$kelompk_gaji->nama_kelompok}' berhasil dibuat.";
+        $successMessage = "Data kelompok gaji '{$kelompk_gaji->nama_kelompok}' berhasil dibuat.";
         return response()->json(new KelompokGajiResource(Response::HTTP_OK, $successMessage, $kelompk_gaji), Response::HTTP_OK);
     }
 
     public function update(KelompokGaji $KelompokGaji, UpdateKelompokGajiRequest $request)
     {
-        if (!Gate::allows('edit.kelompokgaji', $KelompokGaji)) {
+        if (!Gate::allows('edit kelompokGaji', $KelompokGaji)) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
@@ -106,13 +97,13 @@ class KelompokGajiController extends Controller
 
         $KelompokGaji->update($data);
         $updatedKelompokGaji = $KelompokGaji->fresh();
-        $successMessage = "Data Kelompok Gaji '{$updatedKelompokGaji->nama_kelompok}' berhasil diubah.";
+        $successMessage = "Data kelompok gaji '{$updatedKelompokGaji->nama_kelompok}' berhasil diubah.";
         return response()->json(new KelompokGajiResource(Response::HTTP_OK, $successMessage, $KelompokGaji), Response::HTTP_OK);
     }
 
     public function bulkDelete(Request $request)
     {
-        if (!Gate::allows('delete.kelompokgaji')) {
+        if (!Gate::allows('delete kelompokGaji')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
@@ -131,33 +122,43 @@ class KelompokGajiController extends Controller
         $deletedCount = KelompokGaji::whereIn('id', $ids)->delete();
         // $message = sprintf('Deleted %d Jabatan%s', $deletedCount, $deletedCount > 1 ? 's' : '');
 
-        $message = 'Kelompok Gaji berhasil dihapus.';
+        $message = 'Data kelompok gaji berhasil dihapus.';
 
         return response()->json(new WithoutDataResource(Response::HTTP_OK, $message), Response::HTTP_OK);
     }
 
-    public function exportKelompokGaji()
+    public function exportKelompokGaji(Request $request)
     {
-        if (!Gate::allows('export.kelompokgaji')) {
-            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
-        }
-
-        $KelompokGaji = KelompokGaji::all();
-        return Excel::download(new KelompokGajiExport, 'kelompok-gajis.xlsx');
-    }
-
-    public function importKelompokGaji(Request $request)
-    {
-        if (!Gate::allows('import.kelompokgaji')) {
+        if (!Gate::allows('export kelompokGaji')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
         try {
-            Excel::import(new KelompokGajiImport, $request->file('kelompok_gaji_file'));
+            $ids = $request->input('ids', []);
+            return Excel::download(new KelompokGajiExport($ids), 'kelompok-gajis.xlsx');
+        } catch (\Exception $e) {
+            return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya terjadi error. Message: ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
+        } catch (\Error $e) {
+            return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya terjadi error. Message: ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
+        }
+
+        return response()->json(new WithoutDataResource(Response::HTTP_OK, 'Data kelompok gaji berhasil di download.'), Response::HTTP_OK);
+    }
+
+    public function importKelompokGaji(ImportKelompokGajiRequest $request)
+    {
+        if (!Gate::allows('import kelompokGaji')) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
+
+        $file = $request->validated();
+
+        try {
+            Excel::import(new KelompokGajiImport, $file['kelompok_gaji_file']);
         } catch (\Exception $e) {
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
         }
 
-        return response()->json(new WithoutDataResource(Response::HTTP_OK, 'Data Kelompok Gaji berhasil di import kedalam table.'), Response::HTTP_OK);
+        return response()->json(new WithoutDataResource(Response::HTTP_OK, 'Data kelompok gaji berhasil di import kedalam table.'), Response::HTTP_OK);
     }
 }

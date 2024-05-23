@@ -25,8 +25,8 @@ class StoreTERRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'kategori_ter_id' => 'required',
-            'ptkp_id' => 'required',
+            'kategori_ter_id' => 'required|integer',
+            'ptkp_id' => 'required|integer',
             'from_ter' => 'required|numeric',
             'to_ter' => 'required|numeric',
             'percentage_ter' => 'required|numeric',

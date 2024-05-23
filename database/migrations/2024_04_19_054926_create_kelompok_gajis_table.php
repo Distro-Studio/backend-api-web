@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('kelompok_gajis', function (Blueprint $table) {
             $table->id();
             $table->string('nama_kelompok');
-            $table->string('besaran_gaji', 20)->default('0');
+            $table->integer('besaran_gaji');
             $table->timestamps();
         });
     }

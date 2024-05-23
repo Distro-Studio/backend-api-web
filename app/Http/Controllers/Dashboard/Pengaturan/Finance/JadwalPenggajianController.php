@@ -17,7 +17,7 @@ class JadwalPenggajianController extends Controller
 {
     public function createJadwalPenggajian(StoreJadwalPenggajianRequest $request)
     {
-        if (!Gate::allows('create.jadwalPenggajian')) {
+        if (!Gate::allows('create jadwalGaji')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
         
@@ -39,7 +39,7 @@ class JadwalPenggajianController extends Controller
 
     public function resetJadwalPenggajian(JadwalPenggajian $jadwalPenggajian, UpdateJadwalPenggajianRequest $request)
     {
-        if (!Gate::allows('reset.jadwalPenggajian')) {
+        if (!Gate::allows('reset jadwalGaji')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
         

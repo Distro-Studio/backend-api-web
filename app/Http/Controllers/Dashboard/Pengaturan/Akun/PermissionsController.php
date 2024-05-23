@@ -15,7 +15,7 @@ class PermissionsController extends Controller
 {
     public function getAllPermissions()
     {
-        if (!Gate::allows('view.permission')) {
+        if (!Gate::allows('view permission')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
@@ -29,7 +29,7 @@ class PermissionsController extends Controller
 
     public function updatePermissions(Request $request, Role $role)
     {
-        if (!Gate::allows('edit.permission')) {
+        if (!Gate::allows('edit permission')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
         
@@ -45,6 +45,6 @@ class PermissionsController extends Controller
         $permissionIds = $request->input('permission_ids');
         $role->permissions()->sync($permissionIds);
 
-        return response()->json(new WithoutDataResource(Response::HTTP_OK, "Berhasil melakukan update permission pada Role '{$role->name}'."));
+        return response()->json(new WithoutDataResource(Response::HTTP_OK, "Berhasil melakukan update permission pada role '{$role->name}'."));
     }
 }

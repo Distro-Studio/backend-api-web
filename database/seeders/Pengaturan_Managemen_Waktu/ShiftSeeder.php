@@ -2,9 +2,10 @@
 
 namespace Database\Seeders\Pengaturan_Managemen_Waktu;
 
+use Carbon\Carbon;
 use App\Models\Shift;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 
 class ShiftSeeder extends Seeder
 {
@@ -15,18 +16,20 @@ class ShiftSeeder extends Seeder
     {
         Shift::create([
             'nama' => 'Pagi',
-            'jam_from' => '07:00:00',
-            'jam_to' => '15:00:00'
+            'jam_from' => Carbon::parse('2024-01-01 06:00:00'),
+            'jam_to' => Carbon::parse('2024-01-01 15:00:00')
         ]);
+        
         Shift::create([
             'nama' => 'Sore',
-            'jam_from' => '15:00:00',
-            'jam_to' => '23:00:00'
+            'jam_from' => Carbon::parse('2024-01-01 15:10:00'),
+            'jam_to' => Carbon::parse('2024-01-01 23:00:00')
         ]);
+        
         Shift::create([
             'nama' => 'Malam',
-            'jam_from' => '23:00:00',
-            'jam_to' => '07:00:00'
+            'jam_from' => Carbon::parse('2024-01-01 23:10:00'),
+            'jam_to' => Carbon::parse('2024-01-02 06:10:00') // Perhatikan bahwa tanggalnya berubah ke hari berikutnya
         ]);
     }
 }

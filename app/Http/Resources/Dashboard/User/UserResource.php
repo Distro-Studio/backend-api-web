@@ -26,12 +26,12 @@ class UserResource extends JsonResource
     {
         $data = [
             'id' => $this->id,
-            'name' => $this->name,
+            'nama' => $this->nama,
             'username' => $this->username,
-            'email' => $this->email,
+            'email' => $this->data_karyawans ? $this->data_karyawans->email : null,
             'foto_profil' => $this->foto_profil,
             'data_completion_step' => $this->data_completion_step,
-            'roles' => $this->roles,
+            'role_id' => $this->roles,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];

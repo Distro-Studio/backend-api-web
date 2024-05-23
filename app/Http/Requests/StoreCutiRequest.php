@@ -34,9 +34,9 @@ class StoreCutiRequest extends FormRequest
     public function messages()
     {
         return [
-            'nama.required' => 'Nama Cuti tidak diperbolehkan kosong.',
-            'nama.max' => 'Nama Cuti melebihi batas maksimum panjang karakter.',
-            'durasi.required' => 'Durasi Cuti tidak diperbolehkan kosong.',
+            'nama.required' => 'Nama cuti tidak diperbolehkan kosong.',
+            'nama.max' => 'Nama cuti melebihi batas maksimum panjang karakter.',
+            'durasi.required' => 'Durasi cuti tidak diperbolehkan kosong.',
         ];
     }
 

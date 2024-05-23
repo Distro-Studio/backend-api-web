@@ -15,22 +15,11 @@ class AccountSeeder extends Seeder
     public function run(): void
     {
         $roleSuperAdmin = User::create([
-            'name' => 'Olga Parks',
-            'email' => 'olga@sa.rski.hosp',
+            'nama' => 'Olga Parks',
             'username' => 'olgaP',
             'data_completion_step' => 1,
             'password' => Hash::make('password'),
         ]);
         $roleSuperAdmin->assignRole('Super Admin');
-
-        // ! TESTER
-        $roleKaryawan = User::create([
-            'name' => 'Joyce Mills',
-            'email' => 'joyce@adm.rski.hosp',
-            'username' => 'joyceM',
-            'data_completion_step' => 1,
-            'password' => Hash::make('password'),
-        ]);
-        $roleKaryawan->assignRole('Karyawan');
     }
 }

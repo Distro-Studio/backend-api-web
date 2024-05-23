@@ -34,15 +34,15 @@ class StoreKompetensiRequest extends FormRequest
     public function messages()
     {
         return [
-            'nama_kompetensi.required' => 'Nama Kompetensi tidak diperbolehkan kosong.',
-            'nama_kompetensi.string' => 'Nama Kompetensi tidak diperbolehkan mengandung angka.',
-            'nama_kompetensi.max' => 'Nama Kompetensi melebihi batas maksimum panjang karakter.',
-            'nama_kompetensi.unique' => 'Nama Kompetensi tersebut sudah pernah dibuat.',
-            'jenis_kompetensi.required' => 'Jenis Kompetensi tidak diperbolehkan kosong.',
-            'jenis_kompetensi.string' => 'Jenis Kompetensi tidak diperbolehkan mengandung angka.',
-            'jenis_kompetensi.max' => 'Jenis Kompetensi melebihi batas maksimum panjang karakter.',
-            'total_tunjangan.required' => 'Jumlah Tunjangan tidak diperbolehkan kosong.',
-            'total_tunjangan.numeric' => 'Jumlah Tunjangan tidak diperbolehkan mengandung huruf.',
+            'nama_kompetensi.required' => 'Nama kompetensi tidak diperbolehkan kosong.',
+            'nama_kompetensi.string' => 'Nama kompetensi tidak diperbolehkan mengandung angka.',
+            'nama_kompetensi.max' => 'Nama kompetensi melebihi batas maksimum panjang karakter.',
+            'nama_kompetensi.unique' => 'Nama kompetensi tersebut sudah pernah dibuat.',
+            'jenis_kompetensi.required' => 'Jenis kompetensi tidak diperbolehkan kosong.',
+            'jenis_kompetensi.string' => 'Jenis kompetensi tidak diperbolehkan mengandung angka.',
+            'jenis_kompetensi.max' => 'Jenis kompetensi melebihi batas maksimum panjang karakter.',
+            'total_tunjangan.required' => 'Jumlah tunjangan tidak diperbolehkan kosong.',
+            'total_tunjangan.numeric' => 'Jumlah tunjangan tidak diperbolehkan mengandung huruf.',
         ];
     }
 

@@ -51,7 +51,6 @@ class TER21Import implements ToModel, WithHeadingRow, WithValidation
 
     public function model(array $row)
     {
-        // $kategoriTER = KategoriTer::where('nama_kategori_ter', $row['kategori_ter_id'])->pluck('id')->first();
         $kategoriTER = $this->kategoriTER->where('nama_kategori_ter', $row['kategori_ter_id'])->first();
         $PTKP = $this->PTKP->where('kode_ptkp', $row['ptkp_id'])->first();
 

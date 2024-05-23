@@ -26,19 +26,19 @@ class UpdateRoleRequest extends FormRequest
     {
         return [
             'name' => 'required|string|max:225',
-            'description' => 'string|max:225|nullable',
+            'deskripsi' => 'string|max:225|nullable',
         ];
     }
 
     public function messages()
     {
         return [
-            'name.required' => 'Nama Role tidak diperbolehkan kosong.',
-            'name.string' => 'Nama Role tidak diperbolehkan mengandung angka.',
-            'name.max' => 'Nama Role melebihi batas maksimum panjang karakter.',
-            'name.unique' => 'Nama Role tersebut sudah pernah dibuat.',
-            'description.string' => 'Deskripsi Role tidak diperbolehkan mengandung angka.',
-            'description.max' => 'Deskripsi Role melebihi batas maksimum panjang karakter.',
+            'name.required' => 'Nama role tidak diperbolehkan kosong.',
+            'name.string' => 'Nama role tidak diperbolehkan mengandung angka.',
+            'name.max' => 'Nama role melebihi batas maksimum panjang karakter.',
+            'name.unique' => 'Nama role tersebut sudah pernah dibuat.',
+            'deskripsi.string' => 'Deskripsi role tidak diperbolehkan mengandung angka.',
+            'deskripsi.max' => 'Deskripsi role melebihi batas maksimum panjang karakter.',
         ];
     }
 

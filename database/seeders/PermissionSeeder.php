@@ -13,110 +13,34 @@ class PermissionSeeder extends Seeder
      */
     public function run(): void
     {
-        $kelolaUsers = [
-            'create.user',
-            'edit.user',
-            'delete.user',
-            'view.user',
-
-            'create.data_karyawan',
-            'edit.data_karyawan',
-            'delete.data_karyawan',
-            'view.data_karyawan',
-        ];
-
-        $kelolaMasterSettings = [
-            // Akun
-            'create.role',
-            'edit.role',
-            'delete.role',
-            'view.role',
-            'import.role',
-            'export.role',
-
-            'view.permission',
-            'create.permission',
-            'edit.permission',
-
+        $permissions = [
             // Karyawan
-            'create.unitkerja',
-            'edit.unitkerja',
-            'delete.unitkerja',
-            'view.unitkerja',
-            'import.unitkerja',
-            'export.unitkerja',
+            'User' => ['create user', 'edit user', 'delete user', 'view user', 'import user', 'export user'],
+            'Data Karyawan' => ['create dataKaryawan', 'edit dataKaryawan', 'delete dataKaryawan', 'view dataKaryawan', 'import dataKaryawan', 'export dataKaryawan'],
 
-            'create.jabatan',
-            'edit.jabatan',
-            'delete.jabatan',
-            'view.jabatan',
-            'import.jabatan',
-            'export.jabatan',
+            // Master setting
+            'Role' => ['create role', 'edit role', 'delete role', 'view role', 'import role', 'export role'],
+            'Permission' => ['create permission', 'edit permission', 'delete permission', 'view permission'],
 
-            'create.kompetensi',
-            'edit.kompetensi',
-            'delete.kompetensi',
-            'view.kompetensi',
-            'import.kompetensi',
-            'export.kompetensi',
+            'Unit Kerja' => ['create unitKerja', 'edit unitKerja', 'delete unitKerja', 'view unitKerja', 'import unitKerja', 'export unitKerja'],
+            'Jabatan' => ['create jabatan', 'edit jabatan', 'delete jabatan', 'view jabatan', 'import jabatan', 'export jabatan'],
+            'Kompetensi' => ['create kompetensi', 'edit kompetensi', 'delete kompetensi', 'view kompetensi', 'import kompetensi', 'export kompetensi'],
+            'Kelompok Gaji' => ['create kelompokGaji', 'edit kelompokGaji', 'delete kelompokGaji', 'view kelompokGaji', 'import kelompokGaji', 'export kelompokGaji'],
 
-            'create.kelompokgaji',
-            'edit.kelompokgaji',
-            'delete.kelompokgaji',
-            'view.kelompokgaji',
-            'import.kelompokgaji',
-            'export.kelompokgaji',
+            'Premi' => ['create premi', 'edit premi', 'delete premi', 'view premi', 'import premi', 'export premi'],
+            'TER21' => ['create ter21', 'edit ter21', 'delete ter21', 'view ter21', 'import ter21', 'export ter21'],
+            'Jadwal Penggajian' => ['create jadwalGaji', 'reset jadwalGaji'],
+            'THR' => ['create thr', 'edit thr', 'delete thr', 'view thr'],
 
-            // Finance
-            'create.premi',
-            'edit.premi',
-            'delete.premi',
-            'view.premi',
-            'import.premi',
-            'export.premi',
-
-            'create.ter21',
-            'edit.ter21',
-            'delete.ter21',
-            'view.ter21',
-            'import.ter21',
-            'export.ter21',
-
-            'create.jadwalPenggajian',
-            'reset.jadwalPenggajian',
-
-            'create.THR',
-            'edit.THR',
-            'delete.THR',
-            'view.THR',
-            'import.THR',
-            'export.THR',
-
-            // Managemen Waktu
-            'create.shift',
-            'edit.shift',
-            'delete.shift',
-            'view.shift',
-            'import.shift',
-            'export.shift',
-
-            'create.hariLibur',
-            'edit.hariLibur',
-            'delete.hariLibur',
-            'view.hariLibur',
-            'import.hariLibur',
-            'export.hariLibur',
-
-            'create.cuti',
-            'edit.cuti',
-            'delete.cuti',
-            'view.cuti',
-            'import.cuti',
-            'export.cuti',
+            'Shift' => ['create shift', 'edit shift', 'delete shift', 'view shift', 'import shift', 'export shift'],
+            'Hari Libur' => ['create hariLibur', 'edit hariLibur', 'delete hariLibur', 'view hariLibur', 'import hariLibur', 'export hariLibur'],
+            'Cuti' => ['create cuti', 'edit cuti', 'delete cuti', 'view cuti', 'import cuti', 'export cuti'],
         ];
 
-        foreach ($kelolaMasterSettings as $kelolaMasterSetting) {
-            Permission::create(['name' => $kelolaMasterSetting]);
+        foreach ($permissions as $group => $perms) {
+            foreach ($perms as $permission) {
+                Permission::create(['name' => $permission, 'group' => $group]);
+            }
         }
     }
 }

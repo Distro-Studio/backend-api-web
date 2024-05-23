@@ -11,8 +11,17 @@ use Maatwebsite\Excel\Concerns\FromCollection;
 class PremiExport implements FromCollection, WithHeadings, WithMapping
 {
     use Exportable;
+    protected $ids;
+
+    public function __construct(array $ids = [])
+    {
+        $this->ids = $ids;
+    }
     public function collection()
     {
+        if (!empty($this->ids)) {
+            return Premi::whereIn('id', $this->ids)->get();
+        }
         return Premi::all();
     }
 

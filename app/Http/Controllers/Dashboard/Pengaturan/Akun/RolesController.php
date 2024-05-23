@@ -12,6 +12,7 @@ use App\Http\Requests\StoreRoleRequest;
 use App\Http\Requests\UpdateRoleRequest;
 use Illuminate\Support\Facades\Validator;
 use App\Exports\Pengaturan\Akun\RolesExport;
+use App\Http\Requests\Excel_Import\ImportRoleRequest;
 use App\Imports\Pengaturan\Akun\RolesImport;
 use App\Http\Resources\Dashboard\Pengaturan_Akun\RoleResource;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
@@ -21,14 +22,14 @@ class RolesController extends Controller
     /* ============================= For Dropdown ============================= */
     public function getAllRoles()
     {
-        if (!Gate::allows('view.role')) {
+        if (!Gate::allows('view role')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
         $dataRole = Role::all();
         return response()->json([
             'status' => Response::HTTP_OK,
-            'message' => 'Retrieving all Role for dropdown',
+            'message' => 'Retrieving all role for dropdown',
             'data' => $dataRole
         ], Response::HTTP_OK);
     }
@@ -36,7 +37,7 @@ class RolesController extends Controller
 
     public function index(Request $request)
     {
-        if (!Gate::allows('view.role')) {
+        if (!Gate::allows('view role')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
@@ -53,18 +54,7 @@ class RolesController extends Controller
                 ->orWhere('description', 'like', '%' . $request->search . '%');
         }
 
-        // Sort
-        if ($request->has('sort')) {
-            $sortFields = explode(',', $request->sort);
-            $sortOrder = $request->get('order', 'asc');
-
-            foreach ($sortFields as $sortField) {
-                $role = $role->orderBy($sortField, $sortOrder);
-            }
-        }
-
         $dataRole = $role->paginate(10);
-
         if ($dataRole->isEmpty()) {
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data Role tidak ditemukan.'), Response::HTTP_NOT_FOUND);
         }
@@ -74,7 +64,7 @@ class RolesController extends Controller
 
     public function store(StoreRoleRequest $request)
     {
-        if (!Gate::allows('create.role')) {
+        if (!Gate::allows('create role')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
@@ -85,9 +75,24 @@ class RolesController extends Controller
         return response()->json(new RoleResource(Response::HTTP_OK, $successMessage, $role), Response::HTTP_OK);
     }
 
+    public function show(Role $role)
+    {
+        if (!Gate::allows('view role', $role)) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
+        
+        
+
+        if (!$role) {
+            return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data role karyawan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+        }
+
+        return response()->json(new RoleResource(Response::HTTP_OK, "Data role {$role->name} karyawan berhasil ditampilkan.", $role), Response::HTTP_OK);
+    }
+
     public function update(Role $role, UpdateRoleRequest $request)
     {
-        if (!Gate::allows('edit.role', $role)) {
+        if (!Gate::allows('edit role', $role)) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
@@ -101,7 +106,7 @@ class RolesController extends Controller
 
     public function bulkDelete(Request $request)
     {
-        if (!Gate::allows('delete.role')) {
+        if (!Gate::allows('delete role')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
@@ -118,40 +123,43 @@ class RolesController extends Controller
         $deletedCount = Role::whereIn('id', $ids);
         $deletedCount->delete();
 
-        $message = 'Role berhasil dihapus.';
+        $message = 'Data role berhasil dihapus.';
 
         return response()->json(new WithoutDataResource(Response::HTTP_OK, $message), Response::HTTP_OK);
     }
 
-    public function exportRoles()
+    public function exportRoles(Request $request)
     {
-        if (!Gate::allows('export.role')) {
+        if (!Gate::allows('export role')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
         try {
-            return Excel::download(new RolesExport, 'roles.xlsx');
+            $ids = $request->input('ids', []);
+            return Excel::download(new RolesExport($ids), 'roles.xlsx');
         } catch (\Exception $e) {
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya terjadi error. Message: ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
         } catch (\Error $e) {
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya terjadi error. Message: ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
         }
 
-        return response()->json(new WithoutDataResource(Response::HTTP_OK, 'Data Role berhasil di download.'), Response::HTTP_OK);
+        return response()->json(new WithoutDataResource(Response::HTTP_OK, 'Data role berhasil di download.'), Response::HTTP_OK);
     }
 
-    public function importRoles(Request $request)
+    public function importRoles(ImportRoleRequest $request)
     {
-        if (!Gate::allows('import.role')) {
+        if (!Gate::allows('import role')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
+        $file = $request->validated();
+
         try {
-            Excel::import(new RolesImport, $request->file('role_file'));
+            Excel::import(new RolesImport, $file['role_file']);
         } catch (\Exception $e) {
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
         }
 
-        return response()->json(new WithoutDataResource(Response::HTTP_OK, 'Data Role berhasil di import kedalam table.'), Response::HTTP_OK);
+        return response()->json(new WithoutDataResource(Response::HTTP_OK, 'Data role berhasil di import kedalam table.'), Response::HTTP_OK);
     }
 }

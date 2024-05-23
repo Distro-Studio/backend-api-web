@@ -2,12 +2,9 @@
 
 namespace App\Http\Controllers\Publik\Auth;
 
-use App\Models\User;
 use Illuminate\Support\Str;
-use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Cookie;
 use App\Http\Requests\LoginDashboardRequest;
 use App\Http\Resources\Dashboard\User\UserResource;
@@ -17,19 +14,6 @@ class LoginController extends Controller
 {
     public function login(LoginDashboardRequest $request)
     {
-        // $data = $request->validated();
-
-        // $user = User::with('roles')->where('email', $data['email'])->first();
-
-        // if (!$user || !Hash::check($data['password'], $user->password)) {
-        //     return response()->json(new WithoutDataResource(Response::HTTP_UNAUTHORIZED, 'Password atau email anda tidak valid'), Response::HTTP_UNAUTHORIZED);
-        // }
-
-        // $createToken = $user->createToken('create_token_' . Str::uuid())->plainTextToken;
-        // session()->put('token_login', $createToken);
-
-        // $createCookie = cookie('authToken', $createToken, 43200);
-        // return response()->json(new UserResource(Response::HTTP_OK, 'Login berhasil!, Selamat Datang ' . $user->name . '.', $user), Response::HTTP_OK)->withCookie($createCookie);
         $credentials = $request->validated();
 
         if (!auth()->attempt($credentials)) {
@@ -40,11 +24,17 @@ class LoginController extends Controller
         $token = $user->createToken('create_token_' . Str::uuid())->plainTextToken;
 
         $response = response()->json([
-            'user' => new UserResource(Response::HTTP_OK, 'Login berhasil!, Selamat Datang ' . $user->name . '.', $user),
+            'user' => new UserResource(Response::HTTP_OK, 'Login berhasil!, Selamat Datang ' . $user->nama . '.', $user),
             'token' => $token
         ], Response::HTTP_OK);
 
         return $response->withCookie(cookie('authToken', $token, 43200, true));
+    }
+
+    public function getInfoUserLogin()
+    {
+        $user = auth()->user();
+        return response()->json(new UserResource(Response::HTTP_OK, 'Data pengguna akun ' . $user->nama . ' berhasil didapatkan.', $user), Response::HTTP_OK);
     }
 
     public function logout()

@@ -34,7 +34,6 @@ class StoreJadwalPenggajianRequest extends FormRequest
         return [
             'tanggal.required' => 'Tanggal penjadwalan gaji tidak diperbolehkan kosong.',
             'tanggal.date' => 'Tanggal penjadwalan gaji wajib berisi tanggal.',
-            // 'tanggal.unique' => 'Tanggal penjadwalan gaji wajib berisi tanggal.',
         ];
     }
 

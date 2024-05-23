@@ -17,7 +17,7 @@ class DataKeluarga extends Model
      *
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function data_karyawan(): BelongsTo
+    public function data_karyawans(): BelongsTo
     {
         return $this->belongsTo(DataKaryawan::class, 'data_karyawan_id', 'id');
     }

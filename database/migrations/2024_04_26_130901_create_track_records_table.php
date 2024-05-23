@@ -18,7 +18,7 @@ return new class extends Migration
             $table->date('tgl_keluar')->nullable();
             $table->string('promosi')->nullable();
             $table->string('mutasi')->nullable();
-            $table->string('reward')->nullable();
+            $table->string('penghargaan')->nullable();
             $table->timestamps();
         });
     }
