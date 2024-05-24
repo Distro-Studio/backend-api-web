@@ -38,7 +38,6 @@ class CutiController extends Controller
 
     public function index(Request $request)
     {
-        // $this->middleware(RoleMiddleware::class, ['roles' => ['Super Admin']]);
         if (!Gate::allows('view cuti')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
@@ -46,17 +45,76 @@ class CutiController extends Controller
         $cuti = TipeCuti::query();
 
         // Filter
-        if ($request->has('durasi')) {
-            $cuti = $cuti->where('durasi' , '<=' , $request->durasi);
+        if ($request->has('durasi_min')) {
+            if (is_array($request->durasi_min)) {
+                $cuti->where(function ($query) use ($request) {
+                    foreach ($request->durasi_min as $min) {
+                        $query->orWhere('durasi', '>', $min);
+                    }
+                });
+            } else {
+                $cuti->where('durasi', '>', $request->durasi_min);
+            }
+        }
+
+        if ($request->has('durasi_max')) {
+            if (is_array($request->durasi_max)) {
+                $cuti->where(function ($query) use ($request) {
+                    foreach ($request->durasi_max as $min) {
+                        $query->orWhere('durasi', '<', $min);
+                    }
+                });
+            } else {
+                $cuti->where('durasi', '<', $request->durasi_max);
+            }
+        }
+
+        if ($request->has('durasi_min') && $request->has('durasi_max')) {
+            if (is_array($request->durasi_min) && is_array($request->durasi_max)) {
+                $cuti->where(function ($query) use ($request) {
+                    foreach ($request->durasi_min as $index => $min) {
+                        if (isset($request->durasi_max[$index])) {
+                            $query->orWhereBetween('durasi', [$min, $request->durasi_max[$index]]);
+                        }
+                    }
+                });
+            } else if (!is_array($request->durasi_min) && !is_array($request->durasi_max)) {
+                $cuti->whereBetween('durasi', [$request->durasi_min, $request->durasi_max]);
+            } else {
+                // Handle case where one is array and the other is not, if needed
+                // Example: Assume single durasi_min and multiple durasi_max, or vice versa
+                if (is_array($request->durasi_min)) {
+                    $cuti->where(function ($query) use ($request) {
+                        foreach ($request->durasi_min as $min) {
+                            $query->orWhere('durasi', '>=', $min);
+                        }
+                    });
+                } else {
+                    $cuti->where('durasi', '>=', $request->durasi_min);
+                }
+
+                if (is_array($request->durasi_max)) {
+                    $cuti->where(function ($query) use ($request) {
+                        foreach ($request->durasi_max as $max) {
+                            $query->orWhere('durasi', '<=', $max);
+                        }
+                    });
+                } else {
+                    $cuti->where('durasi', '<=', $request->durasi_max);
+                }
+            }
         }
 
         // Search
         if ($request->has('search')) {
-            $cuti = $cuti->where('nama', 'like', '%' . $request->search . '%');
+            $cuti = $cuti->where(function ($query) use ($request) {
+                $searchTerm = '%' . $request->search . '%';
+
+                $query->orWhere('nama', 'like', $searchTerm);
+            });
         }
 
         $dataCuti = $cuti->paginate(10);
-
         if ($dataCuti->isEmpty()) {
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data cuti tidak ditemukan.'), Response::HTTP_NOT_FOUND);
         }
@@ -75,6 +133,19 @@ class CutiController extends Controller
         $cuti = TipeCuti::create($data);
         $successMessage = "Data cuti berhasil dibuat.";
         return response()->json(new CutiResource(Response::HTTP_OK, $successMessage, $cuti), Response::HTTP_OK);
+    }
+
+    public function show(TipeCuti $cuti)
+    {
+        if (!Gate::allows('view cuti', $cuti)) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
+
+        if (!$cuti) {
+            return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data cuti tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+        }
+
+        return response()->json(new CutiResource(Response::HTTP_OK, 'Data cuti ditemukan.', $cuti), Response::HTTP_OK);
     }
 
     public function update(TipeCuti $cuti, UpdateCutiRequest $request)
@@ -124,7 +195,7 @@ class CutiController extends Controller
 
         try {
             $ids = $request->input('ids', []);
-            return Excel::download(new CutiExport($ids), 'cutis.xlsx');
+            return Excel::download(new CutiExport($ids), 'tipe-cuti.xls');
         } catch (\Exception $e) {
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya terjadi error. Message: ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
         } catch (\Error $e) {

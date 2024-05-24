@@ -25,6 +25,8 @@ class UserPasswordController extends Controller
                 return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Kata sandi yang anda masukkan tidak valid.'), Response::HTTP_BAD_REQUEST);
             }
 
+            // TODO: Verify email before changing password
+
             // Update the new password
             $data['password'] = Hash::make($data['password']);
         }

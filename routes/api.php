@@ -19,6 +19,7 @@ use App\Http\Controllers\Dashboard\Pengaturan\Karyawan\UnitKerjaController;
 use App\Http\Controllers\Dashboard\Pengaturan\ManagemenWaktu\CutiController;
 use App\Http\Controllers\Dashboard\Pengaturan\ManagemenWaktu\HariLiburController;
 use App\Http\Controllers\Dashboard\Pengaturan\ManagemenWaktu\ShiftController;
+use App\Http\Controllers\Dashboard\Presensi\PresensiController;
 use App\Http\Controllers\Publik\Auth\LoginController;
 use Illuminate\Support\Facades\Route;
 
@@ -92,9 +93,27 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
         Route::group(['prefix' => '/presensi'], function () {
             // ! Presensi Hadir ===========>
+            Route::get('/tepat-waktu-calculated', [PresensiController::class, 'tepatWaktuCalculated']);
+            Route::get('/terlambat-calculated', [PresensiController::class, 'terlambatCalculated']);
+            Route::get('/masuk-calculated', [PresensiController::class, 'masukCalculated']);
+
             // ! Presensi Tidak Hadir ===========>
+            Route::get('/absen-calculated', [PresensiController::class, 'absenCalculated']);
+            Route::get('/izin-calculated', [PresensiController::class, 'izinCalculated']);
+            Route::get('/invalid-calculated', [PresensiController::class, 'invalidCalculated']);
+
             // ! Presensi Libur ===========>
+            Route::get('/hari-libur-calculated', [PresensiController::class, 'hariLiburCalculated']);
+            Route::get('/cuti-calculated', [PresensiController::class, 'cutiCalculated']);
+
             // ! Presensi Tabel ===========>
+            Route::get('/all-presensi', [PresensiController::class, 'getAllPresensi']);
+            Route::post('/presensi/filter', [PresensiController::class, 'index']);
+            Route::post('/presensi/search', [PresensiController::class, 'index']);
+            Route::post('/presensi/bulk-delete', [PresensiController::class, 'bulkDelete']);
+            Route::get('/presensi/export', [PresensiController::class, 'exportPresensi']);
+            Route::post('/presensi/import', [PresensiController::class, 'importPresensi']);
+            Route::apiResource('/presensi', PresensiController::class);
         });
 
         Route::group(['prefix' => '/jadwal'], function () {
@@ -189,8 +208,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::apiResource('/ter-pph-21', TER21Controller::class);
 
             // ! Jadwal Penggajian ===========>
-            Route::post('/jadwal-penggajians', [JadwalPenggajianController::class, 'createJadwalPenggajian']);
-            // Route::post('/jadwal-penggajians/reset/{jadwalPenggajian}', [JadwalPenggajianController::class, 'resetJadwalPenggajian']);
+            Route::post('/jadwal-penggajian', [JadwalPenggajianController::class, 'createJadwalPenggajian']);
+            // Route::post('/jadwal-penggajian/reset/{jadwalPenggajian}', [JadwalPenggajianController::class, 'resetJadwalPenggajian']);
 
             // ! THR ===========>
             // TODO: Belum THR
@@ -216,7 +235,6 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::get('/hari-libur/export', [HariLiburController::class, 'exportHariLibur']);
             Route::post('/hari-libur/import', [HariLiburController::class, 'importHariLibur']);
             Route::apiResource('/hari-libur', HariLiburController::class);
-
 
             // ! Cuti ===========>
             Route::get('/all-cuti', [CutiController::class, 'getAllCuti']);

@@ -45,16 +45,23 @@ class JabatanController extends Controller
 
         // Filter
         if ($request->has('is_struktural')) {
-            $jabatan = $jabatan->where('is_struktural', $request->is_struktural);
+            if (is_array($request->is_struktural)) {
+                $jabatan->whereIn('is_struktural', $request->is_struktural);
+            } else {
+                $jabatan->where('is_struktural', $request->is_struktural);
+            }
         }
 
         // Search
         if ($request->has('search')) {
-            $jabatan = $jabatan->where('nama_jabatan', 'like', '%' . $request->search . '%');
+            $jabatan = $jabatan->where(function ($query) use ($request) {
+                $searchTerm = '%' . $request->search . '%';
+
+                $query->orWhere('nama_jabatan', 'like', $searchTerm);
+            });
         }
 
         $dataJabatan = $jabatan->paginate(10);
-
         if ($dataJabatan->isEmpty()) {
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data jabatan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
         }
@@ -73,6 +80,19 @@ class JabatanController extends Controller
         $jabatan = Jabatan::create($data);
         $successMessage = "Data jabatan '{$jabatan->nama_jabatan}' berhasil dibuat.";
         return response()->json(new JabatanResource(Response::HTTP_OK, $successMessage, $jabatan), Response::HTTP_OK);
+    }
+
+    public function show(Jabatan $jabatan)
+    {
+        if (!Gate::allows('view jabatan', $jabatan)) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
+
+        if (!$jabatan) {
+            return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data jabatan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+        }
+
+        return response()->json(new JabatanResource(Response::HTTP_OK, 'Data jabatan berhasil ditampilkan.', $jabatan), Response::HTTP_OK);
     }
 
     public function update(Jabatan $jabatan, UpdateJabatanRequest $request)
@@ -123,7 +143,7 @@ class JabatanController extends Controller
 
         try {
             $ids = $request->input('ids', []);
-            return Excel::download(new JabatanExport($ids), 'jabatans.xlsx');
+            return Excel::download(new JabatanExport($ids), 'jabatan.xls');
         } catch (\Exception $e) {
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya terjadi error. Message: ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
         } catch (\Error $e) {

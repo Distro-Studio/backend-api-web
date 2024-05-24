@@ -41,7 +41,6 @@ class HariLiburController extends Controller
 
     public function index(Request $request)
     {
-        // $this->middleware(RoleMiddleware::class, ['roles' => ['Super Admin']]);
         if (!Gate::allows('view hariLibur')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
@@ -50,30 +49,31 @@ class HariLiburController extends Controller
 
         // Filter
         if ($request->has('nama')) {
-            $hari_libur = $hari_libur->where('nama', $request->nama);
+            if (is_array($request->nama)) {
+                $hari_libur->whereIn('nama', $request->nama);
+            } else {
+                $hari_libur->where('nama', $request->nama);
+            }
         }
 
         if ($request->has('tanggal')) {
-            $hari_libur = $hari_libur->where('tanggal', $request->tanggal);
+            if (is_array($request->tanggal)) {
+                $hari_libur->whereIn('tanggal', $request->tanggal);
+            } else {
+                $hari_libur->where('tanggal', $request->tanggal);
+            }
         }
 
         // Search
         if ($request->has('search')) {
-            $hari_libur = $hari_libur->where('nama', 'like', '%' . $request->search . '%');
-        }
+            $hari_libur = $hari_libur->where(function ($query) use ($request) {
+                $searchTerm = '%' . $request->search . '%';
 
-        // Sort
-        if ($request->has('sort')) {
-            $sortFields = explode(',', $request->sort);
-            $sortOrder = $request->get('order', 'asc');
-
-            foreach ($sortFields as $sortField) {
-                $hari_libur = $hari_libur->orderBy($sortField, $sortOrder);
-            }
+                $query->orWhere('nama', 'like', $searchTerm);
+            });
         }
 
         $dataHariLibur = $hari_libur->paginate(10);
-
         if ($dataHariLibur->isEmpty()) {
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data hari libur tidak ditemukan.'), Response::HTTP_NOT_FOUND);
         }
@@ -92,6 +92,19 @@ class HariLiburController extends Controller
         $hari_libur = HariLibur::create($data);
         $successMessage = "Data hari libur berhasil dibuat.";
         return response()->json(new HariLiburResource(Response::HTTP_OK, $successMessage, $hari_libur), Response::HTTP_OK);
+    }
+
+    public function show(HariLibur $hari_libur)
+    {
+        if (!Gate::allows('view hariLibur', $hari_libur)) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
+
+        if (!$hari_libur) {
+            return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data hari libur tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+        }
+
+        return response()->json(new HariLiburResource(Response::HTTP_OK, 'Data hari libur berhasil ditampilkan.', $hari_libur), Response::HTTP_OK);
     }
 
     public function update(HariLibur $hari_libur, UpdateHariLiburRequest $request)
@@ -141,7 +154,7 @@ class HariLiburController extends Controller
         }
         try {
             $ids = $request->input('ids', []);
-            return Excel::download(new HariLiburExport($ids), 'hari-liburs.xlsx');
+            return Excel::download(new HariLiburExport($ids), 'hari-libur.xls');
         } catch (\Exception $e) {
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya terjadi error. Message: ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
         } catch (\Error $e) {
@@ -173,12 +186,13 @@ class HariLiburController extends Controller
     public function getNasionalHariLibur()
     {
         $tahunSekarang = now()->format('Y');
-        $apiHariLibur = Http::get("https://api-harilibur.vercel.app/api?year={$tahunSekarang}");
+        $apiUrl = "https://api-harilibur.vercel.app/api?year={$tahunSekarang}";
 
         try {
-            $apiHariLibur = Http::get($apiHariLibur);
-            if ($apiHariLibur->successful()) {
-                $holidayData = collect($apiHariLibur->json());
+            $response = Http::get($apiUrl);
+
+            if ($response->successful()) {
+                $holidayData = collect($response->json());
 
                 $nationalHolidays = $holidayData->filter(function ($holiday) {
                     return $holiday['is_national_holiday'] === true;
@@ -187,7 +201,7 @@ class HariLiburController extends Controller
                         'nama' => $holiday['holiday_name'],
                         'tanggal' => $holiday['holiday_date'],
                     ];
-                })->toArray();
+                })->values();
 
                 $successMessage = "Data Hari Libur Nasional tahun {$tahunSekarang}.";
 
@@ -196,10 +210,14 @@ class HariLiburController extends Controller
                     'success' => $successMessage,
                     'data' => $nationalHolidays,
                 ], Response::HTTP_OK);
+            } else {
+                throw new \Exception('Failed to retrieve holiday data');
             }
-            throw new Exception('Failed to retrieve holiday data');
         } catch (\Exception $th) {
-            return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Maaf sepertinya server sedang sibuk'), Response::HTTP_BAD_REQUEST);
+            return response()->json([
+                'status' => Response::HTTP_BAD_REQUEST,
+                'error' => 'Maaf sepertinya server sedang sibuk',
+            ], Response::HTTP_BAD_REQUEST);
         }
     }
 }

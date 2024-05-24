@@ -47,12 +47,20 @@ class UnitKerjaController extends Controller
 
         // Filter
         if ($request->has('jenis_karyawan')) {
-            $unit_kerja = $unit_kerja->where('jenis_karyawan', $request->jenis_karyawan);
+            if (is_array($request->jenis_karyawan)) {
+                $unit_kerja->whereIn('jenis_karyawan', $request->jenis_karyawan);
+            } else {
+                $unit_kerja->where('jenis_karyawan', $request->jenis_karyawan);
+            }
         }
 
         // Search
         if ($request->has('search')) {
-            $unit_kerja = $unit_kerja->where('nama_unit', 'like', '%' . $request->search . '%');
+            $unit_kerja = $unit_kerja->where(function ($query) use ($request) {
+                $searchTerm = '%' . $request->search . '%';
+
+                $query->orWhere('nama_unit', 'like', $searchTerm);
+            });
         }
 
         $dataUnitKerja = $unit_kerja->paginate(10);
@@ -76,18 +84,31 @@ class UnitKerjaController extends Controller
         return response()->json(new UnitKerjaResource(Response::HTTP_OK, $successMessage, $unit_kerja), Response::HTTP_OK);
     }
 
-    public function update(UnitKerja $UnitKerja, UpdateUnitKerjaRequest $request)
+    public function show(UnitKerja $unit_kerja)
     {
-        if (!Gate::allows('edit unitKerja', $UnitKerja)) {
+        if (!Gate::allows('view unitKerja', $unit_kerja)) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
+
+        if (!$unit_kerja) {
+            return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data unit kerja tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+        }
+
+        return response()->json(new UnitKerjaResource(Response::HTTP_OK, 'Data unit kerja berhasil ditampilkan.', $unit_kerja), Response::HTTP_OK);
+    }
+
+    public function update(UnitKerja $unit_kerja, UpdateUnitKerjaRequest $request)
+    {
+        if (!Gate::allows('edit unitKerja', $unit_kerja)) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
         $data = $request->validated();
 
-        $UnitKerja->update($data);
-        $updatedUnitKerja = $UnitKerja->fresh();
+        $unit_kerja->update($data);
+        $updatedUnitKerja = $unit_kerja->fresh();
         $successMessage = "Data unit kerja '{$updatedUnitKerja->nama_unit}' berhasil diubah.";
-        return response()->json(new UnitKerjaResource(Response::HTTP_OK, $successMessage, $UnitKerja), Response::HTTP_OK);
+        return response()->json(new UnitKerjaResource(Response::HTTP_OK, $successMessage, $unit_kerja), Response::HTTP_OK);
     }
 
     public function bulkDelete(Request $request)
@@ -124,7 +145,7 @@ class UnitKerjaController extends Controller
 
         try {
             $ids = $request->input('ids', []);
-            return Excel::download(new UnitKerjaExport($ids), 'unit-kerjas.xlsx');
+            return Excel::download(new UnitKerjaExport($ids), 'unit-kerja.xls');
         } catch (\Exception $e) {
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya terjadi error. Message: ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
         } catch (\Error $e) {

@@ -171,6 +171,19 @@ class KaryawanController extends Controller
         }
     }
 
+    public function show(DataKaryawan $data_karyawan)
+    {
+        if (!Gate::allows('view dataKaryawan', $data_karyawan)) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
+
+        if (!$data_karyawan) {
+            return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data karyawan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+        }
+
+        return response()->json(new KaryawanResource(Response::HTTP_OK, 'Data karyawan ditemukan.', $data_karyawan), Response::HTTP_OK);
+    }
+
     public function bulkDelete(Request $request)
     {
         if (!Gate::allows('delete dataKaryawan')) {
@@ -187,8 +200,6 @@ class KaryawanController extends Controller
         }
 
         $ids = $request->input('ids');
-        // $deletedCount = DataKaryawan::whereIn('id', $ids);
-        // $deletedCount->delete();
 
         $employeesToDelete = DataKaryawan::whereIn('id', $ids)
             ->with('users') // relationship
@@ -203,7 +214,6 @@ class KaryawanController extends Controller
                 $deletedCount++;
             }
         }
-
         $message = "Total $deletedCount karyawan berhasil dihapus beserta user terkait.";
 
         return response()->json(new WithoutDataResource(Response::HTTP_OK, $message), Response::HTTP_OK);
@@ -217,7 +227,7 @@ class KaryawanController extends Controller
 
         try {
             $ids = $request->input('ids', []);
-            return Excel::download(new KaryawanExport($ids), 'data-karyawans.xlsx');
+            return Excel::download(new KaryawanExport($ids), 'data-karyawans.xls');
         } catch (\Exception $e) {
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya terjadi error. Message: ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
         } catch (\Error $e) {

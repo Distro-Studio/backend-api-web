@@ -45,12 +45,20 @@ class PremiController extends Controller
 
         // Filter
         if ($request->has('jenis_premi')) {
-            $premi = $premi->where('jenis_premi', $request->jenis_premi);
+            if (is_array($request->jenis_premi)) {
+                $premi->whereIn('jenis_premi', $request->jenis_premi);
+            } else {
+                $premi->where('jenis_premi', $request->jenis_premi);
+            }
         }
 
         // Search
         if ($request->has('search')) {
-            $premi = $premi->where('nama_premi', 'like', '%' . $request->search . '%');
+            $premi = $premi->where(function ($query) use ($request) {
+                $searchTerm = '%' . $request->search . '%';
+
+                $query->orWhere('nama_premi', 'like', $searchTerm);
+            });
         }
 
         $dataPremi = $premi->paginate(10);
@@ -72,6 +80,19 @@ class PremiController extends Controller
         $premi = Premi::create($data);
         $successMessage = "Data premi '{$premi->nama_premi}' berhasil dibuat.";
         return response()->json(new PremiResource(Response::HTTP_OK, $successMessage, $premi), Response::HTTP_OK);
+    }
+
+    public function show(Premi $premi)
+    {
+        if (!Gate::allows('view premi', $premi)) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
+
+        if (!$premi) {
+            return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data premi tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+        }
+
+        return response()->json(new PremiResource(Response::HTTP_OK, 'Data premi berhasil ditampilkan.', $premi), Response::HTTP_OK);
     }
 
     public function update(Premi $premi, UpdatePremiRequest $request)
@@ -122,7 +143,7 @@ class PremiController extends Controller
 
         try {
             $ids = $request->input('ids', []);
-            return Excel::download(new PremiExport($ids), 'premis.xlsx');
+            return Excel::download(new PremiExport($ids), 'premis.xls');
         } catch (\Exception $e) {
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya terjadi error. Message: ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
         } catch (\Error $e) {

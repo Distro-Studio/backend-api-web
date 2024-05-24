@@ -45,24 +45,80 @@ class KelompokGajiController extends Controller
 
         // Filter
         if ($request->has('nama_kelompok')) {
-            $kelompok_gaji = $kelompok_gaji->where('nama_kelompok', $request->nama_kelompok);
+            if (is_array($request->nama_kelompok)) {
+                $kelompok_gaji->whereIn('nama_kelompok', $request->nama_kelompok);
+            } else {
+                $kelompok_gaji->where('nama_kelompok', $request->nama_kelompok);
+            }
         }
 
         if ($request->has('range_min')) {
-            $kelompok_gaji = $kelompok_gaji->where('besaran_gaji', '>=', $request->range_min);
+            if (is_array($request->range_min)) {
+                $kelompok_gaji->where(function ($query) use ($request) {
+                    foreach ($request->range_min as $min) {
+                        $query->orWhere('besaran_gaji', '>', $min);
+                    }
+                });
+            } else {
+                $kelompok_gaji->where('besaran_gaji', '>', $request->range_min);
+            }
         }
 
         if ($request->has('range_max')) {
-            $kelompok_gaji = $kelompok_gaji->where('besaran_gaji', '<=', $request->range_max);
+            if (is_array($request->range_max)) {
+                $kelompok_gaji->where(function ($query) use ($request) {
+                    foreach ($request->range_max as $min) {
+                        $query->orWhere('besaran_gaji', '<', $min);
+                    }
+                });
+            } else {
+                $kelompok_gaji->where('besaran_gaji', '<', $request->range_max);
+            }
         }
 
         if ($request->has('range_min') && $request->has('range_max')) {
-            $kelompok_gaji = $kelompok_gaji->whereBetween('besaran_gaji', [$request->range_min, $request->range_max]);
+            if (is_array($request->range_min) && is_array($request->range_max)) {
+                $kelompok_gaji->where(function ($query) use ($request) {
+                    foreach ($request->range_min as $index => $min) {
+                        if (isset($request->range_max[$index])) {
+                            $query->orWhereBetween('besaran_gaji', [$min, $request->range_max[$index]]);
+                        }
+                    }
+                });
+            } else if (!is_array($request->range_min) && !is_array($request->range_max)) {
+                $kelompok_gaji->whereBetween('besaran_gaji', [$request->range_min, $request->range_max]);
+            } else {
+                // Handle case where one is array and the other is not, if needed
+                // Example: Assume single range_min and multiple range_max, or vice versa
+                if (is_array($request->range_min)) {
+                    $kelompok_gaji->where(function ($query) use ($request) {
+                        foreach ($request->range_min as $min) {
+                            $query->orWhere('besaran_gaji', '>=', $min);
+                        }
+                    });
+                } else {
+                    $kelompok_gaji->where('besaran_gaji', '>=', $request->range_min);
+                }
+
+                if (is_array($request->range_max)) {
+                    $kelompok_gaji->where(function ($query) use ($request) {
+                        foreach ($request->range_max as $max) {
+                            $query->orWhere('besaran_gaji', '<=', $max);
+                        }
+                    });
+                } else {
+                    $kelompok_gaji->where('besaran_gaji', '<=', $request->range_max);
+                }
+            }
         }
 
         // Search
         if ($request->has('search')) {
-            $kelompok_gaji = $kelompok_gaji->where('nama_kelompok', 'like', '%' . $request->search . '%');
+            $kelompok_gaji = $kelompok_gaji->where(function ($query) use ($request) {
+                $searchTerm = '%' . $request->search . '%';
+
+                $query->orWhere('nama_kelompok', 'like', $searchTerm);
+            });
         }
 
         $dataKelompokGaji = $kelompok_gaji->paginate(10);
@@ -87,18 +143,31 @@ class KelompokGajiController extends Controller
         return response()->json(new KelompokGajiResource(Response::HTTP_OK, $successMessage, $kelompk_gaji), Response::HTTP_OK);
     }
 
-    public function update(KelompokGaji $KelompokGaji, UpdateKelompokGajiRequest $request)
+    public function show(KelompokGaji $kelompok_gaji)
     {
-        if (!Gate::allows('edit kelompokGaji', $KelompokGaji)) {
+        if (!Gate::allows('view kelompokGaji', $kelompok_gaji)) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
+
+        if (!$kelompok_gaji) {
+            return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data kelompok gaji tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+        }
+
+        return response()->json(new KelompokGajiResource(Response::HTTP_OK, 'Data kelompok gaji berhasil ditampilkan.', $kelompok_gaji), Response::HTTP_OK);
+    }
+
+    public function update(KelompokGaji $kelompok_gaji, UpdateKelompokGajiRequest $request)
+    {
+        if (!Gate::allows('edit kelompokGaji', $kelompok_gaji)) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
         $data = $request->validated();
 
-        $KelompokGaji->update($data);
-        $updatedKelompokGaji = $KelompokGaji->fresh();
+        $kelompok_gaji->update($data);
+        $updatedKelompokGaji = $kelompok_gaji->fresh();
         $successMessage = "Data kelompok gaji '{$updatedKelompokGaji->nama_kelompok}' berhasil diubah.";
-        return response()->json(new KelompokGajiResource(Response::HTTP_OK, $successMessage, $KelompokGaji), Response::HTTP_OK);
+        return response()->json(new KelompokGajiResource(Response::HTTP_OK, $successMessage, $kelompok_gaji), Response::HTTP_OK);
     }
 
     public function bulkDelete(Request $request)
@@ -135,7 +204,7 @@ class KelompokGajiController extends Controller
 
         try {
             $ids = $request->input('ids', []);
-            return Excel::download(new KelompokGajiExport($ids), 'kelompok-gajis.xlsx');
+            return Excel::download(new KelompokGajiExport($ids), 'kelompok-gaji.xls');
         } catch (\Exception $e) {
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya terjadi error. Message: ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
         } catch (\Error $e) {

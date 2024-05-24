@@ -44,13 +44,81 @@ class KompetensiController extends Controller
 
         // Filter
         if ($request->has('jenis_kompetensi')) {
-            $kompetensi = $kompetensi->where('jenis_kompetensi', $request->jenis_kompetensi);
+            if (is_array($request->jenis_kompetensi)) {
+                $kompetensi->whereIn('jenis_kompetensi', $request->jenis_kompetensi);
+            } else {
+                $kompetensi->where('jenis_kompetensi', $request->jenis_kompetensi);
+            }
+        }
+
+        if ($request->has('range_min')) {
+            if (is_array($request->range_min)) {
+                $kompetensi->where(function ($query) use ($request) {
+                    foreach ($request->range_min as $min) {
+                        $query->orWhere('total_tunjangan', '>', $min);
+                    }
+                });
+            } else {
+                $kompetensi->where('total_tunjangan', '>', $request->range_min);
+            }
+        }
+
+        if ($request->has('range_max')) {
+            if (is_array($request->range_max)) {
+                $kompetensi->where(function ($query) use ($request) {
+                    foreach ($request->range_max as $min) {
+                        $query->orWhere('total_tunjangan', '<', $min);
+                    }
+                });
+            } else {
+                $kompetensi->where('total_tunjangan', '<', $request->range_max);
+            }
+        }
+
+        if ($request->has('range_min') && $request->has('range_max')) {
+            if (is_array($request->range_min) && is_array($request->range_max)) {
+                $kompetensi->where(function ($query) use ($request) {
+                    foreach ($request->range_min as $index => $min) {
+                        if (isset($request->range_max[$index])) {
+                            $query->orWhereBetween('total_tunjangan', [$min, $request->range_max[$index]]);
+                        }
+                    }
+                });
+            } else if (!is_array($request->range_min) && !is_array($request->range_max)) {
+                $kompetensi->whereBetween('total_tunjangan', [$request->range_min, $request->range_max]);
+            } else {
+                // Handle case where one is array and the other is not, if needed
+                // Example: Assume single range_min and multiple range_max, or vice versa
+                if (is_array($request->range_min)) {
+                    $kompetensi->where(function ($query) use ($request) {
+                        foreach ($request->range_min as $min) {
+                            $query->orWhere('total_tunjangan', '>=', $min);
+                        }
+                    });
+                } else {
+                    $kompetensi->where('total_tunjangan', '>=', $request->range_min);
+                }
+
+                if (is_array($request->range_max)) {
+                    $kompetensi->where(function ($query) use ($request) {
+                        foreach ($request->range_max as $max) {
+                            $query->orWhere('total_tunjangan', '<=', $max);
+                        }
+                    });
+                } else {
+                    $kompetensi->where('total_tunjangan', '<=', $request->range_max);
+                }
+            }
         }
 
         // Search
         if ($request->has('search')) {
-            $kompetensi = $kompetensi->where('nama_kompetensi', 'like', '%' . $request->search . '%')
-                ->orWhere('jenis_kompetensi', 'like', '%' . $request->search . '%');
+            $kompetensi = $kompetensi->where(function ($query) use ($request) {
+                $searchTerm = '%' . $request->search . '%';
+
+                $query->orWhere('nama_kompetensi', 'like', $searchTerm)
+                    ->orWhere('jenis_kompetensi', 'like', $searchTerm);
+            });
         }
 
         $dataKompetensi = $kompetensi->paginate(10);
@@ -73,6 +141,19 @@ class KompetensiController extends Controller
         $kompetensi = Kompetensi::create($data);
         $successMessage = "Data kompetensi '{$kompetensi->nama_kompetensi}' berhasil dibuat.";
         return response()->json(new KompetensiResource(Response::HTTP_OK, $successMessage, $kompetensi), Response::HTTP_OK);
+    }
+
+    public function show(Kompetensi $kompetensi)
+    {
+        if (!Gate::allows('view kompetensi', $kompetensi)) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
+
+        if (!$kompetensi) {
+            return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data kompetensi tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+        }
+
+        return response()->json(new KompetensiResource(Response::HTTP_OK, 'Data kompetensi berhasil ditampilkan.', $kompetensi), Response::HTTP_OK);
     }
 
     public function update(Kompetensi $kompetensi, UpdateKompetensiRequest $request)
@@ -120,7 +201,7 @@ class KompetensiController extends Controller
 
         try {
             $ids = $request->input('ids', []);
-            return Excel::download(new KompetensiExport($ids), 'kompetensis.xlsx');
+            return Excel::download(new KompetensiExport($ids), 'kompetensi.xls');
         } catch (\Exception $e) {
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya terjadi error. Message: ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
         } catch (\Error $e) {

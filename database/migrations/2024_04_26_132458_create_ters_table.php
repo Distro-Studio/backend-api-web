@@ -15,9 +15,9 @@ return new class extends Migration
             $table->id();
             $table->foreignId('kategori_ter_id')->constrained('kategori_ters');
             $table->foreignId('ptkp_id')->constrained('ptkps');
-            $table->string('from_ter', 20)->default('0');
-            $table->string('to_ter', 20)->default('0');
-            $table->string('percentage_ter')->default('0');
+            $table->integer('from_ter');
+            $table->integer('to_ter');
+            $table->integer('percentage_ter');
             $table->timestamps();
         });
     }

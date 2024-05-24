@@ -37,7 +37,6 @@ class ShiftController extends Controller
 
     public function index(Request $request)
     {
-        // $this->middleware(RoleMiddleware::class, ['roles' => ['Super Admin']]);
         if (!Gate::allows('view shift')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
@@ -46,34 +45,81 @@ class ShiftController extends Controller
 
         // Filter
         if ($request->has('nama')) {
-            $shift = $shift->where('nama', $request->nama);
+            if (is_array($request->nama)) {
+                $shift->whereIn('nama', $request->nama);
+            } else {
+                $shift->where('nama', $request->nama);
+            }
         }
 
         if ($request->has('jam_from')) {
-            $shift = $shift->where('jam_from', $request->jam_from);
+            if (is_array($request->jam_from)) {
+                $shift->where(function ($query) use ($request) {
+                    foreach ($request->jam_from as $from) {
+                        $query->orWhere('jam_from', '>=', $from);
+                    }
+                });
+            } else {
+                $shift->where('jam_from', '>=', $request->jam_from);
+            }
         }
 
         if ($request->has('jam_to')) {
-            $shift = $shift->where('jam_to', $request->jam_to);
+            if (is_array($request->jam_to)) {
+                $shift->where(function ($query) use ($request) {
+                    foreach ($request->jam_to as $to) {
+                        $query->orWhere('jam_to', '<=', $to);
+                    }
+                });
+            } else {
+                $shift->where('jam_to', '<=', $request->jam_to);
+            }
+        }
+
+        if ($request->has('jam_from') && $request->has('jam_to')) {
+            if (is_array($request->jam_from) && is_array($request->jam_to)) {
+                $shift->where(function ($query) use ($request) {
+                    foreach ($request->jam_from as $index => $from) {
+                        if (isset($request->jam_to[$index])) {
+                            $query->orWhereBetween('jam_to', [$from, $request->jam_to[$index]]);
+                        }
+                    }
+                });
+            } else if (!is_array($request->jam_from) && !is_array($request->jam_to)) {
+                $shift->whereBetween('jam_from', [$request->jam_from, $request->jam_to]);
+            } else {
+                if (is_array($request->jam_from)) {
+                    $shift->where(function ($query) use ($request) {
+                        foreach ($request->jam_from as $from) {
+                            $query->orWhere('jam_from', '>=', $from);
+                        }
+                    });
+                } else {
+                    $shift->where('jam_from', '>=', $request->jam_from);
+                }
+
+                if (is_array($request->jam_to)) {
+                    $shift->where(function ($query) use ($request) {
+                        foreach ($request->jam_to as $to) {
+                            $query->orWhere('jam_to', '<=', $to);
+                        }
+                    });
+                } else {
+                    $shift->where('jam_to', '<=', $request->jam_to);
+                }
+            }
         }
 
         // Search
         if ($request->has('search')) {
-            $shift = $shift->where('nama', 'like', '%' . $request->search . '%');
-        }
+            $shift = $shift->where(function ($query) use ($request) {
+                $searchTerm = '%' . $request->search . '%';
 
-        // Sort
-        if ($request->has('sort')) {
-            $sortFields = explode(',', $request->sort);
-            $sortOrder = $request->get('order', 'asc');
-
-            foreach ($sortFields as $sortField) {
-                $shift = $shift->orderBy($sortField, $sortOrder);
-            }
+                $query->orWhere('nama', 'like', $searchTerm);
+            });
         }
 
         $dataShift = $shift->paginate(10);
-
         if ($dataShift->isEmpty()) {
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data shift tidak ditemukan.'), Response::HTTP_NOT_FOUND);
         }
@@ -92,6 +138,19 @@ class ShiftController extends Controller
         $shift = Shift::create($data);
         $successMessage = "Data shift '{$shift->nama}' berhasil dibuat.";
         return response()->json(new ShiftResource(Response::HTTP_OK, $successMessage, $shift), Response::HTTP_OK);
+    }
+
+    public function show(Shift $shift)
+    {
+        if (!Gate::allows('view shift', $shift)) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
+
+        if (!$shift) {
+            return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data shift tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+        }
+
+        return response()->json(new ShiftResource(Response::HTTP_OK, 'Data shift berhasil ditampilkan.', $shift), Response::HTTP_OK);
     }
 
     public function update(Shift $shift, UpdateShiftRequest $request)
@@ -141,7 +200,7 @@ class ShiftController extends Controller
         }
         try {
             $ids = $request->input('ids', []);
-            return Excel::download(new ShiftExport($ids), 'shifts.xlsx');
+            return Excel::download(new ShiftExport($ids), 'shift.xls');
         } catch (\Exception $e) {
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya terjadi error. Message: ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
         } catch (\Error $e) {

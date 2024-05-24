@@ -45,7 +45,11 @@ class RolesController extends Controller
 
         // Filter
         if ($request->has('name')) {
-            $role = $role->where('name', $request->name);
+            if (is_array($request->name)) {
+                $role->whereIn('name', $request->name);
+            } else {
+                $role->where('name', $request->name);
+            }
         }
 
         // Search
@@ -79,9 +83,7 @@ class RolesController extends Controller
     {
         if (!Gate::allows('view role', $role)) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
-        }
-        
-        
+        }     
 
         if (!$role) {
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data role karyawan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
@@ -136,7 +138,7 @@ class RolesController extends Controller
 
         try {
             $ids = $request->input('ids', []);
-            return Excel::download(new RolesExport($ids), 'roles.xlsx');
+            return Excel::download(new RolesExport($ids), 'roles.xls');
         } catch (\Exception $e) {
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya terjadi error. Message: ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
         } catch (\Error $e) {

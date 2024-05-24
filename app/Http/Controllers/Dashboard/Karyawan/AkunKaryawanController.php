@@ -140,7 +140,7 @@ class AkunKaryawanController extends Controller
 
         try {
             $ids = $request->input('ids', []);
-            return Excel::download(new AkunKaryawanExport($ids), 'akun-karyawans.xlsx');
+            return Excel::download(new AkunKaryawanExport($ids), 'akun-karyawans.xls');
         } catch (\Exception $e) {
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya terjadi error. Message: ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
         } catch (\Error $e) {
