@@ -41,11 +41,6 @@ class SendAccoundUsersMail extends Mailable
     {
         return new Content(
             view: 'mails.sendingAccount',
-            with: [
-                'username' => $this->username,
-                'password' => $this->password,
-                'nama' => $this->nama,
-            ]
         );
     }
 

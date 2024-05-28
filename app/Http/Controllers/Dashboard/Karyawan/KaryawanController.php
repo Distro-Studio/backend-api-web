@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Dashboard\Karyawan;
 
 use App\Models\User;
+use App\Models\TrackRecord;
 use App\Models\DataKaryawan;
 use Illuminate\Http\Request;
 use App\Helpers\RandomHelper;
@@ -16,14 +17,14 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\Karyawan\KaryawanExport;
-use App\Http\Requests\Excel_Import\ImportKaryawanRequest;
 use App\Imports\Karyawan\KaryawanImport;
 use Illuminate\Support\Facades\Validator;
 use App\Http\Requests\StoreDataKaryawanRequest;
 
+use App\Http\Requests\UpdateDataKaryawanRequest;
+use App\Http\Requests\Excel_Import\ImportKaryawanRequest;
 use App\Http\Resources\Dashboard\Karyawan\KaryawanResource;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
-use App\Models\TrackRecord;
 
 class KaryawanController extends Controller
 {
@@ -34,7 +35,7 @@ class KaryawanController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
-        $dataKaryawan = DataKaryawan::all();
+        $dataKaryawan = DataKaryawan::with('users', 'unit_kerjas', 'jabatans', 'kompetensis', 'kelompok_gajis', 'ptkps')->get();
         return response()->json([
             'status' => Response::HTTP_OK,
             'message' => 'Retrieving all karyawan for dropdown',
@@ -184,39 +185,18 @@ class KaryawanController extends Controller
         return response()->json(new KaryawanResource(Response::HTTP_OK, 'Data karyawan ditemukan.', $data_karyawan), Response::HTTP_OK);
     }
 
-    public function bulkDelete(Request $request)
+    public function update(UpdateDataKaryawanRequest $request, DataKaryawan $data_karyawan)
     {
-        if (!Gate::allows('delete dataKaryawan')) {
+        if (!Gate::allows('update dataKaryawan', $data_karyawan)) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
-        $dataKaryawan = Validator::make($request->all(), [
-            'ids' => 'required|array|min:1',
-            'ids.*' => 'integer|exists:data_karyawans,id'
-        ]);
+        $data = $request->validated();
+        $data_karyawan->update($data);
+        $updatedFresh = $data_karyawan->fresh();
+        $successMessage = "Data Karyawan '{$updatedFresh->users->nama}' berhasil diubah.";
 
-        if ($dataKaryawan->fails()) {
-            return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, $dataKaryawan->errors()), Response::HTTP_BAD_REQUEST);
-        }
-
-        $ids = $request->input('ids');
-
-        $employeesToDelete = DataKaryawan::whereIn('id', $ids)
-            ->with('users') // relationship
-            ->get();
-
-        $deletedCount = 0;
-
-        foreach ($employeesToDelete as $employee) {
-            if ($employee->users) {
-                $employee->users->delete(); // Delete associated user
-                $employee->delete(); // Delete employee data
-                $deletedCount++;
-            }
-        }
-        $message = "Total $deletedCount karyawan berhasil dihapus beserta user terkait.";
-
-        return response()->json(new WithoutDataResource(Response::HTTP_OK, $message), Response::HTTP_OK);
+        return response()->json(new KaryawanResource(Response::HTTP_OK, $successMessage, $updatedFresh), Response::HTTP_OK);
     }
 
     public function exportKaryawan(Request $request)

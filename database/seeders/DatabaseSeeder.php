@@ -6,6 +6,7 @@ namespace Database\Seeders;
 
 use Database\Seeders\Karyawan\KaryawanSeeder;
 use Database\Seeders\Karyawan\KeluargaKaryawanSeeder;
+use Database\Seeders\Karyawan\TransferKaryawanSeeder;
 use Illuminate\Database\Seeder;
 use Database\Seeders\Pengaturan_Finance\TERSeeder;
 use Database\Seeders\Pengaturan_Finance\PremiSeeder;
@@ -45,6 +46,7 @@ class DatabaseSeeder extends Seeder
             /* ==== Karyawan ==== */
             KaryawanSeeder::class,
             KeluargaKaryawanSeeder::class,
+            TransferKaryawanSeeder::class,
         ]);
     }
 }

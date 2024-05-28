@@ -23,7 +23,7 @@ class TransferExport implements FromCollection, WithHeadings, WithMapping
         if (!empty($this->ids)) {
             return TransferKaryawan::whereIn('id', $this->ids)->get();
         }
-        return TransferKaryawan::with(['unit_kerja_froms', 'unit_kerja_tos', 'jabatan_froms', 'jabatan_tos'])->get();
+        return TransferKaryawan::with(['unit_kerja_asals', 'unit_kerja_tujuans', 'jabatan_asals', 'jabatan_tujuans'])->get();
     }
 
     public function headings(): array
@@ -31,13 +31,12 @@ class TransferExport implements FromCollection, WithHeadings, WithMapping
         return [
             'user_id',
             'tanggal',
-            'unit_kerja_from',
-            'unit_kerja_to',
-            'jabatan_from',
-            'jabatan_to',
+            'unit_kerja_asal',
+            'unit_kerja_tujuan',
+            'jabatan_asal',
+            'jabatan_tujuan',
             'tipe',
             'alasan',
-            // 'dokumen',
             'created_at',
             'updated_at',
         ];
@@ -48,13 +47,12 @@ class TransferExport implements FromCollection, WithHeadings, WithMapping
         return [
             $transfer->users->nama,
             $transfer->tanggal,
-            $transfer->unit_kerja_froms->nama_unit,
-            $transfer->unit_kerja_tos->nama_unit,
-            $transfer->jabatan_froms->nama_jabatan,
-            $transfer->jabatan_tos->nama_jabatan,
+            $transfer->unit_kerja_asals->nama_unit,
+            $transfer->unit_kerja_tujuans->nama_unit,
+            $transfer->jabatan_asals->nama_jabatan,
+            $transfer->jabatan_tujuans->nama_jabatan,
             $transfer->tipe ?? 'Data tidak tersedia',
             $transfer->alasan ?? 'Data tidak tersedia',
-            // $transfer->dokumen ?? 'Data tidak tersedia',
             $transfer->created_at,
             $transfer->updated_at,
         ];

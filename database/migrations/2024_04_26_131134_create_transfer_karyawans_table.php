@@ -14,12 +14,12 @@ return new class extends Migration
         Schema::create('transfer_karyawans', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained('users');
-            $table->dateTime('tanggal');
-            $table->foreignId('unit_kerja_from')->constrained('unit_kerjas');
-            $table->foreignId('unit_kerja_to')->constrained('unit_kerjas');
-            $table->foreignId('jabatan_from')->constrained('jabatans');
-            $table->foreignId('jabatan_to')->constrained('jabatans');
-            $table->string('tipe')->nullable();
+            $table->dateTime('tanggal_mulai');
+            $table->foreignId('unit_kerja_asal')->constrained('unit_kerjas');
+            $table->foreignId('unit_kerja_tujuan')->constrained('unit_kerjas');
+            $table->foreignId('jabatan_asal')->constrained('jabatans');
+            $table->foreignId('jabatan_tujuan')->constrained('jabatans');
+            $table->string('tipe');
             $table->text('alasan');
             $table->string('dokumen')->nullable();
             $table->timestamps();

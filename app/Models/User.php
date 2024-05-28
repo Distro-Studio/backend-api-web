@@ -131,4 +131,14 @@ class User extends Authenticatable
     {
         return $this->hasMany(TransferKaryawan::class, 'user_id', 'id');
     }
+
+    /**
+     * Get all of the berkas for the User
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function berkas(): HasMany
+    {
+        return $this->hasMany(Berkas::class, 'user_id', 'id');
+    }
 }

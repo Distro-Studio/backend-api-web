@@ -118,17 +118,6 @@ class KaryawanSeeder extends Seeder
                 'tgl_keluar' => $tgl_keluar
             ]);
             $dataRekamJejak->save();
-
-            $dataTransfer = new TransferKaryawan([
-                'user_id' => $user->id,
-                'tanggal' => date('Y-m-d', rand(mktime(0, 0, 0, 1, 1, 2023), mktime(0, 0, 0, 12, 31, 2024))),
-                'unit_kerja_from' => $unit_kerja_id[array_rand($unit_kerja_id)],
-                'unit_kerja_to' => $unit_kerja_id[array_rand($unit_kerja_id)],
-                'jabatan_from' => $jabatan_id[array_rand($jabatan_id)],
-                'jabatan_to' => $jabatan_id[array_rand($jabatan_id)],
-                'alasan' => 'Lorem ipsum dolor, sit amet consectetur adipisicing elit. Quos rerum unde, culpa corporis impedit id sequi in tenetur laboriosam odit provident vel temporibus fugiat excepturi ex eum at? Rem, totam!',
-            ]);
-            $dataTransfer->save();
         }
     }
 }

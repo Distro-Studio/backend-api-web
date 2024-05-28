@@ -108,26 +108,44 @@ class TransferKaryawanController extends Controller
         }
 
         $data = $request->validated();
-
         $transfer = TransferKaryawan::create($data);
-        $message = "Berhasil melakukan transfer karyawan {$transfer->users->nama}.";
 
         $users = $transfer->users;
-        $data_karyawans = $transfer->users->data_karyawans;
-        $unitKerjaFrom = $transfer->unit_kerja_froms;
-        $unitKerjaTo = $transfer->unit_kerja_tos;
-        $jabatanFrom = $transfer->jabatan_froms;
-        $jabatanTo = $transfer->jabatan_tos;
+        // $email = $transfer->data_karyawans;
+        $unit_kerja_asals = $transfer->unit_kerja_asals->nama_unit;
+        $unit_kerja_tujuans = $transfer->unit_kerja_tujuans->nama_unit;
+        $jabatan_asals = $transfer->jabatan_asals->nama_jabatan;
+        $jabatan_tujuans = $transfer->jabatan_tujuans->nama_jabatan;
+        $alasan = $transfer->alasan;
+        $tanggal_mulai = $transfer->tanggal_mulai;
+
         if ($request->has('notify_manager_direktur') && $request->notify_manager_direktur == true) {
             // TODO: ganti email
-            Mail::to('manager@example.com')->cc('direktur@example.com')->send(new SendNotifyTransfer($users->nama, $data_karyawans->email, $unitKerjaFrom->nama_unit, $unitKerjaTo->nama_unit, $jabatanFrom->nama_jabatan, $jabatanTo->nama_jabatan, $data['alasan'], $data['tanggal']));
+            Mail::to('manager@example.com')->cc('direktur@example.com')->send(new SendNotifyTransfer(
+                $users->nama,
+                $users->data_karyawans->email,
+                $unit_kerja_asals,
+                $unit_kerja_tujuans,
+                $jabatan_asals,
+                $jabatan_tujuans,
+                $alasan,
+                $tanggal_mulai
+            ));
         }
         if ($request->has('notify_users') && $request->notify_users == true) {
-            Mail::to($data_karyawans->email)->send(new SendNotifyTransfer($users->nama, $data_karyawans->email, $unitKerjaFrom->nama_unit, $unitKerjaTo->nama_unit, $jabatanFrom->nama_jabatan, $jabatanTo->nama_jabatan, $data['alasan'], $data['tanggal']));
+            Mail::to($users->data_karyawans->email)->send(new SendNotifyTransfer(
+                $users->nama,
+                $users->data_karyawans->email,
+                $unit_kerja_asals,
+                $unit_kerja_tujuans,
+                $jabatan_asals,
+                $jabatan_tujuans,
+                $alasan,
+                $tanggal_mulai
+            ));
         }
 
-
-        return response()->json(new TransferKaryawanResource(Response::HTTP_OK, $message, $transfer), Response::HTTP_OK);
+        return response()->json(new TransferKaryawanResource(Response::HTTP_OK, "Berhasil melakukan transfer karyawan {$users->nama}.", $transfer), Response::HTTP_OK);
     }
 
     public function exportTransferKaryawan(Request $request)

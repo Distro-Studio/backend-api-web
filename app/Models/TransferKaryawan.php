@@ -20,44 +20,44 @@ class TransferKaryawan extends Model
     {
         return $this->belongsTo(User::class, 'user_id', 'id');
     }
-    
+
     /**
-     * Get the unit_kerja_from that owns the TransferKaryawan
+     * Get the unit_kerja_asal that owns the TransferKaryawan
      *
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function unit_kerja_froms(): BelongsTo
+    public function unit_kerja_asals(): BelongsTo
     {
-        return $this->belongsTo(UnitKerja::class, 'unit_kerja_from', 'id');
+        return $this->belongsTo(UnitKerja::class, 'unit_kerja_asal', 'id');
     }
 
     /**
-     * Get the unit_kerja_to that owns the TransferKaryawan
+     * Get the unit_kerja_tujuan that owns the TransferKaryawan
      *
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function unit_kerja_tos(): BelongsTo
+    public function unit_kerja_tujuans(): BelongsTo
     {
-        return $this->belongsTo(UnitKerja::class, 'unit_kerja_to', 'id');
+        return $this->belongsTo(UnitKerja::class, 'unit_kerja_tujuan', 'id');
     }
 
     /**
-     * Get the jabatan_from that owns the TransferKaryawan
+     * Get the jabatan_asal that owns the TransferKaryawan
      *
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function jabatan_froms(): BelongsTo
+    public function jabatan_asals(): BelongsTo
     {
-        return $this->belongsTo(Jabatan::class, 'jabatan_from', 'id');
+        return $this->belongsTo(Jabatan::class, 'jabatan_asal', 'id');
     }
 
     /**
-     * Get the jabatan_to that owns the TransferKaryawan
+     * Get the jabatan_tujuan that owns the TransferKaryawan
      *
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function jabatan_tos(): BelongsTo
+    public function jabatan_tujuans(): BelongsTo
     {
-        return $this->belongsTo(Jabatan::class, 'jabatan_to', 'id');
+        return $this->belongsTo(Jabatan::class, 'jabatan_tujuan', 'id');
     }
 }

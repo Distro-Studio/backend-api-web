@@ -22,7 +22,7 @@ class AkunKaryawanController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
-        $akunKaryawan = User::all();
+        $akunKaryawan = User::with('data_karyawans')->get();
         return response()->json([
             'status' => Response::HTTP_OK,
             'message' => 'Retrieving all akun karyawan for dropdown',
