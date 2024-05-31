@@ -17,7 +17,7 @@ class Presensi extends Model
      *
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function user(): BelongsTo
+    public function users(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id', 'id');
     }
@@ -27,8 +27,18 @@ class Presensi extends Model
      *
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function jadwal(): BelongsTo
+    public function jadwals(): BelongsTo
     {
         return $this->belongsTo(Jadwal::class, 'jadwal_id', 'id');
+    }
+
+    /**
+     * Get the data_karyawans that owns the Presensi
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function data_karyawans(): BelongsTo
+    {
+        return $this->belongsTo(DataKaryawan::class, 'data_karyawan_id', 'id');
     }
 }

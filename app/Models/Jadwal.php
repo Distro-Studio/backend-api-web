@@ -18,7 +18,7 @@ class Jadwal extends Model
      *
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function presensi(): HasMany
+    public function presensis(): HasMany
     {
         return $this->hasMany(Presensi::class, 'jadwal_id', 'id');
     }
@@ -28,7 +28,7 @@ class Jadwal extends Model
      *
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function user(): BelongsTo
+    public function users(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id', 'id');
     }
@@ -38,7 +38,7 @@ class Jadwal extends Model
      *
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function shift(): BelongsTo
+    public function shifts(): BelongsTo
     {
         return $this->belongsTo(Shift::class, 'shift_id', 'id');
     }

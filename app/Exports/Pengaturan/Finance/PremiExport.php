@@ -2,6 +2,7 @@
 
 namespace App\Exports\Pengaturan\Finance;
 
+use Carbon\Carbon;
 use App\Models\Premi;
 use Maatwebsite\Excel\Concerns\Exportable;
 use Maatwebsite\Excel\Concerns\WithMapping;
@@ -42,8 +43,8 @@ class PremiExport implements FromCollection, WithHeadings, WithMapping
             $premi->nama_premi,
             $premi->jenis_premi,
             $premi->besaran_premi,
-            $premi->created_at,
-            $premi->updated_at,
+            Carbon::parse($premi->created_at)->format('d-m-Y H:i:s'),
+            Carbon::parse($premi->updated_at)->format('d-m-Y H:i:s')
         ];
     }
 }

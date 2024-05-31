@@ -2,6 +2,7 @@
 
 namespace App\Exports\Pengaturan\Managemen_Waktu;
 
+use Carbon\Carbon;
 use App\Models\Shift;
 use Maatwebsite\Excel\Concerns\Exportable;
 use Maatwebsite\Excel\Concerns\WithMapping;
@@ -43,8 +44,8 @@ class ShiftExport implements FromCollection, WithHeadings, WithMapping
             $shift->nama,
             $shift->jam_from,
             $shift->jam_to,
-            $shift->created_at,
-            $shift->updated_at,
+            Carbon::parse($shift->created_at)->format('d-m-Y H:i:s'),
+            Carbon::parse($shift->updated_at)->format('d-m-Y H:i:s')
         ];
     }
 }

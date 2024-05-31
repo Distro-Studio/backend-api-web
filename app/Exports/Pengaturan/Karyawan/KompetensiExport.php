@@ -2,6 +2,7 @@
 
 namespace App\Exports\Pengaturan\Karyawan;
 
+use Carbon\Carbon;
 use App\Models\Kompetensi;
 use Maatwebsite\Excel\Concerns\Exportable;
 use Maatwebsite\Excel\Concerns\WithMapping;
@@ -43,8 +44,8 @@ class KompetensiExport implements FromCollection, WithHeadings, WithMapping
             $kompetensi->nama_kompetensi,
             $kompetensi->jenis_kompetensi,
             $kompetensi->total_tunjangan,
-            $kompetensi->created_at,
-            $kompetensi->updated_at,
+            Carbon::parse($kompetensi->created_at)->format('d-m-Y H:i:s'),
+            Carbon::parse($kompetensi->updated_at)->format('d-m-Y H:i:s')
         ];
     }
 }

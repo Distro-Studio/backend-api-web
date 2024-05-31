@@ -2,6 +2,7 @@
 
 namespace App\Exports\Karyawan;
 
+use Carbon\Carbon;
 use App\Models\DataKeluarga;
 use Maatwebsite\Excel\Concerns\Exportable;
 use Maatwebsite\Excel\Concerns\WithMapping;
@@ -44,8 +45,8 @@ class KeluargaKaryawanExport implements FromCollection, WithHeadings, WithMappin
             $keluarga->pekerjaan ?? 'Data tidak tersedia',
             $keluarga->no_hp ?? 'Data tidak tersedia',
             $keluarga->email ?? 'Data tidak tersedia',
-            $keluarga->created_at,
-            $keluarga->updated_at
+            Carbon::parse($keluarga->created_at)->format('d-m-Y H:i:s'),
+            Carbon::parse($keluarga->updated_at)->format('d-m-Y H:i:s')
         ];
     }
 }

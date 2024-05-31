@@ -46,6 +46,8 @@ class RoleSeeder extends Seeder
         ]);
 
         $roleSuperAdmin->givePermissionTo([
+            'create presensi', 'edit presensi', 'delete presensi', 'view presensi', 'import presensi', 'export presensi',
+
             'create user', 'edit user', 'delete user', 'view user', 'import user', 'export user', 
             'create dataKaryawan', 'edit dataKaryawan', 'delete dataKaryawan', 'view dataKaryawan', 'import dataKaryawan', 'export dataKaryawan',
 

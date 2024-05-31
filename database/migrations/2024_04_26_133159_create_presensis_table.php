@@ -14,10 +14,10 @@ return new class extends Migration
         Schema::create('presensis', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained('users');
-            $table->date('tanggal');
+            $table->foreignId('data_karyawan_id')->constrained('data_karyawans');
             $table->foreignId('jadwal_id')->constrained('jadwals');
-            $table->time('jam_masuk');
-            $table->time('jam_keluar');
+            $table->timestamp('jam_masuk');
+            $table->timestamp('jam_keluar')->nullable();
             $table->string('durasi');
             $table->string('lat');
             $table->string('long');

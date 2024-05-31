@@ -14,6 +14,9 @@ class PermissionSeeder extends Seeder
     public function run(): void
     {
         $permissions = [
+            // Presensi
+            'Presensi' => ['create presensi', 'edit presensi', 'delete presensi', 'view presensi', 'import presensi', 'export presensi'],
+
             // Karyawan
             'User' => ['create user', 'edit user', 'delete user', 'view user', 'import user', 'export user'],
             'Data Karyawan' => ['create dataKaryawan', 'edit dataKaryawan', 'delete dataKaryawan', 'view dataKaryawan', 'import dataKaryawan', 'export dataKaryawan'],

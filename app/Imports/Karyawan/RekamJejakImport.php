@@ -22,7 +22,7 @@ class RekamJejakImport implements ToModel, WithHeadingRow, WithValidation
     public function rules(): array
     {
         return [
-            'user_id' => 'required|string|max:225|exists:users,nama',
+            'nama' => 'required|string|max:225|exists:users,nama',
             'tgl_masuk' => 'required|date',
             'tgl_keluar' => 'nullable|date',
             'promosi' => 'nullable|string',
@@ -34,10 +34,10 @@ class RekamJejakImport implements ToModel, WithHeadingRow, WithValidation
     public function customValidationMessages()
     {
         return [
-            'user_id.required' => 'Nama karyawan tidak diperbolehkan kosong.',
-            'user_id.string' => 'Nama karyawan tidak diperbolehkan mengandung angka.',
-            'user_id.max' => 'Nama karyawan melebihi batas maksimum panjang karakter.',
-            'user_id.exists' => 'Maaf nama tersebut tidak tersedia.',
+            'nama.required' => 'Nama karyawan tidak diperbolehkan kosong.',
+            'nama.string' => 'Nama karyawan tidak diperbolehkan mengandung angka.',
+            'nama.max' => 'Nama karyawan melebihi batas maksimum panjang karakter.',
+            'nama.exists' => 'Maaf nama tersebut tidak tersedia.',
             'tgl_masuk.required' => 'Tanggal masuk tidak diperbolehkan kosong.',
             'tgl_masuk.date' => 'Format tanggal masuk tidak sesuai.',
             'tgl_keluar.date' => 'Format tanggal keluar tidak sesuai.',
@@ -48,7 +48,7 @@ class RekamJejakImport implements ToModel, WithHeadingRow, WithValidation
     }
     public function model(array $row)
     {
-        $user_id = $this->User->where('nama', $row['user_id'])->first();
+        $user_id = $this->User->where('nama', $row['nama'])->first();
 
         return new TrackRecord([
             'user_id' => $user_id->id,

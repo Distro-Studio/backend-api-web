@@ -2,6 +2,7 @@
 
 namespace App\Exports\Pengaturan\Managemen_Waktu;
 
+use Carbon\Carbon;
 use App\Models\HariLibur;
 use Maatwebsite\Excel\Concerns\Exportable;
 use Maatwebsite\Excel\Concerns\WithMapping;
@@ -41,8 +42,8 @@ class HariLiburExport implements FromCollection, WithHeadings, WithMapping
         return [
             $hari_libur->nama,
             $hari_libur->tanggal,
-            $hari_libur->created_at,
-            $hari_libur->updated_at,
+            Carbon::parse($hari_libur->created_at)->format('d-m-Y H:i:s'),
+            Carbon::parse($hari_libur->updated_at)->format('d-m-Y H:i:s')
         ];
     }
 }

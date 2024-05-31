@@ -2,6 +2,7 @@
 
 namespace App\Exports\Pengaturan\Finance;
 
+use Carbon\Carbon;
 use App\Models\Ter;
 use Maatwebsite\Excel\Concerns\Exportable;
 use Maatwebsite\Excel\Concerns\WithMapping;
@@ -29,8 +30,8 @@ class TER21Export implements FromCollection, WithHeadings, WithMapping
     public function headings(): array
     {
         return [
-            'kategori_ter_id',
-            'ptkp_id',
+            'nama_kategori_ter',
+            'kode_ptkp',
             'from_ter',
             'to_ter',
             'percentage_ter',
@@ -47,8 +48,8 @@ class TER21Export implements FromCollection, WithHeadings, WithMapping
             $ter21->from_ter,
             $ter21->to_ter,
             $ter21->percentage_ter,
-            $ter21->created_at,
-            $ter21->updated_at,
+            Carbon::parse($ter21->created_at)->format('d-m-Y H:i:s'),
+            Carbon::parse($ter21->updated_at)->format('d-m-Y H:i:s')
         ];
     }
 }

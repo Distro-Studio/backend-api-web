@@ -50,16 +50,16 @@ class KaryawanImport implements ToModel, WithHeadingRow, WithValidation
         return [
             'nama' => 'required|string|max:225',
             'email' => 'required|email|max:225|unique:data_karyawans,email',
-            'role_id' => 'required|exists:roles,name',
+            'roles' => 'required|exists:roles,name',
             'no_rm' => 'required',
             'no_manulife' => 'nullable',
             'tgl_masuk' => 'required',
-            'unit_kerja_id' => 'required|exists:unit_kerjas,nama_unit',
-            'jabatan_id' => 'required|exists:jabatans,nama_jabatan',
-            'kompetensi_id' => 'required|exists:kompetensis,nama_kompetensi',
+            'unit_kerja' => 'required|exists:unit_kerjas,nama_unit',
+            'jabatan' => 'required|exists:jabatans,nama_jabatan',
+            'kompetensi' => 'required|exists:kompetensis,nama_kompetensi',
             // 'status_karyawan' => 'required|string',
 
-            'kelompok_gaji_id' => 'required|integer|exists:kelompok_gajis,id',
+            'kelompok_gaji' => 'required|integer|exists:kelompok_gajis,id',
             'no_rekening' => 'required|numeric|max:50',
             'tunjangan_jabatan' => 'required|numeric|max:20',
             'tunjangan_fungsional' => 'required|numeric|max:20',
@@ -67,7 +67,7 @@ class KaryawanImport implements ToModel, WithHeadingRow, WithValidation
             'tunjangan_lainnya' => 'required|numeric|max:20',
             'uang_makan' => 'required|numeric|max:20',
             'uang_lembur' => 'nullable|numeric|max:20',
-            'ptkp_id' => 'required|integer|exists:ptkps,id',
+            'kode_ptkp' => 'required|integer|exists:ptkps,id',
 
             'username' => 'nullable|unique:users,username',
             'password' => 'nullable',
@@ -84,22 +84,22 @@ class KaryawanImport implements ToModel, WithHeadingRow, WithValidation
             'email.email' => 'Alamat email yang valid wajib menggunakan @.',
             'email.max' => 'Email karyawan melebihi batas maksimum panjang karakter.',
             'email.unique' => 'Email karyawan tersebut sudah pernah digunakan.',
-            'role_id.required' => 'Silahkan masukkan nama role karyawan terlebih dahulu.',
-            'role_id.exists' => 'Maaf role tersebut tidak valid.',
+            'roles.required' => 'Silahkan masukkan nama role karyawan terlebih dahulu.',
+            'roles.exists' => 'Maaf role tersebut tidak valid.',
             'no_rm.required' => 'Nomor rekam medis karyawan tidak diperbolehkan kosong.',
             'no_manulife.string' => 'Nomor manulife karyawan tidak diperbolehkan kosong.',
             'tgl_masuk.required' => 'Tanggal masuk karyawan tidak diperbolehkan kosong.',
-            'unit_kerja_id.required' => 'Silahkan masukkan nama unit kerja karyawan terlebih dahulu.',
-            'unit_kerja_id.exists' => 'Maaf unit kerja tersebut tidak valid.',
-            'jabatan_id.required' => 'Silahkan masukkan nama jabatan karyawan terlebih dahulu.',
-            'jabatan_id.exists' => 'Maaf jabatan tersebut tidak valid.',
-            'kompetensi_id.required' => 'Silahkan masukkan nama kompetensi karyawan terlebih dahulu.',
-            'kompetensi_id.exists' => 'Maaf kompetensi tersebut tidak valid.',
+            'unit_kerja.required' => 'Silahkan masukkan nama unit kerja karyawan terlebih dahulu.',
+            'unit_kerja.exists' => 'Maaf unit kerja tersebut tidak valid.',
+            'jabatan.required' => 'Silahkan masukkan nama jabatan karyawan terlebih dahulu.',
+            'jabatan.exists' => 'Maaf jabatan tersebut tidak valid.',
+            'kompetensi.required' => 'Silahkan masukkan nama kompetensi karyawan terlebih dahulu.',
+            'kompetensi.exists' => 'Maaf kompetensi tersebut tidak valid.',
             'status_karyawan.required' => 'Status karyawan tidak diperbolehkan kosong.',
             'status_karyawan.string' => 'Status karyawan tidak diperbolehkan mengandung angka.',
 
-            'kelompok_gaji_id.required' => 'Silahkan pilih kelompok gaji karyawan terlebih dahulu.',
-            'kelompok_gaji_id.exists' => 'Maaf kelompok gaji tersebut tidak valid.',
+            'kelompok_gaji.required' => 'Silahkan pilih kelompok gaji karyawan terlebih dahulu.',
+            'kelompok_gaji.exists' => 'Maaf kelompok gaji tersebut tidak valid.',
             'no_rekening.required' => 'Nomor rekening karyawan tidak diperbolehkan kosong.',
             'no_rekening.numeric' => 'Nomor rekening karyawan tidak diperbolehkan mengandung huruf.',
             'no_rekening.max' => 'Nomor rekening karyawan melebihi batas maksimum panjang karakter.',
@@ -121,8 +121,8 @@ class KaryawanImport implements ToModel, WithHeadingRow, WithValidation
             'uang_lembur.required' => 'Uang lembur karyawan tidak diperbolehkan kosong.',
             'uang_lembur.numeric' => 'Uang lembur karyawan tidak diperbolehkan mengandung huruf.',
             'uang_lembur.max' => 'Uang lembur karyawan melebihi batas maksimum panjang karakter.',
-            'ptkp_id.required' => 'Silahkan pilih PTKP karyawan terlebih dahulu.',
-            'ptkp_id.exists' => 'Maaf PTKP tersebut tidak valid.',
+            'kode_ptkp.required' => 'Silahkan pilih PTKP karyawan terlebih dahulu.',
+            'kode_ptkp.exists' => 'Maaf PTKP tersebut tidak valid.',
 
             'username.required' => 'Username karyawan tidak diperbolehkan kosong.',
             'username.unique' => 'Username tersebut sudah pernah digunakan.',
@@ -140,10 +140,10 @@ class KaryawanImport implements ToModel, WithHeadingRow, WithValidation
             $password = RandomHelper::generatePassword($row['email']);
 
             // Find role ID
-            $role = $this->Role->where('name', $row['role_id'])->first();
+            $role = $this->Role->where('name', $row['roles'])->first();
 
             if (!$role) {
-                throw new \Exception("Role tidak tersedia: " . $row['role_id']);
+                throw new \Exception("Role tidak tersedia: " . $row['roles']);
             }
 
             // Create new user
@@ -160,11 +160,11 @@ class KaryawanImport implements ToModel, WithHeadingRow, WithValidation
             $user_id = $createUser->id;
         }
 
-        $jabatan_id = $this->Jabatan->where('nama_jabatan', $row['jabatan_id'])->first();
-        $unit_kerja_id = $this->UnitKerja->where('nama_unit', $row['unit_kerja_id'])->first();
-        $kompetensi_id = $this->Kompetensi->where('nama_kompetensi', $row['kompetensi_id'])->first();
-        $kelompok_gaji_id = $this->KelompokGaji->where('nama_kelompok', $row['kelompok_gaji_id'])->first();
-        $ptkp_id = $this->PTKP->where('kode_ptkp', $row['ptkp_id'])->first();
+        $jabatan_id = $this->Jabatan->where('nama_jabatan', $row['jabatan'])->first();
+        $unit_kerja_id = $this->UnitKerja->where('nama_unit', $row['unit_kerja'])->first();
+        $kompetensi_id = $this->Kompetensi->where('nama_kompetensi', $row['kompetensi'])->first();
+        $kelompok_gaji_id = $this->KelompokGaji->where('nama_kelompok', $row['kelompok_gaji'])->first();
+        $ptkp_id = $this->PTKP->where('kode_ptkp', $row['kode_ptkp'])->first();
 
         return new DataKaryawan([
             'user_id' => $user_id,

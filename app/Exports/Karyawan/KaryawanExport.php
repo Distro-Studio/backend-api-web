@@ -2,6 +2,7 @@
 
 namespace App\Exports\Karyawan;
 
+use Carbon\Carbon;
 use App\Models\DataKaryawan;
 use Maatwebsite\Excel\Concerns\Exportable;
 use Maatwebsite\Excel\Concerns\WithMapping;
@@ -33,7 +34,7 @@ class KaryawanExport implements FromCollection, WithHeadings, WithMapping
             'nik',
             'no_rm',
             'nik_ktp',
-            'unit_kerja_id',
+            'unit_kerja',
             'status_karyawan',
             'tempat_lahir',
             'tgl_lahir',
@@ -53,8 +54,8 @@ class KaryawanExport implements FromCollection, WithHeadings, WithMapping
             $karyawan->status_karyawan,
             $karyawan->tempat_lahir ?? 'Data tidak tersedia',
             $karyawan->tgl_lahir ?? 'Data tidak tersedia',
-            $karyawan->created_at,
-            $karyawan->updated_at,
+            Carbon::parse($karyawan->created_at)->format('d-m-Y H:i:s'),
+            Carbon::parse($karyawan->updated_at)->format('d-m-Y H:i:s')
         ];
     }
 }

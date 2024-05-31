@@ -2,6 +2,7 @@
 
 namespace App\Exports\Karyawan;
 
+use Carbon\Carbon;
 use App\Models\TrackRecord;
 use Maatwebsite\Excel\Concerns\Exportable;
 use Maatwebsite\Excel\Concerns\WithMapping;
@@ -29,7 +30,7 @@ class RekamJejakExport implements FromCollection, WithHeadings, WithMapping
     public function headings(): array
     {
         return [
-            'user_id',
+            'nama',
             'tgl_masuk',
             'tgl_keluar',
             'promosi',
@@ -49,8 +50,8 @@ class RekamJejakExport implements FromCollection, WithHeadings, WithMapping
             $rekam_jejak->promosi ?? 'Data tidak tersedia',
             $rekam_jejak->mutasi ?? 'Data tidak tersedia',
             $rekam_jejak->penghargaan ?? 'Data tidak tersedia',
-            $rekam_jejak->created_at,
-            $rekam_jejak->updated_at,
+            Carbon::parse($rekam_jejak->created_at)->format('d-m-Y H:i:s'),
+            Carbon::parse($rekam_jejak->updated_at)->format('d-m-Y H:i:s')
         ];
     }
 }

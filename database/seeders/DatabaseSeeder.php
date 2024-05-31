@@ -4,15 +4,16 @@ namespace Database\Seeders;
 
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 
-use Database\Seeders\Karyawan\KaryawanSeeder;
-use Database\Seeders\Karyawan\KeluargaKaryawanSeeder;
-use Database\Seeders\Karyawan\TransferKaryawanSeeder;
 use Illuminate\Database\Seeder;
+use Database\Seeders\Karyawan\KaryawanSeeder;
+use Database\Seeders\Presensi\PresensiSeeder;
 use Database\Seeders\Pengaturan_Finance\TERSeeder;
 use Database\Seeders\Pengaturan_Finance\PremiSeeder;
+use Database\Seeders\Karyawan\KeluargaKaryawanSeeder;
+use Database\Seeders\Karyawan\TransferKaryawanSeeder;
 use Database\Seeders\Pengaturan_Managemen_Waktu\CutiSeeder;
-use Database\Seeders\Pengaturan_Managemen_Waktu\HariLiburSeeder;
 use Database\Seeders\Pengaturan_Managemen_Waktu\ShiftSeeder;
+use Database\Seeders\Pengaturan_Managemen_Waktu\HariLiburSeeder;
 
 class DatabaseSeeder extends Seeder
 {
@@ -47,6 +48,12 @@ class DatabaseSeeder extends Seeder
             KaryawanSeeder::class,
             KeluargaKaryawanSeeder::class,
             TransferKaryawanSeeder::class,
+
+            /* ==== Jadwals ==== */
+            JadwalSeeder::class,
+
+            /* ==== Presensi ==== */
+            PresensiSeeder::class,
         ]);
     }
 }

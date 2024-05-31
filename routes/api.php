@@ -91,29 +91,18 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::apiResource('/transfer-karyawan', TransferKaryawanController::class);
         });
 
+        // ! export import presensi belum di test untuk gambar
         Route::group(['prefix' => '/presensi'], function () {
-            // ! Presensi Hadir ===========>
-            Route::get('/tepat-waktu-calculated', [PresensiController::class, 'tepatWaktuCalculated']);
-            Route::get('/terlambat-calculated', [PresensiController::class, 'terlambatCalculated']);
-            Route::get('/masuk-calculated', [PresensiController::class, 'masukCalculated']);
-
-            // ! Presensi Tidak Hadir ===========>
-            Route::get('/absen-calculated', [PresensiController::class, 'absenCalculated']);
-            Route::get('/izin-calculated', [PresensiController::class, 'izinCalculated']);
-            Route::get('/invalid-calculated', [PresensiController::class, 'invalidCalculated']);
-
-            // ! Presensi Libur ===========>
-            Route::get('/hari-libur-calculated', [PresensiController::class, 'hariLiburCalculated']);
-            Route::get('/cuti-calculated', [PresensiController::class, 'cutiCalculated']);
-
             // ! Presensi Tabel ===========>
             Route::get('/all-presensi', [PresensiController::class, 'getAllPresensi']);
-            Route::post('/presensi/filter', [PresensiController::class, 'index']);
-            Route::post('/presensi/search', [PresensiController::class, 'index']);
-            Route::post('/presensi/bulk-delete', [PresensiController::class, 'bulkDelete']);
-            Route::get('/presensi/export', [PresensiController::class, 'exportPresensi']);
-            Route::post('/presensi/import', [PresensiController::class, 'importPresensi']);
-            Route::apiResource('/presensi', PresensiController::class);
+            Route::post('/presensi-filter', [PresensiController::class, 'index']);
+            Route::post('/presensi-search', [PresensiController::class, 'index']);
+            Route::post('/presensi-bulk-delete', [PresensiController::class, 'bulkDelete']);
+            Route::get('/presensi-export', [PresensiController::class, 'exportPresensi']);
+            Route::post('/presensi-import', [PresensiController::class, 'importPresensi']);
+            Route::apiResource('/data-presensi', PresensiController::class);
+
+            Route::get('/calculated', [PresensiController::class, 'calculatedPresensi']);
         });
 
         Route::group(['prefix' => '/jadwal'], function () {

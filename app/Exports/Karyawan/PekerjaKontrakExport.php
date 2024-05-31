@@ -2,6 +2,7 @@
 
 namespace App\Exports\Karyawan;
 
+use Carbon\Carbon;
 use App\Models\DataKaryawan;
 use Maatwebsite\Excel\Concerns\Exportable;
 use Maatwebsite\Excel\Concerns\WithMapping;
@@ -29,8 +30,8 @@ class PekerjaKontrakExport implements FromCollection, WithHeadings, WithMapping
     public function headings(): array
     {
         return [
-            'user_id',
-            'unit_kerja_id',
+            'nama',
+            'unit_kerja',
             'tgl_masuk',
             'tgl_keluar',
             'status_karyawan',
@@ -47,8 +48,8 @@ class PekerjaKontrakExport implements FromCollection, WithHeadings, WithMapping
             $kontrak->tgl_masuk,
             $kontrak->tgl_keluar ?? 'Data tidak tersedia',
             $kontrak->status_karyawan,
-            $kontrak->created_at,
-            $kontrak->updated_at,
+            Carbon::parse($kontrak->created_at)->format('d-m-Y H:i:s'),
+            Carbon::parse($kontrak->updated_at)->format('d-m-Y H:i:s')
         ];
     }
 }

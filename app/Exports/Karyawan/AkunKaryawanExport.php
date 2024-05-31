@@ -3,6 +3,7 @@
 namespace App\Exports\Karyawan;
 
 use App\Models\User;
+use Carbon\Carbon;
 use Maatwebsite\Excel\Concerns\Exportable;
 use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\WithHeadings;
@@ -47,8 +48,8 @@ class AkunKaryawanExport implements FromCollection, WithHeadings, WithMapping
             $akun->data_karyawans->email ?? 'Data tidak tersedia',
             $akun->username,
             $akun->data_karyawans->status_karyawan ?? 'Data tidak tersedia',
-            $akun->created_at,
-            $akun->updated_at,
+            Carbon::parse($akun->created_at)->format('d-m-Y H:i:s'),
+            Carbon::parse($akun->updated_at)->format('d-m-Y H:i:s')
         ];
     }
 }

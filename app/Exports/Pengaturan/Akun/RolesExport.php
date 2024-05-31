@@ -2,11 +2,12 @@
 
 namespace App\Exports\Pengaturan\Akun;
 
+use Carbon\Carbon;
 use Spatie\Permission\Models\Role;
 use Maatwebsite\Excel\Concerns\Exportable;
-use Maatwebsite\Excel\Concerns\FromCollection;
-use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
+use Maatwebsite\Excel\Concerns\WithHeadings;
+use Maatwebsite\Excel\Concerns\FromCollection;
 
 class RolesExport implements FromCollection, WithHeadings, WithMapping
 {
@@ -41,8 +42,8 @@ class RolesExport implements FromCollection, WithHeadings, WithMapping
         return [
             $roles->name,
             $roles->description,
-            $roles->created_at,
-            $roles->updated_at,
+            Carbon::parse($roles->created_at)->format('d-m-Y H:i:s'),
+            Carbon::parse($roles->updated_at)->format('d-m-Y H:i:s')
         ];
     }
 }

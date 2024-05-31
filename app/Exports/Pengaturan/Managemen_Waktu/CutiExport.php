@@ -2,6 +2,7 @@
 
 namespace App\Exports\Pengaturan\Managemen_Waktu;
 
+use Carbon\Carbon;
 use App\Models\TipeCuti;
 use Maatwebsite\Excel\Concerns\Exportable;
 use Maatwebsite\Excel\Concerns\WithMapping;
@@ -45,8 +46,8 @@ class CutiExport implements FromCollection, WithHeadings, WithMapping
 
             // ? kolom waktu masih dibiarkan kosong
             // $cuti->waktu,
-            $cuti->created_at,
-            $cuti->updated_at,
+            Carbon::parse($cuti->created_at)->format('d-m-Y H:i:s'),
+            Carbon::parse($cuti->updated_at)->format('d-m-Y H:i:s')
         ];
     }
 }

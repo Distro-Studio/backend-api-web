@@ -2,6 +2,7 @@
 
 namespace App\Exports\Pengaturan\Karyawan;
 
+use Carbon\Carbon;
 use App\Models\KelompokGaji;
 use Maatwebsite\Excel\Concerns\Exportable;
 use Maatwebsite\Excel\Concerns\WithMapping;
@@ -40,8 +41,8 @@ class KelompokGajiExport implements FromCollection, WithHeadings, WithMapping
         return [
             $kelompok_gaji->nama_kelompok,
             $kelompok_gaji->besaran_gaji,
-            $kelompok_gaji->created_at,
-            $kelompok_gaji->updated_at,
+            Carbon::parse($kelompok_gaji->created_at)->format('d-m-Y H:i:s'),
+            Carbon::parse($kelompok_gaji->updated_at)->format('d-m-Y H:i:s')
         ];
     }
 }

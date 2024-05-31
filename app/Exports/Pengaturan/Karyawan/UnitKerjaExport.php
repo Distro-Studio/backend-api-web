@@ -2,6 +2,7 @@
 
 namespace App\Exports\Pengaturan\Karyawan;
 
+use Carbon\Carbon;
 use App\Models\UnitKerja;
 use Maatwebsite\Excel\Concerns\Exportable;
 use Maatwebsite\Excel\Concerns\WithMapping;
@@ -40,8 +41,8 @@ class UnitKerjaExport implements FromCollection, WithHeadings, WithMapping
         return [
             $unit_kerja->nama_unit,
             $unit_kerja->jenis_karyawan ? 'Shift' : 'Non-Shift',
-            $unit_kerja->created_at,
-            $unit_kerja->updated_at,
+            Carbon::parse($unit_kerja->created_at)->format('d-m-Y H:i:s'),
+            Carbon::parse($unit_kerja->updated_at)->format('d-m-Y H:i:s')
         ];
     }
 }

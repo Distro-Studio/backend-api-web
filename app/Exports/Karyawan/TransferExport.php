@@ -2,6 +2,7 @@
 
 namespace App\Exports\Karyawan;
 
+use Carbon\Carbon;
 use App\Models\TransferKaryawan;
 use Maatwebsite\Excel\Concerns\Exportable;
 use Maatwebsite\Excel\Concerns\WithMapping;
@@ -29,7 +30,7 @@ class TransferExport implements FromCollection, WithHeadings, WithMapping
     public function headings(): array
     {
         return [
-            'user_id',
+            'nama',
             'tanggal',
             'unit_kerja_asal',
             'unit_kerja_tujuan',
@@ -53,8 +54,8 @@ class TransferExport implements FromCollection, WithHeadings, WithMapping
             $transfer->jabatan_tujuans->nama_jabatan,
             $transfer->tipe ?? 'Data tidak tersedia',
             $transfer->alasan ?? 'Data tidak tersedia',
-            $transfer->created_at,
-            $transfer->updated_at,
+            Carbon::parse($transfer->created_at)->format('d-m-Y H:i:s'),
+            Carbon::parse($transfer->updated_at)->format('d-m-Y H:i:s')
         ];
     }
 }

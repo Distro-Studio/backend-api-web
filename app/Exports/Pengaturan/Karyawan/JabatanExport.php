@@ -2,6 +2,7 @@
 
 namespace App\Exports\Pengaturan\Karyawan;
 
+use Carbon\Carbon;
 use App\Models\Jabatan;
 use Maatwebsite\Excel\Concerns\Exportable;
 use Maatwebsite\Excel\Concerns\WithMapping;
@@ -42,8 +43,8 @@ class JabatanExport implements FromCollection, WithHeadings, WithMapping
             $jabatan->nama_jabatan,
             $jabatan->is_struktural ? 'Ya' : 'Tidak',
             $jabatan->tunjangan,
-            $jabatan->created_at,
-            $jabatan->updated_at,
+            Carbon::parse($jabatan->created_at)->format('d-m-Y H:i:s'),
+            Carbon::parse($jabatan->updated_at)->format('d-m-Y H:i:s')
         ];
     }
 }
