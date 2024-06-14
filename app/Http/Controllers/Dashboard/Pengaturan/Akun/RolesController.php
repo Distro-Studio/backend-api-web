@@ -106,29 +106,29 @@ class RolesController extends Controller
         return response()->json(new RoleResource(Response::HTTP_OK, $successMessage, $role), Response::HTTP_OK);
     }
 
-    public function bulkDelete(Request $request)
-    {
-        if (!Gate::allows('delete role')) {
-            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
-        }
+    // public function bulkDelete(Request $request)
+    // {
+    //     if (!Gate::allows('delete role')) {
+    //         return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+    //     }
 
-        $dataRole = Validator::make($request->all(), [
-            'ids' => 'required|array|min:1',
-            'ids.*' => 'integer|exists:roles,id'
-        ]);
+    //     $dataRole = Validator::make($request->all(), [
+    //         'ids' => 'required|array|min:1',
+    //         'ids.*' => 'integer|exists:roles,id'
+    //     ]);
 
-        if ($dataRole->fails()) {
-            return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, $dataRole->errors()), Response::HTTP_BAD_REQUEST);
-        }
+    //     if ($dataRole->fails()) {
+    //         return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, $dataRole->errors()), Response::HTTP_BAD_REQUEST);
+    //     }
 
-        $ids = $request->input('ids');
-        $deletedCount = Role::whereIn('id', $ids);
-        $deletedCount->delete();
+    //     $ids = $request->input('ids');
+    //     $deletedCount = Role::whereIn('id', $ids);
+    //     $deletedCount->delete();
 
-        $message = 'Data role berhasil dihapus.';
+    //     $message = 'Data role berhasil dihapus.';
 
-        return response()->json(new WithoutDataResource(Response::HTTP_OK, $message), Response::HTTP_OK);
-    }
+    //     return response()->json(new WithoutDataResource(Response::HTTP_OK, $message), Response::HTTP_OK);
+    // }
 
     public function exportRoles(Request $request)
     {
@@ -137,8 +137,7 @@ class RolesController extends Controller
         }
 
         try {
-            $ids = $request->input('ids', []);
-            return Excel::download(new RolesExport($ids), 'roles.xls');
+            return Excel::download(new RolesExport(), 'data-role.xls');
         } catch (\Exception $e) {
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya terjadi error. Message: ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
         } catch (\Error $e) {

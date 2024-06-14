@@ -20,13 +20,12 @@ class PresensiSeeder extends Seeder
     {
         $faker = Faker::create();
         $kategori = ['Tepat Waktu', 'Terlambat', 'Hadir', 'Absen', 'Izin', 'Invalid', 'Libur', 'Cuti'];
-        $absensi = ['Hadir', 'Izin', 'Sakit'];
+        $presensi_absen = ['Hadir', 'Izin', 'Sakit'];
 
         $lat_default = 33.7490;
         $long_default = -84.3880;
 
         $user_ids = User::pluck('id')->all();
-        $data_karyawan_ids = DataKaryawan::pluck('id')->all();
         $jadwal_ids = Jadwal::pluck('id')->all();
 
         for ($i = 0; $i < 30; $i++) {
@@ -34,7 +33,6 @@ class PresensiSeeder extends Seeder
                 break; // break if we run out of unique user_ids
             }
             $user_id = $user_ids[$i];
-            $data_karyawan_id = $data_karyawan_ids[array_rand($data_karyawan_ids)];
             $jadwal_id = $jadwal_ids[array_rand($jadwal_ids)];
 
             $lat = $faker->latitude(
@@ -51,15 +49,15 @@ class PresensiSeeder extends Seeder
 
             $presensi = new Presensi([
                 'user_id' => $user_id,
-                'data_karyawan_id' => $data_karyawan_id,
                 'jadwal_id' => $jadwal_id,
                 'jam_masuk' => $jam_masuk,
                 'jam_keluar' => $jam_keluar,
-                'durasi' => $jam_keluar->diffInHours($jam_masuk),
+                'durasi' => $jam_keluar->diffInSeconds($jam_masuk),
                 'lat' => $lat,
                 'long' => $long,
-                'foto' => 'storage/link/' . $i . '/foto_hadir/users' . $user_id . '.jpg',
-                'absensi' => $absensi[array_rand($absensi)],
+                'foto_masuk' => 'storage/' . $i . '/foto_masuk/user_' . $user_id . '.jpg',
+                'foto_keluar' => 'storage/' . $i . '/foto_keluar/user_' . $user_id . '.jpg',
+                'presensi' => $presensi_absen[array_rand($presensi_absen)],
                 'kategori' => $kategori[array_rand($kategori)],
             ]);
             $presensi->save();

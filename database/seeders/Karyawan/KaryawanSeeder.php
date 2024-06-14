@@ -26,7 +26,7 @@ class KaryawanSeeder extends Seeder
         $cityborn = [
             'Magelang', 'Semarang', 'Salatiga', 'Surakarta', 'Yogyakarta', 'Klaten', 'Sragen',
             'Boyolali', 'Demak', 'Kudus', 'Pati', 'Rembang', 'Blora', 'Grobogan', 'Jepara',
-            'Mungkid', 'Purworejo', 'Wonosobo', 'Pekalongan', 'Batang', 'Kajen', 'Pemalang',
+            'Purworejo', 'Wonosobo', 'Pekalongan', 'Batang', 'Kajen', 'Pemalang',
             'Tegal', 'Brebes', 'Cilacap', 'Kebumen', 'Purbalingga', 'Banyumas', 'Cilacap',
             'Purwokerto', 'Banjarnegara', 'Wonosobo', 'Temanggung', 'Magelang', 'Boyolali',
             'Banyuwangi', 'Blitar', 'Bondowoso', 'Bojonegoro', 'Jember', 'Jombang', 'Kediri',
@@ -101,7 +101,7 @@ class KaryawanSeeder extends Seeder
                 "golongan_darah" => $darah[array_rand($darah)],
                 "tinggi_badan" => rand(10, 300),
                 "berat_badan" => rand(10, 200),
-                "no_ijasah" => "IJ/VII/" . rand(1214, 500000000),
+                "no_ijazah" => "IJ/VII/" . rand(1214, 500000000),
                 "tahun_lulus" => rand(1800, 2017),
                 "no_str" => "STR/01/RA/" . rand(1214, 500000),
                 "masa_berlaku_str" => $tgl_str,
@@ -111,13 +111,6 @@ class KaryawanSeeder extends Seeder
                 "masa_diklat" => rand(1, 10),
             ]);
             $dataKaryawan->save();
-
-            $dataRekamJejak = new TrackRecord([
-                'user_id' => $user->id,
-                'tgl_masuk' => $tgl_masuk,
-                'tgl_keluar' => $tgl_keluar
-            ]);
-            $dataRekamJejak->save();
         }
     }
 }

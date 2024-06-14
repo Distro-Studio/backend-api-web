@@ -58,11 +58,12 @@ class AkunResource extends JsonResource
             return [
                 'id' => $akun->id,
                 'nama' => $akun->nama,
+                'foto_profil' => $akun->foto_profil,
                 'nik' => optional($akun->data_karyawans)->nik,
                 'email' => optional($akun->data_karyawans)->email,
                 'username' => $akun->username,
                 'status_karyawan' => optional($akun->data_karyawans)->status_karyawan,
-                // 'unit_kerja' => optional($akun->data_karyawans->unit_kerjas)->nama_unit,
+                'status_akun' => $akun->status_akun,
                 'created_at' => $akun->created_at,
                 'updated_at' => $akun->updated_at
             ];

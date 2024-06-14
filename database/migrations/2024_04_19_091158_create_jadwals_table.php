@@ -13,14 +13,11 @@ return new class extends Migration
     {
         Schema::create('jadwals', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id');
-            $table->date('tanggal_mulai');
-            $table->date('tanggal_selesai');
-            $table->foreignId('shift_id');
+            $table->foreignId('user_id')->constrained('users');
+            $table->date('tgl_mulai');
+            $table->date('tgl_selesai')->nullable();
+            $table->foreignId('shift_id')->constrained('shifts');
             $table->timestamps();
-
-            $table->foreign('user_id')->on('users')->references('id');
-            $table->foreign('shift_id')->on('shifts')->references('id');
         });
     }
 

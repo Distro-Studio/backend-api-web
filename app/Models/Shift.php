@@ -17,7 +17,7 @@ class Shift extends Model
      *
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function jadwal(): HasMany
+    public function jadwals(): HasMany
     {
         return $this->hasMany(Jadwal::class, 'shift_id', 'id');
     }
@@ -27,7 +27,7 @@ class Shift extends Model
      *
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function lembur(): HasMany
+    public function lemburs(): HasMany
     {
         return $this->hasMany(Lembur::class, 'shift_id', 'id');
     }

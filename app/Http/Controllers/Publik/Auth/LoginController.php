@@ -21,6 +21,13 @@ class LoginController extends Controller
         }
 
         $user = auth()->user();
+
+        // Cek status_aktif
+        if ($user->status_akun == 0) {
+            auth()->logout(); // Logout user jika status_aktif bernilai 0
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, "Kami mendeteksi bahwa akun anda sudah tidak aktif sejak {$user->updated_at}."), Response::HTTP_FORBIDDEN);
+        }
+
         $token = $user->createToken('create_token_' . Str::uuid())->plainTextToken;
 
         $response = response()->json([

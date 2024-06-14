@@ -170,28 +170,28 @@ class KompetensiController extends Controller
         return response()->json(new KompetensiResource(Response::HTTP_OK, $successMessage, $kompetensi), Response::HTTP_OK);
     }
 
-    public function bulkDelete(Request $request)
-    {
-        if (!Gate::allows('delete kompetensi')) {
-            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
-        }
+    // public function bulkDelete(Request $request)
+    // {
+    //     if (!Gate::allows('delete kompetensi')) {
+    //         return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+    //     }
 
-        $dataKompetensi = Validator::make($request->all(), [
-            'ids' => 'required|array|min:1',
-            'ids.*' => 'integer|exists:kompetensis,id'
-        ]);
+    //     $dataKompetensi = Validator::make($request->all(), [
+    //         'ids' => 'required|array|min:1',
+    //         'ids.*' => 'integer|exists:kompetensis,id'
+    //     ]);
 
-        if ($dataKompetensi->fails()) {
-            return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, $dataKompetensi->errors()), Response::HTTP_BAD_REQUEST);
-        }
+    //     if ($dataKompetensi->fails()) {
+    //         return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, $dataKompetensi->errors()), Response::HTTP_BAD_REQUEST);
+    //     }
 
-        $ids = $request->input('ids');
-        Kompetensi::destroy($ids);
+    //     $ids = $request->input('ids');
+    //     Kompetensi::destroy($ids);
 
-        $message = 'Data kompetensi berhasil dihapus.';
+    //     $message = 'Data kompetensi berhasil dihapus.';
 
-        return response()->json(new WithoutDataResource(Response::HTTP_OK, $message), Response::HTTP_OK);
-    }
+    //     return response()->json(new WithoutDataResource(Response::HTTP_OK, $message), Response::HTTP_OK);
+    // }
 
     public function exportKompetensi(Request $request)
     {
@@ -200,8 +200,7 @@ class KompetensiController extends Controller
         }
 
         try {
-            $ids = $request->input('ids', []);
-            return Excel::download(new KompetensiExport($ids), 'kompetensi.xls');
+            return Excel::download(new KompetensiExport(), 'data-kompetensi.xls');
         } catch (\Exception $e) {
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya terjadi error. Message: ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
         } catch (\Error $e) {

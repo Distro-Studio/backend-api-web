@@ -14,22 +14,47 @@ class KeluargaKaryawanSeeder extends Seeder
      */
     public function run(): void
     {
-        $hubungan = ['Ayah', 'Ibu', 'Suami', 'Istri', 'Anak'];
         $pendidikan = ['SMA', 'SMK', 'D4', 'D3', 'D2', 'D1', 'S1', 'S2', 'S3'];
-        $data_karyawan_id = DataKaryawan::pluck('id')->all();
+        $data_karyawan_ids = DataKaryawan::pluck('id')->all();
 
-        for ($i = 0; $i < 50; $i++) {
-            $dataKeluarga = new DataKeluarga([
-                'data_karyawan_id' => $data_karyawan_id[array_rand($data_karyawan_id)],
-                'nama_keluarga' => 'Nama keluarga ' . $i,
-                'hubungan' => $hubungan[array_rand($hubungan)],
+        foreach ($data_karyawan_ids as $karyawan_id) {
+            // Ayah
+            DataKeluarga::create([
+                'data_karyawan_id' => $karyawan_id,
+                'nama_keluarga' => 'Nama Ayah ' . $karyawan_id,
+                'hubungan' => 'Ayah',
                 'pendidikan_terakhir' => $pendidikan[array_rand($pendidikan)],
                 'status_hidup' => rand(0, 1),
-                'pekerjaan' => 'Pekerjaan ' . $i,
+                'pekerjaan' => 'Pekerjaan Ayah ' . $karyawan_id,
                 'no_hp' => rand(1214, 5000000),
-                'email' => 'keluarga' . $i . '@example.com',
+                'email' => 'ayah' . $karyawan_id . '@example.com',
             ]);
-            $dataKeluarga->save();
+
+            // Ibu
+            DataKeluarga::create([
+                'data_karyawan_id' => $karyawan_id,
+                'nama_keluarga' => 'Nama Ibu ' . $karyawan_id,
+                'hubungan' => 'Ibu',
+                'pendidikan_terakhir' => $pendidikan[array_rand($pendidikan)],
+                'status_hidup' => rand(0, 1),
+                'pekerjaan' => 'Pekerjaan Ibu ' . $karyawan_id,
+                'no_hp' => rand(1214, 5000000),
+                'email' => 'ibu' . $karyawan_id . '@example.com',
+            ]);
+
+            // Tambahkan anggota keluarga lainnya
+            for ($i = 0; $i < rand(0, 3); $i++) {
+                DataKeluarga::create([
+                    'data_karyawan_id' => $karyawan_id,
+                    'nama_keluarga' => 'Nama Keluarga ' . $karyawan_id . ' ' . $i,
+                    'hubungan' => ['Suami', 'Istri', 'Anak'][array_rand(['Suami', 'Istri', 'Anak'])],
+                    'pendidikan_terakhir' => $pendidikan[array_rand($pendidikan)],
+                    'status_hidup' => rand(0, 1),
+                    'pekerjaan' => 'Pekerjaan ' . $karyawan_id . ' ' . $i,
+                    'no_hp' => rand(1214, 5000000),
+                    'email' => 'keluarga' . $karyawan_id . $i . '@example.com',
+                ]);
+            }
         }
     }
 }

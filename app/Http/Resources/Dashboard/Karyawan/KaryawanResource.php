@@ -59,15 +59,15 @@ class KaryawanResource extends JsonResource
                 'id' => $karyawan->id,
 
                 // Step 1
-                'user_id' => $karyawan->users,
+                'user' => $karyawan->users,
                 "email" => $karyawan->email,
                 'no_rm' => $karyawan->no_rm,
                 'no_manulife' => $karyawan->no_manulife,
                 'tgl_masuk' => $karyawan->tgl_masuk,
-                'unit_kerja_id' => $karyawan->unit_kerjas,
-                'jabatan_id' => $karyawan->jabatans,
-                'kompetensi_id' => $karyawan->kompetensis,
-                'role_id' => $karyawan->users->roles,
+                'unit_kerja' => $karyawan->unit_kerjas,
+                'jabatan' => $karyawan->jabatans,
+                'kompetensi' => $karyawan->kompetensis,
+                'role' => $karyawan->users->roles,
                 
                 // yang ada di table tp gak ada di create
                 "nik" => $karyawan->nik,
@@ -77,7 +77,7 @@ class KaryawanResource extends JsonResource
                 'tgl_lahir' => $karyawan->tgl_lahir,
 
                 // Step 2
-                'kelompok_gaji_id' => $karyawan->kelompok_gajis,
+                'kelompok_gaji' => $karyawan->kelompok_gajis,
                 'no_rekening' => $karyawan->no_rekening,
                 'tunjangan_jabatan' => $karyawan->tunjangan_jabatan,
                 'tunjangan_fungsional' => $karyawan->tunjangan_fungsional,
@@ -85,7 +85,7 @@ class KaryawanResource extends JsonResource
                 'tunjangan_lainnya' => $karyawan->tunjangan_lainnya,
                 'uang_lembur' => $karyawan->uang_lembur,
                 'uang_makan' => $karyawan->uang_makan,
-                'ptkp_id' => $karyawan->ptkps,
+                'ptkp' => $karyawan->ptkps,
 
                 "tgl_keluar" => $karyawan->tgl_keluar,
                 "no_kk" => $karyawan->no_kk,

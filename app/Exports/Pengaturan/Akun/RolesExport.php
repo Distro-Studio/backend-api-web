@@ -12,26 +12,17 @@ use Maatwebsite\Excel\Concerns\FromCollection;
 class RolesExport implements FromCollection, WithHeadings, WithMapping
 {
     use Exportable;
-    protected $ids;
-
-    public function __construct(array $ids = [])
-    {
-        $this->ids = $ids;
-    }
 
     public function collection()
     {
-        if (!empty($this->ids)) {
-            return Role::whereIn('id', $this->ids)->get();
-        }
         return Role::all();
     }
 
     public function headings(): array
     {
         return [
-            'name',
-            'description',
+            'nama',
+            'deskripsi',
             'created_at',
             'updated_at',
         ];

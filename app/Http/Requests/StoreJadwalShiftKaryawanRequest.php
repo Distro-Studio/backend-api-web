@@ -1,0 +1,53 @@
+<?php
+
+namespace App\Http\Requests;
+
+use Illuminate\Http\Response;
+use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Contracts\Validation\Validator;
+use Illuminate\Http\Exceptions\HttpResponseException;
+
+class StoreJadwalShiftKaryawanRequest extends FormRequest
+{
+    /**
+     * Determine if the user is authorized to make this request.
+     */
+    public function authorize(): bool
+    {
+        return true;
+    }
+
+    /**
+     * Get the validation rules that apply to the request.
+     *
+     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     */
+    public function rules(): array
+    {
+        return [
+            'tgl_mulai' => 'required|date',
+            'shift_id' => 'required|integer|exists:shifts,id'
+        ];
+    }
+
+    public function messages()
+    {
+        return [
+            'tgl_mulai.required' => 'Tanggal mulai jadwal karyawan tidak diperbolehkan kosong.',
+            'tgl_mulai.date' => 'Tanggal mulai jadwal karyawan wajib berisi tanggal.',
+            'shift_id.required' => 'Silahkan pilih shift jadwal karyawan terlebih dahulu.',
+            'shift_id.integer' => 'Shift jadwal karyawan tidak diperbolehkan mengandung selain angka.',
+            'shift_id.exists' => 'Shift jadwal karyawan tersebut tidak valid.',
+        ];
+    }
+
+    public function failedValidation(Validator $validator)
+    {
+        $reponse = [
+            'status' => Response::HTTP_BAD_REQUEST,
+            'message' => $validator->errors()
+        ];
+
+        throw new HttpResponseException(response()->json($reponse, Response::HTTP_BAD_REQUEST));
+    }
+}

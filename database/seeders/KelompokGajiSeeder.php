@@ -20,7 +20,7 @@ class KelompokGajiSeeder extends Seeder
             $randomCharacter = $alphabet[$randomIndex];
 
             $kelompok_gaji = [
-                'nama_kelompok' => $randomCharacter,
+                'nama_kelompok' => 'Kelompok Gaji ' . $randomCharacter,
                 'besaran_gaji' => rand(500000, 5000000), // Tunjangan random antara 500.000 - 5.000.000
                 'created_at' => Carbon::now()->subDays(rand(0, 365)), // Random dalam 1 tahun
                 'updated_at' => Carbon::now(),

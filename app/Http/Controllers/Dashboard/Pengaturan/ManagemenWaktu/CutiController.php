@@ -21,7 +21,7 @@ use App\Models\TipeCuti;
 class CutiController extends Controller
 {
     /* ============================= For Dropdown ============================= */
-    public function getAllCuti()
+    public function getAllTipeCuti()
     {
         if (!Gate::allows('view cuti')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
@@ -162,30 +162,30 @@ class CutiController extends Controller
         return response()->json(new CutiResource(Response::HTTP_OK, $successMessage, $cuti), Response::HTTP_OK);
     }
 
-    public function bulkDelete(Request $request)
-    {
-        if (!Gate::allows('delete cuti')) {
-            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
-        }
+    // public function bulkDelete(Request $request)
+    // {
+    //     if (!Gate::allows('delete cuti')) {
+    //         return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+    //     }
 
-        $dataCuti = Validator::make($request->all(), [
-            'ids' => 'required|array|min:1',
-            'ids.*' => 'integer|exists:tipe_cutis,id'
-        ]);
+    //     $dataCuti = Validator::make($request->all(), [
+    //         'ids' => 'required|array|min:1',
+    //         'ids.*' => 'integer|exists:tipe_cutis,id'
+    //     ]);
 
-        if ($dataCuti->fails()) {
-            return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, $dataCuti->errors()), Response::HTTP_BAD_REQUEST);
-        }
+    //     if ($dataCuti->fails()) {
+    //         return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, $dataCuti->errors()), Response::HTTP_BAD_REQUEST);
+    //     }
 
-        $ids = $request->input('ids');
-        TipeCuti::destroy($ids);
+    //     $ids = $request->input('ids');
+    //     TipeCuti::destroy($ids);
 
-        $deletedCount = TipeCuti::whereIn('id', $ids)->delete();
+    //     $deletedCount = TipeCuti::whereIn('id', $ids)->delete();
 
-        $message = 'Data cuti berhasil dihapus.';
+    //     $message = 'Data cuti berhasil dihapus.';
 
-        return response()->json(new WithoutDataResource(Response::HTTP_OK, $message), Response::HTTP_OK);
-    }
+    //     return response()->json(new WithoutDataResource(Response::HTTP_OK, $message), Response::HTTP_OK);
+    // }
 
     public function exportCuti(Request $request)
     {
@@ -194,8 +194,7 @@ class CutiController extends Controller
         }
 
         try {
-            $ids = $request->input('ids', []);
-            return Excel::download(new CutiExport($ids), 'tipe-cuti.xls');
+            return Excel::download(new CutiExport(), 'data-tipe-cuti.xls');
         } catch (\Exception $e) {
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya terjadi error. Message: ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
         } catch (\Error $e) {

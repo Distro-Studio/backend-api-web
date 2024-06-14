@@ -6,49 +6,40 @@ use App\Models\User;
 
 class RandomHelper
 {
-	public static function generateUniqueUsername(string $fullName, int $maxLength = 20): string
+	public static function generateUniqueUsername(string $fullName, string $email): string
 	{
-		// Mengganti spasi dan karakter non-alfanumerik dengan underscore
+		// Mengganti spasi dan karakter non-alfanumerik pada full name dengan underscore
 		$usernameBase = strtolower(preg_replace("/[^a-zA-Z0-9]/", "_", $fullName));
 
-		// Tentukan panjang suffix
-		$maxSuffixLength = $maxLength - strlen($usernameBase);
-		$maxSuffixLength = max(4, $maxSuffixLength);  // Pastikan suffix minimal 4 karakter
+		// Ambil bagian sebelum '@' dari email
+		$emailBase = strtolower(strstr($email, '@', true));
 
-		// Karakter untuk suffix
-		$chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+		// Gabungkan fullname dan emailBase
+		$username = $usernameBase . '_' . $emailBase;
 
-		do {
-			$randomSuffix = '';
-			for ($i = 0; $i < $maxSuffixLength; $i++) {
-				$randomSuffix .= $chars[random_int(0, strlen($chars) - 1)];
-			}
-			// Gabungkan base username dengan random suffix
-			$username = $usernameBase . $randomSuffix;
+		// Periksa apakah username sudah ada
+		$existingUser = User::where('username', $username)->first();
 
-			// Periksa apakah username sudah ada
-			$existingUser = User::where('username', $username)->first();
-		} while ($existingUser); // Ulangi sampai mendapatkan username yang unik
+		if ($existingUser) {
+			throw new \Exception('Username already exists.');
+		}
 
 		return $username;
 	}
 
-
-	public static function generatePassword(string $email, int $length = 20): string
+	public static function generatePassword(int $length = 12): string
 	{
+		// Karakter yang akan digunakan untuk password
 		$chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#&()";
-		// Mengambil nama pengguna dari email (bagian sebelum '@')
-		$emailPrefix = substr($email, 0, strpos($email, '@'));
-		// Panjang karakter acak yang akan digunakan
-		$randomCharsLength = max(0, $length - strlen($emailPrefix)); // Pastikan tidak negatif
-		$randomChars = "";
 
-		for ($i = 0; $i < $randomCharsLength; $i++) {
-			$randomChars .= $chars[random_int(0, strlen($chars) - 1)];
+		// Inisialisasi password kosong
+		$password = "";
+
+		// Tambahkan karakter acak ke password
+		for ($i = 0; $i < $length; $i++) {
+			$password .= $chars[random_int(0, strlen($chars) - 1)];
 		}
 
-		// Gabungkan bagian email dengan karakter acak
-		$password = $emailPrefix . $randomChars;
 		return $password;
 	}
 }

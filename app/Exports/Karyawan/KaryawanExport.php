@@ -12,18 +12,9 @@ use Maatwebsite\Excel\Concerns\FromCollection;
 class KaryawanExport implements FromCollection, WithHeadings, WithMapping
 {
     use Exportable;
-    protected $ids;
-
-    public function __construct(array $ids = [])
-    {
-        $this->ids = $ids;
-    }
 
     public function collection()
     {
-        if (!empty($this->ids)) {
-            return DataKaryawan::whereIn('id', $this->ids)->get();
-        }
         return DataKaryawan::all();
     }
 
@@ -47,13 +38,13 @@ class KaryawanExport implements FromCollection, WithHeadings, WithMapping
     {
         return [
             $karyawan->users->nama,
-            $karyawan->nik ?? 'Data tidak tersedia',
+            $karyawan->nik ?? 'N/A',
             $karyawan->no_rm,
-            $karyawan->nik_ktp ?? 'Data tidak tersedia',
+            $karyawan->nik_ktp ?? 'N/A',
             $karyawan->unit_kerjas->nama_unit,
             $karyawan->status_karyawan,
-            $karyawan->tempat_lahir ?? 'Data tidak tersedia',
-            $karyawan->tgl_lahir ?? 'Data tidak tersedia',
+            $karyawan->tempat_lahir ?? 'N/A',
+            $karyawan->tgl_lahir ?? 'N/A',
             Carbon::parse($karyawan->created_at)->format('d-m-Y H:i:s'),
             Carbon::parse($karyawan->updated_at)->format('d-m-Y H:i:s')
         ];

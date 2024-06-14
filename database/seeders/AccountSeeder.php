@@ -15,10 +15,11 @@ class AccountSeeder extends Seeder
     public function run(): void
     {
         $roleSuperAdmin = User::create([
-            'nama' => 'Olga Parks',
-            'username' => 'olgaP',
-            'data_completion_step' => 1,
-            'password' => Hash::make('password'),
+            'nama' => 'Super Admin',
+            'username' => 'super_admin',
+            'data_completion_step' => 0,
+            'status_akun' => 1,
+            'password' => Hash::make('super_admin'),
         ]);
         $roleSuperAdmin->assignRole('Super Admin');
     }

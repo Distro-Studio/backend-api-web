@@ -109,31 +109,31 @@ class JabatanController extends Controller
         return response()->json(new JabatanResource(Response::HTTP_OK, $successMessage, $jabatan), Response::HTTP_OK);
     }
 
-    public function bulkDelete(Request $request)
-    {
-        if (!Gate::allows('delete jabatan')) {
-            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
-        }
+    // public function bulkDelete(Request $request)
+    // {
+    //     if (!Gate::allows('delete jabatan')) {
+    //         return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+    //     }
 
-        $dataJabatan = Validator::make($request->all(), [
-            'ids' => 'required|array|min:1',
-            'ids.*' => 'integer|exists:jabatans,id'
-        ]);
+    //     $dataJabatan = Validator::make($request->all(), [
+    //         'ids' => 'required|array|min:1',
+    //         'ids.*' => 'integer|exists:jabatans,id'
+    //     ]);
 
-        if ($dataJabatan->fails()) {
-            return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, $dataJabatan->errors()), Response::HTTP_BAD_REQUEST);
-        }
+    //     if ($dataJabatan->fails()) {
+    //         return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, $dataJabatan->errors()), Response::HTTP_BAD_REQUEST);
+    //     }
 
-        $ids = $request->input('ids');
-        Jabatan::destroy($ids);
+    //     $ids = $request->input('ids');
+    //     Jabatan::destroy($ids);
 
-        $deletedCount = Jabatan::whereIn('id', $ids)->delete();
-        // $message = sprintf('Deleted %d Jabatan%s', $deletedCount, $deletedCount > 1 ? 's' : '');
+    //     $deletedCount = Jabatan::whereIn('id', $ids)->delete();
+    //     // $message = sprintf('Deleted %d Jabatan%s', $deletedCount, $deletedCount > 1 ? 's' : '');
 
-        $message = 'Data jabatan berhasil dihapus.';
+    //     $message = 'Data jabatan berhasil dihapus.';
 
-        return response()->json(new WithoutDataResource(Response::HTTP_OK, $message), Response::HTTP_OK);
-    }
+    //     return response()->json(new WithoutDataResource(Response::HTTP_OK, $message), Response::HTTP_OK);
+    // }
 
     public function exportJabatan(Request $request)
     {
@@ -142,8 +142,7 @@ class JabatanController extends Controller
         }
 
         try {
-            $ids = $request->input('ids', []);
-            return Excel::download(new JabatanExport($ids), 'jabatan.xls');
+            return Excel::download(new JabatanExport(), 'data-jabatan.xls');
         } catch (\Exception $e) {
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya terjadi error. Message: ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
         } catch (\Error $e) {

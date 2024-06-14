@@ -14,15 +14,15 @@ return new class extends Migration
         Schema::create('presensis', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained('users');
-            $table->foreignId('data_karyawan_id')->constrained('data_karyawans');
             $table->foreignId('jadwal_id')->constrained('jadwals');
             $table->timestamp('jam_masuk');
             $table->timestamp('jam_keluar')->nullable();
-            $table->string('durasi');
+            $table->integer('durasi');
             $table->string('lat');
             $table->string('long');
-            $table->string('foto');
-            $table->string('absensi'); //(hadir,izin,sakit)
+            $table->string('foto_masuk');
+            $table->string('foto_keluar');
+            $table->string('presensi'); //(hadir,izin,sakit)
             $table->string('kategori');
             $table->timestamps();
         });

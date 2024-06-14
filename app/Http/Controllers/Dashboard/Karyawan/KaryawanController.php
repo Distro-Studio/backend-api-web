@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\Karyawan\KaryawanExport;
+use App\Http\Requests\CreateCredentialsDataKaryawan;
 use App\Imports\Karyawan\KaryawanImport;
 use Illuminate\Support\Facades\Validator;
 use App\Http\Requests\StoreDataKaryawanRequest;
@@ -50,7 +51,7 @@ class KaryawanController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
-        $karyawan = DataKaryawan::query();
+        $karyawan = DataKaryawan::query()->with(['users', 'unit_kerjas', 'jabatans', 'kompetensis', 'kelompok_gajis', 'ptkps']);
 
         // Filter
         if ($request->has('status_karyawan')) {
@@ -64,14 +65,13 @@ class KaryawanController extends Controller
         if ($request->has('nama_unit')) {
             $namaUnitKerja = $request->nama_unit;
 
-            $karyawan->with('unit_kerjas:id,nama_unit')
-                ->whereHas('unit_kerjas', function ($query) use ($namaUnitKerja) {
-                    if (is_array($namaUnitKerja)) {
-                        $query->whereIn('nama_unit', $namaUnitKerja);
-                    } else {
-                        $query->where('nama_unit', '=', $namaUnitKerja);
-                    }
-                });
+            $karyawan->whereHas('unit_kerjas', function ($query) use ($namaUnitKerja) {
+                if (is_array($namaUnitKerja)) {
+                    $query->whereIn('nama_unit', $namaUnitKerja);
+                } else {
+                    $query->where('nama_unit', '=', $namaUnitKerja);
+                }
+            });
         }
 
         // Search
@@ -87,11 +87,7 @@ class KaryawanController extends Controller
                 });
 
                 $query->orWhere('nik', 'like', $searchTerm)
-                    ->orWhere('no_rm', 'like', $searchTerm)
-                    ->orWhere('nik_ktp', 'like', $searchTerm)
-                    ->orWhere('status_karyawan', 'like', $searchTerm)
-                    ->orWhere('tempat_lahir', 'like', $searchTerm)
-                    ->orWhere('tgl_lahir', 'like', $searchTerm);
+                    ->orWhere('no_rm', 'like', $searchTerm);
             });
         }
 
@@ -100,8 +96,58 @@ class KaryawanController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data karyawan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
         }
 
-        return response()->json(new KaryawanResource(Response::HTTP_OK, 'Data karyawan berhasil ditampilkan.', $dataKaryawan), Response::HTTP_OK);
+        // Format data untuk output
+        $formattedData = $dataKaryawan->items();
+        $formattedData = array_map(function ($karyawan) {
+            return [
+                'id' => $karyawan->id,
+                'user' => $karyawan->users,
+                'nik' => $karyawan->nik,
+                'no_rm' => $karyawan->no_rm,
+                'unit_kerja' => $karyawan->unit_kerjas ?? null,
+                'status_karyawan' => $karyawan->status_karyawan,
+                'created_at' => $karyawan->created_at,
+                'updated_at' => $karyawan->updated_at
+            ];
+        }, $formattedData);
+
+        $paginationData = [
+            'links' => [
+                'first' => $dataKaryawan->url(1),
+                'last' => $dataKaryawan->url($dataKaryawan->lastPage()),
+                'prev' => $dataKaryawan->previousPageUrl(),
+                'next' => $dataKaryawan->nextPageUrl(),
+            ],
+            'meta' => [
+                'current_page' => $dataKaryawan->currentPage(),
+                'last_page' => $dataKaryawan->lastPage(),
+                'per_page' => $dataKaryawan->perPage(),
+                'total' => $dataKaryawan->total(),
+            ]
+        ];
+
+        return response()->json([
+            'status' => Response::HTTP_OK,
+            'message' => 'Data karyawan berhasil ditampilkan.',
+            'data' => $formattedData,
+            'pagination' => $paginationData
+        ], Response::HTTP_OK);
     }
+
+    public function generateCredentials(CreateCredentialsDataKaryawan $request)
+    {
+        $data = $request->validated();
+
+        return response()->json([
+            'status' => Response::HTTP_OK,
+            'message' => 'Data credentials karyawan berhasil digenerate.',
+            'data' => [
+                'username' => RandomHelper::generateUniqueUsername($data['nama'], $data['email']),
+                'password' => RandomHelper::generatePassword()
+            ]
+        ], Response::HTTP_OK);
+    }
+
 
     public function store(StoreDataKaryawanRequest $request)
     {
@@ -114,19 +160,11 @@ class KaryawanController extends Controller
 
         DB::beginTransaction();
         try {
-            $username = empty($data['username'])
-                ? RandomHelper::generateUniqueUsername($data['nama'])
-                : $data['username'];
-
-            $password = empty($data['password'])
-                ? RandomHelper::generatePassword($data['email'])
-                : $data['password'];
-
             $userData = [
                 'nama' => $data['nama'],
                 'role_id' => $data['role_id'],
-                'username' => $username,
-                'password' => Hash::make($password)
+                'username' => $data['username'],
+                'password' => Hash::make($data['password']),
             ];
 
             $createUser = User::create($userData);
@@ -152,19 +190,11 @@ class KaryawanController extends Controller
                 'uang_lembur' => $data['uang_lembur'],
                 'ptkp_id' => $data['ptkp_id'],
             ]);
-
-            $createRekamJejak = new TrackRecord([
-                'user_id' => $createUser->id,
-                'tgl_masuk' => $data['tgl_masuk'],
-            ]);
-
             $createDataKaryawan->save();
-            $createRekamJejak->save();
 
             DB::commit();
 
-            Mail::to($data['email'])->send(new SendAccoundUsersMail($username, $password, $data['nama']));
-
+            Mail::to($data['email'])->send(new SendAccoundUsersMail($data['username'], $data['password'], $data['nama']));
             return response()->json(new KaryawanResource(Response::HTTP_OK, 'Data karyawan berhasil dibuat.', $createDataKaryawan), Response::HTTP_OK);
         } catch (\Throwable $th) {
             DB::rollBack();
@@ -172,31 +202,148 @@ class KaryawanController extends Controller
         }
     }
 
-    public function show(DataKaryawan $data_karyawan)
+    public function show($id)
     {
-        if (!Gate::allows('view dataKaryawan', $data_karyawan)) {
+        if (!Gate::allows('view dataKaryawan')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
-        if (!$data_karyawan) {
+        $karyawan = DataKaryawan::with(['users', 'unit_kerjas', 'jabatans', 'kompetensis', 'kelompok_gajis', 'ptkps'])->find($id);
+
+        if (!$karyawan) {
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data karyawan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
         }
 
-        return response()->json(new KaryawanResource(Response::HTTP_OK, 'Data karyawan ditemukan.', $data_karyawan), Response::HTTP_OK);
+        $formattedData = [
+            'id' => $karyawan->id,
+            'user' => $karyawan->users,
+            "email" => $karyawan->email,
+            'no_rm' => $karyawan->no_rm,
+            'no_manulife' => $karyawan->no_manulife,
+            'tgl_masuk' => $karyawan->tgl_masuk,
+            'unit_kerja' => $karyawan->unit_kerjas ?? null,
+            'jabatan' => $karyawan->jabatans ?? null,
+            'kompetensi' => $karyawan->kompetensis ?? null,
+            'role' => $karyawan->users->roles ?? null,
+            "nik" => $karyawan->nik,
+            "nik_ktp" => $karyawan->nik_ktp,
+            'status_karyawan' => $karyawan->status_karyawan,
+            'tempat_lahir' => $karyawan->tempat_lahir,
+            'tgl_lahir' => $karyawan->tgl_lahir,
+            'kelompok_gaji' => $karyawan->kelompok_gajis ?? null,
+            'no_rekening' => $karyawan->no_rekening,
+            'tunjangan_jabatan' => $karyawan->tunjangan_jabatan,
+            'tunjangan_fungsional' => $karyawan->tunjangan_fungsional,
+            'tunjangan_khusus' => $karyawan->tunjangan_khusus,
+            'tunjangan_lainnya' => $karyawan->tunjangan_lainnya,
+            'uang_lembur' => $karyawan->uang_lembur,
+            'uang_makan' => $karyawan->uang_makan,
+            'ptkp' => $karyawan->ptkps ?? null,
+            "tgl_keluar" => $karyawan->tgl_keluar,
+            "no_kk" => $karyawan->no_kk,
+            "alamat" => $karyawan->alamat,
+            "gelar_depan" => $karyawan->gelar_depan,
+            "no_hp" => $karyawan->no_hp,
+            "no_bpjsksh" => $karyawan->no_bpjsksh,
+            "no_bpjsktk" => $karyawan->no_bpjsktk,
+            "tgl_diangkat" => $karyawan->tgl_diangkat,
+            "masa_kerja" => $karyawan->masa_kerja,
+            "npwp" => $karyawan->npwp,
+            "jenis_kelamin" => $karyawan->jenis_kelamin,
+            "agama" => $karyawan->agama,
+            "golongan_darah" => $karyawan->golongan_darah,
+            "tinggi_badan" => $karyawan->tinggi_badan,
+            "berat_badan" => $karyawan->berat_badan,
+            "no_ijazah" => $karyawan->no_ijazah,
+            "tahun_lulus" => $karyawan->tahun_lulus,
+            "no_str" => $karyawan->no_str,
+            "masa_berlaku_str" => $karyawan->masa_berlaku_str,
+            "no_sip" => $karyawan->no_sip,
+            "masa_berlaku_sip" => $karyawan->masa_berlaku_sip,
+            "tgl_berakhir_pks" => $karyawan->tgl_berakhir_pks,
+            "masa_diklat" => $karyawan->masa_diklat,
+            'created_at' => $karyawan->created_at,
+            'updated_at' => $karyawan->updated_at
+        ];
+
+        return response()->json([
+            'status' => Response::HTTP_OK,
+            'message' => 'Detail karyawan berhasil ditampilkan.',
+            'data' => $formattedData,
+        ], Response::HTTP_OK);
     }
 
-    public function update(UpdateDataKaryawanRequest $request, DataKaryawan $data_karyawan)
+    public function update(UpdateDataKaryawanRequest $request, $id)
     {
-        if (!Gate::allows('update dataKaryawan', $data_karyawan)) {
+        if (!Gate::allows('edit dataKaryawan')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
         $data = $request->validated();
-        $data_karyawan->update($data);
-        $updatedFresh = $data_karyawan->fresh();
-        $successMessage = "Data Karyawan '{$updatedFresh->users->nama}' berhasil diubah.";
+        $karyawan = DataKaryawan::find($id);
+        $karyawan->update($data);
 
-        return response()->json(new KaryawanResource(Response::HTTP_OK, $successMessage, $updatedFresh), Response::HTTP_OK);
+        if (!$karyawan) {
+            return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data karyawan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+        }
+
+        $formattedData = [
+            'id' => $karyawan->id,
+            'user' => $karyawan->users,
+            "email" => $karyawan->email,
+            'no_rm' => $karyawan->no_rm,
+            'no_manulife' => $karyawan->no_manulife,
+            'tgl_masuk' => $karyawan->tgl_masuk,
+            'unit_kerja' => $karyawan->unit_kerjas ?? null,
+            'jabatan' => $karyawan->jabatans ?? null,
+            'kompetensi' => $karyawan->kompetensis ?? null,
+            'role' => $karyawan->users->roles ?? null,
+            "nik" => $karyawan->nik,
+            "nik_ktp" => $karyawan->nik_ktp,
+            'status_karyawan' => $karyawan->status_karyawan,
+            'tempat_lahir' => $karyawan->tempat_lahir,
+            'tgl_lahir' => $karyawan->tgl_lahir,
+            'kelompok_gaji' => $karyawan->kelompok_gajis ?? null,
+            'no_rekening' => $karyawan->no_rekening,
+            'tunjangan_jabatan' => $karyawan->tunjangan_jabatan,
+            'tunjangan_fungsional' => $karyawan->tunjangan_fungsional,
+            'tunjangan_khusus' => $karyawan->tunjangan_khusus,
+            'tunjangan_lainnya' => $karyawan->tunjangan_lainnya,
+            'uang_lembur' => $karyawan->uang_lembur,
+            'uang_makan' => $karyawan->uang_makan,
+            'ptkp' => $karyawan->ptkps ?? null,
+            "tgl_keluar" => $karyawan->tgl_keluar,
+            "no_kk" => $karyawan->no_kk,
+            "alamat" => $karyawan->alamat,
+            "gelar_depan" => $karyawan->gelar_depan,
+            "no_hp" => $karyawan->no_hp,
+            "no_bpjsksh" => $karyawan->no_bpjsksh,
+            "no_bpjsktk" => $karyawan->no_bpjsktk,
+            "tgl_diangkat" => $karyawan->tgl_diangkat,
+            "masa_kerja" => $karyawan->masa_kerja,
+            "npwp" => $karyawan->npwp,
+            "jenis_kelamin" => $karyawan->jenis_kelamin,
+            "agama" => $karyawan->agama,
+            "golongan_darah" => $karyawan->golongan_darah,
+            "tinggi_badan" => $karyawan->tinggi_badan,
+            "berat_badan" => $karyawan->berat_badan,
+            "no_ijazah" => $karyawan->no_ijazah,
+            "tahun_lulus" => $karyawan->tahun_lulus,
+            "no_str" => $karyawan->no_str,
+            "masa_berlaku_str" => $karyawan->masa_berlaku_str,
+            "no_sip" => $karyawan->no_sip,
+            "masa_berlaku_sip" => $karyawan->masa_berlaku_sip,
+            "tgl_berakhir_pks" => $karyawan->tgl_berakhir_pks,
+            "masa_diklat" => $karyawan->masa_diklat,
+            'created_at' => $karyawan->created_at,
+            'updated_at' => $karyawan->updated_at
+        ];
+
+        return response()->json([
+            'status' => Response::HTTP_OK,
+            'message' => 'Data karyawan berhasil diperbarui.',
+            'data' => $formattedData,
+        ], Response::HTTP_OK);
     }
 
     public function exportKaryawan(Request $request)
@@ -206,8 +353,7 @@ class KaryawanController extends Controller
         }
 
         try {
-            $ids = $request->input('ids', []);
-            return Excel::download(new KaryawanExport($ids), 'data-karyawans.xls');
+            return Excel::download(new KaryawanExport(), 'data-karyawan.xls');
         } catch (\Exception $e) {
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya terjadi error. Message: ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
         } catch (\Error $e) {

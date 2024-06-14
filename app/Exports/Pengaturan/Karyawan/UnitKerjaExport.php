@@ -12,17 +12,9 @@ use Maatwebsite\Excel\Concerns\FromCollection;
 class UnitKerjaExport implements FromCollection, WithHeadings, WithMapping
 {
     use Exportable;
-    protected $ids;
 
-    public function __construct(array $ids = [])
-    {
-        $this->ids = $ids;
-    }
     public function collection()
     {
-        if (!empty($this->ids)) {
-            return UnitKerja::whereIn('id', $this->ids)->get();
-        }
         return UnitKerja::all();
     }
 
@@ -40,7 +32,7 @@ class UnitKerjaExport implements FromCollection, WithHeadings, WithMapping
     {
         return [
             $unit_kerja->nama_unit,
-            $unit_kerja->jenis_karyawan ? 'Shift' : 'Non-Shift',
+            $unit_kerja->jenis_karyawan ? 'Shift' : 'Non-Shift', // 1 = Shift, 0 = Non-Shift
             Carbon::parse($unit_kerja->created_at)->format('d-m-Y H:i:s'),
             Carbon::parse($unit_kerja->updated_at)->format('d-m-Y H:i:s')
         ];

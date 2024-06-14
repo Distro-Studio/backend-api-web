@@ -54,14 +54,14 @@ class CutiResource extends JsonResource
 
     protected function formatData(Collection $collection)
     {
-        return $collection->transform(function ($jabatan) {
+        return $collection->transform(function ($tipe_cuti) {
             return [
-                'id' => $jabatan->id,
-                'nama' => $jabatan->nama,
-                'durasi' => $jabatan->durasi,
-                'waktu' => $jabatan->waktu,
-                'created_at' => $jabatan->created_at,
-                'updated_at' => $jabatan->updated_at
+                'id' => $tipe_cuti->id,
+                'nama' => $tipe_cuti->nama,
+                'durasi' => $tipe_cuti->durasi,
+                'waktu' => $tipe_cuti->waktu,
+                'created_at' => $tipe_cuti->created_at,
+                'updated_at' => $tipe_cuti->updated_at
             ];
         });
     }

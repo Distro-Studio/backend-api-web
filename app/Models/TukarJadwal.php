@@ -17,7 +17,7 @@ class TukarJadwal extends Model
      *
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function user_pengajuan(): BelongsTo
+    public function user_pengajuans(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_pengajuan', 'id');
     }
@@ -27,7 +27,7 @@ class TukarJadwal extends Model
      *
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function user_ditukar(): BelongsTo
+    public function user_ditukars(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_ditukar', 'id');
     }
@@ -37,7 +37,7 @@ class TukarJadwal extends Model
      *
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function jadwal_pengajuan(): BelongsTo
+    public function jadwal_pengajuans(): BelongsTo
     {
         return $this->belongsTo(Jadwal::class, 'jadwal_pengajuan', 'id');
     }
@@ -47,7 +47,7 @@ class TukarJadwal extends Model
      *
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function jadwal_ditukar(): BelongsTo
+    public function jadwal_ditukars(): BelongsTo
     {
         return $this->belongsTo(Jadwal::class, 'jadwal_ditukar', 'id');
     }

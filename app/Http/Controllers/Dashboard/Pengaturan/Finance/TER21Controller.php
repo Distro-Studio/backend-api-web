@@ -42,33 +42,31 @@ class TER21Controller extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
-        $ter = Ter::query();
+        $ter = Ter::with(['kategori_ters', 'ptkps']);
 
         // Filter
         if ($request->has('nama_kategori_ter')) {
             $namaKategoriTER = $request->nama_kategori_ter;
 
-            $ter->with('kategori_ters:id,nama_kategori_ter')
-                ->whereHas('kategori_ters', function ($query) use ($namaKategoriTER) {
-                    if (is_array($namaKategoriTER)) {
-                        $query->whereIn('nama_kategori_ter', $namaKategoriTER);
-                    } else {
-                        $query->where('nama_kategori_ter', '=', $namaKategoriTER);
-                    }
-                });
+            $ter->whereHas('kategori_ters', function ($query) use ($namaKategoriTER) {
+                if (is_array($namaKategoriTER)) {
+                    $query->whereIn('nama_kategori_ter', $namaKategoriTER);
+                } else {
+                    $query->where('nama_kategori_ter', '=', $namaKategoriTER);
+                }
+            });
         }
 
         if ($request->has('kode_ptkp')) {
             $namaPTKP = $request->kode_ptkp;
 
-            $ter->with('ptkps:id,kode_ptkp')
-                ->whereHas('ptkps', function ($query) use ($namaPTKP) {
-                    if (is_array($namaPTKP)) {
-                        $query->whereIn('kode_ptkp', $namaPTKP);
-                    } else {
-                        $query->where('kode_ptkp', '=', $namaPTKP);
-                    }
-                });
+            $ter->whereHas('ptkps', function ($query) use ($namaPTKP) {
+                if (is_array($namaPTKP)) {
+                    $query->whereIn('kode_ptkp', $namaPTKP);
+                } else {
+                    $query->where('kode_ptkp', '=', $namaPTKP);
+                }
+            });
         }
 
         // Search
@@ -130,31 +128,31 @@ class TER21Controller extends Controller
         return response()->json(new TER21Resource(Response::HTTP_OK, $successMessage, $ter_pph_21), Response::HTTP_OK);
     }
 
-    public function bulkDelete(Request $request)
-    {
-        if (!Gate::allows('delete ter21')) {
-            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
-        }
+    // public function bulkDelete(Request $request)
+    // {
+    //     if (!Gate::allows('delete ter21')) {
+    //         return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+    //     }
 
-        $dataPremi = Validator::make($request->all(), [
-            'ids' => 'required|array|min:1',
-            'ids.*' => 'integer|exists:ters,id'
-        ]);
+    //     $dataPremi = Validator::make($request->all(), [
+    //         'ids' => 'required|array|min:1',
+    //         'ids.*' => 'integer|exists:ters,id'
+    //     ]);
 
-        if ($dataPremi->fails()) {
-            return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, $dataPremi->errors()), Response::HTTP_BAD_REQUEST);
-        }
+    //     if ($dataPremi->fails()) {
+    //         return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, $dataPremi->errors()), Response::HTTP_BAD_REQUEST);
+    //     }
 
-        $ids = $request->input('ids');
-        Ter::destroy($ids);
+    //     $ids = $request->input('ids');
+    //     Ter::destroy($ids);
 
-        $deletedCount = Ter::whereIn('id', $ids)->delete();
-        // $message = sprintf('Deleted %d Jabatan%s', $deletedCount, $deletedCount > 1 ? 's' : '');
+    //     $deletedCount = Ter::whereIn('id', $ids)->delete();
+    //     // $message = sprintf('Deleted %d Jabatan%s', $deletedCount, $deletedCount > 1 ? 's' : '');
 
-        $message = 'Data Ter PPH21 berhasil dihapus.';
+    //     $message = 'Data Ter PPH21 berhasil dihapus.';
 
-        return response()->json(new WithoutDataResource(Response::HTTP_OK, $message), Response::HTTP_OK);
-    }
+    //     return response()->json(new WithoutDataResource(Response::HTTP_OK, $message), Response::HTTP_OK);
+    // }
 
     public function exportTER(Request $request)
     {
@@ -163,8 +161,7 @@ class TER21Controller extends Controller
         }
 
         try {
-            $ids = $request->input('ids', []);
-            return Excel::download(new TER21Export($ids), 'ter-pph-21.xls');
+            return Excel::download(new TER21Export(), 'ter-pph-21.xls');
         } catch (\Exception $e) {
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya terjadi error. Message: ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
         } catch (\Error $e) {

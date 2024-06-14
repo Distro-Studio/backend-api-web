@@ -44,13 +44,14 @@ class TransferKaryawanSeeder extends Seeder
 
             $dataTransfer = new TransferKaryawan([
                 'user_id' => $user_id,
-                'tanggal_mulai' => date('Y-m-d', rand(mktime(0, 0, 0, 1, 1, 2024), mktime(0, 0, 0, 12, 31, 2024))),
+                'tgl_mulai' => date('Y-m-d', rand(mktime(0, 0, 0, 1, 1, 2024), mktime(0, 0, 0, 12, 31, 2024))),
                 'unit_kerja_asal' => $unit_kerja_asal,
                 'unit_kerja_tujuan' => $unit_kerja_tujuan,
                 'jabatan_asal' => $jabatan_asal,
                 'jabatan_tujuan' => $jabatan_tujuan,
                 'tipe' => $tipe[array_rand($tipe)],
                 'alasan' => 'Lorem ipsum dolor, sit amet consectetur adipisicing elit. Quos rerum unde, culpa corporis impedit id sequi in tenetur laboriosam odit provident vel temporibus fugiat excepturi ex eum at? Rem, totam!',
+                'dokumen' => '/berkas/karyawan/karyawan-transfer/dokumen_' . $user_id . '.pdf',
             ]);
             $dataTransfer->save();
         }

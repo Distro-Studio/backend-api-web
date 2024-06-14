@@ -12,19 +12,10 @@ use Maatwebsite\Excel\Concerns\FromCollection;
 class AkunKaryawanExport implements FromCollection, WithHeadings, WithMapping
 {
     use Exportable;
-    protected $ids;
-
-    public function __construct(array $ids = [])
-    {
-        $this->ids = $ids;
-    }
 
     public function collection()
     {
-        if (!empty($this->ids)) {
-            return User::whereIn('id', $this->ids)->get();
-        }
-        return User::all();
+        return User::with('data_karyawans')->get();
     }
 
     public function headings(): array
@@ -44,10 +35,10 @@ class AkunKaryawanExport implements FromCollection, WithHeadings, WithMapping
     {
         return [
             $akun->nama,
-            $akun->data_karyawans->nik ?? 'Data tidak tersedia',
-            $akun->data_karyawans->email ?? 'Data tidak tersedia',
+            $akun->data_karyawans->nik ?? 'N/A',
+            $akun->data_karyawans->email ?? 'N/A',
             $akun->username,
-            $akun->data_karyawans->status_karyawan ?? 'Data tidak tersedia',
+            $akun->data_karyawans->status_karyawan ?? 'N/A',
             Carbon::parse($akun->created_at)->format('d-m-Y H:i:s'),
             Carbon::parse($akun->updated_at)->format('d-m-Y H:i:s')
         ];

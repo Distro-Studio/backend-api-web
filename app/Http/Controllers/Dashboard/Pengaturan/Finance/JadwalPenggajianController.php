@@ -45,16 +45,6 @@ class JadwalPenggajianController extends Controller
         
         $data = $request->validated();
 
-        // if (!$jadwalPenggajian || $jadwalPenggajian == isEmpty()) {
-        //     $newJadwalGaji = JadwalPenggajian::create($data);
-        //     $message = "Jadwal penggajian karyawan berhasil di atur pada '{$newJadwalGaji->tanggal}'";
-        //     return response()->json([
-        //         'status' => Response::HTTP_OK,
-        //         'message' => $message,
-        //         'data' => $newJadwalGaji
-        //     ], Response::HTTP_OK);
-        // }
-
         $jadwalPenggajian->update($data);
         $message = "Jadwal penggajian karyawan berhasil diperbarui pada '{$jadwalPenggajian->tanggal}'";
         return response()->json([

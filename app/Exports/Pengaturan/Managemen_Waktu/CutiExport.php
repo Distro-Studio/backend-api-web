@@ -12,18 +12,9 @@ use Maatwebsite\Excel\Concerns\FromCollection;
 class CutiExport implements FromCollection, WithHeadings, WithMapping
 {
     use Exportable;
-    protected $ids;
-
-    public function __construct(array $ids = [])
-    {
-        $this->ids = $ids;
-    }
 
     public function collection()
     {
-        if (!empty($this->ids)) {
-            return TipeCuti::whereIn('id', $this->ids)->get();
-        }
         return TipeCuti::all();
     }
 

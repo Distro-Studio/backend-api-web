@@ -14,9 +14,10 @@ return new class extends Migration
         Schema::create('tukar_jadwals', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_pengajuan')->constrained('users');
-            $table->foreignId('user_ditukar')->constrained('users');
             $table->foreignId('jadwal_pengajuan')->constrained('jadwals');
+            $table->foreignId('user_ditukar')->constrained('users');
             $table->foreignId('jadwal_ditukar')->constrained('jadwals');
+            $table->boolean('status_penukaran');
             $table->timestamps();
         });
     }

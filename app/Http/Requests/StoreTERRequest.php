@@ -25,8 +25,8 @@ class StoreTERRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'kategori_ter_id' => 'required|integer',
-            'ptkp_id' => 'required|integer',
+            'kategori_ter_id' => 'required|integer|exists:kategori_ters,id',
+            'ptkp_id' => 'required|integer|exists:ptkps,id',
             'from_ter' => 'required|numeric',
             'to_ter' => 'required|numeric',
             'percentage_ter' => 'required|numeric',
@@ -37,7 +37,9 @@ class StoreTERRequest extends FormRequest
     {
         return [
             'kategori_ter_id.required' => 'Silahkan pilih kategori TER terlebih dahulu.',
+            'kategori_ter_id.exists' => 'Maaf kategori tersebut tidak valid.',
             'ptkp_id.required' => 'Silahkan pilih PTKP terlebih dahulu.',
+            'ptkp_id.exists' => 'Maaf ptkp tersebut tidak valid.',
             'from_ter.required' => 'Batas penghasilan awal tidak diperbolehkan kosong.',
             'from_ter.numeric' => 'Batas penghasilan awal tidak diperbolehkan mengandung huruf.',
             'to_ter.required' => 'Batas penghasilan akhir tidak diperbolehkan kosong.',

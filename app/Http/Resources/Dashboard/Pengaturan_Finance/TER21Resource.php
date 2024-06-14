@@ -58,7 +58,7 @@ class TER21Resource extends JsonResource
             return [
                 'id' => 'T00' . $ter21->id,
                 'kategori_ter_id' => $ter21->kategori_ters,
-                'ptkp_id' => $ter21->ptkps,
+                'ptkp' => $ter21->ptkps,
                 'from_ter' => $ter21->from_ter,
                 'to_ter' => $ter21->to_ter,
                 'percentage_ter' => $ter21->percentage_ter,

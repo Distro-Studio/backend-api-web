@@ -1,12 +1,12 @@
 <?php
 
-namespace App\Http\Resources\Dashboard\Presensi;
+namespace App\Http\Resources\Dashboard\Jadwal;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-class PresensiResource extends JsonResource
+class CutiJadwalResource extends JsonResource
 {
     public $status;
     public $message;
@@ -51,25 +51,19 @@ class PresensiResource extends JsonResource
         }
     }
 
-
     protected function formatData(Collection $collection)
     {
-        return $collection->transform(function ($presensi) {
+        return $collection->transform(function ($cuti_jadwal) {
             return [
-                'id' => $presensi->id,
-                'user_id' => $presensi->users,
-                'data_karyawan_id' => optional($presensi->data_karyawans)->unit_kerjas,
-                'jadwal_id' => optional($presensi->jadwals)->shifts, // ambil shift
-                'jam_masuk' => $presensi->jam_masuk,
-                'jam_keluar' => $presensi->jam_keluar,
-                'durasi' => $presensi->durasi,
-                'lat' => $presensi->lat,
-                'long' => $presensi->long,
-                'foto' => $presensi->foto,
-                'absensi' => $presensi->absensi,
-                'kategori' => $presensi->kategori,
-                'created_at' => $presensi->created_at,
-                'updated_at' => $presensi->updated_at
+                'id' => $cuti_jadwal->id,
+                'user' => $cuti_jadwal->users,
+                'tipe_cuti' => $cuti_jadwal->tipe_cutis,
+                'tgl_from' => $cuti_jadwal->tgl_from,
+                'tgl_to' => $cuti_jadwal->tgl_to,
+                'catatan' => $cuti_jadwal->catatan,
+                'durasi' => $cuti_jadwal->durasi,
+                'created_at' => $cuti_jadwal->created_at,
+                'updated_at' => $cuti_jadwal->updated_at
             ];
         });
     }

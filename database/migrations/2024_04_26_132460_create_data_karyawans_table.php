@@ -13,7 +13,6 @@ return new class extends Migration
     {
         Schema::create('data_karyawans', function (Blueprint $table) {
             $table->id();
-
             $table->foreignId('user_id')->constrained('users');
             $table->string('email')->nullable();
             $table->integer('no_rm')->nullable();
@@ -41,7 +40,7 @@ return new class extends Migration
             $table->string('no_bpjsksh', 50)->nullable();
             $table->string('no_bpjsktk', 50)->nullable();
             $table->date('tgl_diangkat')->nullable();
-            $table->string('masa_kerja', 10)->nullable();
+            $table->integer('masa_kerja')->nullable();
             $table->string('npwp', 50)->nullable();
             $table->string('no_rekening', 50)->nullable();
             $table->string('jenis_kelamin', 50)->nullable();
@@ -49,7 +48,7 @@ return new class extends Migration
             $table->string('golongan_darah', 50)->nullable();
             $table->integer('tinggi_badan')->nullable();
             $table->integer('berat_badan')->nullable();
-            $table->string('no_ijasah')->nullable();
+            $table->string('no_ijazah')->nullable();
             $table->integer('tahun_lulus')->nullable();
             $table->string('no_kk', 20)->nullable();
             $table->string('status_karyawan', 50)->nullable();
@@ -60,7 +59,7 @@ return new class extends Migration
             $table->date('masa_berlaku_sip')->nullable();
             $table->unsignedBigInteger('ptkp_id')->nullable();
             $table->date('tgl_berakhir_pks')->nullable();
-            $table->string('masa_diklat', 50)->nullable();
+            $table->integer('masa_diklat')->nullable();
             $table->timestamps();
 
             $table->foreign('kelompok_gaji_id')->on('kelompok_gajis')->references('id');

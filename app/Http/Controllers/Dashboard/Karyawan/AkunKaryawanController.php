@@ -22,7 +22,9 @@ class AkunKaryawanController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
-        $akunKaryawan = User::with('data_karyawans')->get();
+        $akunKaryawan = User::with('data_karyawans')
+            ->where('username', '!=', 'super_admin')
+            ->get();
         return response()->json([
             'status' => Response::HTTP_OK,
             'message' => 'Retrieving all akun karyawan for dropdown',
@@ -43,20 +45,18 @@ class AkunKaryawanController extends Controller
         if ($request->has('status_karyawan')) {
             $namaStatus = $request->status_karyawan;
 
-            $akunKaryawan->with('data_karyawans:user_id,email,nik,status_karyawan')
-                ->whereHas('data_karyawans', function ($query) use ($namaStatus) {
-                    if (is_array($namaStatus)) {
-                        $query->whereIn('status_karyawan', $namaStatus);
-                    } else {
-                        $query->where('status_karyawan', '=', $namaStatus);
-                    }
-                });
+            $akunKaryawan->whereHas('data_karyawans', function ($query) use ($namaStatus) {
+                if (is_array($namaStatus)) {
+                    $query->whereIn('status_karyawan', $namaStatus);
+                } else {
+                    $query->where('status_karyawan', '=', $namaStatus);
+                }
+            });
         }
 
         if ($request->has('nama_unit')) {
             $namaUnitKerja = $request->nama_unit;
 
-            // get unit kerja dari table data karyawan
             $akunKaryawan->whereHas('data_karyawans.unit_kerjas', function ($query) use ($namaUnitKerja) {
                 if (is_array($namaUnitKerja)) {
                     $query->whereIn('nama_unit', $namaUnitKerja);
@@ -72,13 +72,9 @@ class AkunKaryawanController extends Controller
                 $searchTerm = '%' . $request->search . '%';
 
                 $query->orWhereHas('data_karyawans', function ($query) use ($searchTerm) {
-                    $query->where('nik', 'like', $searchTerm);
-                });
-                $query->whereHas('data_karyawans', function ($query) use ($searchTerm) {
-                    $query->where('email', 'like', $searchTerm);
-                });
-                $query->orWhereHas('data_karyawans', function ($query) use ($searchTerm) {
-                    $query->where('status_karyawan', 'like', $searchTerm);
+                    $query->where('nik', 'like', $searchTerm)
+                        ->orWhere('email', 'like', $searchTerm)
+                        ->orWhere('status_karyawan', 'like', $searchTerm);
                 });
 
                 $query->orWhere('nama', 'like', $searchTerm)
@@ -94,44 +90,6 @@ class AkunKaryawanController extends Controller
         return response()->json(new AkunResource(Response::HTTP_OK, 'Data akun karyawan berhasil ditampilkan.', $dataAkunKaryawan), Response::HTTP_OK);
     }
 
-    // public function bulkDelete(Request $request)
-    // {
-    //     if (!Gate::allows('delete dataKaryawan') || !Gate::allows('delete user')) {
-    //         return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
-    //     }
-
-    //     $dataKaryawan = Validator::make($request->all(), [
-    //         'ids' => 'required|array|min:1',
-    //         'ids.*' => 'integer|exists:data_karyawans,id'
-    //     ]);
-
-    //     if ($dataKaryawan->fails()) {
-    //         return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, $dataKaryawan->errors()), Response::HTTP_BAD_REQUEST);
-    //     }
-
-    //     $ids = $request->input('ids');
-    //     // $deletedCount = DataKaryawan::whereIn('id', $ids);
-    //     // $deletedCount->delete();
-
-    //     $employeesToDelete = User::whereIn('id', $ids)
-    //         ->with('data_karyawans') // relationship
-    //         ->get();
-
-    //     $deletedCount = 0;
-
-    //     foreach ($employeesToDelete as $employee) {
-    //         if ($employee->data_karyawans) {
-    //             $employee->data_karyawans->delete(); // Delete associated user
-    //             $employee->delete(); // Delete employee data
-    //             $deletedCount++;
-    //         }
-    //     }
-
-    //     $message = "Total $deletedCount akun karyawan berhasil dihapus beserta data karyawan terkait.";
-
-    //     return response()->json(new WithoutDataResource(Response::HTTP_OK, $message), Response::HTTP_OK);
-    // }
-
     public function exportAkunKaryawan(Request $request)
     {
         if (!Gate::allows('export dataKaryawan') || !Gate::allows('export user')) {
@@ -139,8 +97,7 @@ class AkunKaryawanController extends Controller
         }
 
         try {
-            $ids = $request->input('ids', []);
-            return Excel::download(new AkunKaryawanExport($ids), 'akun-karyawans.xls');
+            return Excel::download(new AkunKaryawanExport(), 'akun-karyawan.xls');
         } catch (\Exception $e) {
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya terjadi error. Message: ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
         } catch (\Error $e) {

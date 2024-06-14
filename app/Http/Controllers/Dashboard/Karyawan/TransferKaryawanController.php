@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Dashboard\Karyawan;
 
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use App\Mail\SendNotifyTransfer;
@@ -10,11 +11,14 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Mail;
 use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Support\Facades\Storage;
 use App\Exports\Karyawan\TransferExport;
 use Illuminate\Support\Facades\Validator;
 use App\Http\Requests\StoreTransferKaryawanRequest;
+use App\Http\Requests\UpdateTransferKaryawanRequest;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
 use App\Http\Resources\Dashboard\Karyawan\TransferKaryawanResource;
+use App\Models\TrackRecord;
 
 class TransferKaryawanController extends Controller
 {
@@ -25,7 +29,7 @@ class TransferKaryawanController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
-        $transfer = TransferKaryawan::all();
+        $transfer = TransferKaryawan::with('users', 'unit_kerja_asals', 'unit_kerja_tujuans', 'jabatan_asals', 'jabatan_tujuans')->get();
         return response()->json([
             'status' => Response::HTTP_OK,
             'message' => 'Retrieving all transfer karyawan for dropdown',
@@ -43,34 +47,41 @@ class TransferKaryawanController extends Controller
         $transfer = TransferKaryawan::query();
 
         // Filter
+        if ($request->has('status_transfer') && $request->status_transfer != 'semua_status') {
+            $statusTransfer = $request->status_transfer;
+            $currentDate = Carbon::now();
+
+            $transfer->where(function ($query) use ($statusTransfer, $currentDate) {
+                if ($statusTransfer == 'sukses') {
+                    $query->where('tgl_mulai', '<=', $currentDate);
+                } elseif ($statusTransfer == 'menunggu') {
+                    $query->where('tgl_mulai', '>', $currentDate);
+                }
+            });
+        }
+
         if ($request->has('status_karyawan')) {
             $namaStatus = $request->status_karyawan;
 
-            $transfer->join('users', 'transfer_karyawans.user_id', '=', 'users.id')
-                ->join('data_karyawans', 'users.id', '=', 'data_karyawans.user_id')
-                ->where(function ($query) use ($namaStatus) {
-                    if (is_array($namaStatus)) {
-                        $query->whereIn('data_karyawans.status_karyawan', $namaStatus);
-                    } else {
-                        $query->where('data_karyawans.status_karyawan', '=', $namaStatus);
-                    }
-                });
+            $transfer->whereHas('users.data_karyawans', function ($query) use ($namaStatus) {
+                if (is_array($namaStatus)) {
+                    $query->whereIn('status_karyawan', $namaStatus);
+                } else {
+                    $query->where('status_karyawan', '=', $namaStatus);
+                }
+            });
         }
 
         if ($request->has('nama_unit')) {
             $namaUnitKerja = $request->nama_unit;
 
-            // filter kalo gak punya relasi
-            $transfer->join('users', 'transfer_karyawans.user_id', '=', 'users.id')
-                ->join('data_karyawans', 'users.id', '=', 'data_karyawans.user_id')
-                ->join('unit_kerjas as unit_kerja_tos', 'transfer_karyawans.unit_kerja_to', '=', 'unit_kerja_tos.id')
-                ->where(function ($query) use ($namaUnitKerja) {
-                    if (is_array($namaUnitKerja)) {
-                        $query->whereIn('unit_kerja_tos.nama_unit', $namaUnitKerja);
-                    } else {
-                        $query->where('unit_kerja_tos.nama_unit', '=', $namaUnitKerja);
-                    }
-                });
+            $transfer->whereHas('unit_kerja_tujuans', function ($query) use ($namaUnitKerja) {
+                if (is_array($namaUnitKerja)) {
+                    $query->whereIn('nama_unit', $namaUnitKerja);
+                } else {
+                    $query->where('nama_unit', '=', $namaUnitKerja);
+                }
+            });
         }
 
         // Search
@@ -93,12 +104,54 @@ class TransferKaryawanController extends Controller
             });
         }
 
-        $dataKaryawan = $transfer->paginate(10);
-        if ($dataKaryawan->isEmpty()) {
+        $dataTransfer = $transfer->paginate(10);
+        if ($dataTransfer->isEmpty()) {
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data transfer karyawan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
         }
 
-        return response()->json(new TransferKaryawanResource(Response::HTTP_OK, 'Data transfer karyawan berhasil ditampilkan.', $dataKaryawan), Response::HTTP_OK);
+        $formattedData = $dataTransfer->items();
+        $formattedData = array_map(function ($transfer) {
+            $status_transfer = Carbon::now()->greaterThanOrEqualTo(Carbon::parse($transfer->tgl_mulai)) ? 'Sukses' : 'Menunggu';
+
+            return [
+                'id' => $transfer->id,
+                'user' => $transfer->users,
+                'tgl_mulai' => $transfer->tgl_mulai,
+                'nik' => $transfer->users->data_karyawans->nik ?? null,
+                'unit_kerja_asal' => $transfer->unit_kerja_asals,
+                'unit_kerja_tujuan' => $transfer->unit_kerja_tujuans,
+                'jabatan_asal' => $transfer->jabatan_asals,
+                'jabatan_tujuan' => $transfer->jabatan_tujuans,
+                'tipe' => $transfer->tipe,
+                'alasan' => $transfer->alasan,
+                'dokumen' => $transfer->dokumen,
+                'status_transfer' => $status_transfer,
+                'created_at' => $transfer->created_at,
+                'updated_at' => $transfer->updated_at
+            ];
+        }, $formattedData);
+
+        $paginationData = [
+            'links' => [
+                'first' => $dataTransfer->url(1),
+                'last' => $dataTransfer->url($dataTransfer->lastPage()),
+                'prev' => $dataTransfer->previousPageUrl(),
+                'next' => $dataTransfer->nextPageUrl(),
+            ],
+            'meta' => [
+                'current_page' => $dataTransfer->currentPage(),
+                'last_page' => $dataTransfer->lastPage(),
+                'per_page' => $dataTransfer->perPage(),
+                'total' => $dataTransfer->total(),
+            ]
+        ];
+
+        return response()->json([
+            'status' => Response::HTTP_OK,
+            'message' => 'Data transfer karyawan berhasil ditampilkan.',
+            'data' => $formattedData,
+            'pagination' => $paginationData
+        ], Response::HTTP_OK);
     }
 
     public function store(StoreTransferKaryawanRequest $request)
@@ -108,18 +161,31 @@ class TransferKaryawanController extends Controller
         }
 
         $data = $request->validated();
+
+        if ($request->hasFile('dokumen')) {
+            $file = $request->file('dokumen');
+            $filePath = $file->store('/berkas/karyawan/karyawan-transfer', 'public');
+            $data['dokumen'] = $filePath;
+        }
         $transfer = TransferKaryawan::create($data);
 
         $users = $transfer->users;
-        // $email = $transfer->data_karyawans;
         $unit_kerja_asals = $transfer->unit_kerja_asals->nama_unit;
         $unit_kerja_tujuans = $transfer->unit_kerja_tujuans->nama_unit;
         $jabatan_asals = $transfer->jabatan_asals->nama_jabatan;
         $jabatan_tujuans = $transfer->jabatan_tujuans->nama_jabatan;
         $alasan = $transfer->alasan;
-        $tanggal_mulai = $transfer->tanggal_mulai;
+        $tgl_mulai = $transfer->tgl_mulai;
 
-        if ($request->has('notify_manager_direktur') && $request->notify_manager_direktur == true) {
+        // create track record
+        TrackRecord::create([
+            'user_id' => $users->id,
+            'tgl_masuk' => $users->data_karyawans->tgl_masuk,
+            'tgl_keluar' => $users->data_karyawans->tgl_keluar,
+            'mutasi' => "Mutasi dari Unit kerja {$unit_kerja_asals} ke {$unit_kerja_tujuans} - Jabatan {$jabatan_asals} ke {$jabatan_tujuans}",
+        ]);
+
+        if ($request->has('beri_tahu_manajer_direktur') && $request->beri_tahu_manajer_direktur == 1) {
             // TODO: ganti email
             Mail::to('manager@example.com')->cc('direktur@example.com')->send(new SendNotifyTransfer(
                 $users->nama,
@@ -129,10 +195,10 @@ class TransferKaryawanController extends Controller
                 $jabatan_asals,
                 $jabatan_tujuans,
                 $alasan,
-                $tanggal_mulai
+                $tgl_mulai
             ));
         }
-        if ($request->has('notify_users') && $request->notify_users == true) {
+        if ($request->has('beri_tahu_karyawan') && $request->beri_tahu_karyawan == 1) {
             Mail::to($users->data_karyawans->email)->send(new SendNotifyTransfer(
                 $users->nama,
                 $users->data_karyawans->email,
@@ -141,11 +207,120 @@ class TransferKaryawanController extends Controller
                 $jabatan_asals,
                 $jabatan_tujuans,
                 $alasan,
-                $tanggal_mulai
+                $tgl_mulai
             ));
         }
 
         return response()->json(new TransferKaryawanResource(Response::HTTP_OK, "Berhasil melakukan transfer karyawan {$users->nama}.", $transfer), Response::HTTP_OK);
+    }
+
+    public function show($id)
+    {
+        if (!Gate::allows('view dataKaryawan')) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melihat data ini.'), Response::HTTP_FORBIDDEN);
+        }
+
+        $transfer = TransferKaryawan::with(['users', 'unit_kerja_asals', 'unit_kerja_tujuans', 'jabatan_asals', 'jabatan_tujuans'])->find($id);
+
+        if (!$transfer) {
+            return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data transfer karyawan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+        }
+
+        $status_transfer = Carbon::now()->greaterThanOrEqualTo(Carbon::parse($transfer->tgl_mulai)) ? 'Sukses' : 'Menunggu';
+
+        $formattedData = [
+            'id' => $transfer->id,
+            'user' => $transfer->users,
+            'tgl_mulai' => $transfer->tgl_mulai,
+            'nik' => $transfer->users->data_karyawans->nik ?? null,
+            'unit_kerja_asal' => $transfer->unit_kerja_asals,
+            'unit_kerja_tujuan' => $transfer->unit_kerja_tujuans,
+            'jabatan_asal' => $transfer->jabatan_asals,
+            'jabatan_tujuan' => $transfer->jabatan_tujuans,
+            'tipe' => $transfer->tipe,
+            'alasan' => $transfer->alasan,
+            'dokumen' => $transfer->dokumen,
+            'status_transfer' => $status_transfer,
+            'created_at' => $transfer->created_at,
+            'updated_at' => $transfer->updated_at
+        ];
+
+        return response()->json([
+            'status' => Response::HTTP_OK,
+            'message' => "Detail transfer karyawan {$transfer->users->nama} berhasil ditampilkan.",
+            'data' => $formattedData,
+        ], Response::HTTP_OK);
+    }
+
+    public function update(UpdateTransferKaryawanRequest $request, $id)
+    {
+        if (!Gate::allows('edit dataKaryawan')) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
+
+        $data = $request->validated();
+        $transfer = TransferKaryawan::find($id);
+
+        if (!$transfer) {
+            return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data transfer karyawan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+        }
+
+        if ($request->hasFile('dokumen')) {
+            // Hapus dokumen lama jika ada
+            if ($transfer->dokumen && Storage::exists('public/' . $transfer->dokumen)) {
+                Storage::delete('public/' . $transfer->dokumen);
+            }
+
+            $file = $request->file('dokumen');
+            $filePath = $file->store('/berkas/karyawan/karyawan-transfer', 'public');
+            $data['dokumen'] = $filePath;
+        }
+
+        $transfer->update($data);
+
+        $users = $transfer->users;
+        $unit_kerja_asals = $transfer->unit_kerja_asals->nama_unit;
+        $unit_kerja_tujuans = $transfer->unit_kerja_tujuans->nama_unit;
+        $jabatan_asals = $transfer->jabatan_asals->nama_jabatan;
+        $jabatan_tujuans = $transfer->jabatan_tujuans->nama_jabatan;
+        $alasan = $transfer->alasan;
+        $tgl_mulai = $transfer->tgl_mulai;
+
+        // create track record
+        TrackRecord::create([
+            'user_id' => $users->id,
+            'tgl_masuk' => $users->data_karyawans->tgl_masuk,
+            'tgl_keluar' => $users->data_karyawans->tgl_keluar,
+            'mutasi' => "Pembaharuan mutasi dari Unit kerja {$unit_kerja_asals} ke {$unit_kerja_tujuans} - Jabatan {$jabatan_asals} ke {$jabatan_tujuans}",
+        ]);
+
+        if ($request->has('beri_tahu_manajer_direktur') && $request->beri_tahu_manajer_direktur == 1) {
+            // TODO: ganti email
+            Mail::to('manager@example.com')->cc('direktur@example.com')->send(new SendNotifyTransfer(
+                $users->nama,
+                $users->data_karyawans->email,
+                $unit_kerja_asals,
+                $unit_kerja_tujuans,
+                $jabatan_asals,
+                $jabatan_tujuans,
+                $alasan,
+                $tgl_mulai
+            ));
+        }
+        if ($request->has('beri_tahu_karyawan') && $request->beri_tahu_karyawan == 1) {
+            Mail::to($users->data_karyawans->email)->send(new SendNotifyTransfer(
+                $users->nama,
+                $users->data_karyawans->email,
+                $unit_kerja_asals,
+                $unit_kerja_tujuans,
+                $jabatan_asals,
+                $jabatan_tujuans,
+                $alasan,
+                $tgl_mulai
+            ));
+        }
+
+        return response()->json(new TransferKaryawanResource(Response::HTTP_OK, "Berhasil memperbarui transfer karyawan {$users->nama}.", $transfer), Response::HTTP_OK);
     }
 
     public function exportTransferKaryawan(Request $request)
@@ -155,8 +330,7 @@ class TransferKaryawanController extends Controller
         }
 
         try {
-            $ids = $request->input('ids', []);
-            return Excel::download(new TransferExport($ids), 'transfer-karyawan.xls');
+            return Excel::download(new TransferExport(), 'transfer-karyawan.xls');
         } catch (\Exception $e) {
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya terjadi error. Message: ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
         } catch (\Error $e) {

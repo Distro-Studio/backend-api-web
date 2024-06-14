@@ -30,7 +30,7 @@ class StoreDataKaryawanRequest extends FormRequest
             'role_id' => 'required|integer|exists:roles,id',
             'no_rm' => 'required|string',
             'no_manulife' => 'nullable|string',
-            'tgl_masuk' => 'required',
+            'tgl_masuk' => 'required|date',
             'unit_kerja_id' => 'required|integer|exists:unit_kerjas,id',
             'jabatan_id' => 'required|integer|exists:jabatans,id',
             'kompetensi_id' => 'required|integer|exists:kompetensis,id',
@@ -48,8 +48,8 @@ class StoreDataKaryawanRequest extends FormRequest
             'ptkp_id' => 'required|integer|exists:ptkps,id',
 
             // Step 3
-            'username' => 'nullable|unique:users,username',
-            'password' => 'nullable',
+            'username' => 'required|string|unique:users,username',
+            'password' => 'required|string',
         ];
     }
 
@@ -68,6 +68,7 @@ class StoreDataKaryawanRequest extends FormRequest
             'no_rm.required' => 'Nomor rekam medis karyawan tidak diperbolehkan kosong.',
             'no_manulife.string' => 'Nomor manulife karyawan tidak diperbolehkan kosong.',
             'tgl_masuk.required' => 'Tanggal masuk karyawan tidak diperbolehkan kosong.',
+            'tgl_masuk.date' => 'Tanggal masuk karyawan harus berupa tanggal.',
             'unit_kerja_id.required' => 'Silahkan pilih unit kerja karyawan terlebih dahulu.',
             'unit_kerja_id.exists' => 'Maaf unit kerja tersebut tidak valid.',
             'jabatan_id.required' => 'Silahkan pilih jabatan karyawan terlebih dahulu.',

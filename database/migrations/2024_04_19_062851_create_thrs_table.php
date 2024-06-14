@@ -14,9 +14,9 @@ return new class extends Migration
         Schema::create('thrs', function (Blueprint $table) {
             $table->id();
             $table->string('perhitungan');
-            $table->string('nominal_satu', 20);
-            $table->string('nominal_dua', 20);
-            $table->string('potongan', 20)->nullable();
+            $table->integer('nominal_satu')->nullable();
+            $table->integer('nominal_dua')->nullable();
+            $table->string('potongan')->nullable();
             $table->string('kriteria_karyawan_kontrak')->nullable();
             $table->timestamps();
         });

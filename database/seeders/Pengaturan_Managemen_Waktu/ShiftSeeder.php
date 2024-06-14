@@ -16,20 +16,24 @@ class ShiftSeeder extends Seeder
     {
         Shift::create([
             'nama' => 'Pagi',
-            'jam_from' => Carbon::parse('2024-01-01 06:00:00'),
-            'jam_to' => Carbon::parse('2024-01-01 15:00:00')
+            'jam_from' => Carbon::parse('06:00:00'),
+            'jam_to' => Carbon::parse('15:00:00')
         ]);
-        
+
         Shift::create([
             'nama' => 'Sore',
-            'jam_from' => Carbon::parse('2024-01-01 15:00:00'),
-            'jam_to' => Carbon::parse('2024-01-01 22:00:00')
+            'jam_from' => Carbon::parse('15:00:00'),
+            'jam_to' => Carbon::parse('22:00:00')
         ]);
-        
+
         Shift::create([
             'nama' => 'Malam',
-            'jam_from' => Carbon::parse('2024-01-01 22:00:00'),
-            'jam_to' => Carbon::parse('2024-01-02 06:00:00') // Perhatikan bahwa tanggalnya berubah ke hari berikutnya
+            'jam_from' => Carbon::parse('22:00:00'),
+            'jam_to' => Carbon::parse('06:00:00')
+        ]);
+
+        Shift::create([
+            'nama' => 'Libur',
         ]);
     }
 }

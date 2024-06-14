@@ -17,7 +17,7 @@ class Cuti extends Model
      *
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function user(): BelongsTo
+    public function users(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id', 'id');
     }
@@ -27,7 +27,7 @@ class Cuti extends Model
      *
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function tipe_cuti(): BelongsTo
+    public function tipe_cutis(): BelongsTo
     {
         return $this->belongsTo(TipeCuti::class, 'tipe_cuti_id', 'id');
     }

@@ -16,6 +16,7 @@ use App\Imports\Karyawan\RekamJejakImport;
 use App\Http\Resources\Dashboard\Karyawan\RekamJejakResource;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
 use App\Http\Requests\Excel_Import\ImportRekamJejakKaryawanRequest;
+use Illuminate\Support\Facades\DB;
 
 class RekamJejakController extends Controller
 {
@@ -26,7 +27,7 @@ class RekamJejakController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
-        $rekamJejak = TrackRecord::all();
+        $rekamJejak = TrackRecord::with('users')->get();
         return response()->json([
             'status' => Response::HTTP_OK,
             'message' => 'Retrieving all rekam jejak karyawan for dropdown',
@@ -41,43 +42,39 @@ class RekamJejakController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
-        $rekamJejak = TrackRecord::query();
+        $rekamJejak = TrackRecord::query()
+            ->with('users')
+            ->select('track_records.*')
+            ->join(DB::raw('(SELECT MAX(id) as max_id FROM track_records GROUP BY user_id) as grouped'), 'track_records.id', '=', 'grouped.max_id');
 
         // Filter
         if ($request->has('nama_unit')) {
             $namaUnitKerja = $request->nama_unit;
 
-            // filter kalo gak punya relasi
-            $rekamJejak->join('users', 'track_records.user_id', '=', 'users.id')
-                ->join('data_karyawans', 'users.id', '=', 'data_karyawans.user_id')
-                ->join('unit_kerjas', 'data_karyawans.unit_kerja_id', '=', 'unit_kerjas.id')
-                ->where(function ($query) use ($namaUnitKerja) {
-                    if (is_array($namaUnitKerja)) {
-                        $query->whereIn('unit_kerjas.nama_unit', $namaUnitKerja);
-                    } else {
-                        $query->where('unit_kerjas.nama_unit', '=', $namaUnitKerja);
-                    }
-                });
+            $rekamJejak->whereHas('users.data_karyawans.unit_kerjas', function ($query) use ($namaUnitKerja) {
+                if (is_array($namaUnitKerja)) {
+                    $query->whereIn('nama_unit', $namaUnitKerja);
+                } else {
+                    $query->where('nama_unit', '=', $namaUnitKerja);
+                }
+            });
         }
 
         if ($request->has('status_karyawan')) {
             $namaStatus = $request->status_karyawan;
 
-            $rekamJejak->join('users', 'track_records.user_id', '=', 'users.id')
-                ->join('data_karyawans', 'users.id', '=', 'data_karyawans.user_id')
-                ->where(function ($query) use ($namaStatus) {
-                    if (is_array($namaStatus)) {
-                        $query->whereIn('data_karyawans.status_karyawan', $namaStatus);
-                    } else {
-                        $query->where('data_karyawans.status_karyawan', '=', $namaStatus);
-                    }
-                });
+            $rekamJejak->whereHas('users.data_karyawans', function ($query) use ($namaStatus) {
+                if (is_array($namaStatus)) {
+                    $query->whereIn('status_karyawan', $namaStatus);
+                } else {
+                    $query->where('status_karyawan', '=', $namaStatus);
+                }
+            });
         }
 
-        // calculate masa kerja
-        if ($request->has('tahun_max')) {
-            $tahun_max = $request->tahun_max;
-            $rekamJejak->whereRaw('TIMESTAMPDIFF(YEAR, tgl_masuk, COALESCE(tgl_keluar, NOW())) = ?', [$tahun_max]);
+        if ($request->has('masa_kerja')) {
+            $masa_kerja = $request->masa_kerja;
+            $rekamJejak->whereRaw('TIMESTAMPDIFF(YEAR, tgl_masuk, COALESCE(tgl_keluar, NOW())) = ?', [$masa_kerja]);
         }
 
         // Search
@@ -87,43 +84,116 @@ class RekamJejakController extends Controller
 
                 $query->whereHas('users', function ($query) use ($searchTerm) {
                     $query->where('nama', 'like', $searchTerm);
-                });
-
-                $query->orWhere('promosi', 'like', $searchTerm)
+                })
+                    ->orWhere('promosi', 'like', $searchTerm)
                     ->orWhere('mutasi', 'like', $searchTerm)
                     ->orWhere('penghargaan', 'like', $searchTerm);
             });
         }
 
-        $dataKaryawan = $rekamJejak->paginate(10);
-        if ($dataKaryawan->isEmpty()) {
+        $dataRekamJejak = $rekamJejak->paginate(10);
+        if ($dataRekamJejak->isEmpty()) {
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data rekam jejak tidak ditemukan.'), Response::HTTP_NOT_FOUND);
         }
 
-        return response()->json(new RekamJejakResource(Response::HTTP_OK, 'Data rekam jejak karyawan berhasil ditampilkan.', $dataKaryawan), Response::HTTP_OK);
+        $formattedData = $dataRekamJejak->items();
+        $formattedData = array_map(function ($rekam_jejak) {
+            return [
+                'id' => $rekam_jejak->id,
+                'user' => $rekam_jejak->users,
+                'tgl_masuk' => $rekam_jejak->tgl_masuk,
+                'tgl_keluar' => $rekam_jejak->tgl_keluar,
+                // calculation
+                'masa_kerja' => $this->calculateMasaKerja($rekam_jejak->tgl_masuk, $rekam_jejak->tgl_keluar),
+                // calculation
+                'promosi' => $rekam_jejak->promosi,
+                'mutasi' => $rekam_jejak->mutasi,
+                'penghargaan' => $rekam_jejak->penghargaan,
+                'created_at' => $rekam_jejak->created_at,
+                'updated_at' => $rekam_jejak->updated_at
+            ];
+        }, $formattedData);
+
+        $paginationData = [
+            'links' => [
+                'first' => $dataRekamJejak->url(1),
+                'last' => $dataRekamJejak->url($dataRekamJejak->lastPage()),
+                'prev' => $dataRekamJejak->previousPageUrl(),
+                'next' => $dataRekamJejak->nextPageUrl(),
+            ],
+            'meta' => [
+                'current_page' => $dataRekamJejak->currentPage(),
+                'last_page' => $dataRekamJejak->lastPage(),
+                'per_page' => $dataRekamJejak->perPage(),
+                'total' => $dataRekamJejak->total(),
+            ]
+        ];
+
+        return response()->json([
+            'status' => Response::HTTP_OK,
+            'message' => 'Data rekam jejak karyawan berhasil ditampilkan.',
+            'data' => $formattedData,
+            'pagination' => $paginationData
+        ], Response::HTTP_OK);
     }
 
-    public function bulkDelete(Request $request)
+    public function show($id)
     {
-        if (!Gate::allows('delete dataKaryawan')) {
+        if (!Gate::allows('view dataKaryawan')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
-        $dataRecords = Validator::make($request->all(), [
-            'ids' => 'required|array|min:1',
-            'ids.*' => 'integer|exists:track_records,id'
-        ]);
-
-        if ($dataRecords->fails()) {
-            return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, $dataRecords->errors()), Response::HTTP_BAD_REQUEST);
+        $rekamJejak = TrackRecord::find($id);
+        if (!$rekamJejak) {
+            return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data rekam jejak karyawan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
         }
 
-        $ids = $request->input('ids');
-        TrackRecord::whereIn('id', $ids)->delete();
+        $userData = [
+            'user' => $rekamJejak->users,
+            'tgl_masuk' => $rekamJejak->tgl_masuk,
+            'tgl_keluar' => $rekamJejak->tgl_keluar,
+            'masa_kerja' => $this->calculateMasaKerja($rekamJejak->tgl_masuk, $rekamJejak->tgl_keluar)
+        ];
 
-        $message = 'Data rekam jejak berhasil dihapus.';
+        // get semua record dari id
+        $rekamJejakList = TrackRecord::where('user_id', $rekamJejak->user_id)->paginate(10);
+        $formattedData = $rekamJejakList->items();
+        $formattedData = array_map(function ($item) {
+            return [
+                'id' => $item->id,
+                'tgl_masuk' => $item->tgl_masuk,
+                'promosi' => $item->promosi,
+                'mutasi' => $item->mutasi,
+                'penghargaan' => $item->penghargaan,
+                'created_at' => $item->created_at,
+                'updated_at' => $item->updated_at
+            ];
+        }, $formattedData);
 
-        return response()->json(new WithoutDataResource(Response::HTTP_OK, $message), Response::HTTP_OK);
+        $paginationData = [
+            'links' => [
+                'first' => $rekamJejakList->url(1),
+                'last' => $rekamJejakList->url($rekamJejakList->lastPage()),
+                'prev' => $rekamJejakList->previousPageUrl(),
+                'next' => $rekamJejakList->nextPageUrl(),
+            ],
+            'meta' => [
+                'current_page' => $rekamJejakList->currentPage(),
+                'last_page' => $rekamJejakList->lastPage(),
+                'per_page' => $rekamJejakList->perPage(),
+                'total' => $rekamJejakList->total(),
+            ]
+        ];
+
+        return response()->json([
+            'status' => Response::HTTP_OK,
+            'message' => "Data rekam jejak karyawan {$rekamJejak->users->name} berhasil ditampilkan.",
+            'data' => [
+                'data_user' => $userData,
+                'data_rekam_jejak' => $formattedData,
+            ],
+            'pagination' => $paginationData
+        ], Response::HTTP_OK);
     }
 
     public function exportRekamJejak(Request $request)
@@ -133,8 +203,7 @@ class RekamJejakController extends Controller
         }
 
         try {
-            $ids = $request->input('ids', []);
-            return Excel::download(new RekamJejakExport($ids), 'rekam-jejak-karyawan.xls');
+            return Excel::download(new RekamJejakExport(), 'rekam-jejak-karyawan.xls');
         } catch (\Exception $e) {
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya terjadi error. Message: ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
         } catch (\Error $e) {
@@ -159,5 +228,22 @@ class RekamJejakController extends Controller
         }
 
         return response()->json(new WithoutDataResource(Response::HTTP_OK, 'Data karyawan berhasil di import kedalam table.'), Response::HTTP_OK);
+    }
+
+    // masa kerja calculation
+    private function calculateMasaKerja($tglMasuk, $tglKeluar)
+    {
+        if ($tglMasuk) {
+            $tglMasuk = Carbon::parse($tglMasuk)->format('Y-m-d');
+            $tglSekarang = Carbon::now()->format('Y-m-d');
+
+            if ($tglKeluar) {
+                $tglKeluar = Carbon::parse($tglKeluar)->format('Y-m-d');
+                return Carbon::parse($tglMasuk)->diffInDays(Carbon::parse($tglKeluar));
+            } else {
+                return Carbon::parse($tglMasuk)->diffInDays(Carbon::parse($tglSekarang));
+            }
+        }
+        return null;
     }
 }

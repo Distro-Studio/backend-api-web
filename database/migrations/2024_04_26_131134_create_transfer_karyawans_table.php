@@ -14,14 +14,14 @@ return new class extends Migration
         Schema::create('transfer_karyawans', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained('users');
-            $table->date('tanggal_mulai');
+            $table->date('tgl_mulai');
             $table->foreignId('unit_kerja_asal')->constrained('unit_kerjas');
             $table->foreignId('unit_kerja_tujuan')->constrained('unit_kerjas');
             $table->foreignId('jabatan_asal')->constrained('jabatans');
             $table->foreignId('jabatan_tujuan')->constrained('jabatans');
             $table->string('tipe');
             $table->text('alasan');
-            $table->string('dokumen')->nullable();
+            $table->string('dokumen');
             $table->timestamps();
         });
     }

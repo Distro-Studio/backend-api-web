@@ -39,31 +39,35 @@ class PekerjaKontrakController extends Controller
         $pekerjaKontrak = DataKaryawan::where('status_karyawan', 'Kontrak');
 
         // Filter
+        if ($request->has('status_kontrak') && $request->status_kontrak != 'semua_status') {
+            $statusAktif = $request->status_kontrak;
+            $pekerjaKontrak->where(function ($query) use ($statusAktif) {
+                if ($statusAktif == 'aktif') {
+                    $query->whereNotNull('tgl_masuk')
+                        ->whereNull('tgl_keluar');
+                } elseif ($statusAktif == 'tidak_aktif') {
+                    $query->whereNotNull('tgl_masuk')
+                        ->whereNotNull('tgl_keluar');
+                }
+            });
+        }
+
         if ($request->has('nama_unit')) {
             $namaUnitKerja = $request->nama_unit;
 
-            $pekerjaKontrak->with('unit_kerjas:id,nama_unit')
-                ->whereHas('unit_kerjas', function ($query) use ($namaUnitKerja) {
-                    if (is_array($namaUnitKerja)) {
-                        $query->whereIn('nama_unit', $namaUnitKerja);
-                    } else {
-                        $query->where('nama_unit', '=', $namaUnitKerja);
-                    }
-                });
+            $pekerjaKontrak->whereHas('unit_kerjas', function ($query) use ($namaUnitKerja) {
+                if (is_array($namaUnitKerja)) {
+                    $query->whereIn('nama_unit', $namaUnitKerja);
+                } else {
+                    $query->where('nama_unit', '=', $namaUnitKerja);
+                }
+            });
         }
 
         if ($request->has('tgl_masuk')) {
             $tglMasuk = $request->tgl_masuk;
-
-            if (is_array($tglMasuk)) {
-                $tglMasuk = array_map(function ($date) {
-                    return Carbon::parse($date)->format('Y-m-d');
-                }, $tglMasuk);
-                $pekerjaKontrak->whereIn('tgl_masuk', $tglMasuk);
-            } else {
-                $tglMasuk = Carbon::parse($tglMasuk)->format('Y-m-d');
-                $pekerjaKontrak->where('tgl_masuk', $tglMasuk);
-            }
+            $tglMasuk = Carbon::parse($tglMasuk)->format('Y-m-d');
+            $pekerjaKontrak->where('tgl_masuk', $tglMasuk);
         }
 
         // Search
@@ -73,8 +77,7 @@ class PekerjaKontrakController extends Controller
 
                 $query->whereHas('users', function ($query) use ($searchTerm) {
                     $query->where('nama', 'like', $searchTerm);
-                });
-                $query->orWhereHas('unit_kerjas', function ($query) use ($searchTerm) {
+                })->orWhereHas('unit_kerjas', function ($query) use ($searchTerm) {
                     $query->where('nama_unit', 'like', $searchTerm);
                 });
             });
@@ -85,7 +88,43 @@ class PekerjaKontrakController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data karyawan kontrak tidak ditemukan.'), Response::HTTP_NOT_FOUND);
         }
 
-        return response()->json(new PekerjaKontrakResource(Response::HTTP_OK, 'Data karyawan kontrak berhasil ditampilkan.', $dataKontrak), Response::HTTP_OK);
+        // Format data untuk output
+        $formattedData = $dataKontrak->items();
+        $formattedData = array_map(function ($kontrak) {
+            $statusAktif = ($kontrak->tgl_masuk && !$kontrak->tgl_keluar) ? 'Aktif' : 'Tidak Aktif';
+            return [
+                'id' => $kontrak->id,
+                'user' => $kontrak->users,
+                'unit_kerja' => $kontrak->unit_kerjas,
+                'tgl_masuk' => $kontrak->tgl_masuk,
+                'tgl_keluar' => $kontrak->tgl_keluar,
+                'status_kontrak' => $statusAktif,
+                'created_at' => $kontrak->created_at,
+                'updated_at' => $kontrak->updated_at
+            ];
+        }, $formattedData);
+
+        $paginationData = [
+            'links' => [
+                'first' => $dataKontrak->url(1),
+                'last' => $dataKontrak->url($dataKontrak->lastPage()),
+                'prev' => $dataKontrak->previousPageUrl(),
+                'next' => $dataKontrak->nextPageUrl(),
+            ],
+            'meta' => [
+                'current_page' => $dataKontrak->currentPage(),
+                'last_page' => $dataKontrak->lastPage(),
+                'per_page' => $dataKontrak->perPage(),
+                'total' => $dataKontrak->total(),
+            ]
+        ];
+
+        return response()->json([
+            'status' => Response::HTTP_OK,
+            'message' => 'Data karyawan kontrak berhasil ditampilkan.',
+            'data' => $formattedData,
+            'pagination' => $paginationData
+        ], Response::HTTP_OK);
     }
 
     public function exportPekerjaKontrak(Request $request)
@@ -95,8 +134,7 @@ class PekerjaKontrakController extends Controller
         }
 
         try {
-            $ids = $request->input('ids', []);
-            return Excel::download(new PekerjaKontrakExport($ids), 'pekerja-kontrak.xls');
+            return Excel::download(new PekerjaKontrakExport(), 'karyawan-kontrak.xls');
         } catch (\Exception $e) {
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya terjadi error. Message: ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
         } catch (\Error $e) {

@@ -12,18 +12,9 @@ use Maatwebsite\Excel\Concerns\FromCollection;
 class PekerjaKontrakExport implements FromCollection, WithHeadings, WithMapping
 {
     use Exportable;
-    protected $ids;
-
-    public function __construct(array $ids = [])
-    {
-        $this->ids = $ids;
-    }
 
     public function collection()
     {
-        if (!empty($this->ids)) {
-            return DataKaryawan::whereIn('id', $this->ids)->get();
-        }
         return DataKaryawan::where('status_karyawan', 'Kontrak')->get();
     }
 
@@ -34,7 +25,7 @@ class PekerjaKontrakExport implements FromCollection, WithHeadings, WithMapping
             'unit_kerja',
             'tgl_masuk',
             'tgl_keluar',
-            'status_karyawan',
+            'status_kontrak',
             'created_at',
             'updated_at'
         ];
@@ -42,12 +33,13 @@ class PekerjaKontrakExport implements FromCollection, WithHeadings, WithMapping
 
     public function map($kontrak): array
     {
+        $statusAktif = ($kontrak->tgl_masuk && !$kontrak->tgl_keluar) ? 'Aktif' : 'Tidak Aktif'; // 1 = Aktif, 0 = Tidak Aktif
         return [
             $kontrak->users->nama,
             $kontrak->unit_kerjas->nama_unit,
             $kontrak->tgl_masuk,
-            $kontrak->tgl_keluar ?? 'Data tidak tersedia',
-            $kontrak->status_karyawan,
+            $kontrak->tgl_keluar ?? 'N/A',
+            $statusAktif,
             Carbon::parse($kontrak->created_at)->format('d-m-Y H:i:s'),
             Carbon::parse($kontrak->updated_at)->format('d-m-Y H:i:s')
         ];

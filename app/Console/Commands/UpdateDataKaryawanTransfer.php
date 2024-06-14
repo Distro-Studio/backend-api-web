@@ -32,8 +32,8 @@ class UpdateDataKaryawanTransfer extends Command
 
         // Ambil transfer yang tanggal mulainya kurang dari atau sama dengan H-1
         $transfers = TransferKaryawan::where(function ($query) use ($today, $tomorrow) {
-            $query->whereDate('tanggal_mulai', '<', $today)
-                ->orWhereDate('tanggal_mulai', '=', $tomorrow->format('Y-m-d'));
+            $query->whereDate('tgl_mulai', '<', $today)
+                ->orWhereDate('tgl_mulai', '=', $tomorrow->format('Y-m-d'));
         })->get();
 
         foreach ($transfers as $transfer) {
@@ -44,6 +44,6 @@ class UpdateDataKaryawanTransfer extends Command
                 ]);
         }
 
-        $this->info('Data karyawan berhasil diperbarui untuk yang tanggal mulainya H-1 atau sudah terlewat.');
+        $this->info('Data karyawan berhasil diperbarui pada tanggal mulainya H-1 atau sudah terlewat.');
     }
 }

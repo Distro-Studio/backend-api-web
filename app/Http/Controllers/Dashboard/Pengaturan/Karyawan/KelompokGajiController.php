@@ -170,31 +170,31 @@ class KelompokGajiController extends Controller
         return response()->json(new KelompokGajiResource(Response::HTTP_OK, $successMessage, $kelompok_gaji), Response::HTTP_OK);
     }
 
-    public function bulkDelete(Request $request)
-    {
-        if (!Gate::allows('delete kelompokGaji')) {
-            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
-        }
+    // public function bulkDelete(Request $request)
+    // {
+    //     if (!Gate::allows('delete kelompokGaji')) {
+    //         return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+    //     }
 
-        $dataKelompokGaji = Validator::make($request->all(), [
-            'ids' => 'required|array|min:1',
-            'ids.*' => 'integer|exists:jabatans,id'
-        ]);
+    //     $dataKelompokGaji = Validator::make($request->all(), [
+    //         'ids' => 'required|array|min:1',
+    //         'ids.*' => 'integer|exists:jabatans,id'
+    //     ]);
 
-        if ($dataKelompokGaji->fails()) {
-            return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, $dataKelompokGaji->errors()), Response::HTTP_BAD_REQUEST);
-        }
+    //     if ($dataKelompokGaji->fails()) {
+    //         return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, $dataKelompokGaji->errors()), Response::HTTP_BAD_REQUEST);
+    //     }
 
-        $ids = $request->input('ids');
-        KelompokGaji::destroy($ids);
+    //     $ids = $request->input('ids');
+    //     KelompokGaji::destroy($ids);
 
-        $deletedCount = KelompokGaji::whereIn('id', $ids)->delete();
-        // $message = sprintf('Deleted %d Jabatan%s', $deletedCount, $deletedCount > 1 ? 's' : '');
+    //     $deletedCount = KelompokGaji::whereIn('id', $ids)->delete();
+    //     // $message = sprintf('Deleted %d Jabatan%s', $deletedCount, $deletedCount > 1 ? 's' : '');
 
-        $message = 'Data kelompok gaji berhasil dihapus.';
+    //     $message = 'Data kelompok gaji berhasil dihapus.';
 
-        return response()->json(new WithoutDataResource(Response::HTTP_OK, $message), Response::HTTP_OK);
-    }
+    //     return response()->json(new WithoutDataResource(Response::HTTP_OK, $message), Response::HTTP_OK);
+    // }
 
     public function exportKelompokGaji(Request $request)
     {
@@ -203,8 +203,7 @@ class KelompokGajiController extends Controller
         }
 
         try {
-            $ids = $request->input('ids', []);
-            return Excel::download(new KelompokGajiExport($ids), 'kelompok-gaji.xls');
+            return Excel::download(new KelompokGajiExport(), 'data-kelompok-gaji.xls');
         } catch (\Exception $e) {
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya terjadi error. Message: ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
         } catch (\Error $e) {

@@ -23,7 +23,7 @@ class PresensiController extends Controller
 	/* ============================= For Dropdown ============================= */
 	public function getAllPresensi()
 	{
-		if (!Gate::allows('view presensi')) {
+		if (!Gate::allows('view presensiKaryawan')) {
 			return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
 		}
 
@@ -38,11 +38,11 @@ class PresensiController extends Controller
 
 	public function index(Request $request)
 	{
-		if (!Gate::allows('view presensi')) {
-			return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+		if (!Gate::allows('view presensiKaryawan')) {
+			return response()->json(['status' => Response::HTTP_FORBIDDEN, 'message' => 'Anda tidak memiliki hak akses untuk melakukan proses ini.'], Response::HTTP_FORBIDDEN);
 		}
 
-		$presensi = Presensi::query();
+		$presensi = Presensi::query()->with(['users.data_karyawans.unit_kerjas', 'jadwals.shifts']);
 
 		// Filter
 		if ($request->has('kategori')) {
@@ -55,21 +55,18 @@ class PresensiController extends Controller
 
 		if ($request->has('status_karyawan')) {
 			$statuskaryawan = $request->status_karyawan;
-
-			$presensi->with('data_karyawans:user_id,status_karyawan')
-				->whereHas('data_karyawans', function ($query) use ($statuskaryawan) {
-					if (is_array($statuskaryawan)) {
-						$query->whereIn('status_karyawan', $statuskaryawan);
-					} else {
-						$query->where('status_karyawan', '=', $statuskaryawan);
-					}
-				});
+			$presensi->whereHas('users.data_karyawans', function ($query) use ($statuskaryawan) {
+				if (is_array($statuskaryawan)) {
+					$query->whereIn('status_karyawan', $statuskaryawan);
+				} else {
+					$query->where('status_karyawan', '=', $statuskaryawan);
+				}
+			});
 		}
 
 		if ($request->has('nama_unit')) {
 			$namaUnitKerja = $request->nama_unit;
-
-			$presensi->whereHas('data_karyawans.unit_kerjas', function ($query) use ($namaUnitKerja) {
+			$presensi->whereHas('users.data_karyawans.unit_kerjas', function ($query) use ($namaUnitKerja) {
 				if (is_array($namaUnitKerja)) {
 					$query->whereIn('nama_unit', $namaUnitKerja);
 				} else {
@@ -78,59 +75,130 @@ class PresensiController extends Controller
 			});
 		}
 
-		if ($request->has('jam_masuk')) {
-			$tanggal = Carbon::parse($request->jam_masuk)->format('Y-m-d');
-
+		if ($request->has('hari_masuk')) {
+			$tanggal = Carbon::parse($request->hari_masuk)->format('Y-m-d');
 			$presensi->whereDate('jam_masuk', $tanggal);
 		}
 
 		// Search
 		if ($request->has('search')) {
-			$presensi = $presensi->where(function ($query) use ($request) {
-				$searchTerm = '%' . $request->search . '%';
-
+			$searchTerm = '%' . $request->search . '%';
+			$presensi->where(function ($query) use ($searchTerm) {
 				$query->whereHas('users', function ($query) use ($searchTerm) {
 					$query->where('nama', 'like', $searchTerm);
-				});
-				$query->orWhereHas('data_karyawans.unit_kerjas', function ($query) use ($searchTerm) {
+				})->orWhereHas('users.data_karyawans.unit_kerjas', function ($query) use ($searchTerm) {
 					$query->where('nama_unit', 'like', $searchTerm);
-				});
-				$query->orWhereHas('jadwals.shifts', function ($query) use ($searchTerm) {
+				})->orWhereHas('jadwals.shifts', function ($query) use ($searchTerm) {
 					$query->where('nama', 'like', $searchTerm);
 				});
 			});
 		}
 
 		$dataPresensi = $presensi->paginate(10);
+
 		if ($dataPresensi->isEmpty()) {
-			return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data presensi tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+			return response()->json(['status' => Response::HTTP_NOT_FOUND, 'message' => 'Data presensi tidak ditemukan.'], Response::HTTP_NOT_FOUND);
 		}
 
-		return response()->json(new PresensiResource(Response::HTTP_OK, 'Data presensi berhasil ditampilkan.', $dataPresensi), Response::HTTP_OK);
+		// Format data untuk output
+		$formattedData = $dataPresensi->items();
+		$formattedData = array_map(function ($presensi) {
+			$jamMasuk = Carbon::parse($presensi->jam_masuk);
+			$jamKeluar = Carbon::parse($presensi->jam_keluar);
+			$durasi = $jamKeluar->diffInSeconds($jamMasuk);
+
+			return [
+				'id' => $presensi->id,
+				'user' => $presensi->users ?? null,
+				'unit_kerja' => $presensi->users && $presensi->users->data_karyawans ? [
+					'id' => $presensi->users->data_karyawans->unit_kerjas->id,
+					'nama_unit' => $presensi->users->data_karyawans->unit_kerjas->nama_unit,
+					'jenis_karyawan' => $presensi->users->data_karyawans->unit_kerjas->jenis_karyawan,
+					'created_at' => $presensi->users->data_karyawans->unit_kerjas->created_at,
+					'updated_at' => $presensi->users->data_karyawans->unit_kerjas->updated_at,
+				] : null,
+				'jadwal' => $presensi->jadwals->shifts ?? null,
+				'jam_masuk' => $presensi->jam_masuk,
+				'jam_keluar' => $presensi->jam_keluar,
+				'created_at' => $presensi->created_at,
+				'updated_at' => $presensi->updated_at
+			];
+		}, $formattedData);
+
+		$paginationData = [
+			'links' => [
+				'first' => $dataPresensi->url(1),
+				'last' => $dataPresensi->url($dataPresensi->lastPage()),
+				'prev' => $dataPresensi->previousPageUrl(),
+				'next' => $dataPresensi->nextPageUrl(),
+			],
+			'meta' => [
+				'current_page' => $dataPresensi->currentPage(),
+				'last_page' => $dataPresensi->lastPage(),
+				'per_page' => $dataPresensi->perPage(),
+				'total' => $dataPresensi->total(),
+			]
+		];
+
+		return response()->json([
+			'status' => Response::HTTP_OK,
+			'message' => 'Data presensi berhasil ditampilkan.',
+			'data' => $formattedData,
+			'pagination' => $paginationData
+		], Response::HTTP_OK);
 	}
 
-	public function show(Presensi $data_presensi)
+	public function show($id)
 	{
-		if (!Gate::allows('view presensi')) {
+		if (!Gate::allows('view presensiKaryawan')) {
 			return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
 		}
 
-		if (!$data_presensi) {
+		$presensi = Presensi::with(['users.data_karyawans.unit_kerjas', 'jadwals.shifts'])->find($id);
+
+		if (!$presensi) {
 			return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data presensi tidak ditemukan.'), Response::HTTP_NOT_FOUND);
 		}
 
-		return response()->json(new PresensiResource(Response::HTTP_OK, "Data presensi dari {$data_presensi->users->nama} berhasil di tampilkan.", $data_presensi), Response::HTTP_OK);
+		$formattedData = [
+			'id' => $presensi->id,
+			'user' => $presensi->users ?? null,
+			'unit_kerja' => $presensi->users && $presensi->users->data_karyawans ? [
+				'id' => $presensi->users->data_karyawans->unit_kerjas->id,
+				'nama_unit' => $presensi->users->data_karyawans->unit_kerjas->nama_unit,
+				'jenis_karyawan' => $presensi->users->data_karyawans->unit_kerjas->jenis_karyawan,
+				'created_at' => $presensi->users->data_karyawans->unit_kerjas->created_at,
+				'updated_at' => $presensi->users->data_karyawans->unit_kerjas->updated_at,
+			] : null,
+			'jadwal' => $presensi->jadwals->shifts ?? null,
+			'jam_masuk' => $presensi->jam_masuk,
+			'jam_keluar' => $presensi->jam_keluar,
+			'durasi' => $presensi->durasi,
+			'lat' => $presensi->lat,
+			'long' => $presensi->long,
+			'foto_masuk' => $presensi->foto_masuk,
+			'foto_keluar' => $presensi->foto_keluar,
+			'presensi' => $presensi->presensi,
+			'kategori' => $presensi->kategori,
+			'created_at' => $presensi->created_at,
+			'updated_at' => $presensi->updated_at
+		];
+
+		return response()->json([
+			'status' => Response::HTTP_OK,
+			'message' => 'Detail presensi berhasil ditampilkan.',
+			'data' => $formattedData,
+		], Response::HTTP_OK);
 	}
 
 	public function exportPresensi(Request $request)
 	{
-		if (!Gate::allows('export presensi')) {
+		if (!Gate::allows('export presensiKaryawan')) {
 			return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
 		}
 
 		try {
-			$ids = $request->input('ids', []);
-			return Excel::download(new PresensiExport($ids), 'presensi-karyawans.xls');
+			return Excel::download(new PresensiExport(), 'presensi-karyawan.xls');
 		} catch (\Exception $e) {
 			return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya terjadi error. Message: ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
 		} catch (\Error $e) {
@@ -142,7 +210,7 @@ class PresensiController extends Controller
 
 	public function importPresensi(ImportPresensiRequest $request)
 	{
-		if (!Gate::allows('import presensi')) {
+		if (!Gate::allows('import presensiKaryawan')) {
 			return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
 		}
 
@@ -159,6 +227,10 @@ class PresensiController extends Controller
 
 	public function calculatedPresensi()
 	{
+		if (!Gate::allows('view presensiKaryawan')) {
+			return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+		}
+
 		$countTepatWaktu = Presensi::where('kategori', 'Tepat Waktu')->count();
 		$countHadir = Presensi::where('kategori', 'Hadir')->count();
 		$countTerlambat = Presensi::where('kategori', 'Terlambat')->count();

@@ -14,18 +14,9 @@ use PhpOffice\PhpSpreadsheet\Worksheet\Drawing;
 class PresensiExport implements FromCollection, WithHeadings, WithMapping, WithDrawings
 {
     use Exportable;
-    protected $ids;
-
-    public function __construct(array $ids = [])
-    {
-        $this->ids = $ids;
-    }
 
     public function collection()
     {
-        if (!empty($this->ids)) {
-            return Presensi::whereIn('id', $this->ids)->get();
-        }
         return Presensi::all();
     }
 

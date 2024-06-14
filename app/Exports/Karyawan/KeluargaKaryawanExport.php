@@ -41,10 +41,10 @@ class KeluargaKaryawanExport implements FromCollection, WithHeadings, WithMappin
             $keluarga->hubungan,
             $keluarga->nama_keluarga,
             $keluarga->pendidikan_terakhir,
-            $keluarga->status_hidup ? 'Meninggal' : 'Hidup',
-            $keluarga->pekerjaan ?? 'Data tidak tersedia',
-            $keluarga->no_hp ?? 'Data tidak tersedia',
-            $keluarga->email ?? 'Data tidak tersedia',
+            $keluarga->status_hidup ? 'Hidup' : 'Meninggal', // 1 = Hidup, 0 = Meninggal
+            $keluarga->pekerjaan ?? 'N/A',
+            $keluarga->no_hp ?? 'N/A',
+            $keluarga->email ?? 'N/A',
             Carbon::parse($keluarga->created_at)->format('d-m-Y H:i:s'),
             Carbon::parse($keluarga->updated_at)->format('d-m-Y H:i:s')
         ];

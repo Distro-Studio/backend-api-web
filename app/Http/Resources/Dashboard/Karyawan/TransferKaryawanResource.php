@@ -60,8 +60,8 @@ class TransferKaryawanResource extends JsonResource
         return $collection->transform(function ($transfer) {
             return [
                 'id' => $transfer->id,
-                'user_id' => $transfer->users,
-                'tanggal_mulai' => $transfer->tanggal_mulai,
+                'user' => $transfer->users,
+                'tgl_mulai' => $transfer->tgl_mulai,
                 'nik' => $transfer->users->data_karyawans->nik ?? null,
                 'unit_kerja_asal' => $transfer->unit_kerja_asals,
                 'unit_kerja_tujuan' => $transfer->unit_kerja_tujuans,

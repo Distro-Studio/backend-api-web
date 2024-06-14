@@ -19,7 +19,8 @@ return new class extends Migration
             $table->string('password')->nullable();
             $table->foreignId('role_id')->nullable();
             $table->string('foto_profil')->nullable();
-            $table->boolean('data_completion_step')->default(1);
+            $table->boolean('data_completion_step')->default(0);
+            $table->boolean('status_akun')->default(1);
             $table->rememberToken();
             $table->timestamps();
         });

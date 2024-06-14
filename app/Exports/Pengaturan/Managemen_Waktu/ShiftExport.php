@@ -12,18 +12,9 @@ use Maatwebsite\Excel\Concerns\FromCollection;
 class ShiftExport implements FromCollection, WithHeadings, WithMapping
 {
     use Exportable;
-    protected $ids;
-
-    public function __construct(array $ids = [])
-    {
-        $this->ids = $ids;
-    }
 
     public function collection()
     {
-        if (!empty($this->ids)) {
-            return Shift::whereIn('id', $this->ids)->get();
-        }
         return Shift::all();
     }
 

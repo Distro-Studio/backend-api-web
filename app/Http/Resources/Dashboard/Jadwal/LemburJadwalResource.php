@@ -1,12 +1,12 @@
 <?php
 
-namespace App\Http\Resources\Dashboard\Karyawan;
+namespace App\Http\Resources\Dashboard\Jadwal;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-class PekerjaKontrakResource extends JsonResource
+class LemburJadwalResource extends JsonResource
 {
     public $status;
     public $message;
@@ -51,20 +51,21 @@ class PekerjaKontrakResource extends JsonResource
         }
     }
 
-
     protected function formatData(Collection $collection)
     {
-        return $collection->transform(function ($kontrak) {
+        return $collection->transform(function ($lembur) {
             return [
-                'id' => $kontrak->id,
-
-                'user_id' => $kontrak->users,
-                'unit_kerja_id' => $kontrak->unit_kerjas,
-                'tgl_masuk' => $kontrak->tgl_masuk,
-                'tgl_keluar' => $kontrak->tgl_keluar,
-                'status_karyawan' => $kontrak->status_karyawan,
-                'created_at' => $kontrak->created_at,
-                'updated_at' => $kontrak->updated_at
+                'id' => $lembur->id,
+                'user' => $lembur->users,
+                'shift' => $lembur->shifts,
+                'tgl_pengajuan' => $lembur->tgl_pengajuan,
+                'kompensasi' => $lembur->kompensasi,
+                'tipe' => $lembur->tipe,
+                'durasi' => $lembur->durasi,
+                'catatan' => $lembur->catatan,
+                // 'status_lembur' => $lembur->status_lembur,
+                'created_at' => $lembur->created_at,
+                'updated_at' => $lembur->updated_at
             ];
         });
     }
