@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::table('roles', function (Blueprint $table) {
             $table->string('deskripsi')->after('name')->nullable();
+            $table->softDeletes()->after('deskripsi');
         });
     }
 

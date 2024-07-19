@@ -13,36 +13,60 @@ class TipeCutiSeeder extends Seeder
      */
     public function run(): void
     {
-        $jenisCuti = [
-            'Cuti Tahunan',
-            'Cuti Sakit',
-            'Cuti Melahirkan',
-            'Cuti Menikah',
-            'Cuti Kematian',
-            'Cuti Besar',
-            'Cuti Haji',
-            'Cuti Pendidikan',
-            'Cuti Bersama',
-            'Cuti Alasan Penting',
-            'Cuti Adopsi Anak',
-            'Cuti Umroh',
-            'Cuti Tugas Negara',
-            'Cuti Tugas Belajar',
-            'Cuti Menunggu Pensiun',
-            'Cuti Menjaga Anak Sakit',
-            'Cuti Menjaga Orang Tua Sakit',
-            'Cuti Keluarga Dekat Meninggal',
-            'Cuti Pindah Rumah',
-            'Cuti Perjalanan Dinas Luar Negeri',
+        $cutiData = [
+            [
+                'nama' => 'Cuti Tahunan',
+                'kuota' => 12,
+                'is_need_requirement' => false,
+                'keterangan' => 'Maksimal cuti 12 hari',
+                'cuti_administratif' => true
+            ],
+            [
+                'nama' => 'Cuti Melahirkan',
+                'kuota' => 3 * 30, // 3 bulan
+                'is_need_requirement' => false,
+                'keterangan' => 'Maksimal cuti 3 bulan setelah melahirkan',
+                'cuti_administratif' => false
+            ],
+            [
+                'nama' => 'Cuti Sakit',
+                'kuota' => 0, // Kuota tidak terbatas atau khusus
+                'is_need_requirement' => true,
+                'keterangan' => 'Cuti membutuhkan surat dokter',
+                'cuti_administratif' => false
+            ],
+            [
+                'nama' => 'Cuti Luar Tanggungan',
+                'kuota' => 30,
+                'is_need_requirement' => false,
+                'keterangan' => 'Maksimal cuti 30 hari dalam 1 tahun',
+                'cuti_administratif' => false
+            ],
+            [
+                'nama' => 'Cuti Besar',
+                'kuota' => 12,
+                'is_need_requirement' => true,
+                'keterangan' => 'Maksimal cuti 12 hari, jika masa kerja lebih dari 8 tahun',
+                'cuti_administratif' => true
+            ],
+            [
+                'nama' => 'Cuti Nikah',
+                'kuota' => 3,
+                'is_need_requirement' => false,
+                'keterangan' => 'Maksimal cuti 3 hari (untuk pernikahan pertama)',
+                'cuti_administratif' => false
+            ],
+            [
+                'nama' => 'Cuti Kematian',
+                'kuota' => 2,
+                'is_need_requirement' => false,
+                'keterangan' => 'Maksimal cuti 2 hari (sejak tanggal kematian keluarga/saudara/kerabat)',
+                'cuti_administratif' => false
+            ],
         ];
 
-        foreach ($jenisCuti as $cuti) {
-            DB::table('tipe_cutis')->insert([
-                'nama' => $cuti,
-                'durasi' => rand(2, 31),
-                'created_at' => now(),
-                'updated_at' => now()
-            ]);
+        foreach ($cutiData as $data) {
+            DB::table('tipe_cutis')->insert($data);
         }
     }
 }

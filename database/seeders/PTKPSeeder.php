@@ -15,36 +15,39 @@ class PTKPSeeder extends Seeder
     public function run(): void
     {
         $TER_A = [
-            'TK/0',
-            'TK/1',
-            'K/0'
+            ['kode_ptkp' => 'TK/0', 'nilai' => 54000000],
+            ['kode_ptkp' => 'TK/1', 'nilai' => 58500000],
+            ['kode_ptkp' => 'K/0', 'nilai' => 58500000]
         ];
         $TER_B = [
-            'TK/2',
-            'TK/3',
-            'K/1',
-            'K/2'
+            ['kode_ptkp' => 'TK/2', 'nilai' => 63000000],
+            ['kode_ptkp' => 'TK/3', 'nilai' => 67500000],
+            ['kode_ptkp' => 'K/1', 'nilai' => 63000000],
+            ['kode_ptkp' => 'K/2', 'nilai' => 67500000]
         ];
         $TER_C = [
-            'K/3'
+            ['kode_ptkp' => 'K/3', 'nilai' => 72000000]
         ];
 
         foreach ($TER_A as $item) {
             Ptkp::create([
-                'kode_ptkp' => $item,
-                'kategori_ter_id' => 1
+                'kode_ptkp' => $item['kode_ptkp'],
+                'kategori_ter_id' => 1,
+                'nilai' => $item['nilai']
             ]);
         }
         foreach ($TER_B as $item) {
             Ptkp::create([
-                'kode_ptkp' => $item,
-                'kategori_ter_id' => 2
+                'kode_ptkp' => $item['kode_ptkp'],
+                'kategori_ter_id' => 2,
+                'nilai' => $item['nilai']
             ]);
         }
         foreach ($TER_C as $item) {
             Ptkp::create([
-                'kode_ptkp' => $item,
-                'kategori_ter_id' => 3
+                'kode_ptkp' => $item['kode_ptkp'],
+                'kategori_ter_id' => 3,
+                'nilai' => $item['nilai']
             ]);
         }
     }

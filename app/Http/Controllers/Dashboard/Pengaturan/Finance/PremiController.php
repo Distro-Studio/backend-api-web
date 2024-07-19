@@ -26,7 +26,7 @@ class PremiController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
-        $dataPremi = Premi::all();
+        $dataPremi = Premi::whereNull('deleted_at')->get();
         return response()->json([
             'status' => Response::HTTP_OK,
             'message' => 'Retrieving all premi for dropdown',
@@ -109,32 +109,36 @@ class PremiController extends Controller
         return response()->json(new PremiResource(Response::HTTP_OK, $successMessage, $premi), Response::HTTP_OK);
     }
 
-    // public function bulkDelete(Request $request)
-    // {
-    //     if (!Gate::allows('delete premi')) {
-    //         return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
-    //     }
+    public function destroy(Premi $premi)
+    {
+        if (!Gate::allows('delete premi', $premi)) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
 
-    //     $dataPremi = Validator::make($request->all(), [
-    //         'ids' => 'required|array|min:1',
-    //         'ids.*' => 'integer|exists:premis,id'
-    //     ]);
+        $premi->delete();
 
-    //     if ($dataPremi->fails()) {
-    //         return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, $dataPremi->errors()), Response::HTTP_BAD_REQUEST);
-    //     }
+        $successMessage = 'Data premi berhasil dihapus.';
+        return response()->json(new WithoutDataResource(Response::HTTP_OK, $successMessage), Response::HTTP_OK);
+    }
 
-    //     $ids = $request->input('ids');
-    //     Premi::destroy($ids);
+    public function restore($id)
+    {
+        $premi = Premi::withTrashed()->find($id);
 
-    //     $deletedCount = Premi::whereIn('id', $ids)->delete();
-    //     // $message = sprintf('Deleted %d Jabatan%s', $deletedCount, $deletedCount > 1 ? 's' : '');
+        if (!Gate::allows('delete premi', $premi)) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
 
-    //     $message = 'Data premi berhasil dihapus.';
+        $premi->restore();
 
-    //     return response()->json(new WithoutDataResource(Response::HTTP_OK, $message), Response::HTTP_OK);
-    // }
-
+        if (is_null($premi->deleted_at)) {
+            $successMessage = "Data premi {$premi->premis->nama_premi} berhasil dipulihkan.";
+            return response()->json(new WithoutDataResource(Response::HTTP_OK, $successMessage), Response::HTTP_OK);
+        } else {
+            $successMessage = 'Restore data tidak dapat diproses, Silahkan hubungi admin untuk dilakukan pengecekan ulang.';
+            return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, $successMessage), Response::HTTP_BAD_REQUEST);
+        }
+    }
     public function exportPremi(Request $request)
     {
         if (!Gate::allows('export premi')) {

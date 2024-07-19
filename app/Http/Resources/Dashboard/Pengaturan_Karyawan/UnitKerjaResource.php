@@ -59,6 +59,7 @@ class UnitKerjaResource extends JsonResource
                 'id' => 'UK00' . $unit_kerja->id,
                 'nama_unit' => $unit_kerja->nama_unit,
                 'jenis_karyawan' => $unit_kerja->jenis_karyawan,
+                'deleted_at' => $unit_kerja->deleted_at,
                 'created_at' => $unit_kerja->created_at,
                 'updated_at' => $unit_kerja->updated_at
             ];

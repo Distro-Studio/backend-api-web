@@ -16,11 +16,11 @@ return new class extends Migration
             $table->string('gambar')->nullable();
             $table->string('nama');
             $table->string('jenis');
-            $table->date('tanggal');
+            $table->date('tgl_diklat');
             $table->string('tempat');
             $table->string('waktu');
             $table->string('penanggung_jawab');
-            $table->string('total_peserta');
+            $table->string('peserta');
             $table->timestamps();
         });
     }

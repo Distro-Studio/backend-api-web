@@ -27,7 +27,7 @@ class UnitKerjaController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
-        $unit_kerja = UnitKerja::get();
+        $unit_kerja = UnitKerja::whereNull('deleted_at')->get();
         return response()->json([
             'status' => Response::HTTP_OK,
             'message' => 'Retrieving all unit kerja for dropdown',
@@ -104,38 +104,43 @@ class UnitKerjaController extends Controller
         }
 
         $data = $request->validated();
-
         $unit_kerja->update($data);
         $updatedUnitKerja = $unit_kerja->fresh();
+
         $successMessage = "Data unit kerja '{$updatedUnitKerja->nama_unit}' berhasil diubah.";
-        return response()->json(new UnitKerjaResource(Response::HTTP_OK, $successMessage, $unit_kerja), Response::HTTP_OK);
+        return response()->json(new UnitKerjaResource(Response::HTTP_OK, $successMessage, $updatedUnitKerja), Response::HTTP_OK);
     }
 
-    // public function bulkDelete(Request $request)
-    // {
-    //     if (!Gate::allows('delete unitKerja')) {
-    //         return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
-    //     }
+    public function destroy(UnitKerja $unit_kerja)
+    {
+        if (!Gate::allows('delete unitKerja', $unit_kerja)) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
 
-    //     $dataKompetensi = Validator::make($request->all(), [
-    //         'ids' => 'required|array|min:1',
-    //         'ids.*' => 'integer|exists:unit_kerjas,id'
-    //     ]);
+        $unit_kerja->delete();
 
-    //     if ($dataKompetensi->fails()) {
-    //         return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, $dataKompetensi->errors()), Response::HTTP_BAD_REQUEST);
-    //     }
+        $successMessage = 'Data unit kerja berhasil dihapus.';
+        return response()->json(new WithoutDataResource(Response::HTTP_OK, $successMessage), Response::HTTP_OK);
+    }
 
-    //     $ids = $request->input('ids');
-    //     UnitKerja::destroy($ids);
+    public function restore($id)
+    {
+        $unit_kerja = UnitKerja::withTrashed()->find($id);
 
-    //     $deletedCount = UnitKerja::whereIn('id', $ids)->delete();
-    //     // $message = sprintf('Deleted %d Jabatan%s', $deletedCount, $deletedCount > 1 ? 's' : '');
+        if (!Gate::allows('delete unitKerja', $unit_kerja)) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
 
-    //     $message = 'Data unit kerja berhasil dihapus.';
+        $unit_kerja->restore();
 
-    //     return response()->json(new WithoutDataResource(Response::HTTP_OK, $message), Response::HTTP_OK);
-    // }
+        if (is_null($unit_kerja->deleted_at)) {
+            $successMessage = "Data unit kerja {$unit_kerja->jabatans->nama_jabatan} berhasil dipulihkan.";
+            return response()->json(new WithoutDataResource(Response::HTTP_OK, $successMessage), Response::HTTP_OK);
+        } else {
+            $successMessage = 'Restore data tidak dapat diproses, Silahkan hubungi admin untuk dilakukan pengecekan ulang.';
+            return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, $successMessage), Response::HTTP_BAD_REQUEST);
+        }
+    }
 
     public function exportUnitKerja(Request $request)
     {

@@ -15,7 +15,7 @@ class TER21Export implements FromCollection, WithHeadings, WithMapping
 
     public function collection()
     {
-        return Ter::all();
+        return Ter::whereNull('deleted_at')->get();
     }
 
     public function headings(): array

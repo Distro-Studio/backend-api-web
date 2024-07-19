@@ -15,7 +15,7 @@ class JabatanExport implements FromCollection, WithHeadings, WithMapping
 
     public function collection()
     {
-        return Jabatan::all();
+        return Jabatan::whereNull('deleted_at')->get();
     }
 
     public function headings(): array

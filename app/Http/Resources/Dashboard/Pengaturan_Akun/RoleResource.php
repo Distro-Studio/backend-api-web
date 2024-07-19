@@ -72,7 +72,7 @@ class RoleResource extends JsonResource
             return null;
         }
 
-        $permissionTypes = ['view', 'create', 'edit', 'delete', 'import', 'export', 'reset'];
+        $permissionTypes = ['view', 'create', 'edit', 'delete', 'import', 'export', 'reset', 'verifikasi'];
 
         $groupedPermissions = $permissions->groupBy('group')->map(function ($group, $groupName) use ($permissionTypes) {
             $permissionsArray = [];

@@ -13,6 +13,51 @@ class DataKaryawan extends Model
     use HasFactory;
     protected $guarded = ['id'];
 
+    public function setUangMakan($value)
+    {
+        $this->attributes['uang_makan'] = $value == 0 ? null : $value;
+    }
+
+    public function setUangLembur($value)
+    {
+        $this->attributes['uang_lembur'] = $value == 0 ? null : $value;
+    }
+
+    public function setTunjanganJabatan($value)
+    {
+        $this->attributes['tunjangan_jabatan'] = $value == 0 ? null : $value;
+    }
+
+    public function setTunjanganFungsional($value)
+    {
+        $this->attributes['tunjangan_fungsional'] = $value == 0 ? null : $value;
+    }
+
+    public function setTunjanganKhusus($value)
+    {
+        $this->attributes['tunjangan_khusus'] = $value == 0 ? null : $value;
+    }
+
+    public function setTunjanganLainnya($value)
+    {
+        $this->attributes['tunjangan_lainnya'] = $value == 0 ? null : $value;
+    }
+
+    public function setMasaKerja($value)
+    {
+        $this->attributes['masa_kerja'] = $value == 0 ? null : $value;
+    }
+
+    public function setTahunLulus($value)
+    {
+        $this->attributes['tahun_lulus'] = $value == 0 ? null : $value;
+    }
+
+    public function setMasaDiklat($value)
+    {
+        $this->attributes['masa_diklat'] = $value == 0 ? null : $value;
+    }
+
     /**
      * Get the user that owns the DataKaryawan
      *
@@ -91,5 +136,25 @@ class DataKaryawan extends Model
     public function data_keluargas(): HasMany
     {
         return $this->hasMany(DataKeluarga::class, 'data_karyawan_id', 'id');
+    }
+
+    /**
+     * Get all of the pengurang_gajis for the DataKaryawan
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function pengurang_gajis(): HasMany
+    {
+        return $this->hasMany(PengurangGaji::class, 'data_karyawan_id', 'id');
+    }
+
+    /**
+     * Get all of the run_thrs for the DataKaryawan
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function run_thrs(): HasMany
+    {
+        return $this->hasMany(RunThr::class, 'data_karyawan_id', 'id');
     }
 }

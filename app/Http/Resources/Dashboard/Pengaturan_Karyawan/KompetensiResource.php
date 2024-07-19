@@ -60,6 +60,8 @@ class KompetensiResource extends JsonResource
                 'nama_kompetensi' => $kompetensi->nama_kompetensi,
                 'jenis_kompetensi' => $kompetensi->jenis_kompetensi,
                 'total_tunjangan' => $kompetensi->total_tunjangan,
+                'total_bor' => $kompetensi->total_bor,
+                'deleted_at' => $kompetensi->deleted_at,
                 'created_at' => $kompetensi->created_at,
                 'updated_at' => $kompetensi->updated_at
             ];

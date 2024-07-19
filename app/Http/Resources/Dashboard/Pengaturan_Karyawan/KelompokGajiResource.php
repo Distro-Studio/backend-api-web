@@ -59,6 +59,7 @@ class KelompokGajiResource extends JsonResource
                 'id' => $kelompok_gaji->id,
                 'nama_kelompok' => $kelompok_gaji->nama_kelompok,
                 'besaran_gaji' => $kelompok_gaji->besaran_gaji,
+                'deleted_at' => $kelompok_gaji->deleted_at,
                 'created_at' => $kelompok_gaji->created_at,
                 'updated_at' => $kelompok_gaji->updated_at
             ];

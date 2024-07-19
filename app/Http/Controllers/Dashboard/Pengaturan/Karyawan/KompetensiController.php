@@ -26,7 +26,7 @@ class KompetensiController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
-        $kompetensi = Kompetensi::get();
+        $kompetensi = Kompetensi::whereNull('deleted_at')->get();
         return response()->json([
             'status' => Response::HTTP_OK,
             'message' => 'Retrieving all kompetensi for dropdown',
@@ -163,35 +163,43 @@ class KompetensiController extends Controller
         }
 
         $data = $request->validated();
-
         $kompetensi->update($data);
         $updatedKompetensi = $kompetensi->fresh();
+
         $successMessage = "Data kompetensi '{$updatedKompetensi->nama_kompetensi}' berhasil diubah.";
-        return response()->json(new KompetensiResource(Response::HTTP_OK, $successMessage, $kompetensi), Response::HTTP_OK);
+        return response()->json(new KompetensiResource(Response::HTTP_OK, $successMessage, $updatedKompetensi), Response::HTTP_OK);
     }
 
-    // public function bulkDelete(Request $request)
-    // {
-    //     if (!Gate::allows('delete kompetensi')) {
-    //         return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
-    //     }
+    public function destroy(Kompetensi $kompetensi)
+    {
+        if (!Gate::allows('delete kompetensi', $kompetensi)) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
 
-    //     $dataKompetensi = Validator::make($request->all(), [
-    //         'ids' => 'required|array|min:1',
-    //         'ids.*' => 'integer|exists:kompetensis,id'
-    //     ]);
+        $kompetensi->delete();
 
-    //     if ($dataKompetensi->fails()) {
-    //         return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, $dataKompetensi->errors()), Response::HTTP_BAD_REQUEST);
-    //     }
+        $successMessage = 'Data kompetensi berhasil dihapus.';
+        return response()->json(new WithoutDataResource(Response::HTTP_OK, $successMessage), Response::HTTP_OK);
+    }
 
-    //     $ids = $request->input('ids');
-    //     Kompetensi::destroy($ids);
+    public function restore($id)
+    {
+        $kompetensi = Kompetensi::withTrashed()->find($id);
 
-    //     $message = 'Data kompetensi berhasil dihapus.';
+        if (!Gate::allows('delete kompetensi', $kompetensi)) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
 
-    //     return response()->json(new WithoutDataResource(Response::HTTP_OK, $message), Response::HTTP_OK);
-    // }
+        $kompetensi->restore();
+
+        if (is_null($kompetensi->deleted_at)) {
+            $successMessage = "Data kompetensi kuesioner dari jabatan {$kompetensi->nama_kompetensi} berhasil dipulihkan.";
+            return response()->json(new WithoutDataResource(Response::HTTP_OK, $successMessage), Response::HTTP_OK);
+        } else {
+            $successMessage = 'Restore data tidak dapat diproses, Silahkan hubungi admin untuk dilakukan pengecekan ulang.';
+            return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, $successMessage), Response::HTTP_BAD_REQUEST);
+        }
+    }
 
     public function exportKompetensi(Request $request)
     {

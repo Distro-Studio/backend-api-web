@@ -58,8 +58,12 @@ class PremiResource extends JsonResource
             return [
                 'id' => 'P00' . $premi->id,
                 'nama_premi' => $premi->nama_premi,
+                'sumber_potongan' => $premi->sumber_potongan,
                 'jenis_premi' => $premi->jenis_premi,
                 'besaran_premi' => $premi->besaran_premi,
+                'minimal_rate' => $premi->minimal_rate,
+                'maksimal_rate' => $premi->maksimal_rate,
+                'deleted_at' => $premi->deleted_at,
                 'created_at' => $premi->created_at,
                 'updated_at' => $premi->updated_at
             ];

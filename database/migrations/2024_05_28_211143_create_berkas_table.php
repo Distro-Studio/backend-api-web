@@ -14,8 +14,9 @@ return new class extends Migration
         Schema::create('berkas', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained('users');
+            $table->string('file_id');
             $table->string('nama');
-            $table->enum('kategori', ['Pribadi', 'Umum']);
+            $table->enum('kategori', ['Pribadi', 'Umum', 'System', 'Lain - Lain'])->change();
             $table->string('path');
             $table->dateTime('tgl_upload');
             $table->string('nama_file');

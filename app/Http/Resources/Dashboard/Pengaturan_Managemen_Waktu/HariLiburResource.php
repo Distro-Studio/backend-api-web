@@ -59,6 +59,7 @@ class HariLiburResource extends JsonResource
                 'id' => $hariLibur->id,
                 'nama' => $hariLibur->nama,
                 'tanggal' => $hariLibur->tanggal,
+                'deleted_at' => $hariLibur->deleted_at,
                 'created_at' => $hariLibur->created_at,
                 'updated_at' => $hariLibur->updated_at
             ];

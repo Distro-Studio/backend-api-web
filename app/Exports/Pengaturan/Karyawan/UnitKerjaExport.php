@@ -15,7 +15,7 @@ class UnitKerjaExport implements FromCollection, WithHeadings, WithMapping
 
     public function collection()
     {
-        return UnitKerja::all();
+        return UnitKerja::whereNull('deleted_at')->get();
     }
 
     public function headings(): array

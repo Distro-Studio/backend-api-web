@@ -39,7 +39,7 @@ class AkunKaryawanController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
-        $akunKaryawan = User::query();
+        $akunKaryawan = User::query()->where('username', '!=', 'super_admin');
 
         // Filter
         if ($request->has('status_karyawan')) {

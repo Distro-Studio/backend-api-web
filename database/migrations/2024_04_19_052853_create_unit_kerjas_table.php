@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('nama_unit');
             $table->boolean('jenis_karyawan')->default(false);
+            $table->softDeletes();
             $table->timestamps();
         });
     }

@@ -46,14 +46,19 @@ class RoleSeeder extends Seeder
         ]);
 
         $roleSuperAdmin->givePermissionTo([
+            'create penggajianKaryawan', 'edit penggajianKaryawan', 'view penggajianKaryawan', 'delete penggajianKaryawan', 'import penggajianKaryawan', 'export penggajianKaryawan',
+            'create thrKaryawan', 'view thrKaryawan', 'export thrKaryawan',
+
             'create jadwalKaryawan', 'edit jadwalKaryawan', 'delete jadwalKaryawan', 'view jadwalKaryawan', 'import jadwalKaryawan', 'export jadwalKaryawan',
             'create tukarJadwal', 'edit tukarJadwal', 'delete tukarJadwal', 'view tukarJadwal', 'import tukarJadwal', 'export tukarJadwal',
             'create lemburKaryawan', 'edit lemburKaryawan', 'delete lemburKaryawan', 'view lemburKaryawan', 'export lemburKaryawan',
             'create cutiKaryawan', 'edit cutiKaryawan', 'delete cutiKaryawan', 'view cutiKaryawan', 'export cutiKaryawan',
-            
+
             'create presensiKaryawan', 'edit presensiKaryawan', 'delete presensiKaryawan', 'view presensiKaryawan', 'import presensiKaryawan', 'export presensiKaryawan',
 
-            'create user', 'edit user', 'delete user', 'view user', 'import user', 'export user', 
+            'verifikasi data1', 'verifikasi data2',
+
+            'create user', 'edit user', 'delete user', 'view user', 'import user', 'export user',
             'create dataKaryawan', 'edit dataKaryawan', 'delete dataKaryawan', 'view dataKaryawan', 'import dataKaryawan', 'export dataKaryawan',
 
             'create role', 'edit role', 'delete role', 'view role', 'import role', 'export role',
@@ -63,6 +68,7 @@ class RoleSeeder extends Seeder
             'create jabatan', 'edit jabatan', 'delete jabatan', 'view jabatan', 'import jabatan', 'export jabatan',
             'create kompetensi', 'edit kompetensi', 'delete kompetensi', 'view kompetensi', 'import kompetensi', 'export kompetensi',
             'create kelompokGaji', 'edit kelompokGaji', 'delete kelompokGaji', 'view kelompokGaji', 'import kelompokGaji', 'export kelompokGaji',
+            'create kuesioner', 'edit kuesioner', 'delete kuesioner', 'view kuesioner', 'import kuesioner', 'export kuesioner',
 
             'create premi', 'edit premi', 'delete premi', 'view premi', 'import premi', 'export premi',
             'create ter21', 'edit ter21', 'delete ter21', 'view ter21', 'import ter21', 'export ter21',

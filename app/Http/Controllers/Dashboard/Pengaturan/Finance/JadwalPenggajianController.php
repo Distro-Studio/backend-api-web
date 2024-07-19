@@ -17,36 +17,22 @@ class JadwalPenggajianController extends Controller
 {
     public function createJadwalPenggajian(StoreJadwalPenggajianRequest $request)
     {
-        if (!Gate::allows('create jadwalGaji')) {
+        if (!Gate::allows('create jadwalGaji') && !Gate::allows('reset jadwalGaji')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
-        
+
         $data = $request->validated();
 
-        $existingData = JadwalPenggajian::where('tanggal', $data['tanggal'])->first();
-        if ($existingData) {
-            return response()->json(new WithoutDataResource(Response::HTTP_OK, 'Tanggal penggajian tersebut sudah pernah dibuat sebelumnya.'));
-        }
+        // Create or Update the first jadwal penggajian
+        $jadwalPenggajian = JadwalPenggajian::updateOrCreate(
+            ['id' => 1],
+            ['tanggal' => $data['tanggal']]
+        );
 
-        $jadwalGaji = JadwalPenggajian::create($data);
-        $message = "Jadwal penggajian karyawan berhasil di atur pada '{$jadwalGaji->tanggal}'.";
-        return response()->json([
-            'status' => Response::HTTP_OK,
-            'message' => $message,
-            'data' => $jadwalGaji
-        ], Response::HTTP_OK);
-    }
+        $message = $jadwalPenggajian->wasRecentlyCreated
+            ? "Jadwal penggajian karyawan berhasil diatur pada tanggal {$jadwalPenggajian->tanggal}."
+            : "Jadwal penggajian karyawan berhasil diperbarui pada tanggal {$jadwalPenggajian->tanggal}.";
 
-    public function resetJadwalPenggajian(JadwalPenggajian $jadwalPenggajian, UpdateJadwalPenggajianRequest $request)
-    {
-        if (!Gate::allows('reset jadwalGaji')) {
-            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
-        }
-        
-        $data = $request->validated();
-
-        $jadwalPenggajian->update($data);
-        $message = "Jadwal penggajian karyawan berhasil diperbarui pada '{$jadwalPenggajian->tanggal}'";
         return response()->json([
             'status' => Response::HTTP_OK,
             'message' => $message,

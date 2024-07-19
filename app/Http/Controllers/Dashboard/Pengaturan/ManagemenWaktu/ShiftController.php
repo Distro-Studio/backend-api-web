@@ -26,7 +26,7 @@ class ShiftController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
-        $shift = Shift::get();
+        $shift = Shift::whereNull('deleted_at')->get();
         return response()->json([
             'status' => Response::HTTP_OK,
             'message' => 'Retrieving all shift for dropdown',
@@ -160,38 +160,43 @@ class ShiftController extends Controller
         }
 
         $data = $request->validated();
-
         $shift->update($data);
         $updatedShift = $shift->fresh();
+
         $successMessage = "Data shift '{$updatedShift->nama}' berhasil diubah.";
-        return response()->json(new ShiftResource(Response::HTTP_OK, $successMessage, $shift), Response::HTTP_OK);
+        return response()->json(new ShiftResource(Response::HTTP_OK, $successMessage, $updatedShift), Response::HTTP_OK);
     }
 
-    // public function bulkDelete(Request $request)
-    // {
-    //     if (!Gate::allows('delete shift')) {
-    //         return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
-    //     }
+    public function destroy(Shift $shift)
+    {
+        if (!Gate::allows('delete shift', $shift)) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
 
-    //     $dataKompetensi = Validator::make($request->all(), [
-    //         'ids' => 'required|array|min:1',
-    //         'ids.*' => 'integer|exists:unit_kerjas,id'
-    //     ]);
+        $shift->delete();
 
-    //     if ($dataKompetensi->fails()) {
-    //         return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, $dataKompetensi->errors()), Response::HTTP_BAD_REQUEST);
-    //     }
+        $successMessage = 'Data shift berhasil dihapus.';
+        return response()->json(new WithoutDataResource(Response::HTTP_OK, $successMessage), Response::HTTP_OK);
+    }
 
-    //     $ids = $request->input('ids');
-    //     Shift::destroy($ids);
+    public function restore($id)
+    {
+        $shift = Shift::withTrashed()->find($id);
 
-    //     $deletedCount = Shift::whereIn('id', $ids)->delete();
-    //     // $message = sprintf('Deleted %d Jabatan%s', $deletedCount, $deletedCount > 1 ? 's' : '');
+        if (!Gate::allows('delete shift', $shift)) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
 
-    //     $message = 'Data shift berhasil dihapus.';
+        $shift->restore();
 
-    //     return response()->json(new WithoutDataResource(Response::HTTP_OK, $message), Response::HTTP_OK);
-    // }
+        if (is_null($shift->deleted_at)) {
+            $successMessage = "Data shift {$shift->nama} berhasil dipulihkan.";
+            return response()->json(new WithoutDataResource(Response::HTTP_OK, $successMessage), Response::HTTP_OK);
+        } else {
+            $successMessage = 'Restore data tidak dapat diproses, Silahkan hubungi admin untuk dilakukan pengecekan ulang.';
+            return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, $successMessage), Response::HTTP_BAD_REQUEST);
+        }
+    }
 
     public function exportShift(Request $request)
     {

@@ -14,6 +14,10 @@ class PermissionSeeder extends Seeder
     public function run(): void
     {
         $permissions = [
+            // Keuangan
+            'Penggajian THR Karyawan' => ['create thrKaryawan', 'view thrKaryawan', 'export thrKaryawan'],
+            'Penggajian Karyawan' => ['create penggajianKaryawan', 'edit penggajianKaryawan', 'view penggajianKaryawan', 'delete penggajianKaryawan', 'import penggajianKaryawan', 'export penggajianKaryawan'],
+
             // Jadwals
             'Jadwal Karyawan' => ['create jadwalKaryawan', 'edit jadwalKaryawan', 'delete jadwalKaryawan', 'view jadwalKaryawan', 'import jadwalKaryawan', 'export jadwalKaryawan'],
             'Jadwal Tukar Karyawan' => ['create tukarJadwal', 'edit tukarJadwal', 'delete tukarJadwal', 'view tukarJadwal', 'import tukarJadwal', 'export tukarJadwal'],
@@ -28,12 +32,14 @@ class PermissionSeeder extends Seeder
             'Karyawan Data' => ['create dataKaryawan', 'edit dataKaryawan', 'delete dataKaryawan', 'view dataKaryawan', 'import dataKaryawan', 'export dataKaryawan'],
 
             // Master setting
+            'Verifikasi Data' => ['verifikasi data1', 'verifikasi data2'],
             'Pengaturan Role' => ['create role', 'edit role', 'delete role', 'view role', 'import role', 'export role'],
             'Pengaturan Permission' => ['create permission', 'edit permission', 'delete permission', 'view permission'],
             'Pengaturan Unit Kerja' => ['create unitKerja', 'edit unitKerja', 'delete unitKerja', 'view unitKerja', 'import unitKerja', 'export unitKerja'],
             'Pengaturan Jabatan' => ['create jabatan', 'edit jabatan', 'delete jabatan', 'view jabatan', 'import jabatan', 'export jabatan'],
             'Pengaturan Kompetensi' => ['create kompetensi', 'edit kompetensi', 'delete kompetensi', 'view kompetensi', 'import kompetensi', 'export kompetensi'],
             'Pengaturan Kelompok Gaji' => ['create kelompokGaji', 'edit kelompokGaji', 'delete kelompokGaji', 'view kelompokGaji', 'import kelompokGaji', 'export kelompokGaji'],
+            'Pengaturan Kuesioner' => ['create kuesioner', 'edit kuesioner', 'delete kuesioner', 'view kuesioner', 'import kuesioner', 'export kuesioner'],
             'Pengaturan Premi' => ['create premi', 'edit premi', 'delete premi', 'view premi', 'import premi', 'export premi'],
             'Pengaturan TER21' => ['create ter21', 'edit ter21', 'delete ter21', 'view ter21', 'import ter21', 'export ter21'],
             'Pengaturan Jadwal Penggajian' => ['create jadwalGaji', 'reset jadwalGaji'],

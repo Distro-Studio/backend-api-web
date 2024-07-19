@@ -27,7 +27,7 @@ class TER21Controller extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
-        $dataTer = Ter::with(['kategori_ters', 'ptkps'])->get();
+        $dataTer = Ter::with(['kategori_ters', 'ptkps'])->whereNull('deleted_at')->get();
         return response()->json([
             'status' => Response::HTTP_OK,
             'message' => 'Retrieving all Ter PPH21 for dropdown',
@@ -121,38 +121,43 @@ class TER21Controller extends Controller
         }
 
         $data = $request->validated();
-
         $ter_pph_21->update($data);
-        $updatedTer = $ter_pph_21->fresh();
-        $successMessage = "Data Ter PPH21 berhasil diubah.";
-        return response()->json(new TER21Resource(Response::HTTP_OK, $successMessage, $ter_pph_21), Response::HTTP_OK);
+        $updatedterTer = $ter_pph_21->fresh();
+
+        $successMessage = "Data TER PPH21 berhasil diubah.";
+        return response()->json(new TER21Resource(Response::HTTP_OK, $successMessage, $updatedterTer), Response::HTTP_OK);
     }
 
-    // public function bulkDelete(Request $request)
-    // {
-    //     if (!Gate::allows('delete ter21')) {
-    //         return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
-    //     }
+    public function destroy(Ter $ter_pph_21)
+    {
+        if (!Gate::allows('delete ter21', $ter_pph_21)) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
 
-    //     $dataPremi = Validator::make($request->all(), [
-    //         'ids' => 'required|array|min:1',
-    //         'ids.*' => 'integer|exists:ters,id'
-    //     ]);
+        $ter_pph_21->delete();
 
-    //     if ($dataPremi->fails()) {
-    //         return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, $dataPremi->errors()), Response::HTTP_BAD_REQUEST);
-    //     }
+        $successMessage = 'Data TER berhasil dihapus.';
+        return response()->json(new WithoutDataResource(Response::HTTP_OK, $successMessage), Response::HTTP_OK);
+    }
 
-    //     $ids = $request->input('ids');
-    //     Ter::destroy($ids);
+    public function restore($id)
+    {
+        $ter_pph_21 = Ter::withTrashed()->find($id);
 
-    //     $deletedCount = Ter::whereIn('id', $ids)->delete();
-    //     // $message = sprintf('Deleted %d Jabatan%s', $deletedCount, $deletedCount > 1 ? 's' : '');
+        if (!Gate::allows('delete ter21', $ter_pph_21)) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
 
-    //     $message = 'Data Ter PPH21 berhasil dihapus.';
+        $ter_pph_21->restore();
 
-    //     return response()->json(new WithoutDataResource(Response::HTTP_OK, $message), Response::HTTP_OK);
-    // }
+        if (is_null($ter_pph_21->deleted_at)) {
+            $successMessage = "Data TER PPH 21 berhasil dipulihkan.";
+            return response()->json(new WithoutDataResource(Response::HTTP_OK, $successMessage), Response::HTTP_OK);
+        } else {
+            $successMessage = 'Restore data tidak dapat diproses, Silahkan hubungi admin untuk dilakukan pengecekan ulang.';
+            return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, $successMessage), Response::HTTP_BAD_REQUEST);
+        }
+    }
 
     public function exportTER(Request $request)
     {

@@ -58,8 +58,11 @@ class CutiResource extends JsonResource
             return [
                 'id' => $tipe_cuti->id,
                 'nama' => $tipe_cuti->nama,
-                'durasi' => $tipe_cuti->durasi,
-                'waktu' => $tipe_cuti->waktu,
+                'kuota' => $tipe_cuti->kuota,
+                'is_need_requirement' => $tipe_cuti->is_need_requirement,
+                'keterangan' => $tipe_cuti->keterangan,
+                'cuti_administratif' => $tipe_cuti->cuti_administratif,
+                'deleted_at' => $tipe_cuti->deleted_at,
                 'created_at' => $tipe_cuti->created_at,
                 'updated_at' => $tipe_cuti->updated_at
             ];

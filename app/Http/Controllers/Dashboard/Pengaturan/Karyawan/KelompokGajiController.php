@@ -26,7 +26,7 @@ class KelompokGajiController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
-        $kelompk_gaji = KelompokGaji::all();
+        $kelompk_gaji = KelompokGaji::whereNull('deleted_at')->get();
         return response()->json([
             'status' => Response::HTTP_OK,
             'message' => 'Retrieving all kelompok gaji for dropdown',
@@ -163,38 +163,43 @@ class KelompokGajiController extends Controller
         }
 
         $data = $request->validated();
-
         $kelompok_gaji->update($data);
         $updatedKelompokGaji = $kelompok_gaji->fresh();
+
         $successMessage = "Data kelompok gaji '{$updatedKelompokGaji->nama_kelompok}' berhasil diubah.";
-        return response()->json(new KelompokGajiResource(Response::HTTP_OK, $successMessage, $kelompok_gaji), Response::HTTP_OK);
+        return response()->json(new KelompokGajiResource(Response::HTTP_OK, $successMessage, $updatedKelompokGaji), Response::HTTP_OK);
     }
 
-    // public function bulkDelete(Request $request)
-    // {
-    //     if (!Gate::allows('delete kelompokGaji')) {
-    //         return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
-    //     }
+    public function destroy(KelompokGaji $kelompok_gaji)
+    {
+        if (!Gate::allows('delete kelompokGaji', $kelompok_gaji)) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
 
-    //     $dataKelompokGaji = Validator::make($request->all(), [
-    //         'ids' => 'required|array|min:1',
-    //         'ids.*' => 'integer|exists:jabatans,id'
-    //     ]);
+        $kelompok_gaji->delete();
 
-    //     if ($dataKelompokGaji->fails()) {
-    //         return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, $dataKelompokGaji->errors()), Response::HTTP_BAD_REQUEST);
-    //     }
+        $successMessage = 'Data kelompok gaji berhasil dihapus.';
+        return response()->json(new WithoutDataResource(Response::HTTP_OK, $successMessage), Response::HTTP_OK);
+    }
 
-    //     $ids = $request->input('ids');
-    //     KelompokGaji::destroy($ids);
+    public function restore($id)
+    {
+        $kelompok_gaji = KelompokGaji::withTrashed()->find($id);
 
-    //     $deletedCount = KelompokGaji::whereIn('id', $ids)->delete();
-    //     // $message = sprintf('Deleted %d Jabatan%s', $deletedCount, $deletedCount > 1 ? 's' : '');
+        if (!Gate::allows('delete kelompokGaji', $kelompok_gaji)) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
 
-    //     $message = 'Data kelompok gaji berhasil dihapus.';
+        $kelompok_gaji->restore();
 
-    //     return response()->json(new WithoutDataResource(Response::HTTP_OK, $message), Response::HTTP_OK);
-    // }
+        if (is_null($kelompok_gaji->deleted_at)) {
+            $successMessage = "Data kelompok gaji {$kelompok_gaji->nama_kelompok} berhasil dipulihkan.";
+            return response()->json(new WithoutDataResource(Response::HTTP_OK, $successMessage), Response::HTTP_OK);
+        } else {
+            $successMessage = 'Restore data tidak dapat diproses, Silahkan hubungi admin untuk dilakukan pengecekan ulang.';
+            return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, $successMessage), Response::HTTP_BAD_REQUEST);
+        }
+    }
 
     public function exportKelompokGaji(Request $request)
     {

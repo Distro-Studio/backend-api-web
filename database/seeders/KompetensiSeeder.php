@@ -28,22 +28,19 @@ class KompetensiSeeder extends Seeder
             'Petugas Kebersihan',
         ];
 
-        for ($i = 0; $i < 13; $i++) {
-            $nama_kompetensi = $namaKompetensi[rand(0, count($namaKompetensi) - 1)];
+        foreach ($namaKompetensi as $nama_kompetensi) {
             $total_tunjangan = rand(500000, 3000000);
             $created_at = Carbon::now()->subDays(rand(0, 365));
             $updated_at = Carbon::now();
 
-            // Periksa duplikasi nama unit
-            if (!DB::table('kompetensis')->where('nama_kompetensi', $nama_kompetensi)->exists()) {
-                DB::table('kompetensis')->insert([
-                    'nama_kompetensi' => $nama_kompetensi,
-                    'jenis_kompetensi' => rand(0, 1),
-                    'total_tunjangan' => $total_tunjangan,
-                    'created_at' => $created_at,
-                    'updated_at' => $updated_at,
-                ]);
-            }
+            DB::table('kompetensis')->insert([
+                'nama_kompetensi' => $nama_kompetensi,
+                'jenis_kompetensi' => rand(0, 1),
+                'total_tunjangan' => $total_tunjangan,
+                'nilai_bor' => 120000,
+                'created_at' => $created_at,
+                'updated_at' => $updated_at,
+            ]);
         }
     }
 }

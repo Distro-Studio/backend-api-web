@@ -15,18 +15,29 @@ class CutiImport implements ToModel, WithHeadingRow, WithValidation
     public function rules(): array
     {
         return [
-            'nama' => 'required|max:255',
-            'durasi' => 'required',
-            'waktu' => 'nullable'
+            'nama' => 'required|string|max:255',
+            'kuota' => 'required|integer',
+            'is_need_requirement' => 'required|boolean',
+            'keterangan' => 'required|string|max:255',
+            'cuti_administratif' => 'required|boolean',
         ];
     }
 
     public function customValidationMessages()
     {
         return [
-            'nama.required' => 'Nama Cuti tidak diperbolehkan kosong.',
-            'nama.max' => 'Nama Cuti melebihi batas maksimum panjang karakter.',
-            'durasi.required' => 'Durasi Cuti tidak diperbolehkan kosong.',
+            'nama.required' => 'Nama cuti tidak diperbolehkan kosong.',
+            'nama.string' => 'Nama cuti tidak diperbolehkan mengandung karakter selain huruf.',
+            'nama.max' => 'Nama cuti melebihi batas maksimum panjang karakter.',
+            'kuota.required' => 'Kuota cuti tidak diperbolehkan kosong.',
+            'kuota.integer' => 'Kuota cuti tidak diperbolehkan mengandung karakter selain angka.',
+            'is_need_requirement.required' => 'Persyaratan cuti tidak diperbolehkan kosong.',
+            'is_need_requirement.boolean' => 'Persyaratan cuti harus berupa boolean.',
+            'keterangan.required' => 'Keterangan cuti tidak diperbolehkan kosong.',
+            'keterangan.string' => 'Keterangan cuti diperbolehkan mengandung karakter selain huruf.',
+            'keterangan.max' => 'Keterangan melebihi batas maksimum panjang karakter.',
+            'cuti_administratif.required' => 'Cuti absensi tidak boleh kosong.',
+            'cuti_administratif.boolean' => 'Cuti absensi harus berupa boolean.',
         ];
     }
 
@@ -34,8 +45,15 @@ class CutiImport implements ToModel, WithHeadingRow, WithValidation
     {
         return new TipeCuti([
             'nama' => $row['nama'],
-            'durasi' => $row['durasi'],
-            'waktu' => isset($row['waktu']) ? $row['waktu'] : null,
+            'kuota' => $row['kuota'],
+            'is_need_requirement' => $this->convertToBoolean($row['is_need_requirement']),
+            'keterangan' => $row['keterangan'],
+            'cuti_administratif' => $this->convertToBoolean($row['cuti_administratif']),
         ]);
+    }
+
+    private function convertToBoolean($value): bool
+    {
+        return strtolower($value) === 'ya';
     }
 }

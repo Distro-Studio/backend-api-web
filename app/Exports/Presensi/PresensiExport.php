@@ -8,10 +8,8 @@ use Maatwebsite\Excel\Concerns\Exportable;
 use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\FromCollection;
-use Maatwebsite\Excel\Concerns\WithDrawings;
-use PhpOffice\PhpSpreadsheet\Worksheet\Drawing;
 
-class PresensiExport implements FromCollection, WithHeadings, WithMapping, WithDrawings
+class PresensiExport implements FromCollection, WithHeadings, WithMapping
 {
     use Exportable;
 
@@ -31,7 +29,6 @@ class PresensiExport implements FromCollection, WithHeadings, WithMapping, WithD
             'durasi',
             'latitude',
             'longtitude',
-            'bukti_absensi',
             'absensi',
             'kategori',
             'created_at',
@@ -50,31 +47,10 @@ class PresensiExport implements FromCollection, WithHeadings, WithMapping, WithD
             $presensi->durasi,
             $presensi->lat,
             $presensi->long,
-            $presensi->foto,
             $presensi->absensi,
             $presensi->kategori,
             Carbon::parse($presensi->created_at)->format('d-m-Y H:i:s'),
             Carbon::parse($presensi->updated_at)->format('d-m-Y H:i:s')
         ];
-    }
-
-    public function drawings()
-    {
-        $drawings = [];
-        $rows = $this->collection();
-        $rowNumber = 2; // Start from row 2 because row 1 is the heading
-
-        foreach ($rows as $row) {
-            $path = storage_path('app/public/bukti_absensi/' . $row->foto);
-
-            if (file_exists($path)) {
-                $drawing = new Drawing();
-                $drawing->setPath($path);
-                $drawing->setHeight(50); // Adjust the height as needed
-                $drawings[] = $drawing;
-            }
-            $rowNumber++;
-        }
-        return $drawings;
     }
 }

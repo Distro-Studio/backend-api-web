@@ -28,6 +28,7 @@ class StoreKompetensiRequest extends FormRequest
             'nama_kompetensi' => 'required|string|max:225|unique:kompetensis,nama_kompetensi',
             'jenis_kompetensi' => 'required|string|max:225',
             'total_tunjangan' => 'required|numeric',
+            'total_bor' => 'required|numeric',
         ];
     }
 
@@ -43,6 +44,8 @@ class StoreKompetensiRequest extends FormRequest
             'jenis_kompetensi.max' => 'Jenis kompetensi melebihi batas maksimum panjang karakter.',
             'total_tunjangan.required' => 'Jumlah tunjangan tidak diperbolehkan kosong.',
             'total_tunjangan.numeric' => 'Jumlah tunjangan tidak diperbolehkan mengandung huruf.',
+            'total_bor.required' => 'Jumlah BOR tidak diperbolehkan kosong.',
+            'total_bor.numeric' => 'Jumlah BOR tidak diperbolehkan mengandung huruf.',
         ];
     }
 

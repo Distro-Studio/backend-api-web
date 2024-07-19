@@ -18,6 +18,7 @@ use App\Http\Requests\StoreTransferKaryawanRequest;
 use App\Http\Requests\UpdateTransferKaryawanRequest;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
 use App\Http\Resources\Dashboard\Karyawan\TransferKaryawanResource;
+use App\Jobs\EmailNotification\TransferEmailJob;
 use App\Models\TrackRecord;
 
 class TransferKaryawanController extends Controller
@@ -182,33 +183,26 @@ class TransferKaryawanController extends Controller
             'user_id' => $users->id,
             'tgl_masuk' => $users->data_karyawans->tgl_masuk,
             'tgl_keluar' => $users->data_karyawans->tgl_keluar,
-            'mutasi' => "Mutasi dari Unit kerja {$unit_kerja_asals} ke {$unit_kerja_tujuans} - Jabatan {$jabatan_asals} ke {$jabatan_tujuans}",
+            'mutasi' => "Mutasi dari Unit Kerja {$unit_kerja_asals} ke {$unit_kerja_tujuans} - Jabatan {$jabatan_asals} ke {$jabatan_tujuans}",
         ]);
+
+        $details = [
+            'nama' => $users->nama,
+            'email' => $users->data_karyawans->email,
+            'unit_kerja_asals' => $unit_kerja_asals,
+            'unit_kerja_tujuans' => $unit_kerja_tujuans,
+            'jabatan_asals' => $jabatan_asals,
+            'jabatan_tujuans' => $jabatan_tujuans,
+            'alasan' => $alasan,
+            'tgl_mulai' => $tgl_mulai
+        ];
 
         if ($request->has('beri_tahu_manajer_direktur') && $request->beri_tahu_manajer_direktur == 1) {
             // TODO: ganti email
-            Mail::to('manager@example.com')->cc('direktur@example.com')->send(new SendNotifyTransfer(
-                $users->nama,
-                $users->data_karyawans->email,
-                $unit_kerja_asals,
-                $unit_kerja_tujuans,
-                $jabatan_asals,
-                $jabatan_tujuans,
-                $alasan,
-                $tgl_mulai
-            ));
+            TransferEmailJob::dispatch('manager@example.com', ['direktur@example.com'], $details);
         }
         if ($request->has('beri_tahu_karyawan') && $request->beri_tahu_karyawan == 1) {
-            Mail::to($users->data_karyawans->email)->send(new SendNotifyTransfer(
-                $users->nama,
-                $users->data_karyawans->email,
-                $unit_kerja_asals,
-                $unit_kerja_tujuans,
-                $jabatan_asals,
-                $jabatan_tujuans,
-                $alasan,
-                $tgl_mulai
-            ));
+            TransferEmailJob::dispatch($users->data_karyawans->email, [], $details);
         }
 
         return response()->json(new TransferKaryawanResource(Response::HTTP_OK, "Berhasil melakukan transfer karyawan {$users->nama}.", $transfer), Response::HTTP_OK);
@@ -291,33 +285,26 @@ class TransferKaryawanController extends Controller
             'user_id' => $users->id,
             'tgl_masuk' => $users->data_karyawans->tgl_masuk,
             'tgl_keluar' => $users->data_karyawans->tgl_keluar,
-            'mutasi' => "Pembaharuan mutasi dari Unit kerja {$unit_kerja_asals} ke {$unit_kerja_tujuans} - Jabatan {$jabatan_asals} ke {$jabatan_tujuans}",
+            'mutasi' => "Pembaharuan mutasi dari Unit Kerja {$unit_kerja_asals} ke {$unit_kerja_tujuans} - Jabatan {$jabatan_asals} ke {$jabatan_tujuans}",
         ]);
 
-        if ($request->has('beri_tahu_manajer_direktur') && $request->beri_tahu_manajer_direktur == 1) {
+        $details = [
+            'nama' => $users->nama,
+            'email' => $users->data_karyawans->email,
+            'unit_kerja_asals' => $unit_kerja_asals,
+            'unit_kerja_tujuans' => $unit_kerja_tujuans,
+            'jabatan_asals' => $jabatan_asals,
+            'jabatan_tujuans' => $jabatan_tujuans,
+            'alasan' => $alasan,
+            'tgl_mulai' => $tgl_mulai
+        ];
+
+        if ($request->has('beri_tahu_manajer_direktur') && $request->beri_tahu_manajer_direktur == 0) {
             // TODO: ganti email
-            Mail::to('manager@example.com')->cc('direktur@example.com')->send(new SendNotifyTransfer(
-                $users->nama,
-                $users->data_karyawans->email,
-                $unit_kerja_asals,
-                $unit_kerja_tujuans,
-                $jabatan_asals,
-                $jabatan_tujuans,
-                $alasan,
-                $tgl_mulai
-            ));
+            TransferEmailJob::dispatch('manager@example.com', ['direktur@example.com'], $details);
         }
-        if ($request->has('beri_tahu_karyawan') && $request->beri_tahu_karyawan == 1) {
-            Mail::to($users->data_karyawans->email)->send(new SendNotifyTransfer(
-                $users->nama,
-                $users->data_karyawans->email,
-                $unit_kerja_asals,
-                $unit_kerja_tujuans,
-                $jabatan_asals,
-                $jabatan_tujuans,
-                $alasan,
-                $tgl_mulai
-            ));
+        if ($request->has('beri_tahu_karyawan') && $request->beri_tahu_karyawan == 0) {
+            TransferEmailJob::dispatch($users->data_karyawans->email, [], $details);
         }
 
         return response()->json(new TransferKaryawanResource(Response::HTTP_OK, "Berhasil memperbarui transfer karyawan {$users->nama}.", $transfer), Response::HTTP_OK);
@@ -338,5 +325,9 @@ class TransferKaryawanController extends Controller
         }
 
         return response()->json(new WithoutDataResource(Response::HTTP_OK, 'Data transfer karyawan berhasil di download.'), Response::HTTP_OK);
+    }
+
+    private function apiBerkas(Request $request)
+    {
     }
 }

@@ -63,16 +63,6 @@ class User extends Authenticatable
     }
 
     /**
-     * Get all of the run_thr for the User
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
-     */
-    public function run_thrs(): HasMany
-    {
-        return $this->hasMany(RunThr::class, 'user_id', 'id');
-    }
-
-    /**
      * Get all of the presensi for the User
      *
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
@@ -140,5 +130,43 @@ class User extends Authenticatable
     public function berkas(): HasMany
     {
         return $this->hasMany(Berkas::class, 'user_id', 'id');
+    }
+
+    /**
+     * Get all of the user_dinilai for the User
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */    public function user_dinilai(): HasMany
+    {
+        return $this->hasMany(Penilaian::class, 'user_dinilai', 'id');
+    }
+
+    /**
+     * Get all of the user_penilai for the User
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */    public function user_penilai(): HasMany
+    {
+        return $this->hasMany(Penilaian::class, 'user_penilai', 'id');
+    }
+
+    /**
+     * Get all of the verifikator_1 for the User
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function verifikator_1(): HasMany
+    {
+        return $this->hasMany(RiwayatPenggajian::class, 'verifikator_1', 'id');
+    }
+
+    /**
+     * Get all of the verifikator_2 for the User
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function verifikator_2(): HasMany
+    {
+        return $this->hasMany(RiwayatPenggajian::class, 'verifikator_2', 'id');
     }
 }

@@ -60,6 +60,7 @@ class ShiftResource extends JsonResource
                 'nama' => $shift->nama,
                 'jam_from' => $shift->jam_from,
                 'jam_to' => $shift->jam_to,
+                'deleted_at' => $shift->deleted_at,
                 'created_at' => $shift->created_at,
                 'updated_at' => $shift->updated_at
             ];

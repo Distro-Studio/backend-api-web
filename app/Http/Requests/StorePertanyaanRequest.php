@@ -7,7 +7,7 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Http\Exceptions\HttpResponseException;
 
-class UpdateJadwalPenggajianRequest extends FormRequest
+class StorePertanyaanRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -25,15 +25,19 @@ class UpdateJadwalPenggajianRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'tanggal' => 'required|date'
+            'pertanyaan' => 'required|string',
+            'jabatan_id' => 'required|integer|exists:jabatans,id',
         ];
     }
 
-    public function messages()
+    public function messages(): array
     {
         return [
-            'tanggal.required' => 'Tanggal penjadwalan gaji tidak diperbolehkan kosong.',
-            'tanggal.date' => 'Tanggal penjadwalan gaji wajib berisi tanggal.'
+            'pertanyaan.required' => 'Pertanyaan kuesioner tidak diperbolehkan kosong.',
+            'pertanyaan.string' => 'Pertanyaan kuesioner tidak diperbolehkan mengandung angka atau karakter lainnya.',
+            'jabatan_id.required' => 'Silahkan pilih jabatan yang tersedia terlebih dahulu.',
+            'jabatan_id.integer' => 'Data jabatan yang valid adalah berupa satuan angka.',
+            'jabatan_id.exists' => 'Data jabatan yang terdipilih tidak tersedia.',
         ];
     }
 

@@ -15,7 +15,7 @@ class KompetensiExport implements FromCollection, WithHeadings, WithMapping
 
     public function collection()
     {
-        return Kompetensi::all();
+        return Kompetensi::whereNull('deleted_at')->get();
     }
 
     public function headings(): array
@@ -24,6 +24,7 @@ class KompetensiExport implements FromCollection, WithHeadings, WithMapping
             'nama_kompetensi',
             'jenis_kompetensi',
             'total_tunjangan',
+            'total_bor',
             'created_at',
             'updated_at',
         ];
@@ -35,6 +36,7 @@ class KompetensiExport implements FromCollection, WithHeadings, WithMapping
             $kompetensi->nama_kompetensi,
             $kompetensi->jenis_kompetensi,
             $kompetensi->total_tunjangan,
+            $kompetensi->total_bor,
             Carbon::parse($kompetensi->created_at)->format('d-m-Y H:i:s'),
             Carbon::parse($kompetensi->updated_at)->format('d-m-Y H:i:s')
         ];

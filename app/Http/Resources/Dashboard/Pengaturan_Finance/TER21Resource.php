@@ -62,6 +62,7 @@ class TER21Resource extends JsonResource
                 'from_ter' => $ter21->from_ter,
                 'to_ter' => $ter21->to_ter,
                 'percentage_ter' => $ter21->percentage_ter,
+                'deleted_at' => $ter21->deleted_at,
                 'created_at' => $ter21->created_at,
                 'updated_at' => $ter21->updated_at
             ];

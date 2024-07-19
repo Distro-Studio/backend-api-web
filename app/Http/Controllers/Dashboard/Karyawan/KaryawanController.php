@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Dashboard\Karyawan;
 
+use Carbon\Carbon;
 use App\Models\User;
 use App\Models\TrackRecord;
 use App\Models\DataKaryawan;
@@ -17,12 +18,14 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\Karyawan\KaryawanExport;
-use App\Http\Requests\CreateCredentialsDataKaryawan;
 use App\Imports\Karyawan\KaryawanImport;
+use App\Jobs\Keuangan\StorePenggajianJob;
 use Illuminate\Support\Facades\Validator;
-use App\Http\Requests\StoreDataKaryawanRequest;
 
+use App\Http\Requests\StoreDataKaryawanRequest;
+use App\Jobs\EmailNotification\AccountEmailJob;
 use App\Http\Requests\UpdateDataKaryawanRequest;
+use App\Http\Requests\CreateCredentialsDataKaryawan;
 use App\Http\Requests\Excel_Import\ImportKaryawanRequest;
 use App\Http\Resources\Dashboard\Karyawan\KaryawanResource;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
@@ -148,7 +151,6 @@ class KaryawanController extends Controller
         ], Response::HTTP_OK);
     }
 
-
     public function store(StoreDataKaryawanRequest $request)
     {
         if (!Gate::allows('create dataKaryawan')) {
@@ -157,6 +159,7 @@ class KaryawanController extends Controller
 
         $data = $request->validated();
         $requestedRoleId = $request->input('role_id');
+        $premis = $request->input('potongan', []); // Mengambil daftar premi yang dipilih
 
         DB::beginTransaction();
         try {
@@ -192,9 +195,28 @@ class KaryawanController extends Controller
             ]);
             $createDataKaryawan->save();
 
+            // Masukkan data ke tabel pengurang_gajis jika ada premi yang dipilih
+            if (!empty($premis)) {
+                $premisData = DB::table('premis')->whereIn('id', $premis)->get();
+                if ($premisData->isEmpty()) {
+                    return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Potongan yang dipilih tidak valid.'), Response::HTTP_NOT_FOUND);
+                }
+
+                foreach ($premisData as $premi) {
+                    DB::table('pengurang_gajis')->insert([
+                        'data_karyawan_id' => $createDataKaryawan->id,
+                        'premi_id' => $premi->id,
+                        'created_at' => Carbon::now(),
+                        'updated_at' => Carbon::now(),
+                    ]);
+                }
+            }
+
             DB::commit();
 
-            Mail::to($data['email'])->send(new SendAccoundUsersMail($data['username'], $data['password'], $data['nama']));
+            // AccountEmailJob::dispatch($data['email'], $data['username'], $data['password'], $data['nama']);
+
+            // Mail::to($data['email'])->send(new SendAccoundUsersMail($data['username'], $data['password'], $data['nama']));
             return response()->json(new KaryawanResource(Response::HTTP_OK, 'Data karyawan berhasil dibuat.', $createDataKaryawan), Response::HTTP_OK);
         } catch (\Throwable $th) {
             DB::rollBack();

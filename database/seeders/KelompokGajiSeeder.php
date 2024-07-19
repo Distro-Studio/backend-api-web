@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use Carbon\Carbon;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
+use Faker\Factory as Faker;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 
 class KelompokGajiSeeder extends Seeder
@@ -14,15 +15,16 @@ class KelompokGajiSeeder extends Seeder
      */
     public function run(): void
     {
-        for ($i = 0; $i < 20; $i++) {
-            $alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'; // Use uppercase letters
-            $randomIndex = rand(0, strlen($alphabet) - 1);
-            $randomCharacter = $alphabet[$randomIndex];
+        $faker = Faker::create();
+        $alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+
+        for ($i = 0; $i < strlen($alphabet); $i++) {
+            $randomCharacter = $alphabet[$i];
 
             $kelompok_gaji = [
                 'nama_kelompok' => 'Kelompok Gaji ' . $randomCharacter,
-                'besaran_gaji' => rand(500000, 5000000), // Tunjangan random antara 500.000 - 5.000.000
-                'created_at' => Carbon::now()->subDays(rand(0, 365)), // Random dalam 1 tahun
+                'besaran_gaji' => $faker->numberBetween(5000000, 10000000),
+                'created_at' => Carbon::now()->subDays($faker->numberBetween(0, 365)),
                 'updated_at' => Carbon::now(),
             ];
 

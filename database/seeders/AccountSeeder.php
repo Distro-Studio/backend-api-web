@@ -19,7 +19,7 @@ class AccountSeeder extends Seeder
             'username' => 'super_admin',
             'data_completion_step' => 0,
             'status_akun' => 1,
-            'password' => Hash::make('super_admin'),
+            'password' => Hash::make('SAP_super_admin_password'),
         ]);
         $roleSuperAdmin->assignRole('Super Admin');
     }

@@ -23,6 +23,16 @@ class Presensi extends Model
     }
 
     /**
+     * Get the data_karyawans that owns the Presensi
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function data_karyawans(): BelongsTo
+    {
+        return $this->belongsTo(DataKaryawan::class, 'data_karyawan_id', 'id');
+    }
+
+    /**
      * Get the jadwal that owns the Presensi
      *
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo

@@ -23,12 +23,12 @@ class RunThr extends Model
     }
 
     /**
-     * Get the user that owns the RunThr
+     * Get the data_karyawans that owns the RunThr
      *
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function user(): BelongsTo
+    public function data_karyawans(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'user_id', 'id');
+        return $this->belongsTo(DataKaryawan::class, 'data_karyawan_id', 'id');
     }
 }

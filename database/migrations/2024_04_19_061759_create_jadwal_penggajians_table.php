@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('jadwal_penggajians', function (Blueprint $table) {
             $table->id();
-            $table->date('tanggal');
+            $table->integer('tgl_mulai');
             $table->timestamps();
         });
     }

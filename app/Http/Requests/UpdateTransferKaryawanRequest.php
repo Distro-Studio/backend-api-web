@@ -33,7 +33,7 @@ class UpdateTransferKaryawanRequest extends FormRequest
             'jabatan_asal' => 'required|integer',
             'jabatan_tujuan' => 'required|integer',
             'alasan' => 'required|string',
-            'dokumen' => 'required|file|max:2048|mimes:pdf,doc,docx,xls,xlsx',
+            'dokumen' => 'required|file|max:10240|mimes:pdf,doc,docx,xls,xlsx',
         ];
     }
 
@@ -59,7 +59,7 @@ class UpdateTransferKaryawanRequest extends FormRequest
             'dokumen.required' => 'Dokumen transfer karyawan tidak diperbolehkan kosong.',
             'dokumen.file' => 'Dokumen yang diperbolehkan berupa berkas file .PDF, .XLS, .XLSX, .DOC, dan .DOCX',
             'dokumen.mimes' => 'Dokumen yang diperbolehkan berupa berkas file .PDF, .XLS, .XLSX, .DOC, dan .DOCX',
-            'dokumen.max' => 'Dokumen yang diunggah harus kurang dari 2 MB.',
+            'dokumen.max' => 'Dokumen yang diunggah harus kurang dari 10 MB.',
         ];
     }
 

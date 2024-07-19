@@ -15,7 +15,7 @@ class ShiftExport implements FromCollection, WithHeadings, WithMapping
 
     public function collection()
     {
-        return Shift::all();
+        return Shift::whereNull('deleted_at')->get();
     }
 
     public function headings(): array

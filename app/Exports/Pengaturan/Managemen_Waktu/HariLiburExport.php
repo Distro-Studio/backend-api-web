@@ -15,7 +15,7 @@ class HariLiburExport implements FromCollection, WithHeadings, WithMapping
 
     public function collection()
     {
-        return HariLibur::all();
+        return HariLibur::whereNull('deleted_at')->get();
     }
 
     public function headings(): array

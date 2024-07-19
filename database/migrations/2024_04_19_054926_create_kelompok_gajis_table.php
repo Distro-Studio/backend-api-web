@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('nama_kelompok');
             $table->integer('besaran_gaji');
+            $table->softDeletes();
             $table->timestamps();
         });
     }

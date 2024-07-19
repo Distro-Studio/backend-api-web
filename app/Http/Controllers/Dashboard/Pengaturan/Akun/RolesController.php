@@ -26,7 +26,7 @@ class RolesController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
-        $dataRole = Role::all();
+        $dataRole = Role::whereNull('deleted_at')->get();
         return response()->json([
             'status' => Response::HTTP_OK,
             'message' => 'Retrieving all role for dropdown',
@@ -83,7 +83,7 @@ class RolesController extends Controller
     {
         if (!Gate::allows('view role', $role)) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
-        }     
+        }
 
         if (!$role) {
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data role karyawan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
@@ -99,36 +99,43 @@ class RolesController extends Controller
         }
 
         $data = $request->validated();
-
         $role->update($data);
         $updatedRole = $role->fresh();
+
         $successMessage = "Data Role '{$updatedRole->name}' berhasil diubah.";
-        return response()->json(new RoleResource(Response::HTTP_OK, $successMessage, $role), Response::HTTP_OK);
+        return response()->json(new RoleResource(Response::HTTP_OK, $successMessage, $updatedRole), Response::HTTP_OK);
     }
 
-    // public function bulkDelete(Request $request)
-    // {
-    //     if (!Gate::allows('delete role')) {
-    //         return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
-    //     }
+    public function destroy(Role $role)
+    {
+        if (!Gate::allows('delete role', $role)) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
 
-    //     $dataRole = Validator::make($request->all(), [
-    //         'ids' => 'required|array|min:1',
-    //         'ids.*' => 'integer|exists:roles,id'
-    //     ]);
+        $role->delete();
 
-    //     if ($dataRole->fails()) {
-    //         return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, $dataRole->errors()), Response::HTTP_BAD_REQUEST);
-    //     }
+        $successMessage = 'Data role berhasil dihapus.';
+        return response()->json(new WithoutDataResource(Response::HTTP_OK, $successMessage), Response::HTTP_OK);
+    }
 
-    //     $ids = $request->input('ids');
-    //     $deletedCount = Role::whereIn('id', $ids);
-    //     $deletedCount->delete();
+    public function restore($id)
+    {
+        $role = Role::withTrashed()->find($id);
 
-    //     $message = 'Data role berhasil dihapus.';
+        if (!Gate::allows('delete role', $role)) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
 
-    //     return response()->json(new WithoutDataResource(Response::HTTP_OK, $message), Response::HTTP_OK);
-    // }
+        $role->restore();
+
+        if (is_null($role->deleted_at)) {
+            $successMessage = "Data role {$role->name} berhasil dipulihkan.";
+            return response()->json(new WithoutDataResource(Response::HTTP_OK, $successMessage), Response::HTTP_OK);
+        } else {
+            $successMessage = 'Restore data tidak dapat diproses, Silahkan hubungi admin untuk dilakukan pengecekan ulang.';
+            return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, $successMessage), Response::HTTP_BAD_REQUEST);
+        }
+    }
 
     public function exportRoles(Request $request)
     {

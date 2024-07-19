@@ -16,6 +16,7 @@ return new class extends Migration
             $table->string('nama');
             $table->time('jam_from')->nullable();
             $table->time('jam_to')->nullable();
+            $table->softDeletes();
             $table->timestamps();
         });
     }

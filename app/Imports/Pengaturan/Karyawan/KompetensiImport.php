@@ -18,19 +18,22 @@ class KompetensiImport implements ToModel, WithHeadingRow, WithValidation
             'nama_kompetensi' => 'required|string|unique:kompetensis,nama_kompetensi',
             'jenis_kompetensi' => 'required|string',
             'total_tunjangan' => 'required|numeric',
+            'total_bor' => 'required|numeric',
         ];
     }
 
     public function customValidationMessages()
     {
         return [
-            'nama_kompetensi.required' => 'Nama Kompetensi tidak diperbolehkan kosong.',
-            'nama_kompetensi.string' => 'Nama Kompetensi tidak diperbolehkan mengandung angka.',
-            'nama_kompetensi.unique' => 'Nama Kompetensi pada tabel excel atau database sudah pernah dibuat atau terduplikat.',
-            'jenis_kompetensi.required' => 'Jenis Kompetensi tidak diperbolehkan kosong.',
-            'jenis_kompetensi.string' => 'Jenis Kompetensi tidak diperbolehkan mengandung angka.',
-            'total_tunjangan.required' => 'Jumlah Tunjangan tidak diperbolehkan kosong.',
-            'total_tunjangan.numeric' => 'Jumlah Tunjangan tidak diperbolehkan mengandung huruf.',
+            'nama_kompetensi.required' => 'Nama kompetensi tidak diperbolehkan kosong.',
+            'nama_kompetensi.string' => 'Nama kompetensi tidak diperbolehkan mengandung angka.',
+            'nama_kompetensi.unique' => 'Nama kompetensi pada tabel excel atau database sudah pernah dibuat atau terduplikat.',
+            'jenis_kompetensi.required' => 'Jenis kompetensi tidak diperbolehkan kosong.',
+            'jenis_kompetensi.string' => 'Jenis kompetensi tidak diperbolehkan mengandung angka.',
+            'total_tunjangan.required' => 'Jumlah tunjangan tidak diperbolehkan kosong.',
+            'total_tunjangan.numeric' => 'Jumlah tunjangan tidak diperbolehkan mengandung huruf.',
+            'total_bor.required' => 'Jumlah BOR tidak diperbolehkan kosong.',
+            'total_bor.numeric' => 'Jumlah BOR tidak diperbolehkan mengandung huruf.',
         ];
     }
 

@@ -15,7 +15,7 @@ class KelompokGajiExport implements FromCollection, WithHeadings, WithMapping
 
     public function collection()
     {
-        return KelompokGaji::all();
+        return KelompokGaji::whereNull('deleted_at')->get();
     }
 
     public function headings(): array

@@ -16,6 +16,10 @@ use Database\Seeders\Pengaturan_Finance\PremiSeeder;
 use Database\Seeders\Karyawan\KeluargaKaryawanSeeder;
 use Database\Seeders\Karyawan\TrackRecordSeeder;
 use Database\Seeders\Karyawan\TransferKaryawanSeeder;
+use Database\Seeders\Keuangan\PenggajianSeeder;
+use Database\Seeders\Keuangan\RiwayatPenggajianSeeder;
+use Database\Seeders\Keuangan\TanggalGajiSeeder;
+use Database\Seeders\Keuangan\THRPenggajianSeeder;
 use Database\Seeders\Pengaturan_Managemen_Waktu\ShiftSeeder;
 use Database\Seeders\Pengaturan_Managemen_Waktu\HariLiburSeeder;
 use Database\Seeders\Pengaturan_Managemen_Waktu\TipeCutiSeeder;
@@ -37,6 +41,7 @@ class DatabaseSeeder extends Seeder
             KelompokGajiSeeder::class,
             KompetensiSeeder::class,
             UnitKerjaSeeder::class,
+            PertanyaanSeeder::class,
 
             /* ==== Pengaturan Finance ==== */
             KategoriTERSeeder::class,
@@ -63,6 +68,12 @@ class DatabaseSeeder extends Seeder
 
             /* ==== Presensi ==== */
             PresensiSeeder::class,
+
+            /* ==== Keuangan ==== */
+            TanggalGajiSeeder::class,
+            PenggajianSeeder::class,
+            RiwayatPenggajianSeeder::class,
+            THRPenggajianSeeder::class,
         ]);
     }
 }

@@ -14,10 +14,11 @@ return new class extends Migration
         Schema::create('ters', function (Blueprint $table) {
             $table->id();
             $table->foreignId('kategori_ter_id')->constrained('kategori_ters');
-            $table->foreignId('ptkp_id')->constrained('ptkps');
+            // $table->foreignId('ptkp_id')->constrained('ptkps');
             $table->integer('from_ter');
-            $table->integer('to_ter');
-            $table->integer('percentage_ter');
+            $table->integer('to_ter')->nullable();
+            $table->decimal('percentage', 4, 2);
+            $table->softDeletes();
             $table->timestamps();
         });
     }

@@ -15,15 +15,17 @@ class CutiExport implements FromCollection, WithHeadings, WithMapping
 
     public function collection()
     {
-        return TipeCuti::all();
+        return TipeCuti::whereNull('deleted_at')->get();
     }
 
     public function headings(): array
     {
         return [
             'nama',
-            'durasi',
-            // 'waktu',
+            'kuota',
+            'is_need_requirement',
+            'keterangan',
+            'cuti_administratif',
             'created_at',
             'updated_at',
         ];
@@ -33,10 +35,10 @@ class CutiExport implements FromCollection, WithHeadings, WithMapping
     {
         return [
             $cuti->nama,
-            $cuti->durasi,
-
-            // ? kolom waktu masih dibiarkan kosong
-            // $cuti->waktu,
+            $cuti->kuota,
+            $cuti->is_need_requirement ? 'Ya' : 'Tidak',
+            $cuti->keterangan,
+            $cuti->cuti_administratif ? 'Ya' : 'Tidak',
             Carbon::parse($cuti->created_at)->format('d-m-Y H:i:s'),
             Carbon::parse($cuti->updated_at)->format('d-m-Y H:i:s')
         ];

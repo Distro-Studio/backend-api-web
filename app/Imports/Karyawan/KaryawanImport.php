@@ -136,8 +136,8 @@ class KaryawanImport implements ToModel, WithHeadingRow, WithValidation
         if ($existingUser) {
             $user_id = $existingUser->id;
         } else {
-            $username = RandomHelper::generateUniqueUsername($row['nama']);
-            $password = RandomHelper::generatePassword($row['email']);
+            $username = RandomHelper::generateUniqueUsername($row['nama'], $row['email']);
+            $password = RandomHelper::generatePassword();
 
             // Find role ID
             $role = $this->Role->where('name', $row['roles'])->first();

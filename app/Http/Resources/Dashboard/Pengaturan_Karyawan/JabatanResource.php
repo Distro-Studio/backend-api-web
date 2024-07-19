@@ -60,6 +60,7 @@ class JabatanResource extends JsonResource
                 'nama_jabatan' => $jabatan->nama_jabatan,
                 'is_struktural' => $jabatan->is_struktural,
                 'tunjangan' => $jabatan->tunjangan,
+                'deleted_at' => $jabatan->deleted_at,
                 'created_at' => $jabatan->created_at,
                 'updated_at' => $jabatan->updated_at
             ];

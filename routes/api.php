@@ -10,6 +10,9 @@ use App\Http\Controllers\Dashboard\Karyawan\KeluargaKaryawanController;
 use App\Http\Controllers\Dashboard\Karyawan\PekerjaKontrakController;
 use App\Http\Controllers\Dashboard\Karyawan\RekamJejakController;
 use App\Http\Controllers\Dashboard\Karyawan\TransferKaryawanController;
+use App\Http\Controllers\Dashboard\Keuangan\PenggajianController;
+use App\Http\Controllers\Dashboard\Keuangan\PenyesuaianGajiController;
+use App\Http\Controllers\Dashboard\Keuangan\THRPenggajianController;
 use App\Http\Controllers\Dashboard\Pengaturan\Akun\PermissionsController;
 use App\Http\Controllers\Dashboard\Pengaturan\Akun\RolesController;
 use App\Http\Controllers\Dashboard\Pengaturan\Akun\UserPasswordController;
@@ -20,6 +23,7 @@ use App\Http\Controllers\Dashboard\Pengaturan\Finance\THRController;
 use App\Http\Controllers\Dashboard\Pengaturan\Karyawan\JabatanController;
 use App\Http\Controllers\Dashboard\Pengaturan\Karyawan\KelompokGajiController;
 use App\Http\Controllers\Dashboard\Pengaturan\Karyawan\KompetensiController;
+use App\Http\Controllers\Dashboard\Pengaturan\Karyawan\PertanyaanController;
 use App\Http\Controllers\Dashboard\Pengaturan\Karyawan\UnitKerjaController;
 use App\Http\Controllers\Dashboard\Pengaturan\ManagemenWaktu\CutiController;
 use App\Http\Controllers\Dashboard\Pengaturan\ManagemenWaktu\HariLiburController;
@@ -47,6 +51,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('/user-info', [LoginController::class, 'getInfoUserLogin']);
 
         // TODO: Berkas rekam jejak belom dimasukkan ke db berkas
+        // TODO: aktifkan send email di create & transfer karyawan
+        // TODO: ganti email di create & transfer karyawan
         Route::group(['prefix' => '/karyawan'], function () {
             // ! Data Karyawan ===========>
             Route::get('/all-karyawan', [KaryawanController::class, 'getAllKaryawan']);
@@ -95,7 +101,6 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::apiResource('/transfer-karyawan', TransferKaryawanController::class);
         });
 
-        // ! export import presensi belum di test untuk gambar
         Route::group(['prefix' => '/presensi'], function () {
             // ! Presensi Tabel ===========>
             Route::get('/all-presensi', [PresensiController::class, 'getAllPresensi']);
@@ -155,18 +160,46 @@ Route::middleware(['auth:sanctum'])->group(function () {
         });
 
         Route::group(['prefix' => '/keuangan'], function () {
+            // ! Penggajian ===========>
+            Route::get('/calculated-info-penggajian', [PenggajianController::class, 'calculatedInfo']);
+
+            Route::post('/penggajian-filter', [PenggajianController::class, 'index']);
+            Route::post('/penggajian-search', [PenggajianController::class, 'index']);
+            Route::get('/penggajian-export-riwayat', [PenggajianController::class, 'exportRiwayatPenggajian']);
+            Route::get('/penggajian-export-penerimaan', [PenggajianController::class, 'exportRekapPenerimaanGaji']);
+            Route::get('/penggajian-export-potongan', [PenggajianController::class, 'exportRekapPotonganGaji']);
+            Route::get('/penggajian-export-bank', [PenggajianController::class, 'exportLaporanGajiBank']);
+            Route::get('/data-penggajian/detail/{penggajian_id}', [PenggajianController::class, 'showDetailGajiUser']);
+            Route::post('/data-penggajian/detail/{penggajian_id}/create-penambah-gaji', [PenyesuaianGajiController::class, 'storePenyesuaianGajiPenambah']);
+            Route::post('/data-penggajian/detail/{penggajian_id}/create-pengurang-gaji', [PenyesuaianGajiController::class, 'storePenyesuaianGajiPengurang']);
+            Route::apiResource('/data-penggajian', PenggajianController::class);
+
+            // ! Penyesuaian Gaji ===========>
+            Route::get('/all-karyawan-penggajian', [PenyesuaianGajiController::class, 'getAllKaryawanPenggajian']);
+            Route::post('/penyesuaian-gaji-filter', [PenyesuaianGajiController::class, 'index']);
+            Route::post('/penyesuaian-gaji-search', [PenyesuaianGajiController::class, 'index']);
+            Route::get('/penyesuaian-gaji-export', [PenyesuaianGajiController::class, 'exportPenyesuaianGaji']);
+            Route::apiResource('/data-penyesuaian-gaji', PenyesuaianGajiController::class);
+
+            // ! THR Penggajian ===========>
+            Route::get('/all-karyawan-tetap', [THRPenggajianController::class, 'getDataKaryawan']);
+            Route::post('/thr-filter', [THRPenggajianController::class, 'index']);
+            Route::post('/thr-search', [THRPenggajianController::class, 'index']);
+            Route::get('/thr-export', [THRPenggajianController::class, 'exportTHRPenggajian']);
+            Route::apiResource('/data-thr-penggajian', THRPenggajianController::class);
         });
 
         Route::group(['prefix' => '/perusahaan'], function () {
         });
 
+        // TODO: Belom test fitur master data pertanyaan; Lakukan test fitur update, delete, restore master data lainnya
         Route::group(['prefix' => '/pengaturan'], function () {
             /* ==================================== Setting Akun ==================================== */
             // ! Roles ===========>
             Route::get('/all-role', [RolesController::class, 'getAllRoles']);
             Route::post('/role/filter', [RolesController::class, 'index']);
             Route::post('/role/search', [RolesController::class, 'index']);
-            Route::post('/role/bulk-delete', [RolesController::class, 'bulkDelete']);
+            Route::post('/role/restore/{id}', [RolesController::class, 'restore']);
             Route::get('/role/export', [RolesController::class, 'exportRoles']);
             Route::post('/role/import', [RolesController::class, 'importRoles']);
             Route::apiResource('/role', RolesController::class);
@@ -175,7 +208,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::get('/all-permissions', [PermissionsController::class, 'getAllPermissions']);
             Route::put('/permissions/{role}', [PermissionsController::class, 'updatePermissions']);
 
-            // ! Change Password User ===========>
+            // ! Change Password ===========>
             Route::post('/users/change-passwords', [UserPasswordController::class, 'updatePassword']);
             /* ==================================== Setting Akun ==================================== */
 
@@ -185,7 +218,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::get('/all-jabatan', [JabatanController::class, 'getAllJabatan']);
             Route::post('/jabatan/filter', [JabatanController::class, 'index']);
             Route::post('/jabatan/search', [JabatanController::class, 'index']);
-            Route::post('/jabatan/bulk-delete', [JabatanController::class, 'bulkDelete']);
+            Route::post('/jabatan/restore/{id}', [JabatanController::class, 'restore']);
             Route::get('/jabatan/export', [JabatanController::class, 'exportJabatan']);
             Route::post('/jabatan/import', [JabatanController::class, 'importJabatan']);
             Route::apiResource('/jabatan', JabatanController::class);
@@ -194,7 +227,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::get('/all-kelompok-gaji', [KelompokGajiController::class, 'getAllKelompokGaji']);
             Route::post('/kelompok-gaji/filter', [KelompokGajiController::class, 'index']);
             Route::post('/kelompok-gaji/search', [KelompokGajiController::class, 'index']);
-            Route::post('/kelompok-gaji/bulk-delete', [KelompokGajiController::class, 'bulkDelete']);
+            Route::post('/kelompok-gaji/restore/{id}', [KelompokGajiController::class, 'restore']);
             Route::get('/kelompok-gaji/export', [KelompokGajiController::class, 'exportKelompokGaji']);
             Route::post('/kelompok-gaji/import', [KelompokGajiController::class, 'importKelompokGaji']);
             Route::apiResource('/kelompok-gaji', KelompokGajiController::class);
@@ -203,7 +236,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::get('/all-kompetensi', [KompetensiController::class, 'getAllKompetensi']);
             Route::post('/kompetensi/filter', [KompetensiController::class, 'index']);
             Route::post('/kompetensi/search', [KompetensiController::class, 'index']);
-            Route::post('/kompetensi/bulk-delete', [KompetensiController::class, 'bulkDelete']);
+            Route::post('/kompetensi/restore/{id}', [KompetensiController::class, 'restore']);
             Route::get('/kompetensi/export', [KompetensiController::class, 'exportKompetensi']);
             Route::post('/kompetensi/import', [KompetensiController::class, 'importKompetensi']);
             Route::apiResource('/kompetensi', KompetensiController::class);
@@ -212,10 +245,18 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::get('/all-unit-kerja', [UnitKerjaController::class, 'getAllUnitKerja']);
             Route::post('/unit-kerja/filter', [UnitKerjaController::class, 'index']);
             Route::post('/unit-kerja/search', [UnitKerjaController::class, 'index']);
-            Route::post('/unit-kerja/bulk-delete', [UnitKerjaController::class, 'bulkDelete']);
+            Route::post('/unit-kerja/restore/{id}', [UnitKerjaController::class, 'restore']);
             Route::get('/unit-kerja/export', [UnitKerjaController::class, 'exportUnitKerja']);
             Route::post('/unit-kerja/import', [UnitKerjaController::class, 'importUnitKerja']);
             Route::apiResource('/unit-kerja', UnitKerjaController::class);
+
+            // ! Pertanyaan ===========>
+            Route::get('/all-pertanyaan', [PertanyaanController::class, 'getAllPertanyaan']);
+            Route::post('/pertanyaan/search', [PertanyaanController::class, 'index']);
+            Route::post('/pertanyaan/restore/{id}', [PertanyaanController::class, 'restore']);
+            Route::get('/pertanyaan/export', [PertanyaanController::class, 'exportPertanyaan']);
+            Route::post('/pertanyaan/import', [PertanyaanController::class, 'importPertanyaan']);
+            Route::apiResource('/pertanyaan', PertanyaanController::class);
             /* ==================================== Setting Karyawan ==================================== */
 
 
@@ -224,7 +265,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::get('/all-premi', [PremiController::class, 'getAllPremi']);
             Route::post('/premi/filter', [PremiController::class, 'index']);
             Route::post('/premi/search', [PremiController::class, 'index']);
-            Route::post('/premi/bulk-delete', [PremiController::class, 'bulkDelete']);
+            Route::post('/premi/restore/{id}', [PremiController::class, 'restore']);
             Route::get('/premi/export', [PremiController::class, 'exportPremi']);
             Route::post('/premi/import', [PremiController::class, 'importPremi']);
             Route::apiResource('/premi', PremiController::class);
@@ -233,7 +274,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::get('/all-ter-pph-21', [TER21Controller::class, 'getAllTer']);
             Route::post('/ter-pph-21/filter', [TER21Controller::class, 'index']);
             Route::post('/ter-pph-21/search', [TER21Controller::class, 'index']);
-            Route::post('/ter-pph-21/bulk-delete', [TER21Controller::class, 'bulkDelete']);
+            Route::post('/ter-pph-21/restore/{id}', [TER21Controller::class, 'restore']);
             Route::get('/ter-pph-21/export', [TER21Controller::class, 'exportTER']);
             Route::post('/ter-pph-21/import', [TER21Controller::class, 'importTER']);
             Route::apiResource('/ter-pph-21', TER21Controller::class);
@@ -253,7 +294,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::get('/all-shift', [ShiftController::class, 'getAllShift']);
             Route::post('/shift/filter', [ShiftController::class, 'index']);
             Route::post('/shift/search', [ShiftController::class, 'index']);
-            Route::post('/shift/bulk-delete', [ShiftController::class, 'bulkDelete']);
+            Route::post('/shift/restore/{id}', [ShiftController::class, 'restore']);
             Route::get('/shift/export', [ShiftController::class, 'exportShift']);
             Route::post('/shift/import', [ShiftController::class, 'importShift']);
             Route::apiResource('/shift', ShiftController::class);
@@ -262,7 +303,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::get('/hari-libur/nasional', [HariLiburController::class, 'getNasionalHariLibur']);
             Route::post('/hari-libur/filter', [HariLiburController::class, 'index']);
             Route::post('/hari-libur/search', [HariLiburController::class, 'index']);
-            Route::get('/all-hari-libur', [HariLiburController::class, 'getAllHariLibur']);
+            Route::post('/hari-libur/restore/{id}', [HariLiburController::class, 'restore']);
             Route::post('/hari-libur/bulk-delete', [HariLiburController::class, 'bulkDelete']);
             Route::get('/hari-libur/export', [HariLiburController::class, 'exportHariLibur']);
             Route::post('/hari-libur/import', [HariLiburController::class, 'importHariLibur']);
@@ -272,7 +313,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::get('/all-cuti', [CutiController::class, 'getAllTipeCuti']);
             Route::post('/cuti/filter', [CutiController::class, 'index']);
             Route::post('/cuti/search', [CutiController::class, 'index']);
-            Route::post('/cuti/bulk-delete', [CutiController::class, 'bulkDelete']);
+            Route::post('/cuti/restore/{id}', [CutiController::class, 'restore']);
             Route::get('/cuti/export', [CutiController::class, 'exportCuti']);
             Route::post('/cuti/import', [CutiController::class, 'importCuti']);
             Route::apiResource('/cuti', CutiController::class);

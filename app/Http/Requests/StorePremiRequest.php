@@ -25,9 +25,12 @@ class StorePremiRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'nama_premi' => 'required|string|max:225|unique:premis,nama_premi',
+            'nama_premi' => 'required|string|unique:premis,nama_premi',
+            'sumber_potongan' => 'required|string',
             'jenis_premi' => 'required',
             'besaran_premi' => 'required|numeric',
+            'minimal_rate' => 'nullable|integer',
+            'maksimal_rate' => 'nullable|integer',
         ];
     }
 
@@ -36,11 +39,14 @@ class StorePremiRequest extends FormRequest
         return [
             'nama_premi.required' => 'Nama premi tidak diperbolehkan kosong.',
             'nama_premi.string' => 'Nama premi tidak diperbolehkan mengandung angka.',
-            'nama_premi.max' => 'Nama premi melebihi batas maksimum panjang karakter.',
-            'nama_premi.unique' => 'Nama premi tersebut sudah pernah dibuat.',
+            'nama_premi.unique' => 'Nama premi pada tabel excel atau database sudah pernah dibuat atau terduplikat.',
+            'sumber_potongan.required' => 'Sumber potongan premi tidak diperbolehkan kosong.',
+            'sumber_potongan.string' => 'Sumber potongan premi tidak diperbolehkan mengandung angka.',
             'jenis_premi.required' => 'Silahkan pilih jenis premi terlebih dahulu.',
             'besaran_premi.required' => 'Jumlah premi tidak diperbolehkan kosong.',
             'besaran_premi.numeric' => 'Jumlah premi tidak diperbolehkan mengandung huruf.',
+            'minimal_rate.integer' => 'Minimal rate tidak diperbolehkan mengandung huruf.',
+            'maksimal_rate.integer' => 'Maksimal rate tidak diperbolehkan mengandung huruf.',
         ];
     }
 

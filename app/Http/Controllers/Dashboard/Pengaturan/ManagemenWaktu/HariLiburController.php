@@ -30,7 +30,7 @@ class HariLiburController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
-        $hari_libur = HariLibur::get();
+        $hari_libur = HariLibur::whereNull('deleted_at')->get();
         return response()->json([
             'status' => Response::HTTP_OK,
             'message' => 'Retrieving all hari libur for dropdown',
@@ -114,38 +114,43 @@ class HariLiburController extends Controller
         }
 
         $data = $request->validated();
-
         $hari_libur->update($data);
         $updatedHariLibur = $hari_libur->fresh();
+
         $successMessage = "Data hari libur '{$updatedHariLibur->nama}' berhasil diubah.";
-        return response()->json(new HariLiburResource(Response::HTTP_OK, $successMessage, $hari_libur), Response::HTTP_OK);
+        return response()->json(new HariLiburResource(Response::HTTP_OK, $successMessage, $updatedHariLibur), Response::HTTP_OK);
     }
 
-    // public function bulkDelete(Request $request)
-    // {
-    //     if (!Gate::allows('delete hariLibur')) {
-    //         return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
-    //     }
+    public function destroy(HariLibur $hari_libur)
+    {
+        if (!Gate::allows('delete hariLibur', $hari_libur)) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
 
-    //     $dataKompetensi = Validator::make($request->all(), [
-    //         'ids' => 'required|array|min:1',
-    //         'ids.*' => 'integer|exists:hari_liburs,id'
-    //     ]);
+        $hari_libur->delete();
 
-    //     if ($dataKompetensi->fails()) {
-    //         return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, $dataKompetensi->errors()), Response::HTTP_BAD_REQUEST);
-    //     }
+        $successMessage = 'Data hari libur berhasil dihapus.';
+        return response()->json(new WithoutDataResource(Response::HTTP_OK, $successMessage), Response::HTTP_OK);
+    }
 
-    //     $ids = $request->input('ids');
-    //     HariLibur::destroy($ids);
+    public function restore($id)
+    {
+        $hari_libur = HariLibur::withTrashed()->find($id);
 
-    //     $deletedCount = HariLibur::whereIn('id', $ids)->delete();
-    //     // $message = sprintf('Deleted %d Jabatan%s', $deletedCount, $deletedCount > 1 ? 's' : '');
+        if (!Gate::allows('delete hariLibur', $hari_libur)) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
 
-    //     $message = 'Data hari libur berhasil dihapus.';
+        $hari_libur->restore();
 
-    //     return response()->json(new WithoutDataResource(Response::HTTP_OK, $message), Response::HTTP_OK);
-    // }
+        if (is_null($hari_libur->deleted_at)) {
+            $successMessage = "Data hari libur {$hari_libur->nama} berhasil dipulihkan.";
+            return response()->json(new WithoutDataResource(Response::HTTP_OK, $successMessage), Response::HTTP_OK);
+        } else {
+            $successMessage = 'Restore data tidak dapat diproses, Silahkan hubungi admin untuk dilakukan pengecekan ulang.';
+            return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, $successMessage), Response::HTTP_BAD_REQUEST);
+        }
+    }
 
     public function exportHariLibur(Request $request)
     {

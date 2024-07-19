@@ -25,9 +25,11 @@ class UpdateCutiRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'nama' => 'required|max:255',
-            'durasi' => 'required',
-            'waktu' => 'nullable'
+            'nama' => 'required|string|max:255',
+            'kuota' => 'required|integer',
+            'is_need_requirement' => 'required|boolean',
+            'keterangan' => 'required|string|max:255',
+            'cuti_administratif' => 'required|boolean',
         ];
     }
 
@@ -35,8 +37,17 @@ class UpdateCutiRequest extends FormRequest
     {
         return [
             'nama.required' => 'Nama cuti tidak diperbolehkan kosong.',
+            'nama.string' => 'Nama cuti tidak diperbolehkan mengandung karakter selain huruf.',
             'nama.max' => 'Nama cuti melebihi batas maksimum panjang karakter.',
-            'durasi.required' => 'Durasi cuti tidak diperbolehkan kosong.',
+            'kuota.required' => 'Kuota cuti tidak diperbolehkan kosong.',
+            'kuota.integer' => 'Kuota cuti tidak diperbolehkan mengandung karakter selain angka.',
+            'is_need_requirement.required' => 'Persyaratan cuti tidak diperbolehkan kosong.',
+            'is_need_requirement.boolean' => 'Persyaratan cuti harus berupa boolean.',
+            'keterangan.required' => 'Keterangan cuti tidak diperbolehkan kosong.',
+            'keterangan.string' => 'Keterangan cuti diperbolehkan mengandung karakter selain huruf.',
+            'keterangan.max' => 'Keterangan melebihi batas maksimum panjang karakter.',
+            'cuti_administratif.required' => 'Cuti absensi tidak boleh kosong.',
+            'cuti_administratif.boolean' => 'Cuti absensi harus berupa boolean.',
         ];
     }
 

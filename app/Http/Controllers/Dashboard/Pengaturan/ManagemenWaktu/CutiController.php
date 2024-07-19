@@ -27,7 +27,7 @@ class CutiController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
-        $cuti = TipeCuti::get();
+        $cuti = TipeCuti::whereNull('deleted_at')->get();
         return response()->json([
             'status' => Response::HTTP_OK,
             'message' => 'Retrieving all cuti for dropdown',
@@ -150,42 +150,48 @@ class CutiController extends Controller
 
     public function update(TipeCuti $cuti, UpdateCutiRequest $request)
     {
-        if (!Gate::allows('edit.hariLibur', $cuti)) {
+        if (!Gate::allows('edit cuti', $cuti)) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
         $data = $request->validated();
-
         $cuti->update($data);
         $updatedCuti = $cuti->fresh();
+
         $successMessage = "Data cuti '{$updatedCuti->nama}' berhasil diubah.";
-        return response()->json(new CutiResource(Response::HTTP_OK, $successMessage, $cuti), Response::HTTP_OK);
+        return response()->json(new CutiResource(Response::HTTP_OK, $successMessage, $updatedCuti), Response::HTTP_OK);
     }
 
-    // public function bulkDelete(Request $request)
-    // {
-    //     if (!Gate::allows('delete cuti')) {
-    //         return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
-    //     }
+    public function destroy(TipeCuti $cuti)
+    {
+        if (!Gate::allows('delete cuti', $cuti)) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
 
-    //     $dataCuti = Validator::make($request->all(), [
-    //         'ids' => 'required|array|min:1',
-    //         'ids.*' => 'integer|exists:tipe_cutis,id'
-    //     ]);
+        $cuti->delete();
 
-    //     if ($dataCuti->fails()) {
-    //         return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, $dataCuti->errors()), Response::HTTP_BAD_REQUEST);
-    //     }
+        $successMessage = 'Data cuti berhasil dihapus.';
+        return response()->json(new WithoutDataResource(Response::HTTP_OK, $successMessage), Response::HTTP_OK);
+    }
 
-    //     $ids = $request->input('ids');
-    //     TipeCuti::destroy($ids);
+    public function restore($id)
+    {
+        $cuti = TipeCuti::withTrashed()->find($id);
 
-    //     $deletedCount = TipeCuti::whereIn('id', $ids)->delete();
+        if (!Gate::allows('delete cuti', $cuti)) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
 
-    //     $message = 'Data cuti berhasil dihapus.';
+        $cuti->restore();
 
-    //     return response()->json(new WithoutDataResource(Response::HTTP_OK, $message), Response::HTTP_OK);
-    // }
+        if (is_null($cuti->deleted_at)) {
+            $successMessage = "Data cuti {$cuti->nama} berhasil dipulihkan.";
+            return response()->json(new WithoutDataResource(Response::HTTP_OK, $successMessage), Response::HTTP_OK);
+        } else {
+            $successMessage = 'Restore data tidak dapat diproses, Silahkan hubungi admin untuk dilakukan pengecekan ulang.';
+            return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, $successMessage), Response::HTTP_BAD_REQUEST);
+        }
+    }
 
     public function exportCuti(Request $request)
     {
