@@ -44,7 +44,7 @@ class UserResource extends JsonResource
                         'updated_at' => $role->updated_at,
                     ];
                 }),
-                'permission' => $this->getAllPermissions(),
+                'permissions' => $this->getAllPermissions(),
                 'created_at' => $this->created_at,
                 'updated_at' => $this->updated_at,
             ]
