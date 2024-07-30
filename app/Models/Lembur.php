@@ -31,4 +31,24 @@ class Lembur extends Model
     {
         return $this->belongsTo(Shift::class, 'shift_id', 'id');
     }
+
+    /**
+     * Get the status_lemburs that owns the Lembur
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function status_lemburs(): BelongsTo
+    {
+        return $this->belongsTo(StatusLembur::class, 'status_lembur_id', 'id');
+    }
+
+    /**
+     * Get the kategori_kompensasis that owns the Lembur
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function kategori_kompensasis(): BelongsTo
+    {
+        return $this->belongsTo(KategoriKompensasi::class, 'kompensasi_lembur_id', 'id');
+    }
 }

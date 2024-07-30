@@ -113,10 +113,11 @@ class JadwalController extends Controller
             if ($end_date->diffInDays($start_date) > 28) {
                 return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Rentang tanggal yang diberikan tidak boleh melebihi 28 hari dari tanggal mulai.'), Response::HTTP_BAD_REQUEST);
             }
-        } else {
-            $start_date = Carbon::now()->startOfWeek();
-            $end_date = Carbon::now()->endOfWeek();
         }
+        // else {
+        //     $start_date = Carbon::now()->startOfWeek();
+        //     $end_date = Carbon::now()->endOfWeek();
+        // }
 
         $date_range = $this->generateDateRange($start_date, $end_date);
 
@@ -154,8 +155,8 @@ class JadwalController extends Controller
             $result[] = [
                 'id' => $schedule->id,
                 'user' => $user,
-                'jenis_karyawan' => optional($user->data_karyawans)->unit_kerjas,
-                'shift' => $user_schedule_array,
+                'unit_kerja' => optional($user->data_karyawans)->unit_kerjas,
+                'list_jadwal' => $user_schedule_array,
             ];
         }
 
@@ -203,7 +204,12 @@ class JadwalController extends Controller
 
         $data = $request->validated();
         $shiftId = $data['shift_id'];
-        $tanggalMulai = $data['tgl_mulai'];
+        $tanggalMulai = Carbon::parse($data['tgl_mulai'])->format('Y-m-d');
+        $today = Carbon::now()->format('Y-m-d');
+
+        if ($tanggalMulai == $today) {
+            return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Anda tidak dapat mengupdate jadwal pada tanggal hari ini.'), Response::HTTP_BAD_REQUEST);
+        }
 
         $shift = Shift::findOrFail($shiftId);
 
@@ -240,11 +246,12 @@ class JadwalController extends Controller
             $start_date = Carbon::parse($request->input('tgl_mulai'));
             $end_date = Carbon::parse($request->input('tgl_selesai'));
             $date_range = $this->generateDateRange($start_date, $end_date);
-        } else {
-            $start_date = Carbon::now()->startOfMonth();
-            $end_date = Carbon::now()->endOfMonth();
-            $date_range = $this->generateDateRange($start_date, $end_date);
         }
+        // else {
+        //     $start_date = Carbon::now()->startOfMonth();
+        //     $end_date = Carbon::now()->endOfMonth();
+        //     $date_range = $this->generateDateRange($start_date, $end_date);
+        // }
 
         $user_schedules_by_date = [];
         foreach ($user->jadwals as $schedule) {
@@ -284,7 +291,7 @@ class JadwalController extends Controller
                     'data_completion_step' => $user->data_completion_step,
                     'data_karyawan' => $user->data_karyawans,
                 ],
-                'jenis_karyawan' => $user->data_karyawans->unit_kerjas,
+                'unit_kerja' => $user->data_karyawans->unit_kerjas,
                 'shifts' => $user_schedule_array,
             ]
         ], Response::HTTP_OK);
@@ -298,7 +305,12 @@ class JadwalController extends Controller
 
         $data = $request->validated();
         $shiftId = $data['shift_id'];
-        $tanggalMulai = $data['tgl_mulai'];
+        $tanggalMulai = Carbon::parse($data['tgl_mulai'])->format('Y-m-d');
+        $today = Carbon::now()->format('Y-m-d');
+
+        if ($tanggalMulai == $today) {
+            return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Anda tidak dapat mengupdate jadwal pada tanggal hari ini.'), Response::HTTP_BAD_REQUEST);
+        }
 
         $shift = Shift::findOrFail($shiftId);
 

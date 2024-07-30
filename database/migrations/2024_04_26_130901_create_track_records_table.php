@@ -14,11 +14,9 @@ return new class extends Migration
         Schema::create('track_records', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained('users');
+            $table->foreignId('kategori_record_id')->constrained('kategori_track_records');
             $table->date('tgl_masuk');
             $table->date('tgl_keluar')->nullable();
-            $table->string('promosi')->nullable();
-            $table->string('mutasi')->nullable();
-            $table->string('penghargaan')->nullable();
             $table->timestamps();
         });
     }

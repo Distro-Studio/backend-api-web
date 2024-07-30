@@ -7,30 +7,30 @@ use App\Models\User;
 use App\Models\Jadwal;
 use App\Models\Presensi;
 use Faker\Factory as Faker;
-use App\Models\DataKaryawan;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 
 class PresensiSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
         $faker = Faker::create();
-        $kategori = ['Tepat Waktu', 'Terlambat', 'Hadir', 'Absen', 'Izin', 'Invalid', 'Libur', 'Cuti'];
-        $presensi_absen = ['Hadir', 'Izin', 'Sakit'];
+        $kategoriPresensi = DB::table('kategori_presensis')->pluck('label', 'id')->all();
+        $berkas_id = DB::table('berkas')->pluck('id')->all();
 
         $lat_default = 33.7490;
         $long_default = -84.3880;
 
-        $user_ids = User::pluck('id')->all();
+        $user_ids = User::where('nama', '!=', 'Super Admin')->pluck('id')->all();
         $jadwal_ids = Jadwal::pluck('id')->all();
 
-        $startDate = Carbon::now()->subMonth()->startOfMonth(); // Hari pertama bulan ini
-        $endDate = Carbon::now()->subMonth()->endOfMonth(); // Hari terakhir bulan ini
+        $currentYear = Carbon::now()->year;
+        $randomMonth = rand(1, 12);
+        // $startDate = Carbon::createFromDate($currentYear, $randomMonth, rand(1, 28))->startOfMonth(); // Tanggal acak pada bulan tahun ini
+        $startDate = Carbon::now()->startOfMonth(); // Tanggal acak pada bulan tahun ini
+        $endDate = $startDate->copy()->endOfMonth(); // Hari terakhir bulan tersebu
+
+        $kategoriPresensiId = array_search('Tepat Waktu', $kategoriPresensi);
 
         foreach ($user_ids as $index => $user_id) {
             // Ambil data_karyawan_id yang sesuai dengan user_id
@@ -60,11 +60,8 @@ class PresensiSeeder extends Seeder
                 $jam_masuk = $currentDate->copy()->startOfDay()->addHours(rand(7, 9));
                 $jam_keluar = (clone $jam_masuk)->addHours(rand(7, 10));
 
-                // Tentukan kategori untuk 20 karyawan pertama
-                $kategoriPresensi = ($index < 20) ? 'Tepat Waktu' : $kategori[array_rand($kategori)];
-
-                // Pastikan presensi adalah 'Hadir' untuk 20 orang pertama
-                $presensi = ($index < 8) ? 'Hadir' : $presensi_absen[array_rand($presensi_absen)];
+                // Tentukan kategori dan status untuk 20 karyawan pertama
+                $kategori_id = ($index < 20) ? $kategoriPresensiId : array_rand($kategoriPresensi);
 
                 Presensi::create([
                     'user_id' => $user_id,
@@ -75,10 +72,11 @@ class PresensiSeeder extends Seeder
                     'durasi' => $jam_keluar->diffInSeconds($jam_masuk),
                     'lat' => $lat,
                     'long' => $long,
-                    'foto_masuk' => 'storage/' . $currentDate->format('Y-m-d') . '/foto_masuk/user_' . $user_id . '.jpg',
-                    'foto_keluar' => 'storage/' . $currentDate->format('Y-m-d') . '/foto_keluar/user_' . $user_id . '.jpg',
-                    'presensi' => $presensi,
-                    'kategori' => $kategoriPresensi
+                    'latkeluar' => $lat,
+                    'longkeluar' => $long,
+                    'foto_masuk' => $berkas_id[array_rand($berkas_id)],
+                    'foto_keluar' => $berkas_id[array_rand($berkas_id)],
+                    'kategori_presensi_id' => $kategori_id,
                 ]);
 
                 $currentDate->addDay();

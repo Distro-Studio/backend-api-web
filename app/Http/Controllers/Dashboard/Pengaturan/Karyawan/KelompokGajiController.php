@@ -26,7 +26,7 @@ class KelompokGajiController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
-        $kelompk_gaji = KelompokGaji::whereNull('deleted_at')->get();
+        $kelompk_gaji = KelompokGaji::all();
         return response()->json([
             'status' => Response::HTTP_OK,
             'message' => 'Retrieving all kelompok gaji for dropdown',
@@ -44,84 +44,22 @@ class KelompokGajiController extends Controller
         $kelompok_gaji = KelompokGaji::query();
 
         // Filter
-        if ($request->has('nama_kelompok')) {
-            if (is_array($request->nama_kelompok)) {
-                $kelompok_gaji->whereIn('nama_kelompok', $request->nama_kelompok);
-            } else {
-                $kelompok_gaji->where('nama_kelompok', $request->nama_kelompok);
-            }
-        }
-
-        if ($request->has('range_min')) {
-            if (is_array($request->range_min)) {
-                $kelompok_gaji->where(function ($query) use ($request) {
-                    foreach ($request->range_min as $min) {
-                        $query->orWhere('besaran_gaji', '>', $min);
-                    }
-                });
-            } else {
-                $kelompok_gaji->where('besaran_gaji', '>', $request->range_min);
-            }
-        }
-
-        if ($request->has('range_max')) {
-            if (is_array($request->range_max)) {
-                $kelompok_gaji->where(function ($query) use ($request) {
-                    foreach ($request->range_max as $min) {
-                        $query->orWhere('besaran_gaji', '<', $min);
-                    }
-                });
-            } else {
-                $kelompok_gaji->where('besaran_gaji', '<', $request->range_max);
-            }
-        }
-
-        if ($request->has('range_min') && $request->has('range_max')) {
-            if (is_array($request->range_min) && is_array($request->range_max)) {
-                $kelompok_gaji->where(function ($query) use ($request) {
-                    foreach ($request->range_min as $index => $min) {
-                        if (isset($request->range_max[$index])) {
-                            $query->orWhereBetween('besaran_gaji', [$min, $request->range_max[$index]]);
-                        }
-                    }
-                });
-            } else if (!is_array($request->range_min) && !is_array($request->range_max)) {
-                $kelompok_gaji->whereBetween('besaran_gaji', [$request->range_min, $request->range_max]);
-            } else {
-                // Handle case where one is array and the other is not, if needed
-                // Example: Assume single range_min and multiple range_max, or vice versa
-                if (is_array($request->range_min)) {
-                    $kelompok_gaji->where(function ($query) use ($request) {
-                        foreach ($request->range_min as $min) {
-                            $query->orWhere('besaran_gaji', '>=', $min);
-                        }
-                    });
-                } else {
-                    $kelompok_gaji->where('besaran_gaji', '>=', $request->range_min);
-                }
-
-                if (is_array($request->range_max)) {
-                    $kelompok_gaji->where(function ($query) use ($request) {
-                        foreach ($request->range_max as $max) {
-                            $query->orWhere('besaran_gaji', '<=', $max);
-                        }
-                    });
-                } else {
-                    $kelompok_gaji->where('besaran_gaji', '<=', $request->range_max);
-                }
-            }
+        $softDeleteFilters = $request->input('delete_data', []);
+        if (in_array('dihapus', $softDeleteFilters) && in_array('belum_dihapus', $softDeleteFilters)) {
+            $kelompok_gaji->withTrashed();
+        } elseif (in_array('dihapus', $softDeleteFilters)) {
+            $kelompok_gaji->onlyTrashed();
+        } else {
+            $kelompok_gaji->withoutTrashed();
         }
 
         // Search
         if ($request->has('search')) {
-            $kelompok_gaji = $kelompok_gaji->where(function ($query) use ($request) {
-                $searchTerm = '%' . $request->search . '%';
-
-                $query->orWhere('nama_kelompok', 'like', $searchTerm);
-            });
+            $searchTerm = '%' . $request->search . '%';
+            $kelompok_gaji->where('nama_kelompok', 'like', $searchTerm);
         }
 
-        $dataKelompokGaji = $kelompok_gaji->paginate(10);
+        $dataKelompokGaji = $kelompok_gaji->get();
 
         if ($dataKelompokGaji->isEmpty()) {
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data kelompok gaji tidak ditemukan.'), Response::HTTP_NOT_FOUND);

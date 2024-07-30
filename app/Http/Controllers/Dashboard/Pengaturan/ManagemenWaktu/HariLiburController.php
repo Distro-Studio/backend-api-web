@@ -30,7 +30,7 @@ class HariLiburController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
-        $hari_libur = HariLibur::whereNull('deleted_at')->get();
+        $hari_libur = HariLibur::all();
         return response()->json([
             'status' => Response::HTTP_OK,
             'message' => 'Retrieving all hari libur for dropdown',
@@ -45,23 +45,19 @@ class HariLiburController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
+        // Menghapus secara soft delete hari libur yang telah terlewat
+        HariLibur::where('tanggal', '<', Carbon::today())->delete();
+
         $hari_libur = HariLibur::query();
 
         // Filter
-        if ($request->has('nama')) {
-            if (is_array($request->nama)) {
-                $hari_libur->whereIn('nama', $request->nama);
-            } else {
-                $hari_libur->where('nama', $request->nama);
-            }
-        }
-
-        if ($request->has('tanggal')) {
-            if (is_array($request->tanggal)) {
-                $hari_libur->whereIn('tanggal', $request->tanggal);
-            } else {
-                $hari_libur->where('tanggal', $request->tanggal);
-            }
+        $softDeleteFilters = $request->input('delete_data', []);
+        if (in_array('dihapus', $softDeleteFilters) && in_array('belum_dihapus', $softDeleteFilters)) {
+            $hari_libur->withTrashed();
+        } elseif (in_array('dihapus', $softDeleteFilters)) {
+            $hari_libur->onlyTrashed();
+        } else {
+            $hari_libur->withoutTrashed();
         }
 
         // Search
@@ -73,7 +69,7 @@ class HariLiburController extends Controller
             });
         }
 
-        $dataHariLibur = $hari_libur->paginate(10);
+        $dataHariLibur = $hari_libur->get();
         if ($dataHariLibur->isEmpty()) {
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data hari libur tidak ditemukan.'), Response::HTTP_NOT_FOUND);
         }

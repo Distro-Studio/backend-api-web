@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained('users');
             $table->date('tgl_mulai');
             $table->date('tgl_selesai')->nullable();
-            $table->foreignId('shift_id')->constrained('shifts');
+            $table->foreignId('shift_id')->nullable()->constrained('shifts');
             $table->timestamps();
         });
     }

@@ -59,4 +59,14 @@ class RiwayatPenggajian extends Model
     {
         return $this->belongsTo(User::class, 'verifikator_2', 'id');
     }
+
+    /**
+     * Get the status_gajis that owns the RiwayatPenggajian
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function status_gajis(): BelongsTo
+    {
+        return $this->belongsTo(StatusGaji::class, 'status_gaji_id', 'id');
+    }
 }

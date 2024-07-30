@@ -27,7 +27,7 @@ class CutiController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
-        $cuti = TipeCuti::whereNull('deleted_at')->get();
+        $cuti = TipeCuti::all();
         return response()->json([
             'status' => Response::HTTP_OK,
             'message' => 'Retrieving all cuti for dropdown',
@@ -45,64 +45,13 @@ class CutiController extends Controller
         $cuti = TipeCuti::query();
 
         // Filter
-        if ($request->has('durasi_min')) {
-            if (is_array($request->durasi_min)) {
-                $cuti->where(function ($query) use ($request) {
-                    foreach ($request->durasi_min as $min) {
-                        $query->orWhere('durasi', '>', $min);
-                    }
-                });
-            } else {
-                $cuti->where('durasi', '>', $request->durasi_min);
-            }
-        }
-
-        if ($request->has('durasi_max')) {
-            if (is_array($request->durasi_max)) {
-                $cuti->where(function ($query) use ($request) {
-                    foreach ($request->durasi_max as $min) {
-                        $query->orWhere('durasi', '<', $min);
-                    }
-                });
-            } else {
-                $cuti->where('durasi', '<', $request->durasi_max);
-            }
-        }
-
-        if ($request->has('durasi_min') && $request->has('durasi_max')) {
-            if (is_array($request->durasi_min) && is_array($request->durasi_max)) {
-                $cuti->where(function ($query) use ($request) {
-                    foreach ($request->durasi_min as $index => $min) {
-                        if (isset($request->durasi_max[$index])) {
-                            $query->orWhereBetween('durasi', [$min, $request->durasi_max[$index]]);
-                        }
-                    }
-                });
-            } else if (!is_array($request->durasi_min) && !is_array($request->durasi_max)) {
-                $cuti->whereBetween('durasi', [$request->durasi_min, $request->durasi_max]);
-            } else {
-                // Handle case where one is array and the other is not, if needed
-                // Example: Assume single durasi_min and multiple durasi_max, or vice versa
-                if (is_array($request->durasi_min)) {
-                    $cuti->where(function ($query) use ($request) {
-                        foreach ($request->durasi_min as $min) {
-                            $query->orWhere('durasi', '>=', $min);
-                        }
-                    });
-                } else {
-                    $cuti->where('durasi', '>=', $request->durasi_min);
-                }
-
-                if (is_array($request->durasi_max)) {
-                    $cuti->where(function ($query) use ($request) {
-                        foreach ($request->durasi_max as $max) {
-                            $query->orWhere('durasi', '<=', $max);
-                        }
-                    });
-                } else {
-                    $cuti->where('durasi', '<=', $request->durasi_max);
-                }
-            }
+        $softDeleteFilters = $request->input('delete_data', []);
+        if (in_array('dihapus', $softDeleteFilters) && in_array('belum_dihapus', $softDeleteFilters)) {
+            $cuti->withTrashed();
+        } elseif (in_array('dihapus', $softDeleteFilters)) {
+            $cuti->onlyTrashed();
+        } else {
+            $cuti->withoutTrashed();
         }
 
         // Search
@@ -114,7 +63,7 @@ class CutiController extends Controller
             });
         }
 
-        $dataCuti = $cuti->paginate(10);
+        $dataCuti = $cuti->get();
         if ($dataCuti->isEmpty()) {
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data cuti tidak ditemukan.'), Response::HTTP_NOT_FOUND);
         }

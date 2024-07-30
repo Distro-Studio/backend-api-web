@@ -27,7 +27,7 @@ class UnitKerjaController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
-        $unit_kerja = UnitKerja::whereNull('deleted_at')->get();
+        $unit_kerja = UnitKerja::all();
         return response()->json([
             'status' => Response::HTTP_OK,
             'message' => 'Retrieving all unit kerja for dropdown',
@@ -46,12 +46,13 @@ class UnitKerjaController extends Controller
         $unit_kerja = UnitKerja::query();
 
         // Filter
-        if ($request->has('jenis_karyawan')) {
-            if (is_array($request->jenis_karyawan)) {
-                $unit_kerja->whereIn('jenis_karyawan', $request->jenis_karyawan);
-            } else {
-                $unit_kerja->where('jenis_karyawan', $request->jenis_karyawan);
-            }
+        $softDeleteFilters = $request->input('delete_data', []);
+        if (in_array('dihapus', $softDeleteFilters) && in_array('belum_dihapus', $softDeleteFilters)) {
+            $unit_kerja->withTrashed();
+        } elseif (in_array('dihapus', $softDeleteFilters)) {
+            $unit_kerja->onlyTrashed();
+        } else {
+            $unit_kerja->withoutTrashed();
         }
 
         // Search
@@ -63,7 +64,7 @@ class UnitKerjaController extends Controller
             });
         }
 
-        $dataUnitKerja = $unit_kerja->paginate(10);
+        $dataUnitKerja = $unit_kerja->get();
         if ($dataUnitKerja->isEmpty()) {
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data unit kerja tidak ditemukan.'), Response::HTTP_NOT_FOUND);
         }

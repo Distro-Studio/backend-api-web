@@ -11,7 +11,10 @@ use App\Models\Kompetensi;
 use App\Models\TrackRecord;
 use App\Models\DataKaryawan;
 use App\Models\DataKeluarga;
+use App\Models\KategoriAgama;
+use App\Models\KategoriDarah;
 use App\Models\KelompokGaji;
+use App\Models\StatusKaryawan;
 use Illuminate\Database\Seeder;
 use App\Models\TransferKaryawan;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
@@ -39,30 +42,28 @@ class KaryawanSeeder extends Seeder
             'Subang', 'Kuningan', 'Ciamis', 'Tasikmalaya', 'Garut', 'Sumedang', 'Bandung', 'Cianjur',
         ];
 
-        $statuses = ['Tetap', 'Kontrak', 'Magang'];
         $gelar_dpn = ['Adv.', 'Ar.', 'apt.', 'dr.', 'drg.', 'drh.', 'Ir.', 'Ns.', 'Ak.'];
-        $kelamin = ['L', 'P'];
-        $agama = ['Islam', 'Kristen Protestan', 'Kristen Katolik', 'Hindu', 'Budha', 'Konghucu'];
-        $darah = ['A', 'B', 'AB', 'O', 'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
         $unit_kerja_id = UnitKerja::pluck('id')->all();
         $jabatan_id = Jabatan::pluck('id')->all();
         $kompetensi_id = Kompetensi::pluck('id')->all();
         $kelompok_gaji_id = KelompokGaji::pluck('id')->all();
         $ptkp_id = Ptkp::pluck('id')->all();
+        $kategori_agama_id = KategoriAgama::pluck('id')->all();
+        $status_karyawan_id = StatusKaryawan::pluck('id')->all();
+        $kategori_darah_id = KategoriDarah::pluck('id')->all();
 
         for ($i = 0; $i < 50; $i++) {
             $user = User::create([
                 'nama' => 'User ' . $i,
                 'password' => 'password' . $i,
-                'username' => 'username' . $i,
             ]);
-            $user->roles()->attach(rand(3, 4));
+            $user->roles()->attach(rand(2, 4));
 
-            $tgl_masuk = date('Y-m-d', rand(mktime(0, 0, 0, 1, 1, 2018), mktime(0, 0, 0, 12, 31, 2024)));
+            $tgl_masuk = date('Y-m-d', rand(mktime(0, 0, 0, 1, 1, 2007), mktime(0, 0, 0, 12, 31, 2022)));
             $tgl_keluar = date('Y-m-d', rand(mktime(0, 0, 0, 1, 1, 2023), mktime(0, 0, 0, 12, 31, 2024)));
-            $tgl_lahir = date('Y-m-d', rand(mktime(0, 0, 0, 1, 1, 1900), mktime(0, 0, 0, 12, 31, 2008)));
+            $tgl_lahir = date('Y-m-d', rand(mktime(0, 0, 0, 1, 1, 1900), mktime(0, 0, 0, 12, 31, 2003)));
             $tgl_str = date('Y-m-d', rand(mktime(0, 0, 0, 1, 1, 2023), mktime(0, 0, 0, 12, 31, 2028)));
-            $dataKaryawan = new DataKaryawan([
+            $dataKaryawan = DataKaryawan::create([
                 'user_id' => $user->id,
                 'email' => 'user' . $i . '@example.com',
                 'no_rm' => rand(1214, 5000000),
@@ -71,7 +72,7 @@ class KaryawanSeeder extends Seeder
                 'unit_kerja_id' => $unit_kerja_id[array_rand($unit_kerja_id)],
                 'jabatan_id' => $jabatan_id[array_rand($jabatan_id)],
                 'kompetensi_id' => $kompetensi_id[array_rand($kompetensi_id)],
-                'status_karyawan' => $statuses[array_rand($statuses)],
+                'status_karyawan_id' => $status_karyawan_id[array_rand($status_karyawan_id)],
                 'tempat_lahir' => $cityborn[array_rand($cityborn)],
                 'tgl_lahir' => $tgl_lahir,
                 "nik" => rand(1214, 5000000),
@@ -96,21 +97,24 @@ class KaryawanSeeder extends Seeder
                 "tgl_diangkat" => $tgl_keluar,
                 "masa_kerja" => rand(1, 60),
                 "npwp" => rand(1214, 500000000),
-                "jenis_kelamin" => $kelamin[array_rand($kelamin)],
-                "agama" => $agama[array_rand($agama)],
-                "golongan_darah" => $darah[array_rand($darah)],
+                "jenis_kelamin" => rand(0, 1),
+                "kategori_agama_id" => $kategori_agama_id[array_rand($kategori_agama_id)],
+                "kategori_darah_id" => $kategori_darah_id[array_rand($kategori_darah_id)],
                 "tinggi_badan" => rand(10, 300),
                 "berat_badan" => rand(10, 200),
                 "no_ijazah" => "IJ/VII/" . rand(1214, 500000000),
                 "tahun_lulus" => rand(1800, 2017),
                 "no_str" => "STR/01/RA/" . rand(1214, 500000),
                 "masa_berlaku_str" => $tgl_str,
-                "no_sip" => rand(1214, 500000),
+                "no_sip" => "SIP/01/VI/" . rand(1214, 500000),
                 "masa_berlaku_sip" => $tgl_str,
                 "tgl_berakhir_pks" => $tgl_keluar,
                 "masa_diklat" => rand(1, 10),
             ]);
-            $dataKaryawan->save();
+
+            // Perbarui user dengan data_karyawan_id
+            $user->data_karyawan_id = $dataKaryawan->id;
+            $user->save();
         }
     }
 }

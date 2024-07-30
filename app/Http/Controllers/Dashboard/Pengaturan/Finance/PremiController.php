@@ -26,7 +26,7 @@ class PremiController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
-        $dataPremi = Premi::whereNull('deleted_at')->get();
+        $dataPremi = Premi::all();
         return response()->json([
             'status' => Response::HTTP_OK,
             'message' => 'Retrieving all premi for dropdown',
@@ -44,12 +44,18 @@ class PremiController extends Controller
         $premi = Premi::query();
 
         // Filter
-        if ($request->has('jenis_premi')) {
-            if (is_array($request->jenis_premi)) {
-                $premi->whereIn('jenis_premi', $request->jenis_premi);
-            } else {
-                $premi->where('jenis_premi', $request->jenis_premi);
-            }
+        $softDeleteFilters = $request->input('delete_data', []);
+        if (in_array('dihapus', $softDeleteFilters) && in_array('belum_dihapus', $softDeleteFilters)) {
+            $premi->withTrashed();
+        } elseif (in_array('dihapus', $softDeleteFilters)) {
+            $premi->onlyTrashed();
+        } else {
+            $premi->withoutTrashed();
+        }
+
+        $jenisPremiFilters = $request->input('jenis_premi', []);
+        if (!empty($jenisPremiFilters)) {
+            $premi->whereIn('jenis_premi', $jenisPremiFilters);
         }
 
         // Search
@@ -61,7 +67,7 @@ class PremiController extends Controller
             });
         }
 
-        $dataPremi = $premi->paginate(10);
+        $dataPremi = $premi->get();
         if ($dataPremi->isEmpty()) {
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data premi tidak ditemukan.'), Response::HTTP_NOT_FOUND);
         }

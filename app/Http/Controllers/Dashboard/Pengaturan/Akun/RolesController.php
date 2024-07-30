@@ -26,7 +26,7 @@ class RolesController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
-        $dataRole = Role::whereNull('deleted_at')->get();
+        $dataRole = Role::all();
         return response()->json([
             'status' => Response::HTTP_OK,
             'message' => 'Retrieving all role for dropdown',
@@ -44,21 +44,13 @@ class RolesController extends Controller
         $role = Role::query();
 
         // Filter
-        if ($request->has('name')) {
-            if (is_array($request->name)) {
-                $role->whereIn('name', $request->name);
-            } else {
-                $role->where('name', $request->name);
-            }
-        }
-
         // Search
         if ($request->has('search')) {
             $role = $role->where('name', 'like', '%' . $request->search . '%')
                 ->orWhere('description', 'like', '%' . $request->search . '%');
         }
 
-        $dataRole = $role->paginate(10);
+        $dataRole = $role->get();
         if ($dataRole->isEmpty()) {
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data Role tidak ditemukan.'), Response::HTTP_NOT_FOUND);
         }

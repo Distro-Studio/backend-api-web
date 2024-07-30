@@ -20,4 +20,14 @@ class TrackRecord extends Model
     {
         return $this->belongsTo(User::class, 'user_id', 'id');
     }
+
+    /**
+     * Get the kategori_track_records that owns the TrackRecord
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function kategori_track_records(): BelongsTo
+    {
+        return $this->belongsTo(KategoriTrackRecord::class, 'kategori_record_id', 'id');
+    }
 }

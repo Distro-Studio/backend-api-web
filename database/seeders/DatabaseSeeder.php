@@ -4,6 +4,23 @@ namespace Database\Seeders;
 
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 
+use Database\Seeders\Constant\Kategori\KategoriActivityLogSeeder;
+use Database\Seeders\Constant\Kategori\KategoriAgamaSeeder;
+use Database\Seeders\Constant\Kategori\KategoriBerkasSeeder;
+use Database\Seeders\Constant\Kategori\KategoriDarahSeeder;
+use Database\Seeders\Constant\Kategori\KategoriGajiSeeder;
+use Database\Seeders\Constant\Kategori\KategoriKompensasiSeeder;
+use Database\Seeders\Constant\Kategori\KategoriNotifikasiSeeder;
+use Database\Seeders\Constant\Kategori\KategoriPresensiSeeder;
+use Database\Seeders\Constant\Kategori\KategoriTrackRecordSeeder;
+use Database\Seeders\Constant\Kategori\KategoriTransferKaryawanSeeder;
+use Database\Seeders\Constant\Kategori\KategoriTukarJadwalSeeder;
+use Database\Seeders\Constant\Status\StatusCutiSeeder;
+use Database\Seeders\Constant\Status\StatusGajiSeeder;
+use Database\Seeders\Constant\Status\StatusKaryawanSeeder;
+use Database\Seeders\Constant\Status\StatusLemburSeeder;
+use Database\Seeders\Constant\Status\StatusPresensiSeeder;
+use Database\Seeders\Constant\Status\StatusTukarJadwalSeeder;
 use Database\Seeders\JadwalKaryawan\CutiJadwalSeeder;
 use Illuminate\Database\Seeder;
 use Database\Seeders\Karyawan\KaryawanSeeder;
@@ -36,6 +53,24 @@ class DatabaseSeeder extends Seeder
             RoleSeeder::class,
             AccountSeeder::class,
 
+            /* ==== Kategori & Status ==== */
+            KategoriActivityLogSeeder::class,
+            KategoriAgamaSeeder::class,
+            KategoriBerkasSeeder::class,
+            KategoriGajiSeeder::class,
+            KategoriNotifikasiSeeder::class,
+            KategoriPresensiSeeder::class,
+            KategoriTukarJadwalSeeder::class,
+            KategoriTransferKaryawanSeeder::class,
+            KategoriDarahSeeder::class,
+            KategoriTrackRecordSeeder::class,
+            KategoriKompensasiSeeder::class,
+            StatusCutiSeeder::class,
+            StatusGajiSeeder::class,
+            StatusKaryawanSeeder::class,
+            StatusLemburSeeder::class,
+            StatusTukarJadwalSeeder::class,
+
             /* ==== Pengaturan Karyawan ==== */
             JabatanSeeder::class,
             KelompokGajiSeeder::class,
@@ -58,22 +93,21 @@ class DatabaseSeeder extends Seeder
             KaryawanSeeder::class,
             KeluargaKaryawanSeeder::class,
             TransferKaryawanSeeder::class,
-            TrackRecordSeeder::class,
 
-            /* ==== Jadwals ==== */
+            // /* ==== Jadwals ==== */
             JadwalSeeder::class,
-            LemburSeeder::class,
-            CutiJadwalSeeder::class,
-            TukarJadwalSeeder::class,
+            // LemburSeeder::class,
+            // CutiJadwalSeeder::class,
+            // TukarJadwalSeeder::class,
 
-            /* ==== Presensi ==== */
+            // /* ==== Presensi ==== */
             PresensiSeeder::class,
 
-            /* ==== Keuangan ==== */
-            TanggalGajiSeeder::class,
-            PenggajianSeeder::class,
-            RiwayatPenggajianSeeder::class,
-            THRPenggajianSeeder::class,
+            // /* ==== Keuangan ==== */
+            // TanggalGajiSeeder::class,
+            // PenggajianSeeder::class,
+            // RiwayatPenggajianSeeder::class,
+            // THRPenggajianSeeder::class,
         ]);
     }
 }

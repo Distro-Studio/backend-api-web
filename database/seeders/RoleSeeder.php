@@ -72,12 +72,13 @@ class RoleSeeder extends Seeder
 
             'create premi', 'edit premi', 'delete premi', 'view premi', 'import premi', 'export premi',
             'create ter21', 'edit ter21', 'delete ter21', 'view ter21', 'import ter21', 'export ter21',
-            'create jadwalGaji', 'reset jadwalGaji',
+            'create jadwalGaji', 'view jadwalGaji', 'reset jadwalGaji',
             'create thr', 'edit thr', 'delete thr', 'view thr',
 
             'create shift', 'edit shift', 'delete shift', 'view shift', 'import shift', 'export shift',
             'create hariLibur', 'edit hariLibur', 'delete hariLibur', 'view hariLibur', 'import hariLibur', 'export hariLibur',
             'create cuti', 'edit cuti', 'delete cuti', 'view cuti', 'import cuti', 'export cuti',
+            'create lokasiKantor', 'edit lokasiKantor', 'view lokasiKantor'
         ]);
     }
 }

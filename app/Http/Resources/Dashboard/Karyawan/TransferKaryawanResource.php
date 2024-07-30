@@ -58,16 +58,27 @@ class TransferKaryawanResource extends JsonResource
     protected function formatData(Collection $collection)
     {
         return $collection->transform(function ($transfer) {
+            $user = $transfer->users;
+            $data_karyawan = $user->data_karyawans;
             return [
                 'id' => $transfer->id,
-                'user' => $transfer->users,
+                'user' => [
+                    'id' => $user->id,
+                    'nama' => $user->nama,
+                    'role' => $user->role,
+                    'foto_profil' => $user->foto_profil,
+                    'data_completion_step' => $user->data_completion_step,
+                    'status_aktif' => $user->status_aktif,
+                    'created_at' => $user->created_at,
+                    'updated_at' => $user->updated_at,
+                ],
                 'tgl_mulai' => $transfer->tgl_mulai,
-                'nik' => $transfer->users->data_karyawans->nik ?? null,
+                'nik' => $data_karyawan->nik,
                 'unit_kerja_asal' => $transfer->unit_kerja_asals,
                 'unit_kerja_tujuan' => $transfer->unit_kerja_tujuans,
                 'jabatan_asal' => $transfer->jabatan_asals,
                 'jabatan_tujuan' => $transfer->jabatan_tujuans,
-                'tipe' => $transfer->tipe,
+                'kategori_transfer_id' => $transfer->kategori_transfer_karyawans,
                 'alasan' => $transfer->alasan,
                 'dokumen' => $transfer->dokumen,
                 'created_at' => $transfer->created_at,

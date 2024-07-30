@@ -34,7 +34,9 @@ class StoreDataKaryawanRequest extends FormRequest
             'unit_kerja_id' => 'required|integer|exists:unit_kerjas,id',
             'jabatan_id' => 'required|integer|exists:jabatans,id',
             'kompetensi_id' => 'required|integer|exists:kompetensis,id',
-            'status_karyawan' => 'required|string',
+            'status_karyawan_id' => 'required|integer|exists:status_karyawans,id',
+            'premi_id' => 'array|required',
+            'premi_id.*' => 'integer|exists:premis,id',
 
             // Step 2
             'kelompok_gaji_id' => 'required|integer|exists:kelompok_gajis,id',
@@ -46,10 +48,6 @@ class StoreDataKaryawanRequest extends FormRequest
             'uang_makan' => 'required|numeric',
             'uang_lembur' => 'nullable|numeric',
             'ptkp_id' => 'required|integer|exists:ptkps,id',
-
-            // Step 3
-            'username' => 'required|string|unique:users,username',
-            'password' => 'required|string',
         ];
     }
 
@@ -64,22 +62,25 @@ class StoreDataKaryawanRequest extends FormRequest
             'email.max' => 'Email karyawan melebihi batas maksimum panjang karakter.',
             'email.unique' => 'Email karyawan tersebut sudah pernah digunakan.',
             'role_id.required' => 'Silahkan pilih role untuk karyawan terlebih dahulu.',
-            'role_id.exists' => 'Maaf role tersebut tidak valid.',
+            'role_id.exists' => 'Maaf role yang dipilih tidak valid.',
             'no_rm.required' => 'Nomor rekam medis karyawan tidak diperbolehkan kosong.',
             'no_manulife.string' => 'Nomor manulife karyawan tidak diperbolehkan kosong.',
             'tgl_masuk.required' => 'Tanggal masuk karyawan tidak diperbolehkan kosong.',
             'tgl_masuk.date' => 'Tanggal masuk karyawan harus berupa tanggal.',
             'unit_kerja_id.required' => 'Silahkan pilih unit kerja karyawan terlebih dahulu.',
-            'unit_kerja_id.exists' => 'Maaf unit kerja tersebut tidak valid.',
+            'unit_kerja_id.exists' => 'Maaf unit kerja yang dipilih tidak valid.',
             'jabatan_id.required' => 'Silahkan pilih jabatan karyawan terlebih dahulu.',
-            'jabatan_id.exists' => 'Maaf jabatan tersebut tidak valid.',
+            'jabatan_id.exists' => 'Maaf jabatan yang dipilih tidak valid.',
             'kompetensi_id.required' => 'Silahkan pilih kompetensi karyawan terlebih dahulu.',
-            'kompetensi_id.exists' => 'Maaf kompetensi tersebut tidak valid.',
-            'status_karyawan.required' => 'Status karyawan tidak diperbolehkan kosong.',
-            'status_karyawan.string' => 'Status karyawan tidak diperbolehkan mengandung angka.',
+            'kompetensi_id.exists' => 'Maaf kompetensi yang dipilih tidak valid.',
+            'status_karyawan_id.required' => 'Silahkan pilih status karyawan terlebih dahulu.',
+            'status_karyawan_id.exists' => 'Maaf status karyawan yang dipilih tidak valid.',
+            'premi_id.required' => 'Silahkan pilih potongan penggajian karyawan terlebih dahulu.',
+            'premi_id.array' => 'Potongan penggajian harus berupa array.',
+            'premi_id.*.exists' => 'Maaf potongan penggajian yang dipilih tidak valid.',
 
             'kelompok_gaji_id.required' => 'Silahkan pilih kelompok gaji karyawan terlebih dahulu.',
-            'kelompok_gaji_id.exists' => 'Maaf kelompok gaji tersebut tidak valid.',
+            'kelompok_gaji_id.exists' => 'Maaf kelompok gaji yang dipilih tidak valid.',
             'no_rekening.required' => 'Nomor rekening karyawan tidak diperbolehkan kosong.',
             'no_rekening.numeric' => 'Nomor rekening karyawan tidak diperbolehkan mengandung huruf.',
             'no_rekening.max' => 'Nomor rekening karyawan melebihi batas maksimum panjang karakter.',
@@ -102,11 +103,7 @@ class StoreDataKaryawanRequest extends FormRequest
             'uang_lembur.numeric' => 'Uang lembur karyawan tidak diperbolehkan mengandung huruf.',
             'uang_lembur.max' => 'Uang lembur karyawan melebihi batas maksimum panjang karakter.',
             'ptkp_id.required' => 'Silahkan pilih PTKP karyawan terlebih dahulu.',
-            'ptkp_id.exists' => 'Maaf PTKP tersebut tidak valid.',
-
-            'username.required' => 'Username karyawan tidak diperbolehkan kosong.',
-            'username.unique' => 'Username tersebut sudah pernah digunakan.',
-            'password.required' => 'Password karyawan tidak diperbolehkan kosong.',
+            'ptkp_id.exists' => 'Maaf PTKP yang dipilih tidak valid.',
         ];
     }
 

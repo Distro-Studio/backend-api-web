@@ -2,55 +2,34 @@
 
 namespace App\Exports\Presensi;
 
-use Carbon\Carbon;
-use App\Models\Presensi;
+use App\Exports\Sheet\PresensiSheet;
 use Maatwebsite\Excel\Concerns\Exportable;
-use Maatwebsite\Excel\Concerns\WithMapping;
-use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\FromCollection;
+use Maatwebsite\Excel\Concerns\WithMultipleSheets;
 
-class PresensiExport implements FromCollection, WithHeadings, WithMapping
+class PresensiExport implements WithMultipleSheets
 {
     use Exportable;
 
-    public function collection()
+    private $months;
+    private $year;
+
+    public function __construct($months, $year)
     {
-        return Presensi::all();
+        $this->months = $months;
+        $this->year = $year;
     }
 
-    public function headings(): array
+    public function sheets(): array
     {
-        return [
-            'nama',
-            'shift',
-            'unit_kerja',
-            'jam_masuk',
-            'jam_keluar',
-            'durasi',
-            'latitude',
-            'longtitude',
-            'absensi',
-            'kategori',
-            'created_at',
-            'updated_at'
-        ];
-    }
+        $sheets = [];
 
-    public function map($presensi): array
-    {
-        return [
-            $presensi->users->nama,
-            $presensi->jadwals->shifts->nama,
-            $presensi->data_karyawans->unit_kerjas->nama_unit,
-            Carbon::parse($presensi->jam_masuk)->format('d-m-Y H:i:s'),
-            Carbon::parse($presensi->jam_keluar)->format('d-m-Y H:i:s'),
-            $presensi->durasi,
-            $presensi->lat,
-            $presensi->long,
-            $presensi->absensi,
-            $presensi->kategori,
-            Carbon::parse($presensi->created_at)->format('d-m-Y H:i:s'),
-            Carbon::parse($presensi->updated_at)->format('d-m-Y H:i:s')
-        ];
+        // Menambahkan sheet untuk setiap kategori presensi
+        $categories = ['Terlambat', 'Tepat Waktu', 'Cuti', 'Absen'];
+        foreach ($categories as $category) {
+            $sheets[] = new PresensiSheet($category, 'Laporan ' . str_replace(' ', '', $category), $this->months, $this->year);
+        }
+
+        return $sheets;
     }
 }

@@ -16,7 +16,7 @@ return new class extends Migration
             $table->text('alamat');
             $table->string('lat');
             $table->string('long');
-            $table->string('radius');
+            $table->integer('radius');
             $table->timestamps();
         });
     }

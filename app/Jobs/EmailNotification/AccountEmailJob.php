@@ -15,17 +15,17 @@ class AccountEmailJob implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     protected $email;
-    protected $username;
+    // protected $username;
     protected $password;
     protected $nama;
 
     /**
      * Create a new job instance.
      */
-    public function __construct($email, $username, $password, $nama)
+    public function __construct($email, $password, $nama)
     {
         $this->email = $email;
-        $this->username = $username;
+        // $this->username = $username;
         $this->password = $password;
         $this->nama = $nama;
     }
@@ -35,6 +35,6 @@ class AccountEmailJob implements ShouldQueue
      */
     public function handle(): void
     {
-        Mail::to($this->email)->send(new SendAccoundUsersMail($this->username, $this->password, $this->nama));
+        Mail::to($this->email)->send(new SendAccoundUsersMail($this->email, $this->password, $this->nama));
     }
 }

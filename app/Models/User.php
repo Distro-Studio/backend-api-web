@@ -42,6 +42,25 @@ class User extends Authenticatable
         'password' => 'hashed',
     ];
 
+    // Status constants
+    const STATUS_BELUM_AKTIF = 0;
+    const STATUS_AKTIF = 1;
+    const STATUS_DINONAKTIFKAN = 2;
+
+    public function getStatusDescriptionAttribute()
+    {
+        switch ($this->status_penggajian) {
+            case self::STATUS_BELUM_AKTIF:
+                return 'Belum Aktif';
+            case self::STATUS_AKTIF:
+                return 'Aktif';
+            case self::STATUS_DINONAKTIFKAN:
+                return 'Dinonaktifkan';
+            default:
+                return 'N/A';
+        }
+    }
+
     /**
      * Get the data_karyawan associated with the User
      *
@@ -168,5 +187,35 @@ class User extends Authenticatable
     public function verifikator_2(): HasMany
     {
         return $this->hasMany(RiwayatPenggajian::class, 'verifikator_2', 'id');
+    }
+
+    /**
+     * Get all of the notifikasis for the User
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function notifikasis(): HasMany
+    {
+        return $this->hasMany(Notifikasi::class, 'user_id', 'id');
+    }
+
+    /**
+     * Get all of the user_pelapor for the User
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function user_pelapor(): HasMany
+    {
+        return $this->hasMany(Pelaporan::class, 'pelapor', 'id');
+    }
+
+    /**
+     * Get all of the user_pelaku for the User
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function user_pelaku(): HasMany
+    {
+        return $this->hasMany(Pelaporan::class, 'pelaku', 'id');
     }
 }

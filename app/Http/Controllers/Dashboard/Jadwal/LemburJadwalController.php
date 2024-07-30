@@ -87,7 +87,11 @@ class LemburJadwalController extends Controller
             return [
                 'id' => $lembur->id,
                 'user' => $lembur->users,
+
+                // TODO: ini menjadi jadwal
                 'shift' => $lembur->shifts,
+                // TODO: ini menjadi jadwal
+                
                 'tgl_pengajuan' => $lembur->tgl_pengajuan,
                 'kompensasi' => $lembur->kompensasi,
                 'tipe' => $lembur->tipe,

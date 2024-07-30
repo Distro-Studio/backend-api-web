@@ -60,4 +60,14 @@ class TransferKaryawan extends Model
     {
         return $this->belongsTo(Jabatan::class, 'jabatan_tujuan', 'id');
     }
+
+    /**
+     * Get the kategori_transfer_karyawans that owns the TransferKaryawan
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function kategori_transfer_karyawans(): BelongsTo
+    {
+        return $this->belongsTo(KategoriTransferKaryawan::class, 'kategori_transfer_id', 'id');
+    }
 }

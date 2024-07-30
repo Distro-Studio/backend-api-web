@@ -26,7 +26,7 @@ class ShiftController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
-        $shift = Shift::whereNull('deleted_at')->get();
+        $shift = Shift::all();
         return response()->json([
             'status' => Response::HTTP_OK,
             'message' => 'Retrieving all shift for dropdown',
@@ -44,70 +44,13 @@ class ShiftController extends Controller
         $shift = Shift::query();
 
         // Filter
-        if ($request->has('nama')) {
-            if (is_array($request->nama)) {
-                $shift->whereIn('nama', $request->nama);
-            } else {
-                $shift->where('nama', $request->nama);
-            }
-        }
-
-        if ($request->has('jam_from')) {
-            if (is_array($request->jam_from)) {
-                $shift->where(function ($query) use ($request) {
-                    foreach ($request->jam_from as $from) {
-                        $query->orWhere('jam_from', '>=', $from);
-                    }
-                });
-            } else {
-                $shift->where('jam_from', '>=', $request->jam_from);
-            }
-        }
-
-        if ($request->has('jam_to')) {
-            if (is_array($request->jam_to)) {
-                $shift->where(function ($query) use ($request) {
-                    foreach ($request->jam_to as $to) {
-                        $query->orWhere('jam_to', '<=', $to);
-                    }
-                });
-            } else {
-                $shift->where('jam_to', '<=', $request->jam_to);
-            }
-        }
-
-        if ($request->has('jam_from') && $request->has('jam_to')) {
-            if (is_array($request->jam_from) && is_array($request->jam_to)) {
-                $shift->where(function ($query) use ($request) {
-                    foreach ($request->jam_from as $index => $from) {
-                        if (isset($request->jam_to[$index])) {
-                            $query->orWhereBetween('jam_to', [$from, $request->jam_to[$index]]);
-                        }
-                    }
-                });
-            } else if (!is_array($request->jam_from) && !is_array($request->jam_to)) {
-                $shift->whereBetween('jam_from', [$request->jam_from, $request->jam_to]);
-            } else {
-                if (is_array($request->jam_from)) {
-                    $shift->where(function ($query) use ($request) {
-                        foreach ($request->jam_from as $from) {
-                            $query->orWhere('jam_from', '>=', $from);
-                        }
-                    });
-                } else {
-                    $shift->where('jam_from', '>=', $request->jam_from);
-                }
-
-                if (is_array($request->jam_to)) {
-                    $shift->where(function ($query) use ($request) {
-                        foreach ($request->jam_to as $to) {
-                            $query->orWhere('jam_to', '<=', $to);
-                        }
-                    });
-                } else {
-                    $shift->where('jam_to', '<=', $request->jam_to);
-                }
-            }
+        $softDeleteFilters = $request->input('delete_data', []);
+        if (in_array('dihapus', $softDeleteFilters) && in_array('belum_dihapus', $softDeleteFilters)) {
+            $shift->withTrashed();
+        } elseif (in_array('dihapus', $softDeleteFilters)) {
+            $shift->onlyTrashed();
+        } else {
+            $shift->withoutTrashed();
         }
 
         // Search
@@ -119,7 +62,7 @@ class ShiftController extends Controller
             });
         }
 
-        $dataShift = $shift->paginate(10);
+        $dataShift = $shift->get();
         if ($dataShift->isEmpty()) {
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data shift tidak ditemukan.'), Response::HTTP_NOT_FOUND);
         }

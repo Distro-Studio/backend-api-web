@@ -26,7 +26,7 @@ class JabatanController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
-        $dataJabatan = Jabatan::whereNull('deleted_at')->get();
+        $dataJabatan = Jabatan::all();
         return response()->json([
             'status' => Response::HTTP_OK,
             'message' => 'Retrieving all jabatan for dropdown',
@@ -44,12 +44,13 @@ class JabatanController extends Controller
         $jabatan = Jabatan::query();
 
         // Filter
-        if ($request->has('is_struktural')) {
-            if (is_array($request->is_struktural)) {
-                $jabatan->whereIn('is_struktural', $request->is_struktural);
-            } else {
-                $jabatan->where('is_struktural', $request->is_struktural);
-            }
+        $softDeleteFilters = $request->input('delete_data', []);
+        if (in_array('dihapus', $softDeleteFilters) && in_array('belum_dihapus', $softDeleteFilters)) {
+            $jabatan->withTrashed();
+        } elseif (in_array('dihapus', $softDeleteFilters)) {
+            $jabatan->onlyTrashed();
+        } else {
+            $jabatan->withoutTrashed();
         }
 
         // Search
@@ -61,7 +62,7 @@ class JabatanController extends Controller
             });
         }
 
-        $dataJabatan = $jabatan->paginate(10);
+        $dataJabatan = $jabatan->get();
         if ($dataJabatan->isEmpty()) {
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data jabatan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
         }

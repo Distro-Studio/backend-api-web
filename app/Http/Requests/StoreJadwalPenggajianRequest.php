@@ -25,15 +25,15 @@ class StoreJadwalPenggajianRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'tanggal' => 'required|numeric'
+            'tgl_mulai' => 'required|numeric'
         ];
     }
 
     public function messages()
     {
         return [
-            'tanggal.required' => 'Tanggal penjadwalan gaji tidak diperbolehkan kosong.',
-            'tanggal.numeric' => 'Tanggal penjadwalan gaji tidak diperbolehkan mengandung karakter selain angka.'
+            'tgl_mulai.required' => 'Tanggal penjadwalan gaji tidak diperbolehkan kosong.',
+            'tgl_mulai.numeric' => 'Tanggal penjadwalan gaji tidak diperbolehkan mengandung karakter selain angka.'
         ];
     }
 

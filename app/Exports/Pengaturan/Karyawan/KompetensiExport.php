@@ -34,7 +34,7 @@ class KompetensiExport implements FromCollection, WithHeadings, WithMapping
     {
         return [
             $kompetensi->nama_kompetensi,
-            $kompetensi->jenis_kompetensi,
+            $kompetensi->jenis_kompetensi ? 'Medis' : 'Non Medis',
             $kompetensi->total_tunjangan,
             $kompetensi->total_bor,
             Carbon::parse($kompetensi->created_at)->format('d-m-Y H:i:s'),

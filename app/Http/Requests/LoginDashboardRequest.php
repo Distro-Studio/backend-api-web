@@ -25,7 +25,7 @@ class LoginDashboardRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'username' => ['required'],
+            'email' => ['required', 'email'],
             'password' => ['required', 'min:8']
         ];
     }
@@ -33,7 +33,8 @@ class LoginDashboardRequest extends FormRequest
     public function messages()
     {
         return [
-            'username.required' => 'Silahkan masukkan username anda terlebih dahulu.',
+            'email.required' => 'Silahkan masukkan email anda terlebih dahulu.',
+            'email.email' => 'Format email yang diperbolehkan menggunakan @gmail atau yang lainnya.',
             'password.required' => 'Kolom password tidak diperbolehkan kosong.',
             'password.min' => 'Minimum password yang diperbolehkan 8 karakter.',
         ];

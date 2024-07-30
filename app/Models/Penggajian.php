@@ -68,4 +68,14 @@ class Penggajian extends Model
     {
         return $this->hasMany(PenyesuaianGaji::class, 'penggajian_id', 'id');
     }
+
+    /**
+     * Get the status_gajis that owns the RiwayatPenggajian
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function status_gajis(): BelongsTo
+    {
+        return $this->belongsTo(StatusGaji::class, 'status_gaji_id', 'id');
+    }
 }

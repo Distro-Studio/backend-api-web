@@ -26,7 +26,7 @@ class KompetensiController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
-        $kompetensi = Kompetensi::whereNull('deleted_at')->get();
+        $kompetensi = Kompetensi::all();
         return response()->json([
             'status' => Response::HTTP_OK,
             'message' => 'Retrieving all kompetensi for dropdown',
@@ -43,72 +43,13 @@ class KompetensiController extends Controller
         $kompetensi = Kompetensi::query();
 
         // Filter
-        if ($request->has('jenis_kompetensi')) {
-            if (is_array($request->jenis_kompetensi)) {
-                $kompetensi->whereIn('jenis_kompetensi', $request->jenis_kompetensi);
-            } else {
-                $kompetensi->where('jenis_kompetensi', $request->jenis_kompetensi);
-            }
-        }
-
-        if ($request->has('range_min')) {
-            if (is_array($request->range_min)) {
-                $kompetensi->where(function ($query) use ($request) {
-                    foreach ($request->range_min as $min) {
-                        $query->orWhere('total_tunjangan', '>', $min);
-                    }
-                });
-            } else {
-                $kompetensi->where('total_tunjangan', '>', $request->range_min);
-            }
-        }
-
-        if ($request->has('range_max')) {
-            if (is_array($request->range_max)) {
-                $kompetensi->where(function ($query) use ($request) {
-                    foreach ($request->range_max as $min) {
-                        $query->orWhere('total_tunjangan', '<', $min);
-                    }
-                });
-            } else {
-                $kompetensi->where('total_tunjangan', '<', $request->range_max);
-            }
-        }
-
-        if ($request->has('range_min') && $request->has('range_max')) {
-            if (is_array($request->range_min) && is_array($request->range_max)) {
-                $kompetensi->where(function ($query) use ($request) {
-                    foreach ($request->range_min as $index => $min) {
-                        if (isset($request->range_max[$index])) {
-                            $query->orWhereBetween('total_tunjangan', [$min, $request->range_max[$index]]);
-                        }
-                    }
-                });
-            } else if (!is_array($request->range_min) && !is_array($request->range_max)) {
-                $kompetensi->whereBetween('total_tunjangan', [$request->range_min, $request->range_max]);
-            } else {
-                // Handle case where one is array and the other is not, if needed
-                // Example: Assume single range_min and multiple range_max, or vice versa
-                if (is_array($request->range_min)) {
-                    $kompetensi->where(function ($query) use ($request) {
-                        foreach ($request->range_min as $min) {
-                            $query->orWhere('total_tunjangan', '>=', $min);
-                        }
-                    });
-                } else {
-                    $kompetensi->where('total_tunjangan', '>=', $request->range_min);
-                }
-
-                if (is_array($request->range_max)) {
-                    $kompetensi->where(function ($query) use ($request) {
-                        foreach ($request->range_max as $max) {
-                            $query->orWhere('total_tunjangan', '<=', $max);
-                        }
-                    });
-                } else {
-                    $kompetensi->where('total_tunjangan', '<=', $request->range_max);
-                }
-            }
+        $softDeleteFilters = $request->input('delete_data', []);
+        if (in_array('dihapus', $softDeleteFilters) && in_array('belum_dihapus', $softDeleteFilters)) {
+            $kompetensi->withTrashed();
+        } elseif (in_array('dihapus', $softDeleteFilters)) {
+            $kompetensi->onlyTrashed();
+        } else {
+            $kompetensi->withoutTrashed();
         }
 
         // Search
@@ -121,7 +62,7 @@ class KompetensiController extends Controller
             });
         }
 
-        $dataKompetensi = $kompetensi->paginate(10);
+        $dataKompetensi = $kompetensi->get();
 
         if ($dataKompetensi->isEmpty()) {
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data kompetensi tidak ditemukan.'), Response::HTTP_NOT_FOUND);

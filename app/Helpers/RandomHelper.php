@@ -2,30 +2,31 @@
 
 namespace App\Helpers;
 
+use Carbon\Carbon;
 use App\Models\User;
 
 class RandomHelper
 {
-	public static function generateUniqueUsername(string $fullName, string $email): string
-	{
-		// Mengganti spasi dan karakter non-alfanumerik pada full name dengan underscore
-		$usernameBase = strtolower(preg_replace("/[^a-zA-Z0-9]/", "_", $fullName));
+	// public static function generateUniqueUsername(string $fullName): string
+	// {
+	// 	// Mengganti spasi dan karakter non-alfanumerik pada full name dengan underscore
+	// 	$usernameBase = strtolower(preg_replace("/[^a-zA-Z0-9]/", "_", $fullName));
 
-		// Ambil bagian sebelum '@' dari email
-		$emailBase = strtolower(strstr($email, '@', true));
+	// 	// Ambil tanggal pembuatan sekarang
+	// 	$creationDate = Carbon::now()->format('dmY');
+	
+	// 	// Gabungkan fullname dan creation date
+	// 	$username = $usernameBase . '_' . $creationDate;
+	
+	// 	// Periksa apakah username sudah ada
+	// 	$existingUser = User::where('username', $username)->first();
 
-		// Gabungkan fullname dan emailBase
-		$username = $usernameBase . '_' . $emailBase;
+	// 	if ($existingUser) {
+	// 		throw new \Exception('Username already exists.');
+	// 	}
 
-		// Periksa apakah username sudah ada
-		$existingUser = User::where('username', $username)->first();
-
-		if ($existingUser) {
-			throw new \Exception('Username already exists.');
-		}
-
-		return $username;
-	}
+	// 	return $username;
+	// }
 
 	public static function generatePassword(int $length = 12): string
 	{

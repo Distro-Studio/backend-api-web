@@ -187,10 +187,10 @@ class RekamJejakController extends Controller
 
         return response()->json([
             'status' => Response::HTTP_OK,
-            'message' => "Data rekam jejak karyawan {$rekamJejak->users->name} berhasil ditampilkan.",
+            'message' => "Data rekam jejak karyawan {$rekamJejak->users->nama} berhasil ditampilkan.",
             'data' => [
                 'data_user' => $userData,
-                'data_rekam_jejak' => $formattedData,
+                'transfer_karyawan_id' => $formattedData,
             ],
             'pagination' => $paginationData
         ], Response::HTTP_OK);

@@ -2,12 +2,14 @@
 
 namespace App\Imports\Presensi;
 
+use Carbon\Carbon;
 use App\Models\User;
-use App\Models\Shift;
+use App\Models\Jadwal;
 use App\Models\Presensi;
-use App\Models\UnitKerja;
-use Illuminate\Support\Str;
 use App\Models\DataKaryawan;
+use App\Models\LokasiKantor;
+use App\Models\StatusPresensi;
+use App\Models\KategoriPresensi;
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\Importable;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
@@ -18,29 +20,20 @@ class PresensiImport implements ToModel, WithHeadingRow, WithValidation
     use Importable;
 
     private $User;
-    private $Shift;
-    private $UnitKerja;
+    private $KategoriPresensi;
     public function __construct()
     {
         $this->User = User::select('id', 'nama')->get();
-        $this->Shift = Shift::select('id', 'nama')->get();
-        $this->UnitKerja = UnitKerja::select('id', 'nama_unit')->get();
+        $this->KategoriPresensi = KategoriPresensi::select('id', 'label')->get();
     }
 
     public function rules(): array
     {
         return [
-            'nama' => 'required|string|max:225|exists:users,nama',
-            'shift' => 'required|string|exists:shifts,nama',
-            'unit_kerja' => 'required|string|exists:unit_kerjas,nama_unit',
+            'nama' => 'required|string|max:225',
+            'nik_ktp' => 'required|numeric',
             'jam_masuk' => 'required|date',
             'jam_keluar' => 'required|date',
-            'durasi' => 'required|numeric',
-            'bukti_absensi' => 'required|image|mimes:jpg,jpeg,png|max:2048',
-            'latitude' => 'required',
-            'longtitude' => 'required',
-            'absensi' => 'required|string',
-            'kategori' => 'required',
         ];
     }
 
@@ -50,64 +43,88 @@ class PresensiImport implements ToModel, WithHeadingRow, WithValidation
             'nama.required' => 'Nama karyawan tidak diperbolehkan kosong.',
             'nama.string' => 'Nama karyawan tidak diperbolehkan mengandung angka.',
             'nama.max' => 'Nama karyawan melebihi batas maksimum panjang karakter.',
-            'nama.exists' => 'Maaf nama tersebut tidak tersedia.',
-            'shift.required' => 'Shift karyawan tidak diperbolehkan kosong.',
-            'shift.string' => 'Shift karyawan tidak diperbolehkan mengandung angka.',
-            'shift.exists' => 'Maaf shift tersebut tidak tersedia.',
-            'unit_kerja.required' => 'Unit kerja karyawan tidak diperbolehkan kosong.',
-            'unit_kerja.string' => 'Unit kerja karyawan tidak diperbolehkan mengandung angka.',
-            'unit_kerja.exists' => 'Maaf unit kerja tersebut tidak tersedia.',
+            'nik_ktp.required' => 'NIK KTP karyawan tidak diperbolehkan kosong.',
+            'nik_ktp.numeric' => 'NIK KTP karyawan tidak diperbolehkan mengandung huruf.',
             'jam_masuk.required' => 'Tanggal presensi masuk tidak diperbolehkan kosong.',
             'jam_masuk.date' => 'Format tanggal presensi masuk tidak sesuai.',
             'jam_keluar.required' => 'Tanggal presensi keluar tidak diperbolehkan kosong.',
             'jam_keluar.date' => 'Format tanggal presensi keluar tidak sesuai.',
-            'durasi.required' => 'Durasi bekerja karyawan tidak diperbolehkan kosong.',
-            'durasi.numeric' => 'Durasi bekerja karyawan tidak diperbolehkan mengandung huruf.',
-            'bukti_absensi.required' => 'Bukti foto presensi karyawan tidak diperbolehkan kosong.',
-            'bukti_absensi.image' => 'Bukti foto presensi karyawan harus berupa gambar.',
-            'bukti_absensi.mimes' => 'Bukti foto presensi karyawan harus berupa file ekstensi jpg, jpeg, atau png.',
-            'bukti_absensi.max' => 'Ukuran bukti fotopresensi karyawan  tidak boleh lebih dari 2MB.',
-            'latitude.required' => 'Titik latitude presensi karyawan tidak diperbolehkan kosong.',
-            'longtitude.required' => 'Titik longitude presensi karyawan tidak diperbolehkan kosong.',
-            'absensi.required' => 'Jenis presensi karyawan tidak diperbolehkan kosong.',
-            'absensi.string' => 'Jenis presensi karyawan tidak diperbolehkan mengandung angka.',
-            'kategori.required' => 'Kategori presensi karyawan tidak diperbolehkan kosong.',
         ];
     }
 
     public function model(array $row)
     {
-        $user_id = $this->User->where('nama', $row['nama'])->first();
-        $jadwal_id = $this->Shift->where('nama', $row['shift'])->first();
-        $unit_kerja_id = $this->UnitKerja->where('nama_unit', $row['unit_kerja'])->first();
+        $user = $this->User->where('nama', $row['nama'])->first();
+        // dd($user);
+        if (!$user) {
+            throw new \Exception("Nama karyawan {$row['nama']} tidak tersedia dalam database.");
+        }
 
-        // Get the data karyawan id that matches the unit kerja
-        $data_karyawan_id = DataKaryawan::where('unit_kerja_id', $unit_kerja_id->id)->first();
+        $data_karyawan = DataKaryawan::where('user_id', $user->id)->where('nik_ktp', $row['nik_ktp'])->first();
+        // dd($data_karyawan);
+        if (!$data_karyawan) {
+            throw new \Exception("NIK KTP dari karyawan {$row['nama']} tidak sesuai dengan database.");
+        }
 
-        // Simpan gambar ke storage dan ambil path-nya
-        $fotoPath = $this->saveImage($row['bukti_absensi']);
+        // Hitung durasi kerja berdasarkan jam masuk dan keluar
+        $jam_masuk = Carbon::createFromFormat('d-m-Y H:i:s', $row['jam_masuk']);
+        $jam_keluar = Carbon::createFromFormat('d-m-Y H:i:s', $row['jam_keluar']);
+        $durasi = $jam_keluar->diffInSeconds($jam_masuk);
+        // dd($durasi);
+
+        // Mendapatkan jadwal_id berdasarkan user_id dan range tanggal
+        $jadwal = Jadwal::where('user_id', $user->id)
+            ->whereDate('tgl_mulai', '<=', $jam_masuk)
+            ->whereDate('tgl_selesai', '>=', $jam_masuk)
+            ->first();
+        // dd($jadwal);
+        if (!$jadwal) {
+            throw new \Exception("Jadwal tidak ditemukan untuk user ID: {$user->id} pada tanggal: {$row['jam_masuk']}");
+        }
+
+        // Mendapatkan shift berdasarkan jadwal
+        $shift = $jadwal->shifts;
+        // dd($shift);
+
+        // Mendapatkan kategori presensi berdasarkan jam masuk dan shift
+        $kategori_presensi_id = $this->getKategoriPresensiId($shift, $jam_masuk);
+        // dd($kategori_presensi_id);
+
+        // Ambil lokasi kantor untuk koordinat
+        $lokasi_kantor = LokasiKantor::first();
+        // dd($lokasi_kantor);
 
         return new Presensi([
-            'user_id' => $user_id->id,
-            'jadwal_id' => $jadwal_id->id,
-            'data_karyawan_id' => $data_karyawan_id->id,
-            'jam_masuk' => $row['jam_masuk'],
-            'jam_keluar' => $row['jam_keluar'],
-            'durasi' => $row['durasi'],
-            'foto' => $fotoPath,
-            'lat' => $row['latitude'],
-            'long' => $row['longtitude'],
-            'absensi' => $row['absensi'],
-            'kategori' => $row['kategori']
+            'user_id' => $user->id,
+            'data_karyawan_id' => $data_karyawan->id,
+            'jadwal_id' => $jadwal->id, // ambil dari tabel jadwal berdasarkan id karyawan dan tgl hari ini
+            'jam_masuk' => $jam_masuk->format('Y-m-d H:i:s'),
+            'jam_keluar' => $jam_keluar->format('Y-m-d H:i:s'),
+            'durasi' => $durasi,
+            'lat' => $lokasi_kantor->lat,
+            'long' => $lokasi_kantor->long,
+            'latkeluar' => $lokasi_kantor->lat,
+            'longkeluar' => $lokasi_kantor->long,
+            'kategori_presensi_id' => $kategori_presensi_id,
         ]);
     }
 
-    private function saveImage($image)
+    private function getKategoriPresensiId($shift, $jam_masuk)
     {
-        // Buat nama unik untuk file gambar
-        $imageName = Str::uuid() . '.' . $image->getClientOriginalExtension();
-        // Simpan gambar ke folder bukti_absensi di storage public
-        $path = $image->storeAs('bukti_absensi', $imageName, 'public/images');
-        return $path;
+        if ($shift->nama == 'Pagi') {
+            return ($jam_masuk->hour < 7 || ($jam_masuk->hour == 7 && $jam_masuk->minute == 0)) ?
+                $this->KategoriPresensi->where('label', 'Tepat Waktu')->first()->id :
+                $this->KategoriPresensi->where('label', 'Terlambat')->first()->id;
+        } elseif ($shift->nama == 'Sore') {
+            return ($jam_masuk->hour < 17 || ($jam_masuk->hour == 17 && $jam_masuk->minute == 0)) ?
+                $this->KategoriPresensi->where('label', 'Tepat Waktu')->first()->id :
+                $this->KategoriPresensi->where('label', 'Terlambat')->first()->id;
+        } elseif ($shift->nama == 'Malam') {
+            return ($jam_masuk->hour < 22 || ($jam_masuk->hour == 22 && $jam_masuk->minute == 0)) ?
+                $this->KategoriPresensi->where('label', 'Tepat Waktu')->first()->id :
+                $this->KategoriPresensi->where('label', 'Terlambat')->first()->id;
+        }
+
+        return $this->KategoriPresensi->where('label', 'Terlambat')->first()->id;
     }
 }

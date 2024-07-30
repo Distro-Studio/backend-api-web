@@ -20,4 +20,14 @@ class ActivityLog extends Model
     {
         return $this->belongsTo(User::class, 'user_id', 'id');
     }
+
+    /**
+     * Get the kategori_activity_logs that owns the ActivityLog
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function kategori_activity_logs(): BelongsTo
+    {
+        return $this->belongsTo(KategoriActivityLog::class, 'kategori_activity_id', 'id');
+    }
 }

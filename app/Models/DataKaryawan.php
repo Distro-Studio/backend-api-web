@@ -157,4 +157,34 @@ class DataKaryawan extends Model
     {
         return $this->hasMany(RunThr::class, 'data_karyawan_id', 'id');
     }
+
+    /**
+     * Get the kategori_agamas that owns the DataKaryawan
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function kategori_agamas(): BelongsTo
+    {
+        return $this->belongsTo(KategoriAgama::class, 'kategori_agama_id', 'id');
+    }
+
+    /**
+     * Get the status_karyawans that owns the DataKaryawan
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function status_karyawans(): BelongsTo
+    {
+        return $this->belongsTo(StatusKaryawan::class, 'status_karyawan_id', 'id');
+    }
+
+    /**
+     * Get the kategori_darahs that owns the DataKaryawan
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function kategori_darahs(): BelongsTo
+    {
+        return $this->belongsTo(KategoriDarah::class, 'kategori_darah_id', 'id');
+    }
 }

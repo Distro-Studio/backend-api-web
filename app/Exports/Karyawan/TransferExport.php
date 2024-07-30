@@ -13,6 +13,8 @@ class TransferExport implements FromCollection, WithHeadings, WithMapping
 {
     use Exportable;
 
+    private static $number = 0;
+
     public function collection()
     {
         return TransferKaryawan::with(['unit_kerja_asals', 'unit_kerja_tujuans', 'jabatan_asals', 'jabatan_tujuans'])->get();
@@ -21,32 +23,31 @@ class TransferExport implements FromCollection, WithHeadings, WithMapping
     public function headings(): array
     {
         return [
+            'no',
             'nama',
-            'tanggal',
+            'tanggal_pengajuan',
             'unit_kerja_asal',
             'unit_kerja_tujuan',
             'jabatan_asal',
             'jabatan_tujuan',
-            'tipe',
-            'alasan',
-            'created_at',
-            'updated_at',
+            'kategori_transfer',
+            'alasan'
         ];
     }
 
     public function map($transfer): array
     {
+        self::$number++;
         return [
+            self::$number,
             $transfer->users->nama,
-            $transfer->tanggal,
+            Carbon::parse($transfer->created_at)->format('d-m-Y'),
             $transfer->unit_kerja_asals->nama_unit,
             $transfer->unit_kerja_tujuans->nama_unit,
             $transfer->jabatan_asals->nama_jabatan,
             $transfer->jabatan_tujuans->nama_jabatan,
-            $transfer->tipe ?? 'N/A',
-            $transfer->alasan ?? 'N/A',
-            Carbon::parse($transfer->created_at)->format('d-m-Y H:i:s'),
-            Carbon::parse($transfer->updated_at)->format('d-m-Y H:i:s')
+            $transfer->kategori_transfer_karyawans->label,
+            $transfer->alasan ?? 'N/A'
         ];
     }
 }

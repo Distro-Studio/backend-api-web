@@ -27,7 +27,7 @@ class TER21Controller extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
-        $dataTer = Ter::with(['kategori_ters', 'ptkps'])->whereNull('deleted_at')->get();
+        $dataTer = Ter::with(['kategori_ters', 'ptkps'])->get();
         return response()->json([
             'status' => Response::HTTP_OK,
             'message' => 'Retrieving all Ter PPH21 for dropdown',
@@ -42,31 +42,16 @@ class TER21Controller extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
-        $ter = Ter::with(['kategori_ters', 'ptkps']);
+        $ter = Ter::query();
 
         // Filter
-        if ($request->has('nama_kategori_ter')) {
-            $namaKategoriTER = $request->nama_kategori_ter;
-
-            $ter->whereHas('kategori_ters', function ($query) use ($namaKategoriTER) {
-                if (is_array($namaKategoriTER)) {
-                    $query->whereIn('nama_kategori_ter', $namaKategoriTER);
-                } else {
-                    $query->where('nama_kategori_ter', '=', $namaKategoriTER);
-                }
-            });
-        }
-
-        if ($request->has('kode_ptkp')) {
-            $namaPTKP = $request->kode_ptkp;
-
-            $ter->whereHas('ptkps', function ($query) use ($namaPTKP) {
-                if (is_array($namaPTKP)) {
-                    $query->whereIn('kode_ptkp', $namaPTKP);
-                } else {
-                    $query->where('kode_ptkp', '=', $namaPTKP);
-                }
-            });
+        $softDeleteFilters = $request->input('delete_data', []);
+        if (in_array('dihapus', $softDeleteFilters) && in_array('belum_dihapus', $softDeleteFilters)) {
+            $ter->withTrashed();
+        } elseif (in_array('dihapus', $softDeleteFilters)) {
+            $ter->onlyTrashed();
+        } else {
+            $ter->withoutTrashed();
         }
 
         // Search
@@ -80,7 +65,7 @@ class TER21Controller extends Controller
             });
         }
 
-        $dataTer = $ter->paginate(10);
+        $dataTer = $ter->get();
         if ($dataTer->isEmpty()) {
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data Ter PPH21 tidak ditemukan.'), Response::HTTP_NOT_FOUND);
         }

@@ -56,6 +56,7 @@ class CreateGajiJob implements ShouldQueue
         $query = DB::table('data_karyawans')
             ->join('kelompok_gajis', 'data_karyawans.kelompok_gaji_id', '=', 'kelompok_gajis.id')
             ->leftJoin('penggajians', 'data_karyawans.id', '=', 'penggajians.data_karyawan_id')
+            ->join('status_karyawans', 'data_karyawans.status_karyawan_id', '=', 'status_karyawans.id')
             ->select(
                 'data_karyawans.id as data_karyawan_id',
                 DB::raw('COALESCE(kelompok_gajis.besaran_gaji, 0) as gaji_pokok'),
@@ -66,7 +67,7 @@ class CreateGajiJob implements ShouldQueue
                 DB::raw('COALESCE(data_karyawans.uang_makan, 0) as uang_makan'),
                 DB::raw('COALESCE(data_karyawans.uang_lembur, 0) as uang_lembur'),
                 'data_karyawans.ptkp_id as ptkp_id',
-                'data_karyawans.status_karyawan as status_karyawan',
+                'status_karyawans.label as status_karyawan',
                 'data_karyawans.tgl_masuk as tgl_masuk'
             );
 
@@ -463,11 +464,13 @@ class CreateGajiJob implements ShouldQueue
         $startDate = Carbon::now()->subMonth()->startOfMonth();
         $endDate = Carbon::now()->subMonth()->endOfMonth();
 
+        // Ambil ID untuk kategori 'Tepat Waktu'
+        $kategoriTepatWaktuId = DB::table('kategori_presensis')->where('label', 'Tepat Waktu')->value('id');
+
         // Hitung jumlah presensi 'Tepat Waktu' dari tanggal 1 sampai akhir bulan sebelumnya
         $presensiCount = DB::table('presensis')
             ->where('data_karyawan_id', $data_karyawan_id)
-            ->where('presensi', 'Hadir')
-            ->where('kategori', 'Tepat Waktu')
+            ->where('kategori_presensi_id', $kategoriTepatWaktuId)
             ->whereBetween('jam_masuk', [$startDate, $endDate])
             ->count();
         Log::info("Presensi tepat waktu terhitung: {$presensiCount}");

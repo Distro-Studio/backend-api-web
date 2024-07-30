@@ -72,7 +72,7 @@ class KaryawanResource extends JsonResource
                 // yang ada di table tp gak ada di create
                 "nik" => $karyawan->nik,
                 "nik_ktp" => $karyawan->nik_ktp,
-                'status_karyawan' => $karyawan->status_karyawan,
+                'status_karyawan' => $karyawan->status_karyawans,
                 'tempat_lahir' => $karyawan->tempat_lahir,
                 'tgl_lahir' => $karyawan->tgl_lahir,
 

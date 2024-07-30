@@ -254,11 +254,11 @@
 															<td class="pad">
 																<h1
 																	style="margin: 0; color: #10a9a5; direction: ltr; font-family: Arial, Helvetica Neue, Helvetica, sans-serif; font-size: 27px; font-weight: 700; letter-spacing: normal; line-height: 120%; text-align: center; margin-top: 0; margin-bottom: 0; mso-line-height-alt: 32.4px;">
-																	<span class="tinyMce-placeholder">Hey <span
+																	<span class="tinyMce-placeholder">Selamat Datang <span
 																			style="color: #000000;">{{ $nama
-																			}}</span>!<br>Kami
+																			}}</span>,<br>Kami
 																		telah mendaftarkan anda kedalam sistem
-																		karyawan.<br></span>
+																		karyawan RSKI.<br></span>
 																</h1>
 															</td>
 														</tr>
@@ -272,7 +272,7 @@
 																<div class="alignment" align="center"
 																	style="line-height:10px">
 																	<div class="fullWidth" style="max-width: 386.4px;">
-																		<img src={{ asset('mails/images/illo-top.png') }}
+																		<img src={{ asset('mails/images/Good_team-pana.png') }}
 																			style="display: block; height: auto; border: 0; width: 100%;"
 																			width="386.4" height="auto">
 																	</div>
@@ -359,7 +359,7 @@
 																style="padding-left:10px;padding-right:10px;padding-top:10px;text-align:center;width:100%;">
 																<h2
 																	style="margin: 0; color: #10a9a5; direction: ltr; font-family: Arial, Helvetica Neue, Helvetica, sans-serif; font-size: 24px; font-weight: 700; letter-spacing: normal; line-height: 120%; text-align: left; margin-top: 0; margin-bottom: 0; mso-line-height-alt: 28.799999999999997px;">
-																	<span class="tinyMce-placeholder">Username</span>
+																	<span class="tinyMce-placeholder">Email</span>
 																</h2>
 															</td>
 														</tr>
@@ -372,7 +372,7 @@
 																style="padding-bottom:10px;padding-left:10px;padding-right:10px;">
 																<div
 																	style="color:#201f42;direction:ltr;font-family:Arial, Helvetica Neue, Helvetica, sans-serif;font-size:14px;font-weight:700;letter-spacing:0px;line-height:150%;text-align:left;mso-line-height-alt:21px;">
-																	<p style="margin: 0;">{{ $username }}</p>
+																	<p style="margin: 0;">{{ $email }}</p>
 																</div>
 															</td>
 														</tr>
@@ -465,7 +465,7 @@
 																		<strong>{{ $nama }}</strong>, kami telah
 																		berhasil
 																		membuat akun anda. Silahkan login dengan
-																		username dan password yang kami berikan untuk
+																		email dan password yang kami berikan untuk
 																		melengkapi data pribadi anda.<br><br>Jika anda
 																		mengalami kendala saat login atau kebingungan
 																		saat mengisi data anda, silahkan hubungi

@@ -13,13 +13,13 @@ class SendAccoundUsersMail extends Mailable
 {
     use Queueable, SerializesModels;
 
-    public $username;
+    public $email;
     public $password;
     public $nama;
 
-    public function __construct($username, $password, $nama)
+    public function __construct($email, $password, $nama)
     {
-        $this->username = $username;
+        $this->email = $email;
         $this->password = $password;
         $this->nama = $nama;
     }

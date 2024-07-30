@@ -24,7 +24,7 @@ class PertanyaanController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
-        $pertanyaan = Pertanyaan::with('jabatans')->get();
+        $pertanyaan = Pertanyaan::all();
         return response()->json([
             'status' => Response::HTTP_OK,
             'message' => 'Retrieving data pertanyaan kuesioner.',
@@ -38,7 +38,29 @@ class PertanyaanController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
-        $pertanyaan = Pertanyaan::query()->with('jabatans');
+        $pertanyaan = Pertanyaan::query();
+
+        // Filter
+        $softDeleteFilters = $request->input('delete_data', []);
+        if (in_array('dihapus', $softDeleteFilters) && in_array('belum_dihapus', $softDeleteFilters)) {
+            $pertanyaan->withTrashed();
+        } elseif (in_array('dihapus', $softDeleteFilters)) {
+            $pertanyaan->onlyTrashed();
+        } else {
+            $pertanyaan->withoutTrashed();
+        }
+
+        if ($request->has('nama_jabatan')) {
+            $namaJabatan = $request->nama_jabatan;
+
+            $pertanyaan->whereHas('jabatans', function ($query) use ($namaJabatan) {
+                if (is_array($namaJabatan)) {
+                    $query->whereIn('nama_jabatan', $namaJabatan);
+                } else {
+                    $query->where('nama_jabatan', '=', $namaJabatan);
+                }
+            });
+        }
 
         // search
         if ($request->has('search')) {
@@ -51,7 +73,7 @@ class PertanyaanController extends Controller
             });
         }
 
-        $dataPertanyaan = $pertanyaan->paginate(10);
+        $dataPertanyaan = $pertanyaan->get();
         return response()->json(new PertanyaanResource(Response::HTTP_OK, 'Data pertanyaan kuesioner berhasil ditampilkan.', $dataPertanyaan), Response::HTTP_OK);
     }
 

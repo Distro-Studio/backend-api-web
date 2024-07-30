@@ -13,22 +13,73 @@ class KaryawanExport implements FromCollection, WithHeadings, WithMapping
 {
     use Exportable;
 
+    private static $number = 0;
+
     public function collection()
     {
-        return DataKaryawan::all();
+        return DataKaryawan::with([
+            'users',
+            'users.roles',
+            'unit_kerjas',
+            'status_karyawans',
+            'kategori_agamas',
+            'jabatans',
+            'kompetensis',
+            'kelompok_gajis',
+            'ptkps',
+            'kategori_darahs'
+        ])
+            ->where('email', '!=', 'super_admin@admin.rski')
+            ->get();
     }
 
     public function headings(): array
     {
         return [
+            'no',
             'nama',
-            'nik',
+            'role',
+            'email',
             'no_rm',
-            'nik_ktp',
+            'no_manulife',
+            'tgl_masuk',
             'unit_kerja',
+            'jabatan',
+            'kompetensi',
+            'nik_ktp',
             'status_karyawan',
             'tempat_lahir',
             'tgl_lahir',
+            'kelompok_gaji',
+            'no_rekening',
+            'tunjangan_jabatan',
+            'tunjangan_fungsional',
+            'tunjangan_khusus',
+            'tunjangan_lainnya',
+            'uang_lembur',
+            'uang_makan',
+            'ptkp',
+            'tgl_keluar',
+            'no_kk',
+            'alamat',
+            'gelar_depan',
+            'no_hp',
+            'no_bpjsksh',
+            'no_bpjsktk',
+            'tgl_diangkat',
+            'masa_kerja',
+            'npwp',
+            'jenis_kelamin',
+            'agama',
+            'golongan_darah',
+            'tinggi_badan',
+            'berat_badan',
+            'no_ijazah',
+            'tahun_lulus',
+            'no_str',
+            'masa_berlaku_str',
+            'tgl_berakhir_pks',
+            'masa_diklat',
             'created_at',
             'updated_at',
         ];
@@ -36,15 +87,57 @@ class KaryawanExport implements FromCollection, WithHeadings, WithMapping
 
     public function map($karyawan): array
     {
+        self::$number++;
+
+        $roles = $karyawan->users->roles->map(function ($role) {
+            return $role->name;
+        })->toArray();
+
         return [
+            self::$number,
             $karyawan->users->nama,
-            $karyawan->nik ?? 'N/A',
+            implode(', ', $roles),
+            $karyawan->email,
             $karyawan->no_rm,
-            $karyawan->nik_ktp ?? 'N/A',
-            $karyawan->unit_kerjas->nama_unit,
-            $karyawan->status_karyawan,
-            $karyawan->tempat_lahir ?? 'N/A',
-            $karyawan->tgl_lahir ?? 'N/A',
+            $karyawan->no_manulife,
+            $karyawan->tgl_masuk,
+            optional($karyawan->unit_kerjas)->nama_unit,
+            optional($karyawan->jabatans)->nama_jabatan,
+            optional($karyawan->kompetensis)->nama_kompetensi,
+            $karyawan->nik_ktp,
+            optional($karyawan->status_karyawans)->label,
+            $karyawan->tempat_lahir,
+            $karyawan->tgl_lahir,
+            optional($karyawan->kelompok_gajis)->nama_kelompok,
+            $karyawan->no_rekening,
+            $karyawan->tunjangan_jabatan ?? 'N/A',
+            $karyawan->tunjangan_fungsional ?? 'N/A',
+            $karyawan->tunjangan_khusus ?? 'N/A',
+            $karyawan->tunjangan_lainnya ?? 'N/A',
+            $karyawan->uang_lembur ?? 'N/A',
+            $karyawan->uang_makan ?? 'N/A',
+            optional($karyawan->ptkps)->kode_ptkp,
+            $karyawan->tgl_keluar,
+            $karyawan->no_kk,
+            $karyawan->alamat,
+            $karyawan->gelar_depan,
+            $karyawan->no_hp,
+            $karyawan->no_bpjsksh,
+            $karyawan->no_bpjsktk,
+            $karyawan->tgl_diangkat,
+            $karyawan->masa_kerja,
+            $karyawan->npwp,
+            $karyawan->jenis_kelamin ? 'Laki-laki' : 'Perempuan',
+            optional($karyawan->kategori_agamas)->label,
+            optional($karyawan->kategori_darahs)->label,
+            $karyawan->tinggi_badan,
+            $karyawan->berat_badan,
+            $karyawan->no_ijazah,
+            $karyawan->tahun_lulus,
+            $karyawan->no_str,
+            Carbon::parse($karyawan->masa_berlaku_str)->format('d-m-Y'),
+            $karyawan->tgl_berakhir_pks,
+            $karyawan->masa_diklat,
             Carbon::parse($karyawan->created_at)->format('d-m-Y H:i:s'),
             Carbon::parse($karyawan->updated_at)->format('d-m-Y H:i:s')
         ];

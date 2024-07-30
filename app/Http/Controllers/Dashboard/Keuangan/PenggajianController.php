@@ -291,6 +291,7 @@ class PenggajianController extends Controller
         ], Response::HTTP_OK);
     }
 
+    // ! ini tidak perlu
     public function exportRiwayatPenggajian(Request $request)
     {
         if (!Gate::allows('export penggajianKaryawan')) {
@@ -301,9 +302,9 @@ class PenggajianController extends Controller
         $year = $request->input('year');
 
         // Validasi tahun
-        if (!$year || $year > Carbon::now()->year) {
-            return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Tahun penggajian tidak valid, silahkan gunakan tahun saat ini atau lebih kecil.'), Response::HTTP_BAD_REQUEST);
-        }
+        // if (!$year || $year > Carbon::now()->year) {
+        //     return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Tahun penggajian tidak valid, silahkan gunakan tahun saat ini atau lebih kecil.'), Response::HTTP_BAD_REQUEST);
+        // }
 
         // Pastikan months adalah array
         if (!is_array($months)) {
@@ -320,8 +321,10 @@ class PenggajianController extends Controller
 
         return response()->json(new WithoutDataResource(Response::HTTP_OK, 'Data penggajian karyawan berhasil di download.'), Response::HTTP_OK);
     }
+    // ! ini tidak perlu
 
-    // by unit kerja
+    // TODO: bagian ini tambahkan array month dan year
+    // TODO: tidak usah request array unit kerja, tetapi kelompokkan unit kerja pada sheet
     public function exportRekapPenerimaanGaji(Request $request)
     {
         if (!Gate::allows('export penggajianKaryawan')) {
@@ -341,6 +344,8 @@ class PenggajianController extends Controller
         return response()->json(new WithoutDataResource(Response::HTTP_OK, 'Data penggajian karyawan berhasil di download.'), Response::HTTP_OK);
     }
 
+    // TODO: bagian ini tambahkan array month dan year
+    // TODO: tidak usah request array unit kerja, tetapi kelompokkan unit kerja pada sheet
     public function exportRekapPotonganGaji(Request $request)
     {
         if (!Gate::allows('export penggajianKaryawan')) {
@@ -360,6 +365,8 @@ class PenggajianController extends Controller
         return response()->json(new WithoutDataResource(Response::HTTP_OK, 'Data rekap potongan gaji karyawan berhasil di download.'), Response::HTTP_OK);
     }
 
+    // TODO: export bank cuman perbulan saja
+    // TODO: bagian ini tambahkan array month dan year
     public function exportLaporanGajiBank(Request $request)
     {
         if (!Gate::allows('export penggajianKaryawan')) {

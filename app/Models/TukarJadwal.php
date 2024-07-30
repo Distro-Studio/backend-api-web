@@ -3,12 +3,13 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class TukarJadwal extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $guarded = ['id'];
 
@@ -50,5 +51,25 @@ class TukarJadwal extends Model
     public function jadwal_ditukars(): BelongsTo
     {
         return $this->belongsTo(Jadwal::class, 'jadwal_ditukar', 'id');
+    }
+
+    /**
+     * Get the status_tukar_jadwals that owns the TukarJadwal
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function status_tukar_jadwals(): BelongsTo
+    {
+        return $this->belongsTo(StatusTukarJadwal::class, 'status_penukaran_id', 'id');
+    }
+
+    /**
+     * Get the kategori_tukar_jadwals that owns the TukarJadwal
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function kategori_tukar_jadwals(): BelongsTo
+    {
+        return $this->belongsTo(KategoriTukarJadwal::class, 'kategori_penukaran_id', 'id');
     }
 }

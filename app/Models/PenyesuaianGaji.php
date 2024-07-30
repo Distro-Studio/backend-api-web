@@ -38,4 +38,14 @@ class PenyesuaianGaji extends Model
     {
         return $this->belongsTo(Penggajian::class, 'penggajian_id', 'id');
     }
+
+    /**
+     * Get the kategori_gajis  that owns the PenyesuaianGaji
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function kategori_gajis(): BelongsTo
+    {
+        return $this->belongsTo(KategoriGaji::class, 'kategori_gaji_id', 'id');
+    }
 }

@@ -31,4 +31,14 @@ class Cuti extends Model
     {
         return $this->belongsTo(TipeCuti::class, 'tipe_cuti_id', 'id');
     }
+
+    /**
+     * Get the status_cutis that owns the Cuti
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function status_cutis(): BelongsTo
+    {
+        return $this->belongsTo(StatusCuti::class, 'status_cuti_id', 'id');
+    }
 }

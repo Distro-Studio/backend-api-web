@@ -30,12 +30,12 @@ class UserResource extends JsonResource
             'data'  => [
                 'id' => $this->id,
                 'nama' => $this->nama,
-                'username' => $this->username,
+                // 'username' => $this->username,
                 'email' => $this->data_karyawans ? $this->data_karyawans->email : null,
                 'foto_profil' => $this->foto_profil,
                 'status_aktif' => $this->status_aktif,
                 'data_completion_step' => $this->data_completion_step,
-                'role_id' => $this->roles,
+                'role' => $this->roles,
                 'created_at' => $this->created_at,
                 'updated_at' => $this->updated_at,
             ]

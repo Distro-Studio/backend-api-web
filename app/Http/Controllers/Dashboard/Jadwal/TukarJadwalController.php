@@ -141,6 +141,7 @@ class TukarJadwalController extends Controller
         ], Response::HTTP_OK);
     }
 
+    // Libur ke Shift = Penukar harus cek jadwalnya pada hari yag ditukar (validasi apakah)
     public function store(StoreTukarJadwalRequest $request)
     {
         if (!Gate::allows('create tukarJadwal')) {
