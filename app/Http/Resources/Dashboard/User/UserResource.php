@@ -36,6 +36,7 @@ class UserResource extends JsonResource
                 'status_aktif' => $this->status_aktif,
                 'data_completion_step' => $this->data_completion_step,
                 'role' => $this->roles,
+                'permissions' => $this->getAllPermissions(),
                 'created_at' => $this->created_at,
                 'updated_at' => $this->updated_at,
             ]
