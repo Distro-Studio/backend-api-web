@@ -35,8 +35,16 @@ class UserResource extends JsonResource
                 'foto_profil' => $this->foto_profil,
                 'status_aktif' => $this->status_aktif,
                 'data_completion_step' => $this->data_completion_step,
-                'role' => $this->roles,
-                'permissions' => $this->getAllPermissions(),
+                'role' => $this->roles->map(function ($role) {
+                    return [
+                        'id' => $role->id,
+                        'name' => $role->name,
+                        'deskripsi' => $role->deskripsi,
+                        'created_at' => $role->created_at,
+                        'updated_at' => $role->updated_at,
+                    ];
+                }),
+                'permission' => $this->getAllPermissions(),
                 'created_at' => $this->created_at,
                 'updated_at' => $this->updated_at,
             ]
