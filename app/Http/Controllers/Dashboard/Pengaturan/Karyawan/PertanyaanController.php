@@ -131,9 +131,15 @@ class PertanyaanController extends Controller
         }
 
         $data = $request->validated();
+
+        // Validasi unique
+        $existingDataValidation = Pertanyaan::where('pertanyaan', $data['pertanyaan'])->where('id', '!=', $id)->first();
+        if ($existingDataValidation) {
+            return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Kalimat pertanyaan tersebut sudah pernah dibuat.'), Response::HTTP_BAD_REQUEST);
+        }
+
         $pertanyaan->update($data);
         $updatedPertanyaan = $pertanyaan->fresh();
-
         $successMessage = "Data pertanyaan kuesioner untuk jabatan {$updatedPertanyaan->jabatans->nama_jabatan} diubah.";
         $formattedData = $this->formatData(collect([$pertanyaan]))->first();
 

@@ -109,6 +109,13 @@ class KompetensiController extends Controller
         }
 
         $data = $request->validated();
+        
+        // Validasi unique
+        $existingDataValidation = Kompetensi::where('nama_kompetensi', $data['nama_kompetensi'])->where('id', '!=', $id)->first();
+        if ($existingDataValidation) {
+            return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Nama kompetensi tersebut sudah pernah dibuat.'), Response::HTTP_BAD_REQUEST);
+        }
+        
         $kompetensi->update($data);
         $updatedKompetensi = $kompetensi->fresh();
 
@@ -195,7 +202,7 @@ class KompetensiController extends Controller
                 'nama_kompetensi' => $kompetensi->nama_kompetensi,
                 'jenis_kompetensi' => $kompetensi->jenis_kompetensi,
                 'total_tunjangan' => $kompetensi->total_tunjangan,
-                'total_bor' => $kompetensi->total_bor,
+                'nilai_bor' => $kompetensi->nilai_bor,
                 'deleted_at' => $kompetensi->deleted_at,
                 'created_at' => $kompetensi->created_at,
                 'updated_at' => $kompetensi->updated_at

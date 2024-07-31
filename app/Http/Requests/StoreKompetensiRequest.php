@@ -26,9 +26,9 @@ class StoreKompetensiRequest extends FormRequest
     {
         return [
             'nama_kompetensi' => 'required|string|max:225|unique:kompetensis,nama_kompetensi',
-            'jenis_kompetensi' => 'required|string|max:225',
+            'jenis_kompetensi' => 'required|boolean',
             'total_tunjangan' => 'required|numeric',
-            'total_bor' => 'required|numeric',
+            'nilai_bor' => 'required|numeric',
         ];
     }
 
@@ -40,12 +40,12 @@ class StoreKompetensiRequest extends FormRequest
             'nama_kompetensi.max' => 'Nama kompetensi melebihi batas maksimum panjang karakter.',
             'nama_kompetensi.unique' => 'Nama kompetensi tersebut sudah pernah dibuat.',
             'jenis_kompetensi.required' => 'Jenis kompetensi tidak diperbolehkan kosong.',
-            'jenis_kompetensi.string' => 'Jenis kompetensi tidak diperbolehkan mengandung angka.',
+            'jenis_kompetensi.boolean' => 'Jenis kompetensi hanya dapat diisi Medis atau Non-Medis.',
             'jenis_kompetensi.max' => 'Jenis kompetensi melebihi batas maksimum panjang karakter.',
             'total_tunjangan.required' => 'Jumlah tunjangan tidak diperbolehkan kosong.',
             'total_tunjangan.numeric' => 'Jumlah tunjangan tidak diperbolehkan mengandung huruf.',
-            'total_bor.required' => 'Jumlah BOR tidak diperbolehkan kosong.',
-            'total_bor.numeric' => 'Jumlah BOR tidak diperbolehkan mengandung huruf.',
+            'nilai_bor.required' => 'Jumlah BOR tidak diperbolehkan kosong.',
+            'nilai_bor.numeric' => 'Jumlah BOR tidak diperbolehkan mengandung huruf.',
         ];
     }
 

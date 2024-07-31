@@ -129,9 +129,15 @@ class HariLiburController extends Controller
         }
 
         $data = $request->validated();
+
+        // Validasi unique
+        $existingDataValidation = HariLibur::where('nama', $data['nama'])->where('id', '!=', $id)->first();
+        if ($existingDataValidation) {
+            return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Nama hari libur tersebut sudah pernah dibuat.'), Response::HTTP_BAD_REQUEST);
+        }
+
         $hari_libur->update($data);
         $updatedHariLibur = $hari_libur->fresh();
-
         $successMessage = "Data hari libur '{$updatedHariLibur->nama}' berhasil diubah.";
         $formattedData = $this->formatData(collect([$hari_libur]))->first();
 

@@ -125,9 +125,15 @@ class CutiController extends Controller
         }
 
         $data = $request->validated();
+
+        // Validasi unique
+        $existingDataValidation = TipeCuti::where('nama', $data['nama'])->where('id', '!=', $id)->first();
+        if ($existingDataValidation) {
+            return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Nama cuti tersebut sudah pernah dibuat.'), Response::HTTP_BAD_REQUEST);
+        }
+
         $cuti->update($data);
         $updatedCuti = $cuti->fresh();
-
         $successMessage = "Data cuti '{$updatedCuti->nama}' berhasil diubah.";
         $formattedData = $this->formatData(collect([$cuti]))->first();
 

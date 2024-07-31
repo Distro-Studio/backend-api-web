@@ -108,6 +108,12 @@ class JabatanController extends Controller
 
         $data = $request->validated();
 
+        // Validasi unique
+        $existingDataValidation = Jabatan::where('nama_jabatan', $data['nama_jabatan'])->where('id', '!=', $id)->first();
+        if ($existingDataValidation) {
+            return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Nama jabatan tersebut sudah pernah dibuat.'), Response::HTTP_BAD_REQUEST);
+        }
+
         $jabatan->update($data);
         $updatedJabatan = $jabatan->fresh();
         $successMessage = "Data jabatan '{$updatedJabatan->nama_jabatan}' berhasil diubah.";

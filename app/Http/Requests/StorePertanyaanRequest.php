@@ -25,7 +25,7 @@ class StorePertanyaanRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'pertanyaan' => 'required|string',
+            'pertanyaan' => 'required|string|unique:pertanyaans,pertanyaan',
             'jabatan_id' => 'required|integer|exists:jabatans,id',
         ];
     }

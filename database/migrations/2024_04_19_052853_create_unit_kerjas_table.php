@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('unit_kerjas', function (Blueprint $table) {
             $table->id();
             $table->string('nama_unit');
-            $table->boolean('jenis_karyawan')->default(false);
+            $table->boolean('jenis_karyawan');
             $table->softDeletes();
             $table->timestamps();
         });

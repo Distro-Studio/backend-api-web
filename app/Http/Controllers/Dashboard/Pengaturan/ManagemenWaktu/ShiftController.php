@@ -123,9 +123,15 @@ class ShiftController extends Controller
         }
 
         $data = $request->validated();
+
+        // Validasi unique
+        $existingDataValidation = Shift::where('nama', $data['nama'])->where('id', '!=', $id)->first();
+        if ($existingDataValidation) {
+            return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Nama shift tersebut sudah pernah dibuat.'), Response::HTTP_BAD_REQUEST);
+        }
+
         $shift->update($data);
         $updatedShift = $shift->fresh();
-
         $successMessage = "Data shift '{$updatedShift->nama}' berhasil diubah.";
         $formattedData = $this->formatData(collect([$shift]))->first();
 
@@ -206,7 +212,7 @@ class ShiftController extends Controller
     {
         return $collection->transform(function ($shift) {
             return [
-                'id' => 'S00' . $shift->id,
+                'id' => $shift->id,
                 'nama' => $shift->nama,
                 'jam_from' => $shift->jam_from,
                 'jam_to' => $shift->jam_to,

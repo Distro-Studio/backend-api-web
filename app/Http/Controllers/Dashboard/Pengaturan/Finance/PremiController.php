@@ -112,6 +112,12 @@ class PremiController extends Controller
 
         $data = $request->validated();
 
+        // Validasi unique
+        $existingDataValidation = Premi::where('nama_premi', $data['nama_premi'])->where('id', '!=', $id)->first();
+        if ($existingDataValidation) {
+            return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Nama premi tersebut sudah pernah dibuat.'), Response::HTTP_BAD_REQUEST);
+        }
+
         $premi->update($data);
         $updatedPremi = $premi->fresh();
         $successMessage = "Data premi '{$updatedPremi->nama_premi}' berhasil diubah.";

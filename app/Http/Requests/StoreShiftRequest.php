@@ -25,7 +25,7 @@ class StoreShiftRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'nama' => 'required|string|max:225',
+            'nama' => 'required|string|max:225|unique:shifts,nama',
             'jam_from' => 'required',
             'jam_to' => 'required',
         ];
@@ -37,6 +37,7 @@ class StoreShiftRequest extends FormRequest
             'nama.required' => 'Nama shift tidak diperbolehkan kosong.',
             'nama.string' => 'Nama shift tidak diperbolehkan mengandung angka.',
             'nama.max' => 'Nama shift melebihi batas maksimum panjang karakter.',
+            'nama.unique' => 'Nama shift tersebut sudah pernah dibuat.',
             'jam_from.required' => 'Jam kerja mulai shift tidak diperbolehkan kosong.',
             'jam_to.required' => 'Jam kerja selesai shift tidak diperbolehkan kosong.',
         ];
