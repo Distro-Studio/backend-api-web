@@ -189,7 +189,7 @@ class UnitKerjaController extends Controller
     {
         return $collection->transform(function ($unit_kerja) {
             return [
-                'id' => 'UK00' . $unit_kerja->id,
+                'id' => $unit_kerja->id,
                 'nama_unit' => $unit_kerja->nama_unit,
                 'jenis_karyawan' => $unit_kerja->jenis_karyawan,
                 'deleted_at' => $unit_kerja->deleted_at,

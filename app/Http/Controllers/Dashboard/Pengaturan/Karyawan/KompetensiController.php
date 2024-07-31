@@ -189,7 +189,7 @@ class KompetensiController extends Controller
     {
         return $collection->transform(function ($kompetensi) {
             return [
-                'id' => 'KP00' . $kompetensi->id,
+                'id' => $kompetensi->id,
                 'nama_kompetensi' => $kompetensi->nama_kompetensi,
                 'jenis_kompetensi' => $kompetensi->jenis_kompetensi,
                 'total_tunjangan' => $kompetensi->total_tunjangan,

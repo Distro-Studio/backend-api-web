@@ -187,7 +187,7 @@ class JabatanController extends Controller
     {
         return $collection->transform(function ($jabatan) {
             return [
-                'id' => 'J00' . $jabatan->id,
+                'id' => $jabatan->id,
                 'nama_jabatan' => $jabatan->nama_jabatan,
                 'is_struktural' => $jabatan->is_struktural,
                 'tunjangan' => $jabatan->tunjangan,
