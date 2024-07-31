@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('nama_kompetensi');
             $table->boolean('jenis_kompetensi');
-            $table->integer('total_tunjangan')->nullable();
+            $table->integer('total_tunjangan');
             $table->integer('nilai_bor');
             $table->softDeletes();
             $table->timestamps();
