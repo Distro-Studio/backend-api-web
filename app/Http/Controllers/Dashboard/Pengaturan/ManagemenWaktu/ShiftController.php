@@ -40,16 +40,16 @@ class ShiftController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
-        $shift = Shift::query();
+        $shift = Shift::withTrashed();
 
         // Filter
-        $softDeleteFilters = $request->input('delete_data', []);
-        if (in_array('dihapus', $softDeleteFilters) && in_array('belum_dihapus', $softDeleteFilters)) {
-            $shift->withTrashed();
-        } elseif (in_array('dihapus', $softDeleteFilters)) {
-            $shift->onlyTrashed();
-        } else {
-            $shift->withoutTrashed();
+        if ($request->has('delete_data')) {
+            $softDeleteFilters = $request->delete_data;
+            $shift->when(in_array('dihapus', $softDeleteFilters) && !in_array('belum_dihapus', $softDeleteFilters), function ($query) {
+                return $query->onlyTrashed();
+            })->when(!in_array('dihapus', $softDeleteFilters) && in_array('belum_dihapus', $softDeleteFilters), function ($query) {
+                return $query->withoutTrashed();
+            });
         }
 
         // Search

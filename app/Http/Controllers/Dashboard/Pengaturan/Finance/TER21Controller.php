@@ -40,16 +40,16 @@ class TER21Controller extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
-        $ter = Ter::query();
+        $ter = Ter::withTrashed();
 
         // Filter
-        $softDeleteFilters = $request->input('delete_data', []);
-        if (in_array('dihapus', $softDeleteFilters) && in_array('belum_dihapus', $softDeleteFilters)) {
-            $ter->withTrashed();
-        } elseif (in_array('dihapus', $softDeleteFilters)) {
-            $ter->onlyTrashed();
-        } else {
-            $ter->withoutTrashed();
+        if ($request->has('delete_data')) {
+            $softDeleteFilters = $request->delete_data;
+            $ter->when(in_array('dihapus', $softDeleteFilters) && !in_array('belum_dihapus', $softDeleteFilters), function ($query) {
+                return $query->onlyTrashed();
+            })->when(!in_array('dihapus', $softDeleteFilters) && in_array('belum_dihapus', $softDeleteFilters), function ($query) {
+                return $query->withoutTrashed();
+            });
         }
 
         // Search

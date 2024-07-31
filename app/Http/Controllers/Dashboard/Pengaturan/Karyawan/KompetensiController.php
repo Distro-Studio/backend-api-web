@@ -24,16 +24,16 @@ class KompetensiController extends Controller
         if (!Gate::allows('view kompetensi')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
-        $kompetensi = Kompetensi::query();
+        $kompetensi = Kompetensi::withTrashed();
 
         // Filter
-        $softDeleteFilters = $request->input('delete_data', []);
-        if (in_array('dihapus', $softDeleteFilters) && in_array('belum_dihapus', $softDeleteFilters)) {
-            $kompetensi->withTrashed();
-        } elseif (in_array('dihapus', $softDeleteFilters)) {
-            $kompetensi->onlyTrashed();
-        } else {
-            $kompetensi->withoutTrashed();
+        if ($request->has('delete_data')) {
+            $softDeleteFilters = $request->delete_data;
+            $kompetensi->when(in_array('dihapus', $softDeleteFilters) && !in_array('belum_dihapus', $softDeleteFilters), function ($query) {
+                return $query->onlyTrashed();
+            })->when(!in_array('dihapus', $softDeleteFilters) && in_array('belum_dihapus', $softDeleteFilters), function ($query) {
+                return $query->withoutTrashed();
+            });
         }
 
         // Search

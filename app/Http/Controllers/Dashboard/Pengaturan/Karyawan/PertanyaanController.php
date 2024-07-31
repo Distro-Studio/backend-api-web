@@ -38,16 +38,16 @@ class PertanyaanController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
-        $pertanyaan = Pertanyaan::query();
+        $pertanyaan = Pertanyaan::withTrashed();
 
         // Filter
-        $softDeleteFilters = $request->input('delete_data', []);
-        if (in_array('dihapus', $softDeleteFilters) && in_array('belum_dihapus', $softDeleteFilters)) {
-            $pertanyaan->withTrashed();
-        } elseif (in_array('dihapus', $softDeleteFilters)) {
-            $pertanyaan->onlyTrashed();
-        } else {
-            $pertanyaan->withoutTrashed();
+        if ($request->has('delete_data')) {
+            $softDeleteFilters = $request->delete_data;
+            $pertanyaan->when(in_array('dihapus', $softDeleteFilters) && !in_array('belum_dihapus', $softDeleteFilters), function ($query) {
+                return $query->onlyTrashed();
+            })->when(!in_array('dihapus', $softDeleteFilters) && in_array('belum_dihapus', $softDeleteFilters), function ($query) {
+                return $query->withoutTrashed();
+            });
         }
 
         if ($request->has('nama_jabatan')) {

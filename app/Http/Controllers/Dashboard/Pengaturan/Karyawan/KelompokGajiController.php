@@ -26,16 +26,16 @@ class KelompokGajiController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
-        $kelompok_gaji = KelompokGaji::query();
+        $kelompok_gaji = KelompokGaji::withTrashed();
 
         // Filter
-        $softDeleteFilters = $request->input('delete_data', []);
-        if (in_array('dihapus', $softDeleteFilters) && in_array('belum_dihapus', $softDeleteFilters)) {
-            $kelompok_gaji->withTrashed();
-        } elseif (in_array('dihapus', $softDeleteFilters)) {
-            $kelompok_gaji->onlyTrashed();
-        } else {
-            $kelompok_gaji->withoutTrashed();
+        if ($request->has('delete_data')) {
+            $softDeleteFilters = $request->delete_data;
+            $kelompok_gaji->when(in_array('dihapus', $softDeleteFilters) && !in_array('belum_dihapus', $softDeleteFilters), function ($query) {
+                return $query->onlyTrashed();
+            })->when(!in_array('dihapus', $softDeleteFilters) && in_array('belum_dihapus', $softDeleteFilters), function ($query) {
+                return $query->withoutTrashed();
+            });
         }
 
         // Search

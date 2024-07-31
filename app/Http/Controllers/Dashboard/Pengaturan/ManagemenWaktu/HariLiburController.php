@@ -46,16 +46,16 @@ class HariLiburController extends Controller
         // Menghapus secara soft delete hari libur yang telah terlewat
         HariLibur::where('tanggal', '<', Carbon::today())->delete();
 
-        $hari_libur = HariLibur::query();
+        $hari_libur = HariLibur::withTrashed();
 
         // Filter
-        $softDeleteFilters = $request->input('delete_data', []);
-        if (in_array('dihapus', $softDeleteFilters) && in_array('belum_dihapus', $softDeleteFilters)) {
-            $hari_libur->withTrashed();
-        } elseif (in_array('dihapus', $softDeleteFilters)) {
-            $hari_libur->onlyTrashed();
-        } else {
-            $hari_libur->withoutTrashed();
+        if ($request->has('delete_data')) {
+            $softDeleteFilters = $request->delete_data;
+            $hari_libur->when(in_array('dihapus', $softDeleteFilters) && !in_array('belum_dihapus', $softDeleteFilters), function ($query) {
+                return $query->onlyTrashed();
+            })->when(!in_array('dihapus', $softDeleteFilters) && in_array('belum_dihapus', $softDeleteFilters), function ($query) {
+                return $query->withoutTrashed();
+            });
         }
 
         // Search
