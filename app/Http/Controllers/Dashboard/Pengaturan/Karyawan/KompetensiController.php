@@ -100,8 +100,10 @@ class KompetensiController extends Controller
         ], Response::HTTP_OK);
     }
 
-    public function update(Kompetensi $kompetensi, UpdateKompetensiRequest $request)
+    public function update($id, UpdateKompetensiRequest $request)
     {
+        $kompetensi = Kompetensi::withTrashed()->find($id);
+
         if (!Gate::allows('edit kompetensi', $kompetensi)) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }

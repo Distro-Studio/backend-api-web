@@ -98,8 +98,14 @@ class KelompokGajiController extends Controller
         ], Response::HTTP_OK);
     }
 
-    public function update(KelompokGaji $kelompok_gaji, UpdateKelompokGajiRequest $request)
+    public function update($id, UpdateKelompokGajiRequest $request)
     {
+        $kelompok_gaji = KelompokGaji::withTrashed()->find($id);
+
+        if (!$kelompok_gaji) {
+            return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data kelompok gaji tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+        }
+
         if (!Gate::allows('edit kelompokGaji', $kelompok_gaji)) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }

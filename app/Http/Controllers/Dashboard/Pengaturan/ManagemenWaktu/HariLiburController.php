@@ -120,8 +120,10 @@ class HariLiburController extends Controller
         ], Response::HTTP_OK);
     }
 
-    public function update(HariLibur $hari_libur, UpdateHariLiburRequest $request)
+    public function update($id, UpdateHariLiburRequest $request)
     {
+        $hari_libur = HariLibur::withTrashed()->find($id);
+
         if (!Gate::allows('edit hariLibur', $hari_libur)) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }

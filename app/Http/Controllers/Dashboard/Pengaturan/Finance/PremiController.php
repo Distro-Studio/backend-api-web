@@ -102,8 +102,10 @@ class PremiController extends Controller
         ], Response::HTTP_OK);
     }
 
-    public function update(Premi $premi, UpdatePremiRequest $request)
+    public function update($id, UpdatePremiRequest $request)
     {
+        $premi = Premi::withTrashed()->find($id);
+
         if (!Gate::allows('edit premi', $premi)) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }

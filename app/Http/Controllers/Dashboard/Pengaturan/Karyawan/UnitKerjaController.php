@@ -100,8 +100,10 @@ class UnitKerjaController extends Controller
         ], Response::HTTP_OK);
     }
 
-    public function update(UnitKerja $unit_kerja, UpdateUnitKerjaRequest $request)
+    public function update($id, UpdateUnitKerjaRequest $request)
     {
+        $unit_kerja = UnitKerja::withTrashed()->find($id);
+
         if (!Gate::allows('edit unitKerja', $unit_kerja)) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }

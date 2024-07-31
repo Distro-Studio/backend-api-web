@@ -116,8 +116,10 @@ class CutiController extends Controller
         ], Response::HTTP_OK);
     }
 
-    public function update(TipeCuti $cuti, UpdateCutiRequest $request)
+    public function update($id, UpdateCutiRequest $request)
     {
+        $cuti = TipeCuti::withTrashed()->find($id);
+
         if (!Gate::allows('edit cuti', $cuti)) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }

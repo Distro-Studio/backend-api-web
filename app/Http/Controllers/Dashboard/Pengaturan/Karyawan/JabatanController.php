@@ -98,8 +98,10 @@ class JabatanController extends Controller
         ], Response::HTTP_OK);
     }
 
-    public function update(Jabatan $jabatan, UpdateJabatanRequest $request)
+    public function update($id, UpdateJabatanRequest $request)
     {
+        $jabatan = Jabatan::withTrashed()->find($id);
+
         if (!Gate::allows('edit jabatan', $jabatan)) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }

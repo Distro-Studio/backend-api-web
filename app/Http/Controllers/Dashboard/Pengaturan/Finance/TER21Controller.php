@@ -116,8 +116,10 @@ class TER21Controller extends Controller
         ], Response::HTTP_OK);
     }
 
-    public function update(Ter $ter_pph_21, UpdateTERRequest $request)
+    public function update($id, UpdateTERRequest $request)
     {
+        $ter_pph_21 = Ter::withTrashed()->find($id);
+
         if (!Gate::allows('edit ter21', $ter_pph_21)) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
