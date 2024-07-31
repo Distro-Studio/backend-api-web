@@ -115,7 +115,7 @@ class KelompokGajiController extends Controller
         $updatedKelompokGaji = $kelompok_gaji->fresh();
 
         $successMessage = "Data kelompok gaji '{$updatedKelompokGaji->nama_kelompok}' berhasil diubah.";
-        $formattedData = $this->formatData(collect([$updatedKelompokGaji]))->first();
+        $formattedData = $this->formatData(collect([$kelompok_gaji]))->first();
 
         return response()->json([
             'status' => Response::HTTP_OK,

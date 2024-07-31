@@ -126,10 +126,9 @@ class TER21Controller extends Controller
 
         $data = $request->validated();
         $ter_pph_21->update($data);
-        $updatedterTer = $ter_pph_21->fresh();
 
         $successMessage = "Data TER PPH21 berhasil diubah.";
-        $formattedData = $this->formatData(collect([$updatedterTer]))->first();
+        $formattedData = $this->formatData(collect([$ter_pph_21]))->first();
 
         return response()->json([
             'status' => Response::HTTP_OK,

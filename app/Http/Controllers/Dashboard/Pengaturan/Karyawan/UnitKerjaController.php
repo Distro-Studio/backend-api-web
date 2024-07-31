@@ -113,7 +113,7 @@ class UnitKerjaController extends Controller
         $updatedUnitKerja = $unit_kerja->fresh();
 
         $successMessage = "Data unit kerja '{$updatedUnitKerja->nama_unit}' berhasil diubah.";
-        $formattedData = $this->formatData(collect([$updatedUnitKerja]))->first();
+        $formattedData = $this->formatData(collect([$unit_kerja]))->first();
 
         return response()->json([
             'status' => Response::HTTP_OK,
@@ -145,7 +145,7 @@ class UnitKerjaController extends Controller
         $unit_kerja->restore();
 
         if (is_null($unit_kerja->deleted_at)) {
-            $successMessage = "Data unit kerja {$unit_kerja->jabatans->nama_jabatan} berhasil dipulihkan.";
+            $successMessage = "Data unit kerja {$unit_kerja->nama_unit} berhasil dipulihkan.";
             return response()->json(new WithoutDataResource(Response::HTTP_OK, $successMessage), Response::HTTP_OK);
         } else {
             $successMessage = 'Restore data tidak dapat diproses, Silahkan hubungi admin untuk dilakukan pengecekan ulang.';

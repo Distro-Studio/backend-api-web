@@ -129,7 +129,7 @@ class CutiController extends Controller
         $updatedCuti = $cuti->fresh();
 
         $successMessage = "Data cuti '{$updatedCuti->nama}' berhasil diubah.";
-        $formattedData = $this->formatData(collect([$updatedCuti]))->first();
+        $formattedData = $this->formatData(collect([$cuti]))->first();
 
         return response()->json([
             'status' => Response::HTTP_OK,

@@ -133,7 +133,7 @@ class HariLiburController extends Controller
         $updatedHariLibur = $hari_libur->fresh();
 
         $successMessage = "Data hari libur '{$updatedHariLibur->nama}' berhasil diubah.";
-        $formattedData = $this->formatData(collect([$updatedHariLibur]))->first();
+        $formattedData = $this->formatData(collect([$hari_libur]))->first();
 
         return response()->json([
             'status' => Response::HTTP_OK,

@@ -113,7 +113,7 @@ class KompetensiController extends Controller
         $updatedKompetensi = $kompetensi->fresh();
 
         $successMessage = "Data kompetensi '{$updatedKompetensi->nama_kompetensi}' berhasil diubah.";
-        $formattedData = $this->formatData(collect([$updatedKompetensi]))->first();
+        $formattedData = $this->formatData(collect([$kompetensi]))->first();
 
         return response()->json([
             'status' => Response::HTTP_OK,

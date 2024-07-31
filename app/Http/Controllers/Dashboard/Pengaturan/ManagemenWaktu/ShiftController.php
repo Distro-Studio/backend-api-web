@@ -127,7 +127,7 @@ class ShiftController extends Controller
         $updatedShift = $shift->fresh();
 
         $successMessage = "Data shift '{$updatedShift->nama}' berhasil diubah.";
-        $formattedData = $this->formatData(collect([$updatedShift]))->first();
+        $formattedData = $this->formatData(collect([$shift]))->first();
 
         return response()->json([
             'status' => Response::HTTP_OK,

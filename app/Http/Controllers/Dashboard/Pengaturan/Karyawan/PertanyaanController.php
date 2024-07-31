@@ -135,7 +135,7 @@ class PertanyaanController extends Controller
         $updatedPertanyaan = $pertanyaan->fresh();
 
         $successMessage = "Data pertanyaan kuesioner untuk jabatan {$updatedPertanyaan->jabatans->nama_jabatan} diubah.";
-        $formattedData = $this->formatData(collect([$updatedPertanyaan]))->first();
+        $formattedData = $this->formatData(collect([$pertanyaan]))->first();
 
         return response()->json([
             'status' => Response::HTTP_OK,
