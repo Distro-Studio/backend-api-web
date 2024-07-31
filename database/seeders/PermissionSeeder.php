@@ -42,7 +42,7 @@ class PermissionSeeder extends Seeder
             'Pengaturan Kuesioner' => ['create kuesioner', 'edit kuesioner', 'delete kuesioner', 'view kuesioner', 'import kuesioner', 'export kuesioner'],
             'Pengaturan Premi' => ['create premi', 'edit premi', 'delete premi', 'view premi', 'import premi', 'export premi'],
             'Pengaturan TER21' => ['create ter21', 'edit ter21', 'delete ter21', 'view ter21', 'import ter21', 'export ter21'],
-            'Pengaturan Jadwal Penggajian' => ['create jadwalGaji', 'view jadwalGaji', 'reset jadwalGaji'],
+            'Pengaturan Jadwal Penggajian' => ['create jadwalGaji', 'view jadwalGaji'],
             'Pengaturan THR' => ['create thr', 'edit thr', 'delete thr', 'view thr'],
             'Pengaturan Shift' => ['create shift', 'edit shift', 'delete shift', 'view shift', 'import shift', 'export shift'],
             'Pengaturan Hari Libur' => ['create hariLibur', 'edit hariLibur', 'delete hariLibur', 'view hariLibur', 'import hariLibur', 'export hariLibur'],

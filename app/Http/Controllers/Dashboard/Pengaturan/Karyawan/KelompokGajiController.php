@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Dashboard\Pengaturan\Karyawan;
 use App\Models\KelompokGaji;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Collection;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Gate;
 use Maatwebsite\Excel\Facades\Excel;
@@ -12,29 +13,13 @@ use Illuminate\Support\Facades\Validator;
 use App\Http\Requests\StoreKelompokGajiRequest;
 use App\Http\Requests\UpdateKelompokGajiRequest;
 use App\Exports\Pengaturan\Karyawan\KelompokGajiExport;
-use App\Http\Requests\Excel_Import\ImportKelompokGajiRequest;
 use App\Imports\Pengaturan\Karyawan\KelompokGajiImport;
+use App\Http\Requests\Excel_Import\ImportKelompokGajiRequest;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
 use App\Http\Resources\Dashboard\Pengaturan_Karyawan\KelompokGajiResource;
 
 class KelompokGajiController extends Controller
 {
-    /* ============================= For Dropdown ============================= */
-    public function getAllKelompokGaji()
-    {
-        if (!Gate::allows('view kelompokGaji')) {
-            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
-        }
-
-        $kelompk_gaji = KelompokGaji::all();
-        return response()->json([
-            'status' => Response::HTTP_OK,
-            'message' => 'Retrieving all kelompok gaji for dropdown',
-            'data' => $kelompk_gaji
-        ], Response::HTTP_OK);
-    }
-    /* ============================= For Dropdown ============================= */
-
     public function index(Request $request)
     {
         if (!Gate::allows('view kelompokGaji')) {
@@ -65,7 +50,13 @@ class KelompokGajiController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data kelompok gaji tidak ditemukan.'), Response::HTTP_NOT_FOUND);
         }
 
-        return response()->json(new KelompokGajiResource(Response::HTTP_OK, 'Data kelompok gaji berhasil ditampilkan.', $dataKelompokGaji), Response::HTTP_OK);
+        $successMessage = "Data kelompok gaji berhasil ditampilkan.";
+        $formattedData = $this->formatData($dataKelompokGaji);
+        return response()->json([
+            'status' => Response::HTTP_OK,
+            'message' => $successMessage,
+            'data' => $formattedData,
+        ], Response::HTTP_OK);
     }
 
     public function store(StoreKelompokGajiRequest $request)
@@ -77,8 +68,14 @@ class KelompokGajiController extends Controller
         $data = $request->validated();
 
         $kelompk_gaji = KelompokGaji::create($data);
-        $successMessage = "Data kelompok gaji '{$kelompk_gaji->nama_kelompok}' berhasil dibuat.";
-        return response()->json(new KelompokGajiResource(Response::HTTP_OK, $successMessage, $kelompk_gaji), Response::HTTP_OK);
+        $successMessage = "Data kelompok gaji {$kelompk_gaji->nama_kelompok} berhasil dibuat.";
+        $formattedData = $this->formatData(collect([$kelompk_gaji]))->first();
+
+        return response()->json([
+            'status' => Response::HTTP_OK,
+            'message' => $successMessage,
+            'data' => $formattedData,
+        ], Response::HTTP_OK);
     }
 
     public function show(KelompokGaji $kelompok_gaji)
@@ -91,7 +88,14 @@ class KelompokGajiController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data kelompok gaji tidak ditemukan.'), Response::HTTP_NOT_FOUND);
         }
 
-        return response()->json(new KelompokGajiResource(Response::HTTP_OK, 'Data kelompok gaji berhasil ditampilkan.', $kelompok_gaji), Response::HTTP_OK);
+        $successMessage = "Data kelompok gaji {$kelompok_gaji->nama_kelompok} berhasil ditampilkan.";
+        $formattedData = $this->formatData(collect([$kelompok_gaji]))->first();
+
+        return response()->json([
+            'status' => Response::HTTP_OK,
+            'message' => $successMessage,
+            'data' => $formattedData,
+        ], Response::HTTP_OK);
     }
 
     public function update(KelompokGaji $kelompok_gaji, UpdateKelompokGajiRequest $request)
@@ -105,7 +109,13 @@ class KelompokGajiController extends Controller
         $updatedKelompokGaji = $kelompok_gaji->fresh();
 
         $successMessage = "Data kelompok gaji '{$updatedKelompokGaji->nama_kelompok}' berhasil diubah.";
-        return response()->json(new KelompokGajiResource(Response::HTTP_OK, $successMessage, $updatedKelompokGaji), Response::HTTP_OK);
+        $formattedData = $this->formatData(collect([$updatedKelompokGaji]))->first();
+
+        return response()->json([
+            'status' => Response::HTTP_OK,
+            'message' => $successMessage,
+            'data' => $formattedData,
+        ], Response::HTTP_OK);
     }
 
     public function destroy(KelompokGaji $kelompok_gaji)
@@ -139,7 +149,7 @@ class KelompokGajiController extends Controller
         }
     }
 
-    public function exportKelompokGaji(Request $request)
+    public function exportKelompokGaji()
     {
         if (!Gate::allows('export kelompokGaji')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
@@ -171,5 +181,19 @@ class KelompokGajiController extends Controller
         }
 
         return response()->json(new WithoutDataResource(Response::HTTP_OK, 'Data kelompok gaji berhasil di import kedalam table.'), Response::HTTP_OK);
+    }
+
+    protected function formatData(Collection $collection)
+    {
+        return $collection->transform(function ($kelompok_gaji) {
+            return [
+                'id' => $kelompok_gaji->id,
+                'nama_kelompok' => $kelompok_gaji->nama_kelompok,
+                'besaran_gaji' => $kelompok_gaji->besaran_gaji,
+                'deleted_at' => $kelompok_gaji->deleted_at,
+                'created_at' => $kelompok_gaji->created_at,
+                'updated_at' => $kelompok_gaji->updated_at
+            ];
+        });
     }
 }

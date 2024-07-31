@@ -3,20 +3,20 @@
 namespace App\Http\Controllers\Dashboard\Pengaturan\ManagemenWaktu;
 
 use App\Models\Cuti;
+use App\Models\TipeCuti;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Collection;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Gate;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Http\Requests\StoreCutiRequest;
 use App\Http\Requests\UpdateCutiRequest;
 use Illuminate\Support\Facades\Validator;
-use App\Exports\Pengaturan\Managemen_Waktu\CutiExport;
 use App\Http\Requests\Excel_Import\ImportCutiRequest;
+use App\Exports\Pengaturan\Managemen_Waktu\CutiExport;
 use App\Imports\Pengaturan\Managemen_Waktu\CutiImport;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
-use App\Http\Resources\Dashboard\Pengaturan_Managemen_Waktu\CutiResource;
-use App\Models\TipeCuti;
 
 class CutiController extends Controller
 {
@@ -63,12 +63,18 @@ class CutiController extends Controller
             });
         }
 
-        $dataCuti = $cuti->get();
-        if ($dataCuti->isEmpty()) {
+        $dataTipeCuti = $cuti->get();
+        if ($dataTipeCuti->isEmpty()) {
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data cuti tidak ditemukan.'), Response::HTTP_NOT_FOUND);
         }
 
-        return response()->json(new CutiResource(Response::HTTP_OK, 'Data cuti berhasil ditampilkan.', $dataCuti), Response::HTTP_OK);
+        $successMessage = "Data tipe cuti berhasil ditampilkan.";
+        $formattedData = $this->formatData($dataTipeCuti);
+        return response()->json([
+            'status' => Response::HTTP_OK,
+            'message' => $successMessage,
+            'data' => $formattedData,
+        ], Response::HTTP_OK);
     }
 
     public function store(StoreCutiRequest $request)
@@ -79,9 +85,15 @@ class CutiController extends Controller
 
         $data = $request->validated();
 
-        $cuti = TipeCuti::create($data);
-        $successMessage = "Data cuti berhasil dibuat.";
-        return response()->json(new CutiResource(Response::HTTP_OK, $successMessage, $cuti), Response::HTTP_OK);
+        $tipe_cuti = TipeCuti::create($data);
+        $successMessage = "Data tipe cuti berhasil dibuat.";
+        $formattedData = $this->formatData(collect([$tipe_cuti]))->first();
+
+        return response()->json([
+            'status' => Response::HTTP_OK,
+            'message' => $successMessage,
+            'data' => $formattedData,
+        ], Response::HTTP_OK);
     }
 
     public function show(TipeCuti $cuti)
@@ -94,7 +106,14 @@ class CutiController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data cuti tidak ditemukan.'), Response::HTTP_NOT_FOUND);
         }
 
-        return response()->json(new CutiResource(Response::HTTP_OK, 'Data cuti ditemukan.', $cuti), Response::HTTP_OK);
+        $successMessage = "Data tipe cuti {$cuti->nama} berhasil ditampilkan.";
+        $formattedData = $this->formatData(collect([$cuti]))->first();
+
+        return response()->json([
+            'status' => Response::HTTP_OK,
+            'message' => $successMessage,
+            'data' => $formattedData,
+        ], Response::HTTP_OK);
     }
 
     public function update(TipeCuti $cuti, UpdateCutiRequest $request)
@@ -108,7 +127,13 @@ class CutiController extends Controller
         $updatedCuti = $cuti->fresh();
 
         $successMessage = "Data cuti '{$updatedCuti->nama}' berhasil diubah.";
-        return response()->json(new CutiResource(Response::HTTP_OK, $successMessage, $updatedCuti), Response::HTTP_OK);
+        $formattedData = $this->formatData(collect([$updatedCuti]))->first();
+
+        return response()->json([
+            'status' => Response::HTTP_OK,
+            'message' => $successMessage,
+            'data' => $formattedData,
+        ], Response::HTTP_OK);
     }
 
     public function destroy(TipeCuti $cuti)
@@ -174,5 +199,22 @@ class CutiController extends Controller
         }
 
         return response()->json(new WithoutDataResource(Response::HTTP_OK, 'Data cuti berhasil di import kedalam table.'), Response::HTTP_OK);
+    }
+
+    protected function formatData(Collection $collection)
+    {
+        return $collection->transform(function ($tipe_cuti) {
+            return [
+                'id' => $tipe_cuti->id,
+                'nama' => $tipe_cuti->nama,
+                'kuota' => $tipe_cuti->kuota,
+                'is_need_requirement' => $tipe_cuti->is_need_requirement,
+                'keterangan' => $tipe_cuti->keterangan,
+                'cuti_administratif' => $tipe_cuti->cuti_administratif,
+                'deleted_at' => $tipe_cuti->deleted_at,
+                'created_at' => $tipe_cuti->created_at,
+                'updated_at' => $tipe_cuti->updated_at
+            ];
+        });
     }
 }

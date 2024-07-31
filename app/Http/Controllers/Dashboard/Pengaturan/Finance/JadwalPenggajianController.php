@@ -41,7 +41,7 @@ class JadwalPenggajianController extends Controller
 
     public function createJadwalPenggajian(StoreJadwalPenggajianRequest $request)
     {
-        if (!Gate::allows('create jadwalGaji') && !Gate::allows('reset jadwalGaji')) {
+        if (!Gate::allows('create jadwalGaji')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 

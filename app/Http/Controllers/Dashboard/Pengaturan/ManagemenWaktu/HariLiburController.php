@@ -6,6 +6,7 @@ use Carbon\Carbon;
 use App\Models\HariLibur;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Collection;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Http;
@@ -13,13 +14,10 @@ use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Validator;
 use App\Http\Requests\StoreHariLiburRequest;
 use App\Http\Requests\UpdateHariLiburRequest;
-use App\Imports\Pengaturan\Managemen_Waktu\ShiftImport;
-use App\Exports\Pengaturan\Managemen_Waktu\HariLiburExport;
 use App\Http\Requests\Excel_Import\ImportHariLiburRequest;
+use App\Exports\Pengaturan\Managemen_Waktu\HariLiburExport;
 use App\Imports\Pengaturan\Managemen_Waktu\HariLiburImport;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
-use App\Http\Resources\Dashboard\Pengaturan_Managemen_Waktu\HariLiburResource;
-use Exception;
 
 class HariLiburController extends Controller
 {
@@ -74,7 +72,13 @@ class HariLiburController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data hari libur tidak ditemukan.'), Response::HTTP_NOT_FOUND);
         }
 
-        return response()->json(new HariLiburResource(Response::HTTP_OK, 'Data hari libur berhasil ditampilkan.', $dataHariLibur), Response::HTTP_OK);
+        $successMessage = "Data hari libur berhasil ditampilkan.";
+        $formattedData = $this->formatData($dataHariLibur);
+        return response()->json([
+            'status' => Response::HTTP_OK,
+            'message' => $successMessage,
+            'data' => $formattedData,
+        ], Response::HTTP_OK);
     }
 
     public function store(StoreHariLiburRequest $request)
@@ -87,7 +91,13 @@ class HariLiburController extends Controller
 
         $hari_libur = HariLibur::create($data);
         $successMessage = "Data hari libur berhasil dibuat.";
-        return response()->json(new HariLiburResource(Response::HTTP_OK, $successMessage, $hari_libur), Response::HTTP_OK);
+        $formattedData = $this->formatData(collect([$hari_libur]))->first();
+
+        return response()->json([
+            'status' => Response::HTTP_OK,
+            'message' => $successMessage,
+            'data' => $formattedData,
+        ], Response::HTTP_OK);
     }
 
     public function show(HariLibur $hari_libur)
@@ -100,7 +110,14 @@ class HariLiburController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data hari libur tidak ditemukan.'), Response::HTTP_NOT_FOUND);
         }
 
-        return response()->json(new HariLiburResource(Response::HTTP_OK, 'Data hari libur berhasil ditampilkan.', $hari_libur), Response::HTTP_OK);
+        $successMessage = "Data hari libur {$hari_libur->nama} berhasil diubah.";
+        $formattedData = $this->formatData(collect([$hari_libur]))->first();
+
+        return response()->json([
+            'status' => Response::HTTP_OK,
+            'message' => $successMessage,
+            'data' => $formattedData,
+        ], Response::HTTP_OK);
     }
 
     public function update(HariLibur $hari_libur, UpdateHariLiburRequest $request)
@@ -114,7 +131,13 @@ class HariLiburController extends Controller
         $updatedHariLibur = $hari_libur->fresh();
 
         $successMessage = "Data hari libur '{$updatedHariLibur->nama}' berhasil diubah.";
-        return response()->json(new HariLiburResource(Response::HTTP_OK, $successMessage, $updatedHariLibur), Response::HTTP_OK);
+        $formattedData = $this->formatData(collect([$updatedHariLibur]))->first();
+
+        return response()->json([
+            'status' => Response::HTTP_OK,
+            'message' => $successMessage,
+            'data' => $formattedData,
+        ], Response::HTTP_OK);
     }
 
     public function destroy(HariLibur $hari_libur)
@@ -148,7 +171,7 @@ class HariLiburController extends Controller
         }
     }
 
-    public function exportHariLibur(Request $request)
+    public function exportHariLibur()
     {
         if (!Gate::allows('export hariLibur')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
@@ -219,5 +242,19 @@ class HariLiburController extends Controller
                 'error' => 'Maaf sepertinya server sedang sibuk',
             ], Response::HTTP_BAD_REQUEST);
         }
+    }
+
+    protected function formatData(Collection $collection)
+    {
+        return $collection->transform(function ($hariLibur) {
+            return [
+                'id' => $hariLibur->id,
+                'nama' => $hariLibur->nama,
+                'tanggal' => $hariLibur->tanggal,
+                'deleted_at' => $hariLibur->deleted_at,
+                'created_at' => $hariLibur->created_at,
+                'updated_at' => $hariLibur->updated_at
+            ];
+        });
     }
 }

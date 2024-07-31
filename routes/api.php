@@ -60,9 +60,13 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/get-list-ptkp', [DataKaryawanController::class, 'getAllDataPTKP']);
     Route::get('/get-list-kategori-transfer', [DataTransferKaryawanController::class, 'getAllKategoriTransfer']);
     Route::get('/get-lokasi-kantor', [DataPresensiController::class, 'getLokasiKantor']);
+    Route::get('/get-list-premi', [DataKaryawanController::class, 'getAllDataPremi']);
+    Route::get('/get-list-pph21', [TER21Controller::class, 'getAllTer']);
+    Route::get('/get-list-tipecuti', [CutiController::class, 'getAllTipeCuti']);
+    Route::get('/get-list-harilibur', [HariLiburController::class, 'getAllHariLibur']);
+    Route::get('/get-list-shift', [ShiftController::class, 'getAllShift']);
+    Route::get('/get-list-pertanyaan', [PertanyaanController::class, 'getAllPertanyaan']);
 
-    Route::get('/get-list-premi', [DataKaryawanController::class, 'getAllDataPremi']);
-    Route::get('/get-list-premi', [DataKaryawanController::class, 'getAllDataPremi']);
     Route::get('/get-list-premi', [DataKaryawanController::class, 'getAllDataPremi']);
     Route::get('/get-list-premi', [DataKaryawanController::class, 'getAllDataPremi']);
 
@@ -198,7 +202,6 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::group(['prefix' => '/pengaturan'], function () {
             /* ==================================== Setting Akun ==================================== */
             // ! Roles ===========>
-            Route::get('/all-role', [RolesController::class, 'getAllRoles']);
             Route::post('/role/filter', [RolesController::class, 'index']);
             Route::post('/role/search', [RolesController::class, 'index']);
             Route::post('/role/restore/{id}', [RolesController::class, 'restore']);
@@ -217,7 +220,6 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
             /* ==================================== Setting Karyawan ==================================== */
             // ! Jabatan ===========>
-            Route::get('/all-jabatan', [JabatanController::class, 'getAllJabatan']);
             Route::post('/jabatan/filter', [JabatanController::class, 'index']);
             Route::post('/jabatan/search', [JabatanController::class, 'index']);
             Route::post('/jabatan/restore/{id}', [JabatanController::class, 'restore']);
@@ -226,7 +228,6 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::apiResource('/jabatan', JabatanController::class);
 
             // ! Kelompok Gaji ===========>
-            Route::get('/all-kelompok-gaji', [KelompokGajiController::class, 'getAllKelompokGaji']);
             Route::post('/kelompok-gaji/filter', [KelompokGajiController::class, 'index']);
             Route::post('/kelompok-gaji/search', [KelompokGajiController::class, 'index']);
             Route::post('/kelompok-gaji/restore/{id}', [KelompokGajiController::class, 'restore']);
@@ -235,7 +236,6 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::apiResource('/kelompok-gaji', KelompokGajiController::class);
 
             // ! Kompetensi ===========>
-            Route::get('/all-kompetensi', [KompetensiController::class, 'getAllKompetensi']);
             Route::post('/kompetensi/filter', [KompetensiController::class, 'index']);
             Route::post('/kompetensi/search', [KompetensiController::class, 'index']);
             Route::post('/kompetensi/restore/{id}', [KompetensiController::class, 'restore']);
@@ -244,7 +244,6 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::apiResource('/kompetensi', KompetensiController::class);
 
             // ! Unit Kerja ===========>
-            Route::get('/all-unit-kerja', [UnitKerjaController::class, 'getAllUnitKerja']);
             Route::post('/unit-kerja/filter', [UnitKerjaController::class, 'index']);
             Route::post('/unit-kerja/search', [UnitKerjaController::class, 'index']);
             Route::post('/unit-kerja/restore/{id}', [UnitKerjaController::class, 'restore']);

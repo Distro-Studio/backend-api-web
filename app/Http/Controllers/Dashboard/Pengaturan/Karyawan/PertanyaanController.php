@@ -2,19 +2,19 @@
 
 namespace App\Http\Controllers\Dashboard\Pengaturan\Karyawan;
 
-use App\Exports\Pengaturan\Karyawan\PertanyaanExport;
 use App\Models\Pertanyaan;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Collection;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Excel_Import\ImportPertanyaanRequest;
 use Illuminate\Support\Facades\Gate;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Http\Requests\StorePertanyaanRequest;
 use App\Http\Requests\UpdatePertanyaanRequest;
-use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
-use App\Http\Resources\Dashboard\Pengaturan_Karyawan\PertanyaanResource;
+use App\Exports\Pengaturan\Karyawan\PertanyaanExport;
 use App\Imports\Pengaturan\Karyawan\PertanyaanImport;
+use App\Http\Requests\Excel_Import\ImportPertanyaanRequest;
+use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
 
 class PertanyaanController extends Controller
 {
@@ -74,7 +74,13 @@ class PertanyaanController extends Controller
         }
 
         $dataPertanyaan = $pertanyaan->get();
-        return response()->json(new PertanyaanResource(Response::HTTP_OK, 'Data pertanyaan kuesioner berhasil ditampilkan.', $dataPertanyaan), Response::HTTP_OK);
+        $successMessage = "Data Ter PPH21 berhasil ditampilkan.";
+        $formattedData = $this->formatData($dataPertanyaan);
+        return response()->json([
+            'status' => Response::HTTP_OK,
+            'message' => $successMessage,
+            'data' => $formattedData,
+        ], Response::HTTP_OK);
     }
 
     public function store(StorePertanyaanRequest $request)
@@ -87,7 +93,13 @@ class PertanyaanController extends Controller
 
         $pertanyaan = Pertanyaan::create($data);
         $successMessage = "Data pertanyaan kuesioner untuk jabatan {$pertanyaan->jabatans->nama_jabatan} berhasil dibuat.";
-        return response()->json(new PertanyaanResource(Response::HTTP_OK, $successMessage, $pertanyaan), Response::HTTP_OK);
+        $formattedData = $this->formatData(collect([$pertanyaan]))->first();
+
+        return response()->json([
+            'status' => Response::HTTP_OK,
+            'message' => $successMessage,
+            'data' => $formattedData,
+        ], Response::HTTP_OK);
     }
 
     public function show(Pertanyaan $pertanyaan)
@@ -100,7 +112,14 @@ class PertanyaanController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data pertanyaan kuesioner tidak ditemukan.'), Response::HTTP_NOT_FOUND);
         }
 
-        return response()->json(new PertanyaanResource(Response::HTTP_OK, 'Data pertanyaan kuesioner berhasil ditampilkan.', $pertanyaan), Response::HTTP_OK);
+        $successMessage = "Data pertanyaan kuesioner berhasil ditampilkan.";
+        $formattedData = $this->formatData(collect([$pertanyaan]))->first();
+
+        return response()->json([
+            'status' => Response::HTTP_OK,
+            'message' => $successMessage,
+            'data' => $formattedData,
+        ], Response::HTTP_OK);
     }
 
     public function update(Pertanyaan $pertanyaan, UpdatePertanyaanRequest $request)
@@ -114,7 +133,13 @@ class PertanyaanController extends Controller
         $updatedPertanyaan = $pertanyaan->fresh();
 
         $successMessage = "Data pertanyaan kuesioner untuk jabatan {$updatedPertanyaan->jabatans->nama_jabatan} diubah.";
-        return response()->json(new PertanyaanResource(Response::HTTP_OK, $successMessage, $updatedPertanyaan), Response::HTTP_OK);
+        $formattedData = $this->formatData(collect([$updatedPertanyaan]))->first();
+
+        return response()->json([
+            'status' => Response::HTTP_OK,
+            'message' => $successMessage,
+            'data' => $formattedData,
+        ], Response::HTTP_OK);
     }
 
     public function destroy(Pertanyaan $pertanyaan)
@@ -148,7 +173,7 @@ class PertanyaanController extends Controller
         }
     }
 
-    public function exportPertanyaan(Request $request)
+    public function exportPertanyaan()
     {
         if (!Gate::allows('export kueasioner')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
@@ -180,5 +205,19 @@ class PertanyaanController extends Controller
         }
 
         return response()->json(new WithoutDataResource(Response::HTTP_OK, 'Data pertanyaan berhasil di import kedalam table.'), Response::HTTP_OK);
+    }
+
+    protected function formatData(Collection $collection)
+    {
+        return $collection->transform(function ($pertanyaan) {
+            return [
+                'id' => $pertanyaan->id,
+                'pertanyaan' => $pertanyaan->pertanyaan,
+                'jabatan' => $pertanyaan->jabatans,
+                'deleted_at' => $pertanyaan->deleted_at,
+                'created_at' => $pertanyaan->created_at,
+                'updated_at' => $pertanyaan->updated_at
+            ];
+        });
     }
 }

@@ -5,36 +5,19 @@ namespace App\Http\Controllers\Dashboard\Pengaturan\Finance;
 use App\Models\Premi;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Collection;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Gate;
 use Maatwebsite\Excel\Facades\Excel;
-use Illuminate\Support\Facades\Validator;
-use App\Exports\Pengaturan\Finance\PremiExport;
-use App\Http\Requests\Excel_Import\ImportPremiRequest;
 use App\Http\Requests\StorePremiRequest;
 use App\Http\Requests\UpdatePremiRequest;
-use App\Http\Resources\Dashboard\Pengaturan_Finance\PremiResource;
+use App\Exports\Pengaturan\Finance\PremiExport;
 use App\Imports\Pengaturan\Finance\PremiImport;
+use App\Http\Requests\Excel_Import\ImportPremiRequest;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
 
 class PremiController extends Controller
 {
-    /* ============================= For Dropdown ============================= */
-    public function getAllPremi()
-    {
-        if (!Gate::allows('view premi')) {
-            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
-        }
-
-        $dataPremi = Premi::all();
-        return response()->json([
-            'status' => Response::HTTP_OK,
-            'message' => 'Retrieving all premi for dropdown',
-            'data' => $dataPremi
-        ], Response::HTTP_OK);
-    }
-    /* ============================= For Dropdown ============================= */
-
     public function index(Request $request)
     {
         if (!Gate::allows('view premi')) {
@@ -72,7 +55,13 @@ class PremiController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data premi tidak ditemukan.'), Response::HTTP_NOT_FOUND);
         }
 
-        return response()->json(new PremiResource(Response::HTTP_OK, 'Data premi berhasil ditampilkan.', $dataPremi), Response::HTTP_OK);
+        $formattedData = $this->formatData($dataPremi);
+
+        return response()->json([
+            'status' => Response::HTTP_OK,
+            'message' => 'Data premi berhasil ditampilkan.',
+            'data' => $formattedData,
+        ], Response::HTTP_OK);
     }
 
     public function store(StorePremiRequest $request)
@@ -85,7 +74,13 @@ class PremiController extends Controller
 
         $premi = Premi::create($data);
         $successMessage = "Data premi '{$premi->nama_premi}' berhasil dibuat.";
-        return response()->json(new PremiResource(Response::HTTP_OK, $successMessage, $premi), Response::HTTP_OK);
+        $formattedData = $this->formatData(collect([$premi]))->first();
+
+        return response()->json([
+            'status' => Response::HTTP_OK,
+            'message' => $successMessage,
+            'data' => $formattedData,
+        ], Response::HTTP_OK);
     }
 
     public function show(Premi $premi)
@@ -98,7 +93,13 @@ class PremiController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data premi tidak ditemukan.'), Response::HTTP_NOT_FOUND);
         }
 
-        return response()->json(new PremiResource(Response::HTTP_OK, 'Data premi berhasil ditampilkan.', $premi), Response::HTTP_OK);
+        $formattedData = $this->formatData(collect([$premi]))->first();
+
+        return response()->json([
+            'status' => Response::HTTP_OK,
+            'message' => "Data premi {$premi->name} berhasil ditampilkan.",
+            'data' => $formattedData,
+        ], Response::HTTP_OK);
     }
 
     public function update(Premi $premi, UpdatePremiRequest $request)
@@ -112,7 +113,13 @@ class PremiController extends Controller
         $premi->update($data);
         $updatedPremi = $premi->fresh();
         $successMessage = "Data premi '{$updatedPremi->nama_premi}' berhasil diubah.";
-        return response()->json(new PremiResource(Response::HTTP_OK, $successMessage, $premi), Response::HTTP_OK);
+        $formattedData = $this->formatData(collect([$premi]))->first();
+
+        return response()->json([
+            'status' => Response::HTTP_OK,
+            'message' => $successMessage,
+            'data' => $formattedData,
+        ], Response::HTTP_OK);
     }
 
     public function destroy(Premi $premi)
@@ -145,7 +152,8 @@ class PremiController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, $successMessage), Response::HTTP_BAD_REQUEST);
         }
     }
-    public function exportPremi(Request $request)
+    
+    public function exportPremi()
     {
         if (!Gate::allows('export premi')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
@@ -177,5 +185,23 @@ class PremiController extends Controller
         }
 
         return response()->json(new WithoutDataResource(Response::HTTP_OK, 'Data premi berhasil di import kedalam table.'), Response::HTTP_OK);
+    }
+
+    protected function formatData(Collection $collection)
+    {
+        return $collection->transform(function ($premi) {
+            return [
+                'id' => 'P00' . $premi->id,
+                'nama_premi' => $premi->nama_premi,
+                'sumber_potongan' => $premi->sumber_potongan,
+                'jenis_premi' => $premi->jenis_premi,
+                'besaran_premi' => $premi->besaran_premi,
+                'minimal_rate' => $premi->minimal_rate,
+                'maksimal_rate' => $premi->maksimal_rate,
+                'deleted_at' => $premi->deleted_at,
+                'created_at' => $premi->created_at,
+                'updated_at' => $premi->updated_at
+            ];
+        });
     }
 }

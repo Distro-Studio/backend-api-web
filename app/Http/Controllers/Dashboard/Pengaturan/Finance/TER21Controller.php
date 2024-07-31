@@ -5,18 +5,16 @@ namespace App\Http\Controllers\Dashboard\Pengaturan\Finance;
 use App\Models\Ter;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Collection;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Gate;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Http\Requests\StoreTERRequest;
 use App\Http\Requests\UpdateTERRequest;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Validation\ValidationException;
 use App\Exports\Pengaturan\Finance\TER21Export;
-use App\Http\Requests\Excel_Import\ImportTER21Request;
 use App\Imports\Pengaturan\Finance\TER21Import;
+use App\Http\Requests\Excel_Import\ImportTER21Request;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
-use App\Http\Resources\Dashboard\Pengaturan_Finance\TER21Resource;
 
 class TER21Controller extends Controller
 {
@@ -27,7 +25,7 @@ class TER21Controller extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
-        $dataTer = Ter::with(['kategori_ters', 'ptkps'])->get();
+        $dataTer = Ter::all();
         return response()->json([
             'status' => Response::HTTP_OK,
             'message' => 'Retrieving all Ter PPH21 for dropdown',
@@ -70,7 +68,13 @@ class TER21Controller extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data Ter PPH21 tidak ditemukan.'), Response::HTTP_NOT_FOUND);
         }
 
-        return response()->json(new TER21Resource(Response::HTTP_OK, 'Data Ter PPH21 berhasil ditampilkan.', $dataTer), Response::HTTP_OK);
+        $successMessage = "Data Ter PPH21 berhasil ditampilkan.";
+        $formattedData = $this->formatData($dataTer);
+        return response()->json([
+            'status' => Response::HTTP_OK,
+            'message' => $successMessage,
+            'data' => $formattedData,
+        ], Response::HTTP_OK);
     }
 
     public function store(StoreTERRequest $request)
@@ -81,9 +85,15 @@ class TER21Controller extends Controller
 
         $data = $request->validated();
 
-        $ter = Ter::with(['kategori_ters', 'ptkps'])->create($data);
+        $ter_pph_21 = Ter::create($data);
         $successMessage = "Data Ter PPH21 berhasil dibuat.";
-        return response()->json(new TER21Resource(Response::HTTP_OK, $successMessage, $ter), Response::HTTP_OK);
+        $formattedData = $this->formatData(collect([$ter_pph_21]))->first();
+
+        return response()->json([
+            'status' => Response::HTTP_OK,
+            'message' => $successMessage,
+            'data' => $formattedData,
+        ], Response::HTTP_OK);
     }
 
     public function show(Ter $ter_pph_21)
@@ -96,7 +106,14 @@ class TER21Controller extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data TER PPH21 tidak ditemukan.'), Response::HTTP_NOT_FOUND);
         }
 
-        return response()->json(new TER21Resource(Response::HTTP_OK, 'Data TER PPH21 berhasil ditampilkan.', $ter_pph_21), Response::HTTP_OK);
+        $successMessage = "Data TER PPH21 berhasil ditampilkan.";
+        $formattedData = $this->formatData(collect([$ter_pph_21]))->first();
+
+        return response()->json([
+            'status' => Response::HTTP_OK,
+            'message' => $successMessage,
+            'data' => $formattedData,
+        ], Response::HTTP_OK);
     }
 
     public function update(Ter $ter_pph_21, UpdateTERRequest $request)
@@ -110,7 +127,13 @@ class TER21Controller extends Controller
         $updatedterTer = $ter_pph_21->fresh();
 
         $successMessage = "Data TER PPH21 berhasil diubah.";
-        return response()->json(new TER21Resource(Response::HTTP_OK, $successMessage, $updatedterTer), Response::HTTP_OK);
+        $formattedData = $this->formatData(collect([$updatedterTer]))->first();
+
+        return response()->json([
+            'status' => Response::HTTP_OK,
+            'message' => $successMessage,
+            'data' => $formattedData,
+        ], Response::HTTP_OK);
     }
 
     public function destroy(Ter $ter_pph_21)
@@ -144,7 +167,7 @@ class TER21Controller extends Controller
         }
     }
 
-    public function exportTER(Request $request)
+    public function exportTER()
     {
         if (!Gate::allows('export ter21')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
@@ -176,5 +199,21 @@ class TER21Controller extends Controller
         }
 
         return response()->json(new WithoutDataResource(Response::HTTP_OK, 'Data Ter PPH21 berhasil di import kedalam table.'), Response::HTTP_OK);
+    }
+
+    protected function formatData(Collection $collection)
+    {
+        return $collection->transform(function ($ter21) {
+            return [
+                'id' => 'T00' . $ter21->id,
+                'kategori_ter_id' => $ter21->kategori_ters,
+                'from_ter' => $ter21->from_ter,
+                'to_ter' => $ter21->to_ter,
+                'percentage' => $ter21->percentage_ter,
+                'deleted_at' => $ter21->deleted_at,
+                'created_at' => $ter21->created_at,
+                'updated_at' => $ter21->updated_at
+            ];
+        });
     }
 }

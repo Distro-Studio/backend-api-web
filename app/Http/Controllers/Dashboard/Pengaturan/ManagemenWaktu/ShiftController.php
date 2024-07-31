@@ -5,15 +5,14 @@ namespace App\Http\Controllers\Dashboard\Pengaturan\ManagemenWaktu;
 use App\Models\Shift;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Collection;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Gate;
 use Maatwebsite\Excel\Facades\Excel;
-use Illuminate\Support\Facades\Validator;
-use App\Exports\Pengaturan\Managemen_Waktu\ShiftExport;
-use App\Http\Requests\Excel_Import\ImportShiftRequest;
 use App\Http\Requests\StoreShiftRequest;
 use App\Http\Requests\UpdateShiftRequest;
-use App\Http\Resources\Dashboard\Pengaturan_Managemen_Waktu\ShiftResource;
+use App\Http\Requests\Excel_Import\ImportShiftRequest;
+use App\Exports\Pengaturan\Managemen_Waktu\ShiftExport;
 use App\Imports\Pengaturan\Managemen_Waktu\ShiftImport;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
 
@@ -67,7 +66,13 @@ class ShiftController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data shift tidak ditemukan.'), Response::HTTP_NOT_FOUND);
         }
 
-        return response()->json(new ShiftResource(Response::HTTP_OK, 'Data shift berhasil ditampilkan.', $dataShift), Response::HTTP_OK);
+        $successMessage = "Data shift berhasil ditampilkan.";
+        $formattedData = $this->formatData($dataShift);
+        return response()->json([
+            'status' => Response::HTTP_OK,
+            'message' => $successMessage,
+            'data' => $formattedData,
+        ], Response::HTTP_OK);
     }
 
     public function store(StoreShiftRequest $request)
@@ -80,7 +85,13 @@ class ShiftController extends Controller
 
         $shift = Shift::create($data);
         $successMessage = "Data shift '{$shift->nama}' berhasil dibuat.";
-        return response()->json(new ShiftResource(Response::HTTP_OK, $successMessage, $shift), Response::HTTP_OK);
+        $formattedData = $this->formatData(collect([$shift]))->first();
+
+        return response()->json([
+            'status' => Response::HTTP_OK,
+            'message' => $successMessage,
+            'data' => $formattedData,
+        ], Response::HTTP_OK);
     }
 
     public function show(Shift $shift)
@@ -93,7 +104,14 @@ class ShiftController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data shift tidak ditemukan.'), Response::HTTP_NOT_FOUND);
         }
 
-        return response()->json(new ShiftResource(Response::HTTP_OK, 'Data shift berhasil ditampilkan.', $shift), Response::HTTP_OK);
+        $successMessage = "Data shift {$shift->nama} berhasil diubah.";
+        $formattedData = $this->formatData(collect([$shift]))->first();
+
+        return response()->json([
+            'status' => Response::HTTP_OK,
+            'message' => $successMessage,
+            'data' => $formattedData,
+        ], Response::HTTP_OK);
     }
 
     public function update(Shift $shift, UpdateShiftRequest $request)
@@ -107,7 +125,13 @@ class ShiftController extends Controller
         $updatedShift = $shift->fresh();
 
         $successMessage = "Data shift '{$updatedShift->nama}' berhasil diubah.";
-        return response()->json(new ShiftResource(Response::HTTP_OK, $successMessage, $updatedShift), Response::HTTP_OK);
+        $formattedData = $this->formatData(collect([$updatedShift]))->first();
+
+        return response()->json([
+            'status' => Response::HTTP_OK,
+            'message' => $successMessage,
+            'data' => $formattedData,
+        ], Response::HTTP_OK);
     }
 
     public function destroy(Shift $shift)
@@ -141,7 +165,7 @@ class ShiftController extends Controller
         }
     }
 
-    public function exportShift(Request $request)
+    public function exportShift()
     {
         if (!Gate::allows('export shift')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
@@ -174,5 +198,20 @@ class ShiftController extends Controller
         // More informative success message
         $message = 'Data shift berhasil di import kedalam table.';
         return response()->json(new WithoutDataResource(Response::HTTP_OK, $message), Response::HTTP_OK);
+    }
+
+    protected function formatData(Collection $collection)
+    {
+        return $collection->transform(function ($shift) {
+            return [
+                'id' => 'S00' . $shift->id,
+                'nama' => $shift->nama,
+                'jam_from' => $shift->jam_from,
+                'jam_to' => $shift->jam_to,
+                'deleted_at' => $shift->deleted_at,
+                'created_at' => $shift->created_at,
+                'updated_at' => $shift->updated_at
+            ];
+        });
     }
 }

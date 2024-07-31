@@ -5,36 +5,19 @@ namespace App\Http\Controllers\Dashboard\Pengaturan\Karyawan;
 use App\Models\Jabatan;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Collection;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Gate;
 use Maatwebsite\Excel\Facades\Excel;
-use Illuminate\Support\Facades\Validator;
 use App\Http\Requests\StoreJabatanRequest;
 use App\Http\Requests\UpdateJabatanRequest;
 use App\Exports\Pengaturan\Karyawan\JabatanExport;
+use App\Imports\Pengaturan\Karyawan\JabatanImport;
 use App\Http\Requests\Excel_Import\ImportJabatanRequest;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
-use App\Http\Resources\Dashboard\Pengaturan_Karyawan\JabatanResource;
-use App\Imports\Pengaturan\Karyawan\JabatanImport;
 
 class JabatanController extends Controller
 {
-    /* ============================= For Dropdown ============================= */
-    public function getAllJabatan()
-    {
-        if (!Gate::allows('view jabatan')) {
-            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
-        }
-
-        $dataJabatan = Jabatan::all();
-        return response()->json([
-            'status' => Response::HTTP_OK,
-            'message' => 'Retrieving all jabatan for dropdown',
-            'data' => $dataJabatan
-        ], Response::HTTP_OK);
-    }
-    /* ============================= For Dropdown ============================= */
-
     public function index(Request $request)
     {
         if (!Gate::allows('view jabatan')) {
@@ -67,7 +50,13 @@ class JabatanController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data jabatan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
         }
 
-        return response()->json(new JabatanResource(Response::HTTP_OK, 'Data jabatan berhasil ditampilkan.', $dataJabatan), Response::HTTP_OK);
+        $successMessage = "Data jabatan berhasil ditampilkan.";
+        $formattedData = $this->formatData($dataJabatan);
+        return response()->json([
+            'status' => Response::HTTP_OK,
+            'message' => $successMessage,
+            'data' => $formattedData,
+        ], Response::HTTP_OK);
     }
 
     public function store(StoreJabatanRequest $request)
@@ -80,7 +69,13 @@ class JabatanController extends Controller
 
         $jabatan = Jabatan::create($data);
         $successMessage = "Data jabatan '{$jabatan->nama_jabatan}' berhasil dibuat.";
-        return response()->json(new JabatanResource(Response::HTTP_OK, $successMessage, $jabatan), Response::HTTP_OK);
+        $formattedData = $this->formatData(collect([$jabatan]))->first();
+
+        return response()->json([
+            'status' => Response::HTTP_OK,
+            'message' => $successMessage,
+            'data' => $formattedData,
+        ], Response::HTTP_OK);
     }
 
     public function show(Jabatan $jabatan)
@@ -93,7 +88,14 @@ class JabatanController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data jabatan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
         }
 
-        return response()->json(new JabatanResource(Response::HTTP_OK, 'Data jabatan berhasil ditampilkan.', $jabatan), Response::HTTP_OK);
+        $successMessage = "Data jabatan {$jabatan->nama_jabatan} berhasil ditampilkan.";
+        $formattedData = $this->formatData(collect([$jabatan]))->first();
+
+        return response()->json([
+            'status' => Response::HTTP_OK,
+            'message' => $successMessage,
+            'data' => $formattedData,
+        ], Response::HTTP_OK);
     }
 
     public function update(Jabatan $jabatan, UpdateJabatanRequest $request)
@@ -107,7 +109,13 @@ class JabatanController extends Controller
         $jabatan->update($data);
         $updatedJabatan = $jabatan->fresh();
         $successMessage = "Data jabatan '{$updatedJabatan->nama_jabatan}' berhasil diubah.";
-        return response()->json(new JabatanResource(Response::HTTP_OK, $successMessage, $updatedJabatan), Response::HTTP_OK);
+        $formattedData = $this->formatData(collect([$jabatan]))->first();
+
+        return response()->json([
+            'status' => Response::HTTP_OK,
+            'message' => $successMessage,
+            'data' => $formattedData,
+        ], Response::HTTP_OK);
     }
 
     public function destroy(Jabatan $jabatan)
@@ -141,7 +149,7 @@ class JabatanController extends Controller
         }
     }
 
-    public function exportJabatan(Request $request)
+    public function exportJabatan()
     {
         if (!Gate::allows('export jabatan')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
@@ -173,5 +181,20 @@ class JabatanController extends Controller
         }
 
         return response()->json(new WithoutDataResource(Response::HTTP_OK, 'Data jabatan berhasil di import kedalam table.'), Response::HTTP_OK);
+    }
+
+    protected function formatData(Collection $collection)
+    {
+        return $collection->transform(function ($jabatan) {
+            return [
+                'id' => 'J00' . $jabatan->id,
+                'nama_jabatan' => $jabatan->nama_jabatan,
+                'is_struktural' => $jabatan->is_struktural,
+                'tunjangan' => $jabatan->tunjangan,
+                'deleted_at' => $jabatan->deleted_at,
+                'created_at' => $jabatan->created_at,
+                'updated_at' => $jabatan->updated_at
+            ];
+        });
     }
 }

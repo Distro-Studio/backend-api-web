@@ -4,17 +4,16 @@ namespace App\Http\Controllers\Dashboard\Pengaturan\Akun;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Collection;
 use Spatie\Permission\Models\Role;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Gate;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Http\Requests\StoreRoleRequest;
 use App\Http\Requests\UpdateRoleRequest;
-use Illuminate\Support\Facades\Validator;
 use App\Exports\Pengaturan\Akun\RolesExport;
-use App\Http\Requests\Excel_Import\ImportRoleRequest;
 use App\Imports\Pengaturan\Akun\RolesImport;
-use App\Http\Resources\Dashboard\Pengaturan_Akun\RoleResource;
+use App\Http\Requests\Excel_Import\ImportRoleRequest;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
 
 class RolesController extends Controller
@@ -43,11 +42,10 @@ class RolesController extends Controller
 
         $role = Role::query();
 
-        // Filter
         // Search
         if ($request->has('search')) {
             $role = $role->where('name', 'like', '%' . $request->search . '%')
-                ->orWhere('description', 'like', '%' . $request->search . '%');
+                ->orWhere('deskripsi', 'like', '%' . $request->search . '%');
         }
 
         $dataRole = $role->get();
@@ -55,7 +53,13 @@ class RolesController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data Role tidak ditemukan.'), Response::HTTP_NOT_FOUND);
         }
 
-        return response()->json(new RoleResource(Response::HTTP_OK, 'Data Role berhasil ditampilkan.', $dataRole), Response::HTTP_OK);
+        $formattedData = $this->formatData($dataRole);
+
+        return response()->json([
+            'status' => Response::HTTP_OK,
+            'message' => 'Data Role berhasil ditampilkan.',
+            'data' => $formattedData,
+        ], Response::HTTP_OK);
     }
 
     public function store(StoreRoleRequest $request)
@@ -68,7 +72,13 @@ class RolesController extends Controller
 
         $role = Role::create($data);
         $successMessage = "Data Role '{$role->name}' berhasil dibuat.";
-        return response()->json(new RoleResource(Response::HTTP_OK, $successMessage, $role), Response::HTTP_OK);
+        $formattedData = $this->formatData(collect([$role]))->first();
+
+        return response()->json([
+            'status' => Response::HTTP_OK,
+            'message' => $successMessage,
+            'data' => $formattedData,
+        ], Response::HTTP_OK);
     }
 
     public function show(Role $role)
@@ -81,7 +91,13 @@ class RolesController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data role karyawan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
         }
 
-        return response()->json(new RoleResource(Response::HTTP_OK, "Data role {$role->name} karyawan berhasil ditampilkan.", $role), Response::HTTP_OK);
+        $formattedData = $this->formatData(collect([$role]))->first();
+
+        return response()->json([
+            'status' => Response::HTTP_OK,
+            'message' => "Data role {$role->name} berhasil ditampilkan.",
+            'data' => $formattedData,
+        ], Response::HTTP_OK);
     }
 
     public function update(Role $role, UpdateRoleRequest $request)
@@ -94,8 +110,14 @@ class RolesController extends Controller
         $role->update($data);
         $updatedRole = $role->fresh();
 
-        $successMessage = "Data Role '{$updatedRole->name}' berhasil diubah.";
-        return response()->json(new RoleResource(Response::HTTP_OK, $successMessage, $updatedRole), Response::HTTP_OK);
+        $successMessage = "Data Role '{$updatedRole->name}' berhasil diperbarui.";
+        $formattedData = $this->formatData(collect([$role]))->first();
+
+        return response()->json([
+            'status' => Response::HTTP_OK,
+            'message' => $successMessage,
+            'data' => $formattedData,
+        ], Response::HTTP_OK);
     }
 
     public function destroy(Role $role)
@@ -161,5 +183,44 @@ class RolesController extends Controller
         }
 
         return response()->json(new WithoutDataResource(Response::HTTP_OK, 'Data role berhasil di import kedalam table.'), Response::HTTP_OK);
+    }
+
+    protected function formatData(Collection $collection)
+    {
+        return $collection->transform(function ($role) {
+            return [
+                'id' => $role->id,
+                'name' => $role->name,
+                'deskripsi' => $role->deskripsi,
+                'initialValues' => $this->formatPermissions($role->permissions),
+                'created_at' => $role->created_at,
+                'updated_at' => $role->updated_at,
+            ];
+        });
+    }
+
+    protected function formatPermissions($permissions)
+    {
+        if ($permissions->isEmpty()) {
+            return null;
+        }
+
+        $permissionTypes = ['view', 'create', 'edit', 'delete', 'import', 'export', 'verifikasi'];
+
+        $groupedPermissions = $permissions->groupBy('group')->map(function ($group, $groupName) use ($permissionTypes) {
+            $permissionsArray = [];
+            foreach ($permissionTypes as $type) {
+                $hasPermission = $group->contains(function ($item) use ($type) {
+                    return str_contains($item->name, $type);
+                });
+                $permissionsArray[$type] = $hasPermission ? true : null;
+            }
+            return [
+                'name' => $groupName,
+                'permissions' => $permissionsArray,
+            ];
+        });
+
+        return $groupedPermissions->values()->toArray();
     }
 }
