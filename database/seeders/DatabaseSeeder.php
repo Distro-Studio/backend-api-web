@@ -11,6 +11,7 @@ use Database\Seeders\Constant\Kategori\KategoriDarahSeeder;
 use Database\Seeders\Constant\Kategori\KategoriGajiSeeder;
 use Database\Seeders\Constant\Kategori\KategoriKompensasiSeeder;
 use Database\Seeders\Constant\Kategori\KategoriNotifikasiSeeder;
+use Database\Seeders\Constant\Kategori\KategoriPotonganSeeder;
 use Database\Seeders\Constant\Kategori\KategoriPresensiSeeder;
 use Database\Seeders\Constant\Kategori\KategoriTrackRecordSeeder;
 use Database\Seeders\Constant\Kategori\KategoriTransferKaryawanSeeder;
@@ -39,6 +40,7 @@ use Database\Seeders\Keuangan\TanggalGajiSeeder;
 use Database\Seeders\Keuangan\THRPenggajianSeeder;
 use Database\Seeders\Pengaturan_Managemen_Waktu\ShiftSeeder;
 use Database\Seeders\Pengaturan_Managemen_Waktu\HariLiburSeeder;
+use Database\Seeders\Pengaturan_Managemen_Waktu\LokasiKantorSeeder;
 use Database\Seeders\Pengaturan_Managemen_Waktu\TipeCutiSeeder;
 
 class DatabaseSeeder extends Seeder
@@ -65,11 +67,14 @@ class DatabaseSeeder extends Seeder
             KategoriDarahSeeder::class,
             KategoriTrackRecordSeeder::class,
             KategoriKompensasiSeeder::class,
+            KategoriPotonganSeeder::class,
             StatusCutiSeeder::class,
             StatusGajiSeeder::class,
             StatusKaryawanSeeder::class,
             StatusLemburSeeder::class,
             StatusTukarJadwalSeeder::class,
+
+            LokasiKantorSeeder::class,
 
             /* ==== Pengaturan Karyawan ==== */
             JabatanSeeder::class,

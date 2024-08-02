@@ -88,7 +88,7 @@ class JabatanController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data jabatan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
         }
 
-        $successMessage = "Data jabatan {$jabatan->nama_jabatan} berhasil ditampilkan.";
+        $successMessage = "Data jabatan '{$jabatan->nama_jabatan}' berhasil ditampilkan.";
         $formattedData = $this->formatData(collect([$jabatan]))->first();
 
         return response()->json([
@@ -134,7 +134,7 @@ class JabatanController extends Controller
 
         $jabatan->delete();
 
-        $successMessage = 'Data jabatan berhasil dihapus.';
+        $successMessage = "Data jabatan '{$jabatan->nama_jabatan}' berhasil dihapus.";
         return response()->json(new WithoutDataResource(Response::HTTP_OK, $successMessage), Response::HTTP_OK);
     }
 
@@ -149,7 +149,7 @@ class JabatanController extends Controller
         $jabatan->restore();
 
         if (is_null($jabatan->deleted_at)) {
-            $successMessage = "Data jabatan {$jabatan->nama_jabatan} berhasil dipulihkan.";
+            $successMessage = "Data jabatan '{$jabatan->nama_jabatan}' berhasil dipulihkan.";
             return response()->json(new WithoutDataResource(Response::HTTP_OK, $successMessage), Response::HTTP_OK);
         } else {
             $successMessage = 'Restore data tidak dapat diproses, Silahkan hubungi admin untuk dilakukan pengecekan ulang.';

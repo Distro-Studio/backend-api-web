@@ -255,7 +255,7 @@ class DataKaryawanController extends Controller
 
         return response()->json([
             'status' => Response::HTTP_OK,
-            'message' => "Detail data presensi karyawan berhasil ditampilkan.",
+            'message' => "Detail data presensi karyawan '{$presensi->users->nama}' berhasil ditampilkan.",
             'data' => $formattedData,
         ], Response::HTTP_OK);
     }
@@ -354,7 +354,17 @@ class DataKaryawanController extends Controller
 
             return [
                 'id' => $karyawan->id,
-                'user' => $karyawan->users,
+                'user' => [
+                    'id' => $karyawan->users->id,
+                    'nama' => $karyawan->users->nama,
+                    'email_verified_at' => $karyawan->users->email_verified_at,
+                    'data_karyawan_id' => $karyawan->users->data_karyawan_id,
+                    'foto_profil' => $karyawan->users->foto_profil,
+                    'data_completion_step' => $karyawan->users->data_completion_step,
+                    'status_aktif' => $karyawan->users->status_aktif,
+                    'created_at' => $karyawan->users->created_at,
+                    'updated_at' => $karyawan->users->updated_at
+                ],
                 'role' => $karyawan->users->roles, // role_id
                 'email' => $karyawan->email,
                 'no_rm' => $karyawan->no_rm,
@@ -475,6 +485,9 @@ class DataKaryawanController extends Controller
             ]);
             $createDataKaryawan->save();
 
+            // Update data_karyawan_id pada tabel users setelah DataKaryawan berhasil dibuat
+            $createUser->update(['data_karyawan_id' => $createDataKaryawan->id]);
+
             // Masukkan data ke tabel pengurang_gajis jika ada premi yang dipilih
             if (!empty($premis)) {
                 $premisData = DB::table('premis')->whereIn('id', $premis)->get();
@@ -494,10 +507,10 @@ class DataKaryawanController extends Controller
 
             DB::commit();
 
-            // AccountEmailJob::dispatch($data['email'], $generatedPassword, $data['nama']);
+            AccountEmailJob::dispatch($data['email'], $generatedPassword, $data['nama']);
 
             // Mail::to($data['email'])->send(new SendAccoundUsersMail($data['email'], $generatedPassword, $data['nama']));
-            return response()->json(new KaryawanResource(Response::HTTP_OK, 'Data karyawan berhasil dibuat.', $createDataKaryawan), Response::HTTP_OK);
+            return response()->json(new KaryawanResource(Response::HTTP_OK, "Data karyawan '{$createDataKaryawan->users->nama}' berhasil dibuat.", $createDataKaryawan), Response::HTTP_OK);
         } catch (\Throwable $th) {
             DB::rollBack();
             return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Maaf sepertinya pembuatan data karyawan bermasalah, Error: ' . $th->getMessage()), Response::HTTP_BAD_REQUEST);
@@ -530,7 +543,17 @@ class DataKaryawanController extends Controller
 
         $formattedData = [
             'id' => $karyawan->id,
-            'user' => $karyawan->users,
+            'user' => [
+                'id' => $karyawan->users->id,
+                'nama' => $karyawan->users->nama,
+                'email_verified_at' => $karyawan->users->email_verified_at,
+                'data_karyawan_id' => $karyawan->users->data_karyawan_id,
+                'foto_profil' => $karyawan->users->foto_profil,
+                'data_completion_step' => $karyawan->users->data_completion_step,
+                'status_aktif' => $karyawan->users->status_aktif,
+                'created_at' => $karyawan->users->created_at,
+                'updated_at' => $karyawan->users->updated_at
+            ],
             'role' => $karyawan->users->roles, // role_id
             'email' => $karyawan->email,
             'no_rm' => $karyawan->no_rm,
@@ -579,7 +602,7 @@ class DataKaryawanController extends Controller
 
         return response()->json([
             'status' => Response::HTTP_OK,
-            'message' => "Detail karyawan {$karyawan->users->nama} berhasil ditampilkan.",
+            'message' => "Detail karyawan '{$karyawan->users->nama}' berhasil ditampilkan.",
             'data' => $formattedData,
         ], Response::HTTP_OK);
     }
@@ -600,7 +623,17 @@ class DataKaryawanController extends Controller
 
         $formattedData = [
             'id' => $karyawan->id,
-            'user' => $karyawan->users,
+            'user' => [
+                'id' => $karyawan->users->id,
+                'nama' => $karyawan->users->nama,
+                'email_verified_at' => $karyawan->users->email_verified_at,
+                'data_karyawan_id' => $karyawan->users->data_karyawan_id,
+                'foto_profil' => $karyawan->users->foto_profil,
+                'data_completion_step' => $karyawan->users->data_completion_step,
+                'status_aktif' => $karyawan->users->status_aktif,
+                'created_at' => $karyawan->users->created_at,
+                'updated_at' => $karyawan->users->updated_at
+            ],
             'role' => $karyawan->users->roles, // role_id
             'email' => $karyawan->email,
             'no_rm' => $karyawan->no_rm,
@@ -649,7 +682,7 @@ class DataKaryawanController extends Controller
 
         return response()->json([
             'status' => Response::HTTP_OK,
-            'message' => "Detail karyawan {$karyawan->users->nama} berhasil ditampilkan.",
+            'message' => "Detail karyawan '{$karyawan->users->nama}' berhasil ditampilkan.",
             'data' => $formattedData,
         ], Response::HTTP_OK);
     }
@@ -687,7 +720,17 @@ class DataKaryawanController extends Controller
 
         $formattedData = [
             'id' => $karyawan->id,
-            'user' => $karyawan->users,
+            'user' => [
+                'id' => $karyawan->users->id,
+                'nama' => $karyawan->users->nama,
+                'email_verified_at' => $karyawan->users->email_verified_at,
+                'data_karyawan_id' => $karyawan->users->data_karyawan_id,
+                'foto_profil' => $karyawan->users->foto_profil,
+                'data_completion_step' => $karyawan->users->data_completion_step,
+                'status_aktif' => $karyawan->users->status_aktif,
+                'created_at' => $karyawan->users->created_at,
+                'updated_at' => $karyawan->users->updated_at
+            ],
             'role' => $karyawan->users->roles, // role_id
             'email' => $karyawan->email,
             'no_rm' => $karyawan->no_rm,
@@ -736,7 +779,7 @@ class DataKaryawanController extends Controller
 
         return response()->json([
             'status' => Response::HTTP_OK,
-            'message' => "Data karyawan {$data['nama']} berhasil diperbarui.",
+            'message' => "Data karyawan '{$karyawan->users->nama}' berhasil diperbarui.",
             'data' => $formattedData,
         ], Response::HTTP_OK);
     }
@@ -791,6 +834,6 @@ class DataKaryawanController extends Controller
         $user->status_aktif = User::STATUS_DINONAKTIFKAN;
         $user->save();
 
-        return response()->json(new WithoutDataResource(Response::HTTP_OK, "Karyawan {$karyawan->users->nama} berhasil dinonaktifkan."), Response::HTTP_OK);
+        return response()->json(new WithoutDataResource(Response::HTTP_OK, "Karyawan '{$karyawan->users->nama}' berhasil dinonaktifkan."), Response::HTTP_OK);
     }
 }

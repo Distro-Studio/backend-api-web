@@ -26,7 +26,7 @@ class StorePremiRequest extends FormRequest
     {
         return [
             'nama_premi' => 'required|string|unique:premis,nama_premi',
-            'sumber_potongan' => 'required|string',
+            'kategori_potongan_id' => 'required|integer|exists:kategori_potongans,id',
             'jenis_premi' => 'required',
             'besaran_premi' => 'required|numeric',
             'minimal_rate' => 'nullable|integer',
@@ -40,8 +40,9 @@ class StorePremiRequest extends FormRequest
             'nama_premi.required' => 'Nama premi tidak diperbolehkan kosong.',
             'nama_premi.string' => 'Nama premi tidak diperbolehkan mengandung angka.',
             'nama_premi.unique' => 'Nama premi pada tabel excel atau database sudah pernah dibuat atau terduplikat.',
-            'sumber_potongan.required' => 'Sumber potongan premi tidak diperbolehkan kosong.',
-            'sumber_potongan.string' => 'Sumber potongan premi tidak diperbolehkan mengandung angka.',
+            'kategori_potongan_id.required' => 'Sumber potongan premi tidak diperbolehkan kosong.',
+            'kategori_potongan_id.integer' => 'Sumber potongan premi tidak diperbolehkan mengandung huruf.',
+            'kategori_potongan_id.exists' => 'Sumber potongan premi tersebut tidak valid.',
             'jenis_premi.required' => 'Silahkan pilih jenis premi terlebih dahulu.',
             'besaran_premi.required' => 'Jumlah premi tidak diperbolehkan kosong.',
             'besaran_premi.numeric' => 'Jumlah premi tidak diperbolehkan mengandung huruf.',

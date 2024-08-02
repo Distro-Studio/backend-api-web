@@ -86,7 +86,7 @@ class CutiController extends Controller
         $data = $request->validated();
 
         $tipe_cuti = TipeCuti::create($data);
-        $successMessage = "Data tipe cuti berhasil dibuat.";
+        $successMessage = "Data tipe cuti '{$tipe_cuti->nama}' berhasil dibuat.";
         $formattedData = $this->formatData(collect([$tipe_cuti]))->first();
 
         return response()->json([
@@ -106,7 +106,7 @@ class CutiController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data cuti tidak ditemukan.'), Response::HTTP_NOT_FOUND);
         }
 
-        $successMessage = "Data tipe cuti {$cuti->nama} berhasil ditampilkan.";
+        $successMessage = "Data tipe cuti '{$cuti->nama}' berhasil ditampilkan.";
         $formattedData = $this->formatData(collect([$cuti]))->first();
 
         return response()->json([
@@ -152,7 +152,7 @@ class CutiController extends Controller
 
         $cuti->delete();
 
-        $successMessage = 'Data cuti berhasil dihapus.';
+        $successMessage = "Data cuti {$cuti->nama} berhasil dihapus.";
         return response()->json(new WithoutDataResource(Response::HTTP_OK, $successMessage), Response::HTTP_OK);
     }
 
@@ -167,7 +167,7 @@ class CutiController extends Controller
         $cuti->restore();
 
         if (is_null($cuti->deleted_at)) {
-            $successMessage = "Data cuti {$cuti->nama} berhasil dipulihkan.";
+            $successMessage = "Data cuti '{$cuti->nama}' berhasil dipulihkan.";
             return response()->json(new WithoutDataResource(Response::HTTP_OK, $successMessage), Response::HTTP_OK);
         } else {
             $successMessage = 'Restore data tidak dapat diproses, Silahkan hubungi admin untuk dilakukan pengecekan ulang.';

@@ -47,7 +47,7 @@ class PermissionSeeder extends Seeder
             'Pengaturan Shift' => ['create shift', 'edit shift', 'delete shift', 'view shift', 'import shift', 'export shift'],
             'Pengaturan Hari Libur' => ['create hariLibur', 'edit hariLibur', 'delete hariLibur', 'view hariLibur', 'import hariLibur', 'export hariLibur'],
             'Pengaturan Cuti' => ['create cuti', 'edit cuti', 'delete cuti', 'view cuti', 'import cuti', 'export cuti'],
-            'Pengaturan Lokasi Kantor' => ['create lokasiKantor', 'edit lokasiKantor', 'view lokasiKantor'],
+            'Pengaturan Lokasi Kantor' => ['edit lokasiKantor', 'view lokasiKantor'],
         ];
 
         foreach ($permissions as $group => $perms) {

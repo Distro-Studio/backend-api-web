@@ -29,7 +29,9 @@ class LokasiKantorController extends Controller
             'alamat' => $lokasiKantor->alamat,
             'lat' => $lokasiKantor->lat,
             'long' => $lokasiKantor->long,
-            'radius' => $lokasiKantor->radius
+            'radius' => $lokasiKantor->radius,
+            'created_at' => $lokasiKantor->created_at,
+            'updated_at' => $lokasiKantor->updated_at
         ];
 
         return response()->json([
@@ -39,28 +41,30 @@ class LokasiKantorController extends Controller
         ], Response::HTTP_OK);
     }
 
-    public function createLokasiKantor(StoreLokasiKantorRequest $request)
+    public function editLokasiKantor(StoreLokasiKantorRequest $request)
     {
-        if (!Gate::allows('create lokasiKantor') && !Gate::allows('edit lokasiKantor')) {
+        if (!Gate::allows('edit lokasiKantor')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
         $data = $request->validated();
 
-        // Create or Update the first jadwal penggajian
-        $lokasiKantor = LokasiKantor::updateOrCreate(
-            ['id' => 1],
-            [
-                'alamat' => $data['alamat'],
-                'lat' => $data['lat'],
-                'long' => $data['long'],
-                'radius' => $data['radius']
-            ]
-        );
+        // Find the first lokasi kantor with ID 1
+        $lokasiKantor = LokasiKantor::find(1);
 
-        $message = $lokasiKantor->wasRecentlyCreated
-            ? "Titik lokasi kantor berhasil diatur pada tanggal {$lokasiKantor->created_at}."
-            : "Titik lokasi kantor berhasil diperbarui pada tanggal {$lokasiKantor->updated_at}.";
+        if (!$lokasiKantor) {
+            return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Titik lokasi kantor tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+        }
+
+        // Update lokasi kantor
+        $lokasiKantor->update([
+            'alamat' => $data['alamat'],
+            'lat' => $data['lat'],
+            'long' => $data['long'],
+            'radius' => $data['radius']
+        ]);
+
+        $message = "Titik lokasi kantor berhasil diperbarui pada tanggal '{$lokasiKantor->updated_at}'.";
 
         return response()->json([
             'status' => Response::HTTP_OK,

@@ -92,7 +92,7 @@ class PertanyaanController extends Controller
         $data = $request->validated();
 
         $pertanyaan = Pertanyaan::create($data);
-        $successMessage = "Data pertanyaan kuesioner untuk jabatan {$pertanyaan->jabatans->nama_jabatan} berhasil dibuat.";
+        $successMessage = "Data pertanyaan kuesioner untuk jabatan '{$pertanyaan->jabatans->nama_jabatan}' berhasil dibuat.";
         $formattedData = $this->formatData(collect([$pertanyaan]))->first();
 
         return response()->json([
@@ -112,7 +112,7 @@ class PertanyaanController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data pertanyaan kuesioner tidak ditemukan.'), Response::HTTP_NOT_FOUND);
         }
 
-        $successMessage = "Data pertanyaan kuesioner berhasil ditampilkan.";
+        $successMessage = "Data pertanyaan kuesioner dari jabatan '{$pertanyaan->jabatans->nama_jabatan}' berhasil ditampilkan.";
         $formattedData = $this->formatData(collect([$pertanyaan]))->first();
 
         return response()->json([
@@ -140,7 +140,7 @@ class PertanyaanController extends Controller
 
         $pertanyaan->update($data);
         $updatedPertanyaan = $pertanyaan->fresh();
-        $successMessage = "Data pertanyaan kuesioner untuk jabatan {$updatedPertanyaan->jabatans->nama_jabatan} diubah.";
+        $successMessage = "Data pertanyaan kuesioner untuk jabatan '{$updatedPertanyaan->jabatans->nama_jabatan}' diubah.";
         $formattedData = $this->formatData(collect([$pertanyaan]))->first();
 
         return response()->json([
@@ -158,7 +158,7 @@ class PertanyaanController extends Controller
 
         $pertanyaan->delete();
 
-        $successMessage = 'Data pertanyaan kuesioner berhasil dihapus.';
+        $successMessage = "Data pertanyaan kuesioner dari jabatan '{$pertanyaan->jabatans->nama_jabatan}' berhasil dihapus.";
         return response()->json(new WithoutDataResource(Response::HTTP_OK, $successMessage), Response::HTTP_OK);
     }
 
@@ -173,7 +173,7 @@ class PertanyaanController extends Controller
         $pertanyaan->restore();
 
         if (is_null($pertanyaan->deleted_at)) {
-            $successMessage = "Data pertanyaan kuesioner dari jabatan {$pertanyaan->jabatans->nama_jabatan} berhasil dipulihkan.";
+            $successMessage = "Data pertanyaan kuesioner dari jabatan '{$pertanyaan->jabatans->nama_jabatan}' berhasil dipulihkan.";
             return response()->json(new WithoutDataResource(Response::HTTP_OK, $successMessage), Response::HTTP_OK);
         } else {
             $successMessage = 'Restore data tidak dapat diproses, Silahkan hubungi admin untuk dilakukan pengecekan ulang.';

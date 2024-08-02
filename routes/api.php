@@ -321,7 +321,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
             // ! Lokasi Presensi ===========>
             Route::get('/get-lokasi-kantor/{id}', [LokasiKantorController::class, 'getLokasiKantor']);
-            Route::post('/lokasi-kantor', [LokasiKantorController::class, 'createLokasiKantor']);
+            Route::post('/lokasi-kantor', [LokasiKantorController::class, 'editLokasiKantor']);
             /* ==================================== Setting Managemen Waktu ==================================== */
         });
     });

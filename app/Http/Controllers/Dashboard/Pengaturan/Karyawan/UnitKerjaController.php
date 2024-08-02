@@ -90,7 +90,7 @@ class UnitKerjaController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data unit kerja tidak ditemukan.'), Response::HTTP_NOT_FOUND);
         }
 
-        $successMessage = "Data unit kerja {$unit_kerja->nama_unit} berhasil ditampilkan.";
+        $successMessage = "Data unit kerja '{$unit_kerja->nama_unit}' berhasil ditampilkan.";
         $formattedData = $this->formatData(collect([$unit_kerja]))->first();
 
         return response()->json([
@@ -136,7 +136,7 @@ class UnitKerjaController extends Controller
 
         $unit_kerja->delete();
 
-        $successMessage = 'Data unit kerja berhasil dihapus.';
+        $successMessage = "Data unit kerja {$unit_kerja->nama_unit} berhasil dihapus.";
         return response()->json(new WithoutDataResource(Response::HTTP_OK, $successMessage), Response::HTTP_OK);
     }
 
@@ -151,7 +151,7 @@ class UnitKerjaController extends Controller
         $unit_kerja->restore();
 
         if (is_null($unit_kerja->deleted_at)) {
-            $successMessage = "Data unit kerja {$unit_kerja->nama_unit} berhasil dipulihkan.";
+            $successMessage = "Data unit kerja '{$unit_kerja->nama_unit}' berhasil dipulihkan.";
             return response()->json(new WithoutDataResource(Response::HTTP_OK, $successMessage), Response::HTTP_OK);
         } else {
             $successMessage = 'Restore data tidak dapat diproses, Silahkan hubungi admin untuk dilakukan pengecekan ulang.';

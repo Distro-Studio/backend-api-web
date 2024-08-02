@@ -97,7 +97,7 @@ class PremiController extends Controller
 
         return response()->json([
             'status' => Response::HTTP_OK,
-            'message' => "Data premi {$premi->name} berhasil ditampilkan.",
+            'message' => "Data premi '{$premi->nama_premi}' berhasil ditampilkan.",
             'data' => $formattedData,
         ], Response::HTTP_OK);
     }
@@ -138,7 +138,7 @@ class PremiController extends Controller
 
         $premi->delete();
 
-        $successMessage = 'Data premi berhasil dihapus.';
+        $successMessage = "Data premi '{$premi->nama_premi}' berhasil dihapus.";
         return response()->json(new WithoutDataResource(Response::HTTP_OK, $successMessage), Response::HTTP_OK);
     }
 
@@ -153,7 +153,7 @@ class PremiController extends Controller
         $premi->restore();
 
         if (is_null($premi->deleted_at)) {
-            $successMessage = "Data premi {$premi->premis->nama_premi} berhasil dipulihkan.";
+            $successMessage = "Data premi '{$premi->nama_premi}' berhasil dipulihkan.";
             return response()->json(new WithoutDataResource(Response::HTTP_OK, $successMessage), Response::HTTP_OK);
         } else {
             $successMessage = 'Restore data tidak dapat diproses, Silahkan hubungi admin untuk dilakukan pengecekan ulang.';
@@ -199,9 +199,9 @@ class PremiController extends Controller
     {
         return $collection->transform(function ($premi) {
             return [
-                'id' => 'P00' . $premi->id,
+                'id' => $premi->id,
                 'nama_premi' => $premi->nama_premi,
-                'sumber_potongan' => $premi->sumber_potongan,
+                'kategori_potongan' => $premi->kategori_potongans,
                 'jenis_premi' => $premi->jenis_premi,
                 'besaran_premi' => $premi->besaran_premi,
                 'minimal_rate' => $premi->minimal_rate,

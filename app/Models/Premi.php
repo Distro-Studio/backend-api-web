@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Premi extends Model
@@ -43,5 +44,15 @@ class Premi extends Model
     public function pengurang_gajis(): HasMany
     {
         return $this->hasMany(PengurangGaji::class, 'premi_id', 'id');
+    }
+
+    /**
+     * Get the kategori_potongans that owns the Premi
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function kategori_potongans(): BelongsTo
+    {
+        return $this->belongsTo(KategoriPotongan::class, 'kategori_potongan_id', 'id');
     }
 }

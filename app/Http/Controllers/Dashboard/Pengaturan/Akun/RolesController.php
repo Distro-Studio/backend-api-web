@@ -95,7 +95,7 @@ class RolesController extends Controller
 
         return response()->json([
             'status' => Response::HTTP_OK,
-            'message' => "Data role {$role->name} berhasil ditampilkan.",
+            'message' => "Data role '{$role->name}' berhasil ditampilkan.",
             'data' => $formattedData,
         ], Response::HTTP_OK);
     }
@@ -128,7 +128,7 @@ class RolesController extends Controller
 
         $role->delete();
 
-        $successMessage = 'Data role berhasil dihapus.';
+        $successMessage = "Data role '{$role->name}' berhasil dihapus.";
         return response()->json(new WithoutDataResource(Response::HTTP_OK, $successMessage), Response::HTTP_OK);
     }
 
@@ -143,7 +143,7 @@ class RolesController extends Controller
         $role->restore();
 
         if (is_null($role->deleted_at)) {
-            $successMessage = "Data role {$role->name} berhasil dipulihkan.";
+            $successMessage = "Data role '{$role->name}' berhasil dipulihkan.";
             return response()->json(new WithoutDataResource(Response::HTTP_OK, $successMessage), Response::HTTP_OK);
         } else {
             $successMessage = 'Restore data tidak dapat diproses, Silahkan hubungi admin untuk dilakukan pengecekan ulang.';

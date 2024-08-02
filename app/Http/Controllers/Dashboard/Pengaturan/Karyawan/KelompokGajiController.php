@@ -68,7 +68,7 @@ class KelompokGajiController extends Controller
         $data = $request->validated();
 
         $kelompk_gaji = KelompokGaji::create($data);
-        $successMessage = "Data kelompok gaji {$kelompk_gaji->nama_kelompok} berhasil dibuat.";
+        $successMessage = "Data kelompok gaji '{$kelompk_gaji->nama_kelompok}' berhasil dibuat.";
         $formattedData = $this->formatData(collect([$kelompk_gaji]))->first();
 
         return response()->json([
@@ -88,7 +88,7 @@ class KelompokGajiController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data kelompok gaji tidak ditemukan.'), Response::HTTP_NOT_FOUND);
         }
 
-        $successMessage = "Data kelompok gaji {$kelompok_gaji->nama_kelompok} berhasil ditampilkan.";
+        $successMessage = "Data kelompok gaji '{$kelompok_gaji->nama_kelompok}' berhasil ditampilkan.";
         $formattedData = $this->formatData(collect([$kelompok_gaji]))->first();
 
         return response()->json([
@@ -139,7 +139,7 @@ class KelompokGajiController extends Controller
 
         $kelompok_gaji->delete();
 
-        $successMessage = 'Data kelompok gaji berhasil dihapus.';
+        $successMessage = "Data kelompok gaji '{$kelompok_gaji->nama_kelompok}' berhasil dihapus.";
         return response()->json(new WithoutDataResource(Response::HTTP_OK, $successMessage), Response::HTTP_OK);
     }
 
@@ -154,7 +154,7 @@ class KelompokGajiController extends Controller
         $kelompok_gaji->restore();
 
         if (is_null($kelompok_gaji->deleted_at)) {
-            $successMessage = "Data kelompok gaji {$kelompok_gaji->nama_kelompok} berhasil dipulihkan.";
+            $successMessage = "Data kelompok gaji '{$kelompok_gaji->nama_kelompok}' berhasil dipulihkan.";
             return response()->json(new WithoutDataResource(Response::HTTP_OK, $successMessage), Response::HTTP_OK);
         } else {
             $successMessage = 'Restore data tidak dapat diproses, Silahkan hubungi admin untuk dilakukan pengecekan ulang.';

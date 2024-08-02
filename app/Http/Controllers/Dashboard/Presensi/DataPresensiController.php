@@ -30,7 +30,7 @@ class DataPresensiController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
-        $lokasi_kantor = LokasiKantor::orderBy('updated_at', 'desc')->get();
+        $lokasi_kantor = LokasiKantor::orderBy('updated_at', 'desc')->where('id', 1)->get();
         return response()->json([
             'status' => Response::HTTP_OK,
             'message' => 'Retrieve lokasi kantor successfully.',
@@ -278,7 +278,7 @@ class DataPresensiController extends Controller
 
         return response()->json([
             'status' => Response::HTTP_OK,
-            'message' => 'Detail data presensi berhasil ditampilkan.',
+            'message' => "Detail data presensi karyawan '{$presensi->users->nama}' berhasil ditampilkan.",
             'data' => $formattedData,
         ], Response::HTTP_OK);
     }

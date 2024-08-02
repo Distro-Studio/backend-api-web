@@ -78,7 +78,7 @@ class RoleSeeder extends Seeder
             'create shift', 'edit shift', 'delete shift', 'view shift', 'import shift', 'export shift',
             'create hariLibur', 'edit hariLibur', 'delete hariLibur', 'view hariLibur', 'import hariLibur', 'export hariLibur',
             'create cuti', 'edit cuti', 'delete cuti', 'view cuti', 'import cuti', 'export cuti',
-            'create lokasiKantor', 'edit lokasiKantor', 'view lokasiKantor'
+            'edit lokasiKantor', 'view lokasiKantor'
         ]);
     }
 }

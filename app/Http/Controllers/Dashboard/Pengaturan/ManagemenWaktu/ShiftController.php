@@ -104,7 +104,7 @@ class ShiftController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data shift tidak ditemukan.'), Response::HTTP_NOT_FOUND);
         }
 
-        $successMessage = "Data shift {$shift->nama} berhasil diubah.";
+        $successMessage = "Data shift '{$shift->nama}' berhasil diubah.";
         $formattedData = $this->formatData(collect([$shift]))->first();
 
         return response()->json([
@@ -150,7 +150,7 @@ class ShiftController extends Controller
 
         $shift->delete();
 
-        $successMessage = 'Data shift berhasil dihapus.';
+        $successMessage = "Data shift '{$shift->nama}' berhasil dihapus.";
         return response()->json(new WithoutDataResource(Response::HTTP_OK, $successMessage), Response::HTTP_OK);
     }
 
@@ -165,7 +165,7 @@ class ShiftController extends Controller
         $shift->restore();
 
         if (is_null($shift->deleted_at)) {
-            $successMessage = "Data shift {$shift->nama} berhasil dipulihkan.";
+            $successMessage = "Data shift '{$shift->nama}' berhasil dipulihkan.";
             return response()->json(new WithoutDataResource(Response::HTTP_OK, $successMessage), Response::HTTP_OK);
         } else {
             $successMessage = 'Restore data tidak dapat diproses, Silahkan hubungi admin untuk dilakukan pengecekan ulang.';

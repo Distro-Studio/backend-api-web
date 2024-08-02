@@ -14,8 +14,8 @@ return new class extends Migration
         Schema::create('premis', function (Blueprint $table) {
             $table->id();
             $table->string('nama_premi');
-            $table->string('sumber_potongan');
-            $table->boolean('jenis_premi');
+            $table->foreignId('kategori_potongan_id')->constrained('kategori_potongans'); // 1: gaji bruto, 2: gaji pokok
+            $table->boolean('jenis_premi'); // 0: nominal, 1: persentase
             $table->integer('besaran_premi');
             $table->integer('minimal_rate')->nullable();
             $table->integer('maksimal_rate')->nullable();

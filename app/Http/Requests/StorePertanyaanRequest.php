@@ -35,6 +35,7 @@ class StorePertanyaanRequest extends FormRequest
         return [
             'pertanyaan.required' => 'Pertanyaan kuesioner tidak diperbolehkan kosong.',
             'pertanyaan.string' => 'Pertanyaan kuesioner tidak diperbolehkan mengandung angka atau karakter lainnya.',
+            'pertanyaan.unique' => 'Pertanyaan kuesioner tersebut sudah pernah dibuat.',
             'jabatan_id.required' => 'Silahkan pilih jabatan yang tersedia terlebih dahulu.',
             'jabatan_id.integer' => 'Data jabatan yang valid adalah berupa satuan angka.',
             'jabatan_id.exists' => 'Data jabatan yang terdipilih tidak tersedia.',

@@ -90,7 +90,7 @@ class HariLiburController extends Controller
         $data = $request->validated();
 
         $hari_libur = HariLibur::create($data);
-        $successMessage = "Data hari libur berhasil dibuat.";
+        $successMessage = "Data hari libur '{$hari_libur->nama}' berhasil dibuat.";
         $formattedData = $this->formatData(collect([$hari_libur]))->first();
 
         return response()->json([
@@ -110,7 +110,7 @@ class HariLiburController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data hari libur tidak ditemukan.'), Response::HTTP_NOT_FOUND);
         }
 
-        $successMessage = "Data hari libur {$hari_libur->nama} berhasil diubah.";
+        $successMessage = "Data hari libur '{$hari_libur->nama}' berhasil diubah.";
         $formattedData = $this->formatData(collect([$hari_libur]))->first();
 
         return response()->json([
@@ -156,7 +156,7 @@ class HariLiburController extends Controller
 
         $hari_libur->delete();
 
-        $successMessage = 'Data hari libur berhasil dihapus.';
+        $successMessage = "Data hari libur {$hari_libur->nama} berhasil dihapus.";
         return response()->json(new WithoutDataResource(Response::HTTP_OK, $successMessage), Response::HTTP_OK);
     }
 
@@ -171,7 +171,7 @@ class HariLiburController extends Controller
         $hari_libur->restore();
 
         if (is_null($hari_libur->deleted_at)) {
-            $successMessage = "Data hari libur {$hari_libur->nama} berhasil dipulihkan.";
+            $successMessage = "Data hari libur '{$hari_libur->nama}' berhasil dipulihkan.";
             return response()->json(new WithoutDataResource(Response::HTTP_OK, $successMessage), Response::HTTP_OK);
         } else {
             $successMessage = 'Restore data tidak dapat diproses, Silahkan hubungi admin untuk dilakukan pengecekan ulang.';

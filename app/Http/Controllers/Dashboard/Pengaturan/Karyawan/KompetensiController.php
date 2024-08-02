@@ -90,7 +90,7 @@ class KompetensiController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data kompetensi tidak ditemukan.'), Response::HTTP_NOT_FOUND);
         }
 
-        $successMessage = "Data kompetensi {$kompetensi->nama_kompetensi} berhasil ditampilkan.";
+        $successMessage = "Data kompetensi '{$kompetensi->nama_kompetensi}' berhasil ditampilkan.";
         $formattedData = $this->formatData(collect([$kompetensi]))->first();
 
         return response()->json([
@@ -137,7 +137,7 @@ class KompetensiController extends Controller
 
         $kompetensi->delete();
 
-        $successMessage = 'Data kompetensi berhasil dihapus.';
+        $successMessage = "Data kompetensi '{$kompetensi->nama_kompetensi}' berhasil dihapus.";
         return response()->json(new WithoutDataResource(Response::HTTP_OK, $successMessage), Response::HTTP_OK);
     }
 
@@ -152,7 +152,7 @@ class KompetensiController extends Controller
         $kompetensi->restore();
 
         if (is_null($kompetensi->deleted_at)) {
-            $successMessage = "Data kompetensi kuesioner dari jabatan {$kompetensi->nama_kompetensi} berhasil dipulihkan.";
+            $successMessage = "Data kompetensi kuesioner dari jabatan '{$kompetensi->nama_kompetensi}' berhasil dipulihkan.";
             return response()->json(new WithoutDataResource(Response::HTTP_OK, $successMessage), Response::HTTP_OK);
         } else {
             $successMessage = 'Restore data tidak dapat diproses, Silahkan hubungi admin untuk dilakukan pengecekan ulang.';

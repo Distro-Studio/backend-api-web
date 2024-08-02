@@ -290,7 +290,7 @@ class CreateGajiJob implements ShouldQueue
         foreach ($premis as $premi) {
             $premiAmount = 0;
             $basisGaji = $penghasilanBruto;
-            if ($premi->sumber_potongan == 'Gaji Pokok') {
+            if ($premi->kategori_potongan_id == 2) { // gaji pokok
                 $basisPengkali = $gajiPokok;
             } else {
                 $basisPengkali = $basisGaji;
@@ -333,7 +333,7 @@ class CreateGajiJob implements ShouldQueue
     {
         $premiAmount = 0;
         $basisGaji = $penghasilanBruto;
-        if ($premi->sumber_potongan == 'Gaji Pokok') {
+        if ($premi->kategori_potongan_id == 2) { // gaji pokok
             $basisPengkali = $gajiPokok;
         } else {
             $basisPengkali = $basisGaji;

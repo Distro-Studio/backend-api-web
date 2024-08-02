@@ -218,7 +218,7 @@ class TER21Controller extends Controller
     {
         return $collection->transform(function ($ter21) {
             return [
-                'id' => 'T00' . $ter21->id,
+                'id' => $ter21->id,
                 'kategori_ter_id' => $ter21->kategori_ters,
                 'from_ter' => $ter21->from_ter,
                 'to_ter' => $ter21->to_ter,

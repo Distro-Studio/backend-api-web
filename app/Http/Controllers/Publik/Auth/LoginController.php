@@ -46,18 +46,18 @@ class LoginController extends Controller
 
         $token = $user->createToken('create_token_' . Str::uuid())->plainTextToken;
 
-        $response = response()->json([
-            'user' => new UserResource(Response::HTTP_OK, 'Login berhasil!, Selamat Datang ' . $user->nama . '.', $user),
+        return response()->json([
+            'user' => new UserResource(Response::HTTP_OK, "Login berhasil!, Selamat Datang '{$user->nama}'.", $user),
             'token' => $token
         ], Response::HTTP_OK);
 
-        return $response->withCookie(cookie('authToken', $token, 43200, true));
+        // return $response->withCookie(cookie('authToken', $token, 43200, '/', null, true, true, false, 'Lax'));
     }
 
     public function getInfoUserLogin()
     {
         $user = auth()->user();
-        return response()->json(new UserResource(Response::HTTP_OK, 'Data pengguna akun ' . $user->nama . ' berhasil didapatkan.', $user), Response::HTTP_OK);
+        return response()->json(new UserResource(Response::HTTP_OK, "Data pengguna akun '{$user->nama}' berhasil didapatkan.", $user), Response::HTTP_OK);
     }
 
     public function logout()

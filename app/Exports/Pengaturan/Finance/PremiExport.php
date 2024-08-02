@@ -21,7 +21,7 @@ class PremiExport implements FromCollection, WithHeadings, WithMapping
     {
         return [
             'nama',
-            'sumber_potongan',
+            'kategori_potongan',
             'jenis',
             'besaran',
             'minimal_rate',
@@ -36,7 +36,7 @@ class PremiExport implements FromCollection, WithHeadings, WithMapping
         $besaranPremi = $premi->jenis_premi ? 'Rp' . $premi->besaran_premi : $premi->besaran_premi . '%';
         return [
             $premi->nama_premi,
-            $premi->sumber_potongan,
+            $premi->kategori_potongans->label,
             $premi->jenis_premi ? 'Nominal' : 'Persentase',
             $besaranPremi,
             $premi->minimal_rate ?? 'N/A',
