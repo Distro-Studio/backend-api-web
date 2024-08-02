@@ -40,6 +40,7 @@ class DataTransferKaryawanController extends Controller
             'data' => $tipe_transfer
         ], Response::HTTP_OK);
     }
+
     public function index(Request $request)
     {
         if (!Gate::allows('view dataKaryawan')) {
@@ -51,80 +52,81 @@ class DataTransferKaryawanController extends Controller
 
         $transfer = TransferKaryawan::query();
 
-        // Filter
-        if ($request->has('nama_unit')) {
-            $namaUnitKerja = $request->nama_unit;
+        // Ambil semua filter dari request body
+        $filters = $request->all();
 
+        // Filter
+        if (isset($filters['unit_kerja'])) {
+            $namaUnitKerja = $filters['unit_kerja'];
             $transfer->whereHas('users.data_karyawans.unit_kerjas', function ($query) use ($namaUnitKerja) {
                 if (is_array($namaUnitKerja)) {
-                    $query->whereIn('nama_unit', $namaUnitKerja);
+                    $query->whereIn('id', $namaUnitKerja);
                 } else {
-                    $query->where('nama_unit', '=', $namaUnitKerja);
+                    $query->where('id', '=', $namaUnitKerja);
                 }
             });
         }
 
-        if ($request->has('status_karyawan')) {
-            if (is_array($request->status_karyawan)) {
-                $transfer->whereHas('users.data_karyawans.status_karyawans', function ($query) use ($request) {
-                    $query->whereIn('label', $request->status_karyawan);
+        if (isset($filters['status_karyawan'])) {
+            $statusKaryawan = $filters['status_karyawan'];
+            $transfer->whereHas('users.data_karyawans.status_karyawans', function ($query) use ($statusKaryawan) {
+                if (is_array($statusKaryawan)) {
+                    $query->whereIn('id', $statusKaryawan);
+                } else {
+                    $query->where('id', '=', $statusKaryawan);
+                }
+            });
+        }
+
+        if (isset($filters['masa_kerja'])) {
+            $masaKerja = $filters['masa_kerja'];
+            if (is_array($masaKerja)) {
+                $transfer->whereHas('users.data_karyawans', function ($query) use ($masaKerja) {
+                    foreach ($masaKerja as $masa) {
+                        $query->orWhereRaw('TIMESTAMPDIFF(YEAR, tgl_masuk, COALESCE(tgl_keluar, NOW())) = ?', [$masa]);
+                    }
                 });
             } else {
-                $transfer->whereHas('users.data_karyawans.status_karyawans', function ($query) use ($request) {
-                    $query->where('label', $request->status_karyawan);
+                $transfer->whereHas('users.data_karyawans', function ($query) use ($masaKerja) {
+                    $query->whereRaw('TIMESTAMPDIFF(YEAR, tgl_masuk, COALESCE(tgl_keluar, NOW())) = ?', [$masaKerja]);
                 });
             }
         }
 
-        if ($request->has('masa_kerja')) {
-            $masa_kerja = $request->masa_kerja;
-            $transfer->whereHas('users.data_karyawans', function ($query) use ($masa_kerja) {
-                $query->whereRaw('TIMESTAMPDIFF(YEAR, tgl_masuk, COALESCE(tgl_keluar, NOW())) = ?', [$masa_kerja]);
-            });
-        }
-
-        if ($request->has('status_aktif')) {
-            $statusAktif = $request->status_aktif;
+        if (isset($filters['status_aktif'])) {
+            $statusAktif = $filters['status_aktif'];
             $transfer->whereHas('users', function ($query) use ($statusAktif) {
-                $query->where('status_aktif', $statusAktif);
+                if (is_array($statusAktif)) {
+                    $query->whereIn('status_aktif', $statusAktif);
+                } else {
+                    $query->where('status_aktif', '=', $statusAktif);
+                }
             });
         }
 
-        if ($request->has('tgl_masuk')) {
-            $tglMasuk = $request->tgl_masuk;
-            $tglMasuk = Carbon::parse($tglMasuk)->format('Y-m-d');
-            $transfer->whereHas('users.data_karyawans', function ($query) use ($tglMasuk) {
-                $query->where('tgl_masuk', $tglMasuk);
-            });
+        if (isset($filters['tgl_masuk'])) {
+            $tglMasuk = $filters['tgl_masuk'];
+            if (is_array($tglMasuk)) {
+                $transfer->whereHas('users.data_karyawans', function ($query) use ($tglMasuk) {
+                    $query->whereIn('tgl_masuk', $tglMasuk);
+                });
+            } else {
+                $tglMasuk = Carbon::parse($tglMasuk)->format('Y-m-d');
+                $transfer->whereHas('users.data_karyawans', function ($query) use ($tglMasuk) {
+                    $query->where('tgl_masuk', $tglMasuk);
+                });
+            }
         }
 
         // Search
-        if ($request->has('search')) {
-            $transfer = $transfer->where(function ($query) use ($request) {
-                $searchTerm = '%' . $request->search . '%';
-
+        if (isset($filters['search'])) {
+            $searchTerm = '%' . $filters['search'] . '%';
+            $transfer->where(function ($query) use ($searchTerm) {
                 $query->whereHas('users', function ($query) use ($searchTerm) {
                     $query->where('nama', 'like', $searchTerm);
-                })
-                    ->orWhereHas('users.data_karyawans', function ($query) use ($searchTerm) {
-                        $query->where('nik', 'like', $searchTerm);
-                    })
-                    ->orWhereHas('kategori_transfer_karyawans', function ($query) use ($searchTerm) {
-                        $query->where('label', 'like', $searchTerm);
-                    })
-                    ->orWhereHas('unit_kerja_asals', function ($query) use ($searchTerm) {
-                        $query->where('nama_unit', 'like', $searchTerm);
-                    })
-                    ->orWhereHas('unit_kerja_tujuans', function ($query) use ($searchTerm) {
-                        $query->where('nama_unit', 'like', $searchTerm);
-                    })
-                    ->orWhereHas('jabatan_asals', function ($query) use ($searchTerm) {
-                        $query->where('nama_jabatan', 'like', $searchTerm);
-                    })
-                    ->orWhereHas('jabatan_tujuans', function ($query) use ($searchTerm) {
-                        $query->where('nama_jabatan', 'like', $searchTerm);
-                    })
-                    ->orWhere('alasan', 'like', $searchTerm);
+                })->orWhereHas('users.data_karyawans', function ($query) use ($searchTerm) {
+                    $query->where('nik', 'like', $searchTerm);
+                });
             });
         }
 
@@ -151,7 +153,7 @@ class DataTransferKaryawanController extends Controller
                     'updated_at' => $user->updated_at,
                 ],
                 'role' => $user->roles,
-                'nik' => $data_karyawan->nik,
+                // 'nik' => $data_karyawan->nik,
                 'kategori_transfer' => $transfer->kategori_transfer_karyawans,
                 'tgl_pengajuan' => $transfer->created_at,
                 'tgl_mulai' => $transfer->tgl_mulai,

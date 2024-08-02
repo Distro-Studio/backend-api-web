@@ -160,12 +160,12 @@ class DataPresensiController extends Controller
         // Search
         if ($request->has('search')) {
             $searchTerm = '%' . $request->search . '%';
+
             $presensi->where(function ($query) use ($searchTerm) {
                 $query->whereHas('users', function ($query) use ($searchTerm) {
                     $query->where('nama', 'like', $searchTerm);
-                })->orWhereHas('data_karyawans.unit_kerjas', function ($query) use ($searchTerm) {
-                    $query->where('nama_unit', 'like', $searchTerm);
-                });
+                })
+                    ->orWhere('nik', 'like', $searchTerm);
             });
         }
 

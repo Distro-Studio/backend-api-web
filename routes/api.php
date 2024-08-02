@@ -81,13 +81,11 @@ Route::middleware(['auth:sanctum'])->group(function () {
         // TODO: 2. setelah data_completion_step berubah menjadi true maka lakukan persetujuan dengan update status_aktif menjadi true
         // TODO: 3. ketika persetujuan ditolak, ubah data_completion_step dan status_aktif menjadi false
 
-        // TODO: Ubah export berdasarkan filter
-        // TODO: Buat fitur detail karyawan
+        // ! Ubah export berdasarkan filter
+        // ! Buat fitur detail karyawan
         Route::group(['prefix' => '/karyawan'], function () {
             // ! Data Karyawan ===========>
             Route::post('/get-data-karyawan', [DataKaryawanController::class, 'index']);
-            Route::post('/filter', [DataKaryawanController::class, 'index']);
-            Route::post('/search', [DataKaryawanController::class, 'index']);
             Route::get('/export', [DataKaryawanController::class, 'exportKaryawan']);
             Route::post('/import', [DataKaryawanController::class, 'importKaryawan']);
             Route::post('/{id}/non-aktif', [DataKaryawanController::class, 'deactivateKaryawan']);
@@ -98,8 +96,6 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
             // ! Transfer Karyawan ===========>
             Route::post('/transfer/get-data-trasnfer', [DataTransferKaryawanController::class, 'index']);
-            Route::post('/transfer/filter', [DataTransferKaryawanController::class, 'index']);
-            Route::post('/transfer/search', [DataTransferKaryawanController::class, 'index']);
             Route::get('/transfer/export', [DataTransferKaryawanController::class, 'exportTransferKaryawan']);
             Route::apiResource('/transfer', DataTransferKaryawanController::class);
         });

@@ -272,67 +272,73 @@ class DataKaryawanController extends Controller
 
         $karyawan = DataKaryawan::query()->where('email', '!=', 'super_admin@admin.rski');
 
-        // Filter
-        if ($request->has('nama_unit')) {
-            $namaUnitKerja = $request->nama_unit;
+        // Ambil semua filter dari request body
+        $filters = $request->all();
 
+        // Filter
+        if (isset($filters['unit_kerja'])) {
+            $namaUnitKerja = $filters['unit_kerja'];
             $karyawan->whereHas('unit_kerjas', function ($query) use ($namaUnitKerja) {
                 if (is_array($namaUnitKerja)) {
-                    $query->whereIn('nama_unit', $namaUnitKerja);
+                    $query->whereIn('id', $namaUnitKerja);
                 } else {
-                    $query->where('nama_unit', '=', $namaUnitKerja);
+                    $query->where('id', '=', $namaUnitKerja);
                 }
             });
         }
 
-        if ($request->has('status_karyawan')) {
-            if (is_array($request->status_karyawan)) {
-                $karyawan->whereHas('status_karyawans', function ($query) use ($request) {
-                    $query->whereIn('label', $request->status_karyawan);
-                });
-            } else {
-                $karyawan->whereHas('status_karyawans', function ($query) use ($request) {
-                    $query->where('label', $request->status_karyawan);
-                });
-            }
-        }
-
-        if ($request->has('masa_kerja')) {
-            $masa_kerja = $request->masa_kerja;
-            $karyawan->whereRaw('TIMESTAMPDIFF(YEAR, tgl_masuk, COALESCE(tgl_keluar, NOW())) = ?', [$masa_kerja]);
-        }
-
-        if ($request->has('status_aktif')) {
-            $statusAktif = $request->status_aktif;
-            $karyawan->whereHas('users', function ($query) use ($statusAktif) {
-                $query->where('status_aktif', $statusAktif);
+        if (isset($filters['status_karyawan'])) {
+            $statusKaryawan = $filters['status_karyawan'];
+            $karyawan->whereHas('status_karyawans', function ($query) use ($statusKaryawan) {
+                if (is_array($statusKaryawan)) {
+                    $query->whereIn('id', $statusKaryawan);
+                } else {
+                    $query->where('id', '=', $statusKaryawan);
+                }
             });
         }
 
-        if ($request->has('tgl_masuk')) {
-            $tglMasuk = $request->tgl_masuk;
-            $tglMasuk = Carbon::parse($tglMasuk)->format('Y-m-d');
-            $karyawan->where('tgl_masuk', $tglMasuk);
+        if (isset($filters['masa_kerja'])) {
+            $masaKerja = $filters['masa_kerja'];
+            if (is_array($masaKerja)) {
+                $karyawan->where(function ($query) use ($masaKerja) {
+                    foreach ($masaKerja as $masa) {
+                        $query->orWhereRaw('TIMESTAMPDIFF(YEAR, tgl_masuk, COALESCE(tgl_keluar, NOW())) = ?', [$masa]);
+                    }
+                });
+            } else {
+                $karyawan->whereRaw('TIMESTAMPDIFF(YEAR, tgl_masuk, COALESCE(tgl_keluar, NOW())) = ?', [$masaKerja]);
+            }
+        }
+
+        if (isset($filters['status_aktif'])) {
+            $statusAktif = $filters['status_aktif'];
+            $karyawan->whereHas('users', function ($query) use ($statusAktif) {
+                if (is_array($statusAktif)) {
+                    $query->whereIn('status_aktif', $statusAktif);
+                } else {
+                    $query->where('status_aktif', '=', $statusAktif);
+                }
+            });
+        }
+
+        if (isset($filters['tgl_masuk'])) {
+            $tglMasuk = $filters['tgl_masuk'];
+            if (is_array($tglMasuk)) {
+                $karyawan->whereIn('tgl_masuk', $tglMasuk);
+            } else {
+                $tglMasuk = Carbon::parse($tglMasuk)->format('Y-m-d');
+                $karyawan->where('tgl_masuk', $tglMasuk);
+            }
         }
 
         // Search
-        if ($request->has('search')) {
-            $searchTerm = '%' . $request->search . '%';
-
+        if (isset($filters['search'])) {
+            $searchTerm = '%' . $filters['search'] . '%';
             $karyawan->where(function ($query) use ($searchTerm) {
                 $query->whereHas('users', function ($query) use ($searchTerm) {
                     $query->where('nama', 'like', $searchTerm);
-                })
-                    ->orWhereHas('unit_kerjas', function ($query) use ($searchTerm) {
-                        $query->where('nama_unit', 'like', $searchTerm);
-                    })
-                    ->orWhere('nik', 'like', $searchTerm)
-                    ->orWhere('no_rm', 'like', $searchTerm)
-                    ->orWhere('email', 'like', $searchTerm)
-                    ->orWhereHas('data_keluargas', function ($query) use ($searchTerm) {
-                        $query->where('nama_keluarga', 'like', $searchTerm)
-                            ->whereIn('hubungan', ['Ayah', 'Ibu']);
-                    });
+                })->orWhere('nik', 'like', $searchTerm);
             });
         }
 
@@ -367,6 +373,7 @@ class DataKaryawanController extends Controller
                 ],
                 'role' => $karyawan->users->roles, // role_id
                 'email' => $karyawan->email,
+                'nik' => $karyawan->nik,
                 'no_rm' => $karyawan->no_rm,
                 'no_manulife' => $karyawan->no_manulife,
                 'tgl_masuk' => $karyawan->tgl_masuk,
@@ -555,6 +562,7 @@ class DataKaryawanController extends Controller
                 'updated_at' => $karyawan->users->updated_at
             ],
             'role' => $karyawan->users->roles, // role_id
+            'nik' => $karyawan->nik,
             'email' => $karyawan->email,
             'no_rm' => $karyawan->no_rm,
             'no_manulife' => $karyawan->no_manulife,
@@ -636,6 +644,7 @@ class DataKaryawanController extends Controller
             ],
             'role' => $karyawan->users->roles, // role_id
             'email' => $karyawan->email,
+            'nik' => $karyawan->nik,
             'no_rm' => $karyawan->no_rm,
             'no_manulife' => $karyawan->no_manulife,
             'tgl_masuk' => $karyawan->tgl_masuk,
