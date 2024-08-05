@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Dashboard\DashboardController;
 use App\Http\Controllers\Dashboard\Jadwal\CutiJadwalController;
 use App\Http\Controllers\Dashboard\Jadwal\DataJadwalController;
 use App\Http\Controllers\Dashboard\Jadwal\DataLemburController;
@@ -76,6 +77,15 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::group(['prefix' => 'rski/dashboard'], function () {
         Route::get('/logout', [LoginController::class, 'logout'])->middleware('web');
         Route::get('/user-info', [LoginController::class, 'getInfoUserLogin']);
+
+        Route::group(['prefix' => '/dashboard'], function () {
+            Route::get('/calculated-header', [DashboardController::class, 'calculatedHeader']);
+            Route::get('/calculated-jenis-kelamin', [DashboardController::class, 'calculatedKelamin']);
+            Route::get('/calculated-jabatan', [DashboardController::class, 'calculatedJabatan']);
+            Route::get('/calculated-kepegawaian', [DashboardController::class, 'calculatedKepegawaian']);
+            Route::get('/calculated-header', [DashboardController::class, 'index']);
+            Route::get('/calculated-header', [DashboardController::class, 'index']);
+        });
 
         // TODO: aktifkan send email di create & transfer karyawan
         // TODO: ganti email di create & transfer karyawan

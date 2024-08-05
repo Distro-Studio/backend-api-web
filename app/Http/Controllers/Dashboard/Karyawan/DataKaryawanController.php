@@ -776,6 +776,26 @@ class DataKaryawanController extends Controller
         }
 
         $karyawan->update($data);
+
+        // Update potongan gaji (premi)
+        $premis = $request->input('premi_id', []);
+        DB::table('pengurang_gajis')->where('data_karyawan_id', $karyawan->id)->delete(); // Hapus potongan gaji yang lama
+
+        if (!empty($premis)) {
+            $premisData = DB::table('premis')->whereIn('id', $premis)->get();
+            if ($premisData->isEmpty()) {
+                return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Potongan yang dipilih tidak valid.'), Response::HTTP_NOT_FOUND);
+            }
+
+            foreach ($premisData as $premi) {
+                DB::table('pengurang_gajis')->insert([
+                    'data_karyawan_id' => $karyawan->id,
+                    'premi_id' => $premi->id,
+                    'created_at' => Carbon::now(),
+                    'updated_at' => Carbon::now(),
+                ]);
+            }
+        }
         $role = $karyawan->users->roles->first();
 
         $formattedData = [

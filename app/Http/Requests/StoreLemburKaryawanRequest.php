@@ -29,7 +29,6 @@ class StoreLemburKaryawanRequest extends FormRequest
             'shift_id' => 'required|integer|exists:shifts,id',
             'tgl_pengajuan' => 'required|date',
             'kompensasi' => 'required|string',
-            'tipe' => 'required|string',
             'durasi_jam' => 'required|numeric',
             'durasi_menit' => 'required|numeric',
             'catatan' => 'required|string',

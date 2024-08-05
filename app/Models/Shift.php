@@ -22,14 +22,4 @@ class Shift extends Model
     {
         return $this->hasMany(Jadwal::class, 'shift_id', 'id');
     }
-
-    /**
-     * Get all of the lembur for the Shift
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
-     */
-    public function lemburs(): HasMany
-    {
-        return $this->hasMany(Lembur::class, 'shift_id', 'id');
-    }
 }

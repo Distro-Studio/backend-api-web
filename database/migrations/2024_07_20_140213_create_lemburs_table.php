@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('lemburs', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained('users');
-            $table->foreignId('shift_id')->constrained('shifts');
+            $table->foreignId('jadwal_id')->constrained('jadwals');
             $table->date('tgl_pengajuan');
             $table->foreignId('kompensasi_lembur_id')->constrained('kategori_kompensasis');
             $table->string('tipe'); //! MASIH RANCU

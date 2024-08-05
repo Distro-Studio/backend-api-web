@@ -23,13 +23,13 @@ class Lembur extends Model
     }
 
     /**
-     * Get the shift that owns the Lembur
+     * Get the jadwal that owns the Lembur
      *
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function shifts(): BelongsTo
+    public function jadwals(): BelongsTo
     {
-        return $this->belongsTo(Shift::class, 'shift_id', 'id');
+        return $this->belongsTo(Jadwal::class, 'jadwal_id', 'id');
     }
 
     /**

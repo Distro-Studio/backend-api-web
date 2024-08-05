@@ -30,7 +30,7 @@ class UpdateDataKaryawanRequest extends FormRequest
             'jabatan_id' => 'required|integer|exists:jabatans,id',
             'kompetensi_id' => 'required|integer|exists:kompetensis,id',
             'status_karyawan_id' => 'required|integer|exists:status_karyawans,id',
-            'premi_id' => 'array|required',
+            'premi_id' => 'array|nullable',
             'premi_id.*' => 'integer|exists:premis,id',
 
             // Step 2
@@ -70,7 +70,7 @@ class UpdateDataKaryawanRequest extends FormRequest
             'kompetensi_id.exists' => 'Maaf kompetensi yang dipilih tidak valid.',
             'status_karyawan_id.required' => 'Silahkan pilih status karyawan terlebih dahulu.',
             'status_karyawan_id.exists' => 'Maaf status karyawan yang dipilih tidak valid.',
-            'premi_id.required' => 'Silahkan pilih potongan penggajian karyawan terlebih dahulu.',
+            // 'premi_id.required' => 'Silahkan pilih potongan penggajian karyawan terlebih dahulu.',
             'premi_id.array' => 'Potongan penggajian harus berupa array.',
             'premi_id.*.exists' => 'Maaf potongan penggajian yang dipilih tidak valid.',
 

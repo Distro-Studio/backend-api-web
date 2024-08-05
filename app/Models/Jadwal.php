@@ -42,4 +42,14 @@ class Jadwal extends Model
     {
         return $this->belongsTo(Shift::class, 'shift_id', 'id');
     }
+
+    /**
+     * Get all of the lemburs for the Jadwal
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function lemburs(): HasMany
+    {
+        return $this->hasMany(Lembur::class, 'jadwal_id', 'id');
+    }
 }
