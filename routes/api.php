@@ -102,7 +102,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::post('/get-data-karyawan', [DataKaryawanController::class, 'index']);
             Route::get('/export', [DataKaryawanController::class, 'exportKaryawan']);
             Route::post('/import', [DataKaryawanController::class, 'importKaryawan']);
-            Route::post('/{id}/non-aktif', [DataKaryawanController::class, 'deactivateKaryawan']);
+            Route::post('/{id}/status-karyawan', [DataKaryawanController::class, 'toggleStatusUser']);
             Route::get('/detail-karyawan-user/{user_id}', [DataKaryawanController::class, 'showByUserId']);
             Route::get('/detail-karyawan/{data_karyawan_id}', [DataKaryawanController::class, 'showByDataKaryawanId']);
             Route::get('/detail-karyawan-presensi/{data_karyawan_id}', [DataKaryawanController::class, 'getDataPresensi']);

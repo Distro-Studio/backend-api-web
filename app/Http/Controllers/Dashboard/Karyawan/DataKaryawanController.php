@@ -926,7 +926,7 @@ class DataKaryawanController extends Controller
         return response()->json(new WithoutDataResource(Response::HTTP_OK, 'Data karyawan berhasil di import kedalam table.'), Response::HTTP_OK);
     }
 
-    public function deactivateKaryawan($id)
+    public function toggleStatusUser($id)
     {
         if (!Gate::allows('edit dataKaryawan')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
