@@ -939,7 +939,6 @@ class DataKaryawanController extends Controller
         }
 
         $user = $karyawan->users;
-        $user = $karyawan->users;
 
         if ($user->status_aktif === User::STATUS_AKTIF) {
             $user->status_aktif = User::STATUS_DINONAKTIFKAN;
@@ -948,7 +947,7 @@ class DataKaryawanController extends Controller
             $user->status_aktif = User::STATUS_AKTIF;
             $message = "Karyawan '{$karyawan->users->nama}' berhasil diaktifkan.";
         } else {
-            return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Status karyawan tidak valid.'), Response::HTTP_BAD_REQUEST);
+            return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, "Karyawan '{$karyawan->users->nama}' belum melengkapi data personal, dan status masih belum aktif."), Response::HTTP_NOT_ACCEPTABLE);
         }
 
         $user->save();
