@@ -260,7 +260,6 @@ class DataKaryawanController extends Controller
         ], Response::HTTP_OK);
     }
 
-
     public function index(Request $request)
     {
         if (!Gate::allows('view dataKaryawan')) {
@@ -325,9 +324,12 @@ class DataKaryawanController extends Controller
         if (isset($filters['tgl_masuk'])) {
             $tglMasuk = $filters['tgl_masuk'];
             if (is_array($tglMasuk)) {
+                foreach ($tglMasuk as &$tgl) {
+                    $tgl = RandomHelper::convertToDateString($tgl);
+                }
                 $karyawan->whereIn('tgl_masuk', $tglMasuk);
             } else {
-                $tglMasuk = Carbon::parse($tglMasuk)->format('Y-m-d');
+                $tglMasuk = RandomHelper::convertToDateString($tglMasuk);
                 $karyawan->where('tgl_masuk', $tglMasuk);
             }
         }
@@ -342,21 +344,40 @@ class DataKaryawanController extends Controller
             });
         }
 
-        // Pastikan limit adalah integer
-        $limit = is_numeric($limit) ? (int)$limit : 10;
+        if ($limit == 0) {
+            $dataKaryawan = $karyawan->get();
+            $paginationData = null;
+        } else {
+            $limit = is_numeric($limit) ? (int)$limit : 10;
+            $dataKaryawan = $karyawan->paginate($limit);
 
-        $dataKaryawan = $karyawan->paginate($limit);
+            $paginationData = [
+                'links' => [
+                    'first' => $dataKaryawan->url(1),
+                    'last' => $dataKaryawan->url($dataKaryawan->lastPage()),
+                    'prev' => $dataKaryawan->previousPageUrl(),
+                    'next' => $dataKaryawan->nextPageUrl(),
+                ],
+                'meta' => [
+                    'current_page' => $dataKaryawan->currentPage(),
+                    'last_page' => $dataKaryawan->lastPage(),
+                    'per_page' => $dataKaryawan->perPage(),
+                    'total' => $dataKaryawan->total(),
+                ]
+            ];
+        }
+
         if ($dataKaryawan->isEmpty()) {
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data karyawan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
         }
 
-        // Format data untuk output
-        $formattedData = $dataKaryawan->items();
-        $formattedData = array_map(function ($karyawan) {
+        $formattedData = $dataKaryawan->map(function ($karyawan) {
             $dataKeluargas = $karyawan->data_keluargas;
             $ayah = $dataKeluargas->where('hubungan', 'Ayah')->first();
             $ibu = $dataKeluargas->where('hubungan', 'Ibu')->first();
             $jumlahKeluarga = $dataKeluargas->count();
+
+            $role = $karyawan->users->roles->first();
 
             return [
                 'id' => $karyawan->id,
@@ -371,7 +392,13 @@ class DataKaryawanController extends Controller
                     'created_at' => $karyawan->users->created_at,
                     'updated_at' => $karyawan->users->updated_at
                 ],
-                'role' => $karyawan->users->roles, // role_id
+                'role' => [
+                    'id' => $role->id,
+                    'name' => $role->name,
+                    'deskripsi' => $role->deskripsi,
+                    'created_at' => $role->created_at,
+                    'updated_at' => $role->updated_at
+                ], // role_id
                 'email' => $karyawan->email,
                 'nik' => $karyawan->nik,
                 'no_rm' => $karyawan->no_rm,
@@ -420,22 +447,7 @@ class DataKaryawanController extends Controller
                 'created_at' => $karyawan->created_at,
                 'updated_at' => $karyawan->updated_at
             ];
-        }, $formattedData);
-
-        $paginationData = [
-            'links' => [
-                'first' => $dataKaryawan->url(1),
-                'last' => $dataKaryawan->url($dataKaryawan->lastPage()),
-                'prev' => $dataKaryawan->previousPageUrl(),
-                'next' => $dataKaryawan->nextPageUrl(),
-            ],
-            'meta' => [
-                'current_page' => $dataKaryawan->currentPage(),
-                'last_page' => $dataKaryawan->lastPage(),
-                'per_page' => $dataKaryawan->perPage(),
-                'total' => $dataKaryawan->total(),
-            ]
-        ];
+        });
 
         return response()->json([
             'status' => Response::HTTP_OK,
@@ -547,6 +559,14 @@ class DataKaryawanController extends Controller
         if (!$karyawan) {
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data karyawan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
         }
+        $role = $karyawan->users->roles->first();
+
+        // Ambil data pengurang gaji
+        $pengurangGaji = DB::table('pengurang_gajis')
+            ->join('premis', 'pengurang_gajis.premi_id', '=', 'premis.id')
+            ->where('pengurang_gajis.data_karyawan_id', $karyawan->id)
+            ->select('premis.id', 'premis.nama_premi')
+            ->get();
 
         $formattedData = [
             'id' => $karyawan->id,
@@ -561,7 +581,14 @@ class DataKaryawanController extends Controller
                 'created_at' => $karyawan->users->created_at,
                 'updated_at' => $karyawan->users->updated_at
             ],
-            'role' => $karyawan->users->roles, // role_id
+            'role' => [
+                'id' => $role->id,
+                'name' => $role->name,
+                'deskripsi' => $role->deskripsi,
+                'created_at' => $role->created_at,
+                'updated_at' => $role->updated_at
+            ], // role_id
+            'potongan_gaji' => $pengurangGaji,
             'nik' => $karyawan->nik,
             'email' => $karyawan->email,
             'no_rm' => $karyawan->no_rm,
@@ -628,6 +655,13 @@ class DataKaryawanController extends Controller
         if (!$karyawan) {
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data karyawan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
         }
+        $role = $karyawan->users->roles->first();
+        // Ambil data pengurang gaji
+        $pengurangGaji = DB::table('pengurang_gajis')
+            ->join('premis', 'pengurang_gajis.premi_id', '=', 'premis.id')
+            ->where('pengurang_gajis.data_karyawan_id', $karyawan->id)
+            ->select('premis.id', 'premis.nama_premi')
+            ->get();
 
         $formattedData = [
             'id' => $karyawan->id,
@@ -642,7 +676,14 @@ class DataKaryawanController extends Controller
                 'created_at' => $karyawan->users->created_at,
                 'updated_at' => $karyawan->users->updated_at
             ],
-            'role' => $karyawan->users->roles, // role_id
+            'role' => [
+                'id' => $role->id,
+                'name' => $role->name,
+                'deskripsi' => $role->deskripsi,
+                'created_at' => $role->created_at,
+                'updated_at' => $role->updated_at
+            ], // role_id
+            'potongan_gaji' => $pengurangGaji,
             'email' => $karyawan->email,
             'nik' => $karyawan->nik,
             'no_rm' => $karyawan->no_rm,
@@ -725,7 +766,17 @@ class DataKaryawanController extends Controller
             Mail::to($newEmail)->send(new SendAccountResetPassword($newEmail, $data['nama']));
         }
 
+        // Update nama di tabel users
+        $user->nama = $data['nama'];
+        $user->save();
+
+        // Update role di tabel users
+        if (isset($data['role_id'])) {
+            $user->roles()->sync([$data['role_id']]);
+        }
+
         $karyawan->update($data);
+        $role = $karyawan->users->roles->first();
 
         $formattedData = [
             'id' => $karyawan->id,
@@ -740,7 +791,13 @@ class DataKaryawanController extends Controller
                 'created_at' => $karyawan->users->created_at,
                 'updated_at' => $karyawan->users->updated_at
             ],
-            'role' => $karyawan->users->roles, // role_id
+            'role' => [
+                'id' => $role->id,
+                'name' => $role->name,
+                'deskripsi' => $role->deskripsi,
+                'created_at' => $role->created_at,
+                'updated_at' => $role->updated_at
+            ], // role_id
             'email' => $karyawan->email,
             'no_rm' => $karyawan->no_rm,
             'no_manulife' => $karyawan->no_manulife,

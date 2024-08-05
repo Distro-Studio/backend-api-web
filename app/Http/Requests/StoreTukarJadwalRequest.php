@@ -18,19 +18,12 @@ class StoreTukarJadwalRequest extends FormRequest
 
     public function rules(): array
     {
-        $rules = [
+        return [
             'user_pengajuan' => 'required|exists:users,id',
             'jadwal_pengajuan' => 'required|exists:jadwals,id',
             'user_ditukar' => 'required|exists:users,id',
-            'jadwal_ditukar' => 'required|exists:jadwals,id',
-            'tgl_mulai_ditukar' => 'nullable|date',
+            'jadwal_ditukar' => 'required|exists:jadwals,id'
         ];
-
-        if ($this->isLiburShift()) {
-            $rules['tgl_mulai_ditukar'] = 'required|date';
-        }
-
-        return $rules;
     }
 
     public function messages()
@@ -43,27 +36,10 @@ class StoreTukarJadwalRequest extends FormRequest
             'user_ditukar.required' => 'Silahkan pilih karyawan yang tersedia dan ingin ditukar terlebih dahulu.',
             'user_ditukar.exists' => 'Data karyawan yang dipilih tidak valid.',
             'jadwal_ditukar.required' => 'Silahkan pilih shift yang tersedia dan ingin ditukar terlebih dahulu.',
-            'jadwal_ditukar.exists' => 'Data shift yang dipilih tidak valid.',
-            'tgl_mulai_ditukar.required' => 'Tanggal mulai tidak diperbolehkan kosong dan diperlukan untuk Shift Libur.',
-            'tgl_mulai_ditukar.date' => 'Tanggal yang valid harus berupa tanggal.',
+            'jadwal_ditukar.exists' => 'Data shift yang dipilih tidak valid.'
         ];
     }
-
-    protected function isLiburShift()
-    {
-        $jadwalPengajuan = Jadwal::find($this->jadwal_pengajuan);
-        $jadwalDitukar = Jadwal::find($this->jadwal_ditukar);
-
-        if (!$jadwalPengajuan || !$jadwalDitukar) {
-            return false;
-        }
-
-        $shiftPengajuan = Shift::find($jadwalPengajuan->shift_id);
-        $shiftDitukar = Shift::find($jadwalDitukar->shift_id);
-
-        return $shiftPengajuan && $shiftDitukar && $shiftPengajuan->nama == 'Libur' && $shiftDitukar->nama == 'Libur';
-    }
-
+    
     public function failedValidation(Validator $validator)
     {
         $response = [

@@ -14,8 +14,8 @@ return new class extends Migration
         Schema::create('jadwals', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained('users');
-            $table->date('tgl_mulai');
-            $table->date('tgl_selesai')->nullable();
+            $table->string('tgl_mulai');
+            $table->string('tgl_selesai')->nullable();
             $table->foreignId('shift_id')->nullable()->constrained('shifts');
             $table->timestamps();
         });

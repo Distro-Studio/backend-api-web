@@ -30,12 +30,12 @@ class StoreDataKaryawanRequest extends FormRequest
             'role_id' => 'required|integer|exists:roles,id',
             'no_rm' => 'required|string',
             'no_manulife' => 'nullable|string',
-            'tgl_masuk' => 'required|date',
+            'tgl_masuk' => 'required|string',
             'unit_kerja_id' => 'required|integer|exists:unit_kerjas,id',
             'jabatan_id' => 'required|integer|exists:jabatans,id',
             'kompetensi_id' => 'required|integer|exists:kompetensis,id',
             'status_karyawan_id' => 'required|integer|exists:status_karyawans,id',
-            'premi_id' => 'array|required',
+            'premi_id' => 'array|nullable',
             'premi_id.*' => 'integer|exists:premis,id',
 
             // Step 2
@@ -66,7 +66,7 @@ class StoreDataKaryawanRequest extends FormRequest
             'no_rm.required' => 'Nomor rekam medis karyawan tidak diperbolehkan kosong.',
             'no_manulife.string' => 'Nomor manulife karyawan tidak diperbolehkan kosong.',
             'tgl_masuk.required' => 'Tanggal masuk karyawan tidak diperbolehkan kosong.',
-            'tgl_masuk.date' => 'Tanggal masuk karyawan harus berupa tanggal.',
+            'tgl_masuk.string' => 'Tanggal masuk karyawan tidak diperbolehkan mengandung selain angka dan huruf.',
             'unit_kerja_id.required' => 'Silahkan pilih unit kerja karyawan terlebih dahulu.',
             'unit_kerja_id.exists' => 'Maaf unit kerja yang dipilih tidak valid.',
             'jabatan_id.required' => 'Silahkan pilih jabatan karyawan terlebih dahulu.',
@@ -75,7 +75,7 @@ class StoreDataKaryawanRequest extends FormRequest
             'kompetensi_id.exists' => 'Maaf kompetensi yang dipilih tidak valid.',
             'status_karyawan_id.required' => 'Silahkan pilih status karyawan terlebih dahulu.',
             'status_karyawan_id.exists' => 'Maaf status karyawan yang dipilih tidak valid.',
-            'premi_id.required' => 'Silahkan pilih potongan penggajian karyawan terlebih dahulu.',
+            // 'premi_id.required' => 'Silahkan pilih potongan penggajian karyawan terlebih dahulu.',
             'premi_id.array' => 'Potongan penggajian harus berupa array.',
             'premi_id.*.exists' => 'Maaf potongan penggajian yang dipilih tidak valid.',
 

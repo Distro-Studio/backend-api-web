@@ -18,6 +18,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Gate;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\Karyawan\TransferExport;
+use App\Helpers\RandomHelper;
 use App\Models\KategoriTransferKaryawan;
 use App\Jobs\EmailNotification\TransferEmailJob;
 use App\Http\Requests\StoreTransferKaryawanRequest;
@@ -107,13 +108,14 @@ class DataTransferKaryawanController extends Controller
         if (isset($filters['tgl_masuk'])) {
             $tglMasuk = $filters['tgl_masuk'];
             if (is_array($tglMasuk)) {
-                $transfer->whereHas('users.data_karyawans', function ($query) use ($tglMasuk) {
-                    $query->whereIn('tgl_masuk', $tglMasuk);
+                $convertedDates = array_map([RandomHelper::class, 'convertToDateString'], $tglMasuk);
+                $transfer->whereHas('users.data_karyawans', function ($query) use ($convertedDates) {
+                    $query->whereIn('tgl_masuk', $convertedDates);
                 });
             } else {
-                $tglMasuk = Carbon::parse($tglMasuk)->format('Y-m-d');
-                $transfer->whereHas('users.data_karyawans', function ($query) use ($tglMasuk) {
-                    $query->where('tgl_masuk', $tglMasuk);
+                $convertedDate = RandomHelper::convertToDateString($tglMasuk);
+                $transfer->whereHas('users.data_karyawans', function ($query) use ($convertedDate) {
+                    $query->where('tgl_masuk', $convertedDate);
                 });
             }
         }
@@ -130,30 +132,58 @@ class DataTransferKaryawanController extends Controller
             });
         }
 
-        // Pastikan limit adalah integer
-        $limit = is_numeric($limit) ? (int)$limit : 10;
-        $dataTransfer = $transfer->paginate($limit);
+        if ($limit == 0) {
+            $dataTransfer = $transfer->get();
+            $paginationData = null;
+        } else {
+            $limit = is_numeric($limit) ? (int)$limit : 10;
+            $dataTransfer = $transfer->paginate($limit);
+
+            $paginationData = [
+                'links' => [
+                    'first' => $dataTransfer->url(1),
+                    'last' => $dataTransfer->url($dataTransfer->lastPage()),
+                    'prev' => $dataTransfer->previousPageUrl(),
+                    'next' => $dataTransfer->nextPageUrl(),
+                ],
+                'meta' => [
+                    'current_page' => $dataTransfer->currentPage(),
+                    'last_page' => $dataTransfer->lastPage(),
+                    'per_page' => $dataTransfer->perPage(),
+                    'total' => $dataTransfer->total(),
+                ]
+            ];
+        }
+
         if ($dataTransfer->isEmpty()) {
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data transfer karyawan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
         }
 
-        $formattedData = $dataTransfer->items();
-        $formattedData = array_map(function ($transfer) {
+        $formattedData = $dataTransfer->map(function ($transfer) {
             $user = $transfer->users;
             $data_karyawan = $user->data_karyawans;
+            $role = $user->roles->first();
             return [
                 'id' => $transfer->id,
                 'user' => [
                     'id' => $user->id,
                     'nama' => $user->nama,
+                    'email_verified_at' => $user->email_verified_at,
+                    'data_karyawan_id' => $user->data_karyawan_id,
                     'foto_profil' => $user->foto_profil,
                     'data_completion_step' => $user->data_completion_step,
                     'status_aktif' => $user->status_aktif,
                     'created_at' => $user->created_at,
-                    'updated_at' => $user->updated_at,
+                    'updated_at' => $user->updated_at
                 ],
-                'role' => $user->roles,
-                // 'nik' => $data_karyawan->nik,
+                'role' => [
+                    'id' => $role->id,
+                    'name' => $role->name,
+                    'deskripsi' => $role->deskripsi,
+                    'created_at' => $role->created_at,
+                    'updated_at' => $role->updated_at
+                ], // role_id
+                'nik' => $data_karyawan->nik,
                 'kategori_transfer' => $transfer->kategori_transfer_karyawans,
                 'tgl_pengajuan' => $transfer->created_at,
                 'tgl_mulai' => $transfer->tgl_mulai,
@@ -166,22 +196,7 @@ class DataTransferKaryawanController extends Controller
                 'created_at' => $transfer->created_at,
                 'updated_at' => $transfer->updated_at
             ];
-        }, $formattedData);
-
-        $paginationData = [
-            'links' => [
-                'first' => $dataTransfer->url(1),
-                'last' => $dataTransfer->url($dataTransfer->lastPage()),
-                'prev' => $dataTransfer->previousPageUrl(),
-                'next' => $dataTransfer->nextPageUrl(),
-            ],
-            'meta' => [
-                'current_page' => $dataTransfer->currentPage(),
-                'last_page' => $dataTransfer->lastPage(),
-                'per_page' => $dataTransfer->perPage(),
-                'total' => $dataTransfer->total(),
-            ]
-        ];
+        });
 
         return response()->json([
             'status' => Response::HTTP_OK,
@@ -198,7 +213,6 @@ class DataTransferKaryawanController extends Controller
         }
 
         $data = $request->validated();
-
 
         // with server
         DB::beginTransaction();
@@ -306,7 +320,7 @@ class DataTransferKaryawanController extends Controller
                 'jabatan_asals' => $jabatan_asals,
                 'jabatan_tujuans' => $jabatan_tujuans,
                 'alasan' => $alasan,
-                'tgl_mulai' => $tgl_mulai
+                'tgl_mulai' => RandomHelper::convertToDateTimeString($tgl_mulai),
             ];
 
             if ($request->has('beri_tahu_manajer_direktur') && $request->beri_tahu_manajer_direktur == 1) {

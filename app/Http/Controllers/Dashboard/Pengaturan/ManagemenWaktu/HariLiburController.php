@@ -62,7 +62,6 @@ class HariLiburController extends Controller
         if ($request->has('search')) {
             $hari_libur = $hari_libur->where(function ($query) use ($request) {
                 $searchTerm = '%' . $request->search . '%';
-
                 $query->orWhere('nama', 'like', $searchTerm);
             });
         }
@@ -177,41 +176,6 @@ class HariLiburController extends Controller
             $successMessage = 'Restore data tidak dapat diproses, Silahkan hubungi admin untuk dilakukan pengecekan ulang.';
             return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, $successMessage), Response::HTTP_BAD_REQUEST);
         }
-    }
-
-    public function exportHariLibur()
-    {
-        if (!Gate::allows('export hariLibur')) {
-            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
-        }
-        try {
-            return Excel::download(new HariLiburExport(), 'data-hari-libur.xls');
-        } catch (\Exception $e) {
-            return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya terjadi error. Message: ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
-        } catch (\Error $e) {
-            return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya terjadi error. Message: ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
-        }
-
-        return response()->json(new WithoutDataResource(Response::HTTP_OK, 'Data hari libur berhasil di download.'), Response::HTTP_OK);
-    }
-
-    public function importHariLibur(ImportHariLiburRequest $request)
-    {
-        if (!Gate::allows('import hariLibur')) {
-            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
-        }
-
-        $file = $request->validated();
-
-        try {
-            Excel::import(new HariLiburImport, $file['hari_libur_file']);
-        } catch (\Exception $e) {
-            return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
-        }
-
-        // More informative success message
-        $message = 'Data Hari Libur berhasil di import kedalam table.';
-        return response()->json(new WithoutDataResource(Response::HTTP_OK, $message), Response::HTTP_OK);
     }
 
     public function getNasionalHariLibur()

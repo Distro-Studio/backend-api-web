@@ -8,6 +8,7 @@ use App\Models\Jadwal;
 use App\Models\Presensi;
 use App\Models\LokasiKantor;
 use Illuminate\Http\Request;
+use App\Helpers\RandomHelper;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use App\Helpers\StorageSeverHelper;
@@ -103,84 +104,122 @@ class DataPresensiController extends Controller
 
         $presensi = Presensi::query();
 
+        // Ambil semua filter dari request body
+        $filters = $request->all();
+
         // Filter
         if ($request->has('tanggal')) {
-            $tanggal = Carbon::parse($request->tanggal)->format('Y-m-d');
+            $tanggal = RandomHelper::convertToDateString($request->tanggal);
             $presensi->whereDate('jam_masuk', $tanggal);
         } else {
             return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Pilih tanggal terlebih dahulu untuk menampilkan presensi.'), Response::HTTP_BAD_REQUEST);
         }
 
-        if ($request->has('nama_unit')) {
-            $namaUnitKerja = $request->nama_unit;
-
-            $presensi->whereHas('data_karyawans.unit_kerjas', function ($query) use ($namaUnitKerja) {
+        // Filter
+        if (isset($filters['unit_kerja'])) {
+            $namaUnitKerja = $filters['unit_kerja'];
+            $presensi->whereHas('users.data_karyawans.unit_kerjas', function ($query) use ($namaUnitKerja) {
                 if (is_array($namaUnitKerja)) {
-                    $query->whereIn('nama_unit', $namaUnitKerja);
+                    $query->whereIn('id', $namaUnitKerja);
                 } else {
-                    $query->where('nama_unit', '=', $namaUnitKerja);
+                    $query->where('id', '=', $namaUnitKerja);
                 }
             });
         }
 
-        if ($request->has('status_karyawan')) {
-            if (is_array($request->status_karyawan)) {
-                $presensi->whereHas('data_karyawans.status_karyawans', function ($query) use ($request) {
-                    $query->whereIn('label', $request->status_karyawan);
+        if (isset($filters['status_karyawan'])) {
+            $statusKaryawan = $filters['status_karyawan'];
+            $presensi->whereHas('users.data_karyawans.status_karyawans', function ($query) use ($statusKaryawan) {
+                if (is_array($statusKaryawan)) {
+                    $query->whereIn('id', $statusKaryawan);
+                } else {
+                    $query->where('id', '=', $statusKaryawan);
+                }
+            });
+        }
+
+        if (isset($filters['masa_kerja'])) {
+            $masaKerja = $filters['masa_kerja'];
+            if (is_array($masaKerja)) {
+                $presensi->whereHas('users.data_karyawans', function ($query) use ($masaKerja) {
+                    foreach ($masaKerja as $masa) {
+                        $query->orWhereRaw('TIMESTAMPDIFF(YEAR, tgl_masuk, COALESCE(tgl_keluar, NOW())) = ?', [$masa]);
+                    }
                 });
             } else {
-                $presensi->whereHas('data_karyawans.status_karyawans', function ($query) use ($request) {
-                    $query->where('label', $request->status_karyawan);
+                $presensi->whereHas('users.data_karyawans', function ($query) use ($masaKerja) {
+                    $query->whereRaw('TIMESTAMPDIFF(YEAR, tgl_masuk, COALESCE(tgl_keluar, NOW())) = ?', [$masaKerja]);
                 });
             }
         }
 
-        if ($request->has('masa_kerja')) {
-            $masa_kerja = $request->masa_kerja;
-            $presensi->whereHas('data_karyawans', function ($query) use ($masa_kerja) {
-                $query->whereRaw('TIMESTAMPDIFF(YEAR, tgl_masuk, COALESCE(tgl_keluar, NOW())) = ?', [$masa_kerja]);
-            });
-        }
-
-        if ($request->has('status_aktif')) {
-            $statusAktif = $request->status_aktif;
+        if (isset($filters['status_aktif'])) {
+            $statusAktif = $filters['status_aktif'];
             $presensi->whereHas('users', function ($query) use ($statusAktif) {
-                $query->where('status_aktif', $statusAktif);
+                if (is_array($statusAktif)) {
+                    $query->whereIn('status_aktif', $statusAktif);
+                } else {
+                    $query->where('status_aktif', '=', $statusAktif);
+                }
             });
         }
 
-        if ($request->has('tgl_masuk')) {
-            $tglMasuk = $request->tgl_masuk;
-            $tglMasuk = Carbon::parse($tglMasuk)->format('Y-m-d');
-            $presensi->whereHas('data_karyawans', function ($query) use ($tglMasuk) {
-                $query->where('tgl_masuk', $tglMasuk);
-            });
+        if (isset($filters['tgl_masuk'])) {
+            $tglMasuk = $filters['tgl_masuk'];
+            if (is_array($tglMasuk)) {
+                $convertedDates = array_map([RandomHelper::class, 'convertToDateString'], $tglMasuk);
+                $presensi->whereHas('users.data_karyawans', function ($query) use ($convertedDates) {
+                    $query->whereIn('tgl_masuk', $convertedDates);
+                });
+            } else {
+                $convertedDate = RandomHelper::convertToDateString($tglMasuk);
+                $presensi->whereHas('users.data_karyawans', function ($query) use ($convertedDate) {
+                    $query->where('tgl_masuk', $convertedDate);
+                });
+            }
         }
 
         // Search
-        if ($request->has('search')) {
-            $searchTerm = '%' . $request->search . '%';
-
+        if (isset($filters['search'])) {
+            $searchTerm = '%' . $filters['search'] . '%';
             $presensi->where(function ($query) use ($searchTerm) {
                 $query->whereHas('users', function ($query) use ($searchTerm) {
                     $query->where('nama', 'like', $searchTerm);
-                })
-                    ->orWhere('nik', 'like', $searchTerm);
+                })->orWhereHas('users.data_karyawans', function ($query) use ($searchTerm) {
+                    $query->where('nik', 'like', $searchTerm);
+                });
             });
         }
 
-        // Pastikan limit adalah integer
-        $limit = is_numeric($limit) ? (int)$limit : 10;
+        if ($limit == 0) {
+            $dataPresensi = $presensi->get();
+            $paginationData = null;
+        } else {
+            $limit = is_numeric($limit) ? (int)$limit : 10;
+            $dataPresensi = $presensi->paginate($limit);
 
-        $dataPresensi = $presensi->paginate($limit);
+            $paginationData = [
+                'links' => [
+                    'first' => $dataPresensi->url(1),
+                    'last' => $dataPresensi->url($dataPresensi->lastPage()),
+                    'prev' => $dataPresensi->previousPageUrl(),
+                    'next' => $dataPresensi->nextPageUrl(),
+                ],
+                'meta' => [
+                    'current_page' => $dataPresensi->currentPage(),
+                    'last_page' => $dataPresensi->lastPage(),
+                    'per_page' => $dataPresensi->perPage(),
+                    'total' => $dataPresensi->total(),
+                ]
+            ];
+        }
 
         if ($dataPresensi->isEmpty()) {
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data presensi tidak ditemukan.'), Response::HTTP_NOT_FOUND);
         }
 
         // Format data untuk output
-        $formattedData = $dataPresensi->items();
-        $formattedData = array_map(function ($presensi) {
+        $formattedData = $dataPresensi->map(function ($presensi) {
             return [
                 'id' => $presensi->id,
                 'user' => $presensi->users,
@@ -190,22 +229,7 @@ class DataPresensiController extends Controller
                 'created_at' => $presensi->created_at,
                 'updated_at' => $presensi->updated_at
             ];
-        }, $formattedData);
-
-        $paginationData = [
-            'links' => [
-                'first' => $dataPresensi->url(1),
-                'last' => $dataPresensi->url($dataPresensi->lastPage()),
-                'prev' => $dataPresensi->previousPageUrl(),
-                'next' => $dataPresensi->nextPageUrl(),
-            ],
-            'meta' => [
-                'current_page' => $dataPresensi->currentPage(),
-                'last_page' => $dataPresensi->lastPage(),
-                'per_page' => $dataPresensi->perPage(),
-                'total' => $dataPresensi->total(),
-            ]
-        ];
+        },);
 
         return response()->json([
             'status' => Response::HTTP_OK,

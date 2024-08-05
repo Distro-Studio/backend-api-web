@@ -26,13 +26,15 @@ class TukarJadwalExport implements FromCollection, WithHeadings, WithMapping
     public function headings(): array
     {
         return [
-            'karyawan_pengajuan',
-            'unit_kerja',
+            'no',
             'tanggal_pengajuan',
-            'karyawan_ditukar',
-            'jadwal_pengajuan',
-            'jadwal_ditukar',
+            'unit_kerja',
+            'kategori_penukaran',
             'status_penukaran',
+            'karyawan_pengajuan',
+            'jadwal_karyawan_pengajuan',
+            'karyawan_ditukar',
+            'jadwal_karyawan_ditukar',
             'created_at',
             'updated_at',
         ];
@@ -40,16 +42,40 @@ class TukarJadwalExport implements FromCollection, WithHeadings, WithMapping
 
     public function map($tukar_jadwal): array
     {
+        static $no = 1;
         return [
-            $tukar_jadwal->user_pengajuans->nama,
+            $no++,
+            Carbon::parse($tukar_jadwal->created_at)->format('d-m-Y'),
             $tukar_jadwal->user_pengajuans->data_karyawans->unit_kerjas->nama_unit,
-            Carbon::parse($tukar_jadwal->created_at)->format('d-m-Y H:i:s'),
+            $this->getKategoriName($tukar_jadwal->kategori_penukaran_id),
+            $this->getStatusName($tukar_jadwal->status_penukaran_id),
+            $tukar_jadwal->user_pengajuans->nama,
+            $tukar_jadwal->jadwal_pengajuans->shifts ? $tukar_jadwal->jadwal_pengajuans->shifts->nama : 'Libur',
             $tukar_jadwal->user_ditukars->nama,
-            $tukar_jadwal->jadwal_pengajuans->shifts->nama,
-            $tukar_jadwal->jadwal_ditukars->shifts->nama,
-            $tukar_jadwal->status_penukaran ? 'Disetujui' : 'Tidak Disetujui', // 1 = Disetujui, 0 = Tidak Disetujui
+            $tukar_jadwal->jadwal_ditukars->shifts ? $tukar_jadwal->jadwal_ditukars->shifts->nama : 'Libur',
             Carbon::parse($tukar_jadwal->created_at)->format('d-m-Y H:i:s'),
             Carbon::parse($tukar_jadwal->updated_at)->format('d-m-Y H:i:s')
         ];
+    }
+
+    private function getStatusName($statusId)
+    {
+        $statuses = [
+            1 => 'Menunggu',
+            2 => 'Disetujui',
+            3 => 'Tidak Disetujui',
+        ];
+
+        return $statuses[$statusId] ?? 'Unknown';
+    }
+
+    private function getKategoriName($kategoriId)
+    {
+        $categories = [
+            1 => 'Tukar Shift',
+            2 => 'Tukar Libur',
+        ];
+
+        return $categories[$kategoriId] ?? 'Unknown';
     }
 }

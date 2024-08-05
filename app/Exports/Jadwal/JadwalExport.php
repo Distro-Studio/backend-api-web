@@ -2,6 +2,7 @@
 
 namespace App\Exports\Jadwal;
 
+use App\Helpers\RandomHelper;
 use Carbon\Carbon;
 use App\Models\Shift;
 use App\Models\Jadwal;
@@ -19,18 +20,19 @@ class JadwalExport implements FromCollection, WithHeadings
         $jadwals = Jadwal::with(['users', 'shifts', 'users.data_karyawans.unit_kerjas'])
             ->get();
 
-        $schedules = $jadwals->map(function ($schedule) {
+        $schedules = $jadwals->map(function ($schedule, $index) {
             $unitKerjas = $schedule->users->data_karyawans->unit_kerjas ?? null;
             $jenisKaryawan = $unitKerjas ? ($unitKerjas->jenis_karyawan ? 'Shift' : 'Non-Shift') : 'N/A'; // 1 = Shift, 0 = Non-Shift
             $namaUnit = $unitKerjas ? $unitKerjas->nama_unit : 'N/A';
 
             return [
+                'no' => $index + 1,
                 'user' => $schedule->users->nama,
                 'jenis_karyawan' => $jenisKaryawan,
                 'nama_unit' => $namaUnit,
                 'nama_shift' => $schedule->shifts->nama,
-                'tanggal_mulai' => $schedule->tanggal_mulai,
-                'tanggal_selesai' => $schedule->tanggal_selesai,
+                'tanggal_mulai' => RandomHelper::convertToDateString($schedule->tgl_mulai),
+                'tanggal_selesai' => RandomHelper::convertToDateString($schedule->tgl_keluar),
                 'jam_from' => $schedule->shifts->jam_from,
                 'jam_to' => $schedule->shifts->jam_to,
                 'created_at' => Carbon::parse($schedule->created_at)->format('d-m-Y H:i:s'),
@@ -44,14 +46,15 @@ class JadwalExport implements FromCollection, WithHeadings
     public function headings(): array
     {
         return [
-            'Nama Karyawan',
-            'Jenis Karyawan',
-            'Unit Kerja',
-            'Nama Shift',
-            'Tanggal Mulai',
-            'Tanggal Selesai',
-            'Jam From',
-            'Jam To',
+            'no',
+            'nama',
+            'jenis_karyawan',
+            'unit_kerja',
+            'shift',
+            'tanggal_mulai',
+            'tanggal_selesai',
+            'jam_mulai',
+            'jam_selesai',
             'created_at',
             'updated_at',
         ];

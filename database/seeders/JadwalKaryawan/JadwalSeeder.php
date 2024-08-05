@@ -2,6 +2,7 @@
 
 namespace Database\Seeders\JadwalKaryawan;
 
+use Carbon\Carbon;
 use App\Models\User;
 use App\Models\Shift;
 use App\Models\Jadwal;
@@ -16,13 +17,21 @@ class JadwalSeeder extends Seeder
     public function run(): void
     {
         $shifts = Shift::pluck('id')->all();
-        for ($i = 0; $i < 10; $i++) {
-            $user_id = rand(1, 5);
+        $users = User::where('nama', '!=', 'Super Admin')->pluck('id')->all();
+
+        // Mengatur timezone ke Jakarta
+        $timezone = 'Asia/Jakarta';
+
+        // Mendapatkan tanggal pertama dan terakhir minggu ini dengan timezone Jakarta
+        $startOfWeek = Carbon::now($timezone)->startOfWeek();
+        $endOfWeek = Carbon::now($timezone)->endOfWeek();
+
+        foreach ($users as $user_id) {
             $shift_id = $shifts[array_rand($shifts)];
             $jadwal = new Jadwal([
                 'user_id' => $user_id,
-                'tgl_mulai' => date('Y-m-d', rand(mktime(0, 0, 0, 6, 15, 2024), mktime(0, 0, 0, 6, 20, 2024))),
-                'tgl_selesai' => date('Y-m-d', rand(mktime(0, 0, 0, 6, 30, 2024), mktime(0, 0, 0, 7, 5, 2024))),
+                'tgl_mulai' => $startOfWeek,
+                'tgl_selesai' => $endOfWeek,
                 'shift_id' => $shift_id,
             ]);
             $jadwal->save();

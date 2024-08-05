@@ -26,7 +26,7 @@ class StoreTransferKaryawanRequest extends FormRequest
     {
         return [
             'user_id' => 'required|integer|exists:users,id',
-            'tgl_mulai' => 'required|date',
+            'tgl_mulai' => 'required|string',
             'unit_kerja_asal' => 'required|integer|exists:unit_kerjas,id',
             'unit_kerja_tujuan' => 'required|integer|exists:unit_kerjas,id',
             'jabatan_asal' => 'required|integer|exists:jabatans,id',
@@ -44,7 +44,7 @@ class StoreTransferKaryawanRequest extends FormRequest
             'user_id.integer' => 'Data pengguna yang valid adalah berupa satuan angka.',
             'user_id.exists' => 'Pengguna yang dipilih tidak valid.',
             'tgl_mulai.required' => 'Silahkan masukkan tanggal mulai kerja terlebih dahulu.',
-            'tgl_mulai.date' => 'Data tanggal mulai kerja yang valid adalah berupa tanggal dan waktu.',
+            'tgl_mulai.string' => 'Data tanggal mulai kerja tidak diperbolehkan mengandung selain angka dan huruf.',
             'unit_kerja_asal.integer' => 'Data asal unit kerja karyawan sebelumnya adalah berupa satuan angka.',
             'unit_kerja_asal.required' => 'Data asal unit kerja karyawan otomatis akan terisi jika karyawan terpilih.',
             'unit_kerja_asal.exists' => 'Unit kerja karyawan asal yang dipilih tidak valid.',

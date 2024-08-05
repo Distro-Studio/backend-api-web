@@ -181,40 +181,6 @@ class PertanyaanController extends Controller
         }
     }
 
-    public function exportPertanyaan()
-    {
-        if (!Gate::allows('export kueasioner')) {
-            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
-        }
-
-        try {
-            return Excel::download(new PertanyaanExport(), 'data-pertanyaan.xls');
-        } catch (\Exception $e) {
-            return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya terjadi error. Message: ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
-        } catch (\Error $e) {
-            return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya terjadi error. Message: ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
-        }
-
-        return response()->json(new WithoutDataResource(Response::HTTP_OK, 'Data pertanyaan berhasil di download.'), Response::HTTP_OK);
-    }
-
-    public function importPertanyaan(ImportPertanyaanRequest $request)
-    {
-        if (!Gate::allows('import kuesioner')) {
-            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
-        }
-
-        $file = $request->validated();
-
-        try {
-            Excel::import(new PertanyaanImport, $file['pertanyaan_file']);
-        } catch (\Exception $e) {
-            return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
-        }
-
-        return response()->json(new WithoutDataResource(Response::HTTP_OK, 'Data pertanyaan berhasil di import kedalam table.'), Response::HTTP_OK);
-    }
-
     protected function formatData(Collection $collection)
     {
         return $collection->transform(function ($pertanyaan) {

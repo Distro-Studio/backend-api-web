@@ -157,40 +157,6 @@ class JabatanController extends Controller
         }
     }
 
-    public function exportJabatan()
-    {
-        if (!Gate::allows('export jabatan')) {
-            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
-        }
-
-        try {
-            return Excel::download(new JabatanExport(), 'data-jabatan.xls');
-        } catch (\Exception $e) {
-            return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya terjadi error. Message: ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
-        } catch (\Error $e) {
-            return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya terjadi error. Message: ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
-        }
-
-        return response()->json(new WithoutDataResource(Response::HTTP_OK, 'Data jabatan berhasil di download.'), Response::HTTP_OK);
-    }
-
-    public function importJabatan(ImportJabatanRequest $request)
-    {
-        if (!Gate::allows('import jabatan')) {
-            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
-        }
-
-        $file = $request->validated();
-
-        try {
-            Excel::import(new JabatanImport, $file['jabatan_file']);
-        } catch (\Exception $e) {
-            return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
-        }
-
-        return response()->json(new WithoutDataResource(Response::HTTP_OK, 'Data jabatan berhasil di import kedalam table.'), Response::HTTP_OK);
-    }
-
     protected function formatData(Collection $collection)
     {
         return $collection->transform(function ($jabatan) {

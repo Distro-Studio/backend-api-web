@@ -2,6 +2,7 @@
 
 namespace App\Exports\Karyawan;
 
+use App\Helpers\RandomHelper;
 use Carbon\Carbon;
 use App\Models\DataKaryawan;
 use Maatwebsite\Excel\Concerns\Exportable;
@@ -100,14 +101,14 @@ class KaryawanExport implements FromCollection, WithHeadings, WithMapping
             $karyawan->email,
             $karyawan->no_rm,
             $karyawan->no_manulife,
-            $karyawan->tgl_masuk,
+            RandomHelper::convertToDateString($karyawan->tgl_masuk),
             optional($karyawan->unit_kerjas)->nama_unit,
             optional($karyawan->jabatans)->nama_jabatan,
             optional($karyawan->kompetensis)->nama_kompetensi,
             $karyawan->nik_ktp,
             optional($karyawan->status_karyawans)->label,
             $karyawan->tempat_lahir,
-            $karyawan->tgl_lahir,
+            RandomHelper::convertToDateString($karyawan->tgl_lahir),
             optional($karyawan->kelompok_gajis)->nama_kelompok,
             $karyawan->no_rekening,
             $karyawan->tunjangan_jabatan ?? 'N/A',
@@ -117,14 +118,14 @@ class KaryawanExport implements FromCollection, WithHeadings, WithMapping
             $karyawan->uang_lembur ?? 'N/A',
             $karyawan->uang_makan ?? 'N/A',
             optional($karyawan->ptkps)->kode_ptkp,
-            $karyawan->tgl_keluar,
+            RandomHelper::convertToDateString($karyawan->tgl_keluar),
             $karyawan->no_kk,
             $karyawan->alamat,
             $karyawan->gelar_depan,
             $karyawan->no_hp,
             $karyawan->no_bpjsksh,
             $karyawan->no_bpjsktk,
-            $karyawan->tgl_diangkat,
+            RandomHelper::convertToDateString($karyawan->tgl_diangkat),
             $karyawan->masa_kerja,
             $karyawan->npwp,
             $karyawan->jenis_kelamin ? 'Laki-laki' : 'Perempuan',
@@ -136,7 +137,7 @@ class KaryawanExport implements FromCollection, WithHeadings, WithMapping
             $karyawan->tahun_lulus,
             $karyawan->no_str,
             Carbon::parse($karyawan->masa_berlaku_str)->format('d-m-Y'),
-            $karyawan->tgl_berakhir_pks,
+            RandomHelper::convertToDateString($karyawan->tgl_berakhir_pks),
             $karyawan->masa_diklat,
             Carbon::parse($karyawan->created_at)->format('d-m-Y H:i:s'),
             Carbon::parse($karyawan->updated_at)->format('d-m-Y H:i:s')

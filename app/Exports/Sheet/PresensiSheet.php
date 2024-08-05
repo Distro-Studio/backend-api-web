@@ -2,6 +2,7 @@
 
 namespace App\Exports\Sheet;
 
+use App\Helpers\RandomHelper;
 use Carbon\Carbon;
 use App\Models\Presensi;
 use Illuminate\Support\Facades\DB;
@@ -80,13 +81,13 @@ class PresensiSheet implements FromCollection, WithHeadings, WithMapping, WithTi
             $this->number,
             optional($presensi->users)->nama,
             optional(optional($presensi->jadwals)->shifts)->nama,
-            optional($presensi->jadwals)->shifts ? Carbon::parse(optional($presensi->jadwals)->shifts->jam_from)->format('d-m-Y H:i:s') : null,
-            optional($presensi->jadwals)->shifts ? Carbon::parse(optional($presensi->jadwals)->shifts->jam_to)->format('d-m-Y H:i:s') : null,
-            optional($presensi->jadwals)->tgl_mulai ? Carbon::parse($presensi->jadwals->tgl_mulai)->format('d-m-Y') : null,
-            optional($presensi->jadwals)->tgl_selesai ? Carbon::parse($presensi->jadwals->tgl_selesai)->format('d-m-Y') : null,
+            optional($presensi->jadwals)->shifts ? RandomHelper::convertToDateTimeString(optional($presensi->jadwals)->shifts->jam_from) : null,
+            optional($presensi->jadwals)->shifts ? RandomHelper::convertToDateTimeString(optional($presensi->jadwals)->shifts->jam_to) : null,
+            optional($presensi->jadwals)->tgl_mulai ? RandomHelper::convertToDateString($presensi->jadwals->tgl_mulai) : null,
+            optional($presensi->jadwals)->tgl_selesai ? RandomHelper::convertToDateString($presensi->jadwals->tgl_selesai) : null,
             optional(optional($presensi->data_karyawans)->unit_kerjas)->nama_unit,
-            $presensi->jam_masuk ? Carbon::parse($presensi->jam_masuk)->format('d-m-Y H:i:s') : null,
-            $presensi->jam_keluar ? Carbon::parse($presensi->jam_keluar)->format('d-m-Y H:i:s') : null,
+            $presensi->jam_masuk ? RandomHelper::convertToDateTimeString($presensi->jam_masuk) : null,
+            $presensi->jam_keluar ? RandomHelper::convertToDateTimeString($presensi->jam_keluar) : null,
             $this->formatDuration($presensi->durasi),
             $presensi->lat,
             $presensi->long,

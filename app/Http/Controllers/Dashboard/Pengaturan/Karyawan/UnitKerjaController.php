@@ -159,40 +159,6 @@ class UnitKerjaController extends Controller
         }
     }
 
-    public function exportUnitKerja()
-    {
-        if (!Gate::allows('export unitKerja')) {
-            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
-        }
-
-        try {
-            return Excel::download(new UnitKerjaExport(), 'data-unit-kerja.xls');
-        } catch (\Exception $e) {
-            return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya terjadi error. Message: ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
-        } catch (\Error $e) {
-            return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya terjadi error. Message: ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
-        }
-
-        return response()->json(new WithoutDataResource(Response::HTTP_OK, 'Data unit kerja berhasil di download.'), Response::HTTP_OK);
-    }
-
-    public function importUnitKerja(ImportUnitKerjaRequest $request)
-    {
-        if (!Gate::allows('import unitKerja')) {
-            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
-        }
-
-        $file = $request->validated();
-
-        try {
-            Excel::import(new UnitKerjaImport, $file['unit_kerja_file']);
-        } catch (\Exception $e) {
-            return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
-        }
-
-        return response()->json(new WithoutDataResource(Response::HTTP_OK, 'Data unit kerja berhasil di import kedalam table.'), Response::HTTP_OK);
-    }
-
     protected function formatData(Collection $collection)
     {
         return $collection->transform(function ($unit_kerja) {

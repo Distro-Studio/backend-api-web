@@ -1,6 +1,9 @@
 <?php
 
 use App\Http\Controllers\Dashboard\Jadwal\CutiJadwalController;
+use App\Http\Controllers\Dashboard\Jadwal\DataJadwalController;
+use App\Http\Controllers\Dashboard\Jadwal\DataLemburController;
+use App\Http\Controllers\Dashboard\Jadwal\DataTukarJadwalController;
 use App\Http\Controllers\Dashboard\Jadwal\JadwalController;
 use App\Http\Controllers\Dashboard\Jadwal\LemburJadwalController;
 use App\Http\Controllers\Dashboard\Jadwal\TukarJadwalController;
@@ -83,6 +86,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
         // ! Ubah export berdasarkan filter
         // ! Buat fitur detail karyawan
+        // ! Schema & data time tanggal full string aja
         Route::group(['prefix' => '/karyawan'], function () {
             // ! Data Karyawan ===========>
             Route::post('/get-data-karyawan', [DataKaryawanController::class, 'index']);
@@ -113,40 +117,31 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::get('/calculated', [DataPresensiController::class, 'calculatedPresensi']);
         });
 
-        // TODO: Tipe data di lemburs masih rancu, apakah tipe cuti atau yg lainnya
-        // TODO: test jadwal
         Route::group(['prefix' => '/jadwal-karyawan'], function () {
             // ! Jadwal ===========>
-            Route::get('/all-users-unitkerja', [JadwalController::class, 'getAllKaryawanUnitKerja']);
-            Route::get('/all-shift', [ShiftController::class, 'getAllShift']);
-
-            Route::get('/all-data-jadwal', [JadwalController::class, 'getAllJadwalKaryawan']);
-            Route::post('/jadwal-filter', [JadwalController::class, 'index']);
-            Route::post('/jadwal-search', [JadwalController::class, 'index']);
-            Route::post('/data-jadwal/create-shift/{userId}', [JadwalController::class, 'createShiftKaryawan']);
-            Route::get('/jadwal-export', [JadwalController::class, 'exportJadwalKaryawan']);
-            Route::post('/jadwal-import', [JadwalController::class, 'importJadwalKaryawan']);
-            Route::apiResource('/data-jadwal', JadwalController::class);
+            Route::post('/get-data-jadwal', [DataJadwalController::class, 'index']);
+            Route::post('/create-shift/{userId}', [DataJadwalController::class, 'createShiftByDate']);
+            Route::get('/export', [DataJadwalController::class, 'exportJadwalKaryawan']);
+            Route::post('/import', [DataJadwalController::class, 'importJadwalKaryawan']);
+            Route::apiResource('/data-jadwal', DataJadwalController::class);
 
             // ! Tukar Jadwal ===========>
-            Route::get('/get-karyawan-jadwal-unit', [TukarJadwalController::class, 'getKaryawanJadwal']);
-            Route::get('/get-shift-by-date', [TukarJadwalController::class, 'getShiftbyDate']);
-            Route::get('/get-karyawan-by-shift-and-date', [TukarJadwalController::class, 'getKaryawanByShiftAndDate']);
+            Route::post('/get-tukar-jadwal', [DataTukarJadwalController::class, 'index']);
+            Route::get('/get-tukar-jadwal/jadwal-pengajuan/{userId}', [DataTukarJadwalController::class, 'getJadwalPengajuan']);
+            Route::get('/get-tukar-jadwal/user-ditukar/{jadwalId}', [DataTukarJadwalController::class, 'getUserDitukar']);
+            Route::get('/get-tukar-jadwal/jadwal-ditukar/{userId}', [DataTukarJadwalController::class, 'getJadwalDitukar']);
 
-            Route::get('/all-tukar-jadwal', [TukarJadwalController::class, 'getAllJadwalTukar']);
-            Route::post('/tukar-jadwal-filter', [TukarJadwalController::class, 'index']);
-            Route::post('/tukar-jadwal-search', [TukarJadwalController::class, 'index']);
-            Route::get('/tukar-jadwal-export', [TukarJadwalController::class, 'exportJadwalTukar']);
-            Route::apiResource('/tukar-jadwal', TukarJadwalController::class);
+            Route::get('/tukar-jadwal/export', [DataTukarJadwalController::class, 'exportJadwalTukar']);
+            Route::apiResource('/tukar-jadwal', DataTukarJadwalController::class);
 
             // ! Lembur ===========>
             Route::get('/all-users-unitkerja', [JadwalController::class, 'getAllKaryawanUnitKerja']);
 
-            Route::get('/all-data-lembur', [LemburJadwalController::class, 'getAllJadwalLembur']);
-            Route::post('/lembur-filter', [LemburJadwalController::class, 'index']);
-            Route::post('/lembur-search', [LemburJadwalController::class, 'index']);
-            Route::get('/lembur-export', [LemburJadwalController::class, 'exportJadwalLembur']);
-            Route::apiResource('/data-lembur', LemburJadwalController::class);
+            Route::get('/get-lembur', [DataLemburController::class, 'index']);
+            Route::post('/lembur/filter', [DataLemburController::class, 'index']);
+            Route::post('/lembur/search', [DataLemburController::class, 'index']);
+            Route::get('/lembur-export', [DataLemburController::class, 'exportJadwalLembur']);
+            Route::apiResource('/lembur', DataLemburController::class);
 
             // ! Cuti ===========>
             Route::get('/all-users-unitkerja', [JadwalController::class, 'getAllKaryawanUnitKerja']);

@@ -14,10 +14,10 @@ class RandomHelper
 
 	// 	// Ambil tanggal pembuatan sekarang
 	// 	$creationDate = Carbon::now()->format('dmY');
-	
+
 	// 	// Gabungkan fullname dan creation date
 	// 	$username = $usernameBase . '_' . $creationDate;
-	
+
 	// 	// Periksa apakah username sudah ada
 	// 	$existingUser = User::where('username', $username)->first();
 
@@ -42,5 +42,53 @@ class RandomHelper
 		}
 
 		return $password;
+	}
+
+	public static function convertToDateTimeString($dateString)
+	{
+		try {
+			// Hilangkan bagian zona waktu ganda
+			$cleanDateString = preg_replace('/\s\(.*\)$/', '', $dateString);
+
+			// Konversi string tanggal ke objek Carbon
+			$carbonDate = Carbon::parse($cleanDateString);
+
+			// Mengembalikan datetime string
+			return $carbonDate->toDateTimeString();
+		} catch (\Exception $e) {
+			return null; // Atau tangani pengecualian sesuai kebutuhan Anda
+		}
+	}
+
+	public static function convertToDateString($dateString)
+	{
+		try {
+			// Hilangkan bagian zona waktu ganda
+			$cleanDateString = preg_replace('/\s\(.*\)$/', '', $dateString);
+
+			// Konversi string tanggal ke objek Carbon
+			$carbonDate = Carbon::parse($cleanDateString);
+
+			// Mengembalikan datetime string
+			return $carbonDate->toDateString();
+		} catch (\Exception $e) {
+			return null; // Atau tangani pengecualian sesuai kebutuhan Anda
+		}
+	}
+
+	public static function convertToTimeString($dateString)
+	{
+		try {
+			// Hilangkan bagian zona waktu ganda
+			$cleanDateString = preg_replace('/\s\(.*\)$/', '', $dateString);
+
+			// Konversi string tanggal ke objek Carbon
+			$carbonDate = Carbon::parse($cleanDateString);
+
+			// Mengembalikan datetime string
+			return $carbonDate->toTimeString();
+		} catch (\Exception $e) {
+			return null; // Atau tangani pengecualian sesuai kebutuhan Anda
+		}
 	}
 }

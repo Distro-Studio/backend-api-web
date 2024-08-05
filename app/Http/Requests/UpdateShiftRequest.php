@@ -26,8 +26,8 @@ class UpdateShiftRequest extends FormRequest
     {
         return [
             'nama' => 'required|string|max:225',
-            'jam_from' => 'required',
-            'jam_to' => 'required',
+            'jam_from' => 'required|string',
+            'jam_to' => 'required|string',
         ];
     }
 
@@ -38,7 +38,9 @@ class UpdateShiftRequest extends FormRequest
             'nama.string' => 'Nama shift tidak diperbolehkan mengandung angka.',
             'nama.max' => 'Nama shift melebihi batas maksimum panjang karakter.',
             'jam_from.required' => 'Jam kerja mulai shift tidak diperbolehkan kosong.',
+            'jam_from.string' => 'Nama shift tidak diperbolehkan mengandung selain angka dan huruf.',
             'jam_to.required' => 'Jam kerja selesai shift tidak diperbolehkan kosong.',
+            'jam_to.string' => 'Nama shift tidak diperbolehkan mengandung selain angka dan huruf.',
         ];
     }
 

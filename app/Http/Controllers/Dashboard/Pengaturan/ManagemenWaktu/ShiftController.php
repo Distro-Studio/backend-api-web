@@ -173,41 +173,6 @@ class ShiftController extends Controller
         }
     }
 
-    public function exportShift()
-    {
-        if (!Gate::allows('export shift')) {
-            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
-        }
-        try {
-            return Excel::download(new ShiftExport(), 'data-shift.xls');
-        } catch (\Exception $e) {
-            return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya terjadi error. Message: ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
-        } catch (\Error $e) {
-            return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya terjadi error. Message: ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
-        }
-
-        return response()->json(new WithoutDataResource(Response::HTTP_OK, 'Data shift berhasil di download.'), Response::HTTP_OK);
-    }
-
-    public function importShift(ImportShiftRequest $request)
-    {
-        if (!Gate::allows('import shift')) {
-            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
-        }
-
-        $file = $request->validated();
-
-        try {
-            Excel::import(new ShiftImport, $file['shift_file']);
-        } catch (\Exception $e) {
-            return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
-        }
-
-        // More informative success message
-        $message = 'Data shift berhasil di import kedalam table.';
-        return response()->json(new WithoutDataResource(Response::HTTP_OK, $message), Response::HTTP_OK);
-    }
-
     protected function formatData(Collection $collection)
     {
         return $collection->transform(function ($shift) {
