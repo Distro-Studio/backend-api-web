@@ -565,7 +565,17 @@ class DataKaryawanController extends Controller
         $pengurangGaji = DB::table('pengurang_gajis')
             ->join('premis', 'pengurang_gajis.premi_id', '=', 'premis.id')
             ->where('pengurang_gajis.data_karyawan_id', $karyawan->id)
-            ->select('premis.id', 'premis.nama_premi')
+            ->select(
+                'premis.id',
+                'premis.nama_premi',
+                'premis.kategori_potongan_id',
+                'premis.jenis_premi',
+                'premis.besaran_premi',
+                'premis.minimal_rate',
+                'premis.maksimal_rate',
+                'premis.created_at',
+                'premis.updated_at'
+            )
             ->get();
 
         $formattedData = [
@@ -592,6 +602,7 @@ class DataKaryawanController extends Controller
             'nik' => $karyawan->nik,
             'email' => $karyawan->email,
             'no_rm' => $karyawan->no_rm,
+            'no_sip' => $karyawan->no_sip,
             'no_manulife' => $karyawan->no_manulife,
             'tgl_masuk' => $karyawan->tgl_masuk,
             'unit_kerja' => $karyawan->unit_kerjas, // unit_kerja_id
@@ -660,7 +671,17 @@ class DataKaryawanController extends Controller
         $pengurangGaji = DB::table('pengurang_gajis')
             ->join('premis', 'pengurang_gajis.premi_id', '=', 'premis.id')
             ->where('pengurang_gajis.data_karyawan_id', $karyawan->id)
-            ->select('premis.id', 'premis.nama_premi')
+            ->select(
+                'premis.id',
+                'premis.nama_premi',
+                'premis.kategori_potongan_id',
+                'premis.jenis_premi',
+                'premis.besaran_premi',
+                'premis.minimal_rate',
+                'premis.maksimal_rate',
+                'premis.created_at',
+                'premis.updated_at'
+            )
             ->get();
 
         $formattedData = [
@@ -687,6 +708,7 @@ class DataKaryawanController extends Controller
             'email' => $karyawan->email,
             'nik' => $karyawan->nik,
             'no_rm' => $karyawan->no_rm,
+            'no_sip' => $karyawan->no_sip,
             'no_manulife' => $karyawan->no_manulife,
             'tgl_masuk' => $karyawan->tgl_masuk,
             'unit_kerja' => $karyawan->unit_kerjas, // unit_kerja_id
@@ -917,9 +939,20 @@ class DataKaryawanController extends Controller
         }
 
         $user = $karyawan->users;
-        $user->status_aktif = User::STATUS_DINONAKTIFKAN;
+        $user = $karyawan->users;
+
+        if ($user->status_aktif === User::STATUS_AKTIF) {
+            $user->status_aktif = User::STATUS_DINONAKTIFKAN;
+            $message = "Karyawan '{$karyawan->users->nama}' berhasil dinonaktifkan.";
+        } elseif ($user->status_aktif === User::STATUS_DINONAKTIFKAN) {
+            $user->status_aktif = User::STATUS_AKTIF;
+            $message = "Karyawan '{$karyawan->users->nama}' berhasil diaktifkan.";
+        } else {
+            return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Status karyawan tidak valid.'), Response::HTTP_BAD_REQUEST);
+        }
+
         $user->save();
 
-        return response()->json(new WithoutDataResource(Response::HTTP_OK, "Karyawan '{$karyawan->users->nama}' berhasil dinonaktifkan."), Response::HTTP_OK);
+        return response()->json(new WithoutDataResource(Response::HTTP_OK, $message), Response::HTTP_OK);
     }
 }
