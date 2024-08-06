@@ -19,7 +19,7 @@ class AccountSeeder extends Seeder
         $roleSuperAdmin = User::create([
             'nama' => 'Super Admin',
             'data_completion_step' => 0,
-            'status_aktif' => 1,
+            'status_aktif' => 2,
             'password' => Hash::make('SAP_super_admin_password'),
         ]);
 

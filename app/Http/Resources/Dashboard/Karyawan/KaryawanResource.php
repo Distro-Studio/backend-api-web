@@ -59,15 +59,25 @@ class KaryawanResource extends JsonResource
                 'id' => $karyawan->id,
 
                 // Step 1
-                'user' => $karyawan->users,
-                "email" => $karyawan->email,
+                'user' => [
+                    'id' => $karyawan->users->id,
+                    'nama' => $karyawan->users->nama,
+                    'email_verified_at' => $karyawan->users->email_verified_at,
+                    'data_karyawan_id' => $karyawan->users->data_karyawan_id,
+                    'foto_profil' => $karyawan->users->foto_profil,
+                    'data_completion_step' => $karyawan->users->data_completion_step,
+                    'status_aktif' => $karyawan->users->status_aktif,
+                    'created_at' => $karyawan->users->created_at,
+                    'updated_at' => $karyawan->users->updated_at
+                ],
+                'role' => $karyawan->users->roles,
+                'email' => $karyawan->email,
                 'no_rm' => $karyawan->no_rm,
                 'no_manulife' => $karyawan->no_manulife,
                 'tgl_masuk' => $karyawan->tgl_masuk,
                 'unit_kerja' => $karyawan->unit_kerjas,
                 'jabatan' => $karyawan->jabatans,
                 'kompetensi' => $karyawan->kompetensis,
-                'role' => $karyawan->users->roles,
                 
                 // yang ada di table tp gak ada di create
                 "nik" => $karyawan->nik,

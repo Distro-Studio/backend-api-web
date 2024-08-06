@@ -17,6 +17,7 @@ use Database\Seeders\Constant\Kategori\KategoriPresensiSeeder;
 use Database\Seeders\Constant\Kategori\KategoriTrackRecordSeeder;
 use Database\Seeders\Constant\Kategori\KategoriTransferKaryawanSeeder;
 use Database\Seeders\Constant\Kategori\KategoriTukarJadwalSeeder;
+use Database\Seeders\Constant\Status\StatusAktifUserSeeder;
 use Database\Seeders\Constant\Status\StatusCutiSeeder;
 use Database\Seeders\Constant\Status\StatusGajiSeeder;
 use Database\Seeders\Constant\Status\StatusKaryawanSeeder;
@@ -52,6 +53,7 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call([
+            StatusAktifUserSeeder::class,
             PermissionSeeder::class,
             RoleSeeder::class,
             AccountSeeder::class,

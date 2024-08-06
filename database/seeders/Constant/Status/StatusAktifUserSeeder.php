@@ -6,17 +6,16 @@ use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 
-class StatusCutiSeeder extends Seeder
+class StatusAktifUserSeeder extends Seeder
 {
     /**
      * Run the database seeds.
      */
     public function run(): void
     {
-        $status = ['Menunggu', 'Disetujui', 'Ditolak'];
-
+        $status = ['Belum Aktif', 'Aktif', 'Dinonaktifkan'];
         foreach ($status as $status) {
-            DB::table('status_cutis')->insert([
+            DB::table('status_aktifs')->insert([
                 'label' => $status,
                 'created_at' => now(),
                 'updated_at' => now(),

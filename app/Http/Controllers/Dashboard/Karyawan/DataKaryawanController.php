@@ -522,6 +522,7 @@ class DataKaryawanController extends Controller
         try {
             $userData = [
                 'nama' => $data['nama'],
+                'status_aktif' => 1,
                 'role_id' => $data['role_id'],
                 // 'username' => $data['username'],
                 'password' => Hash::make($generatedPassword),
@@ -827,7 +828,7 @@ class DataKaryawanController extends Controller
         // Memeriksa apakah email telah berubah
         if ($oldEmail !== $newEmail) {
             // Memeriksa status_aktif
-            if ($user->status_aktif !== User::STATUS_BELUM_AKTIF) {
+            if ($user->status_aktif !== 1) {
                 return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Email tidak dapat diubah, Status akun harus dalam keadaan belum aktif.'), Response::HTTP_NOT_ACCEPTABLE);
             }
 
@@ -988,11 +989,11 @@ class DataKaryawanController extends Controller
 
         $user = $karyawan->users;
 
-        if ($user->status_aktif === User::STATUS_AKTIF) {
-            $user->status_aktif = User::STATUS_DINONAKTIFKAN;
+        if ($user->status_aktif === 2) {
+            $user->status_aktif = 3;
             $message = "Karyawan '{$karyawan->users->nama}' berhasil dinonaktifkan.";
-        } elseif ($user->status_aktif === User::STATUS_DINONAKTIFKAN) {
-            $user->status_aktif = User::STATUS_AKTIF;
+        } elseif ($user->status_aktif === 3) {
+            $user->status_aktif = 2;
             $message = "Karyawan '{$karyawan->users->nama}' berhasil diaktifkan.";
         } else {
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, "Karyawan '{$karyawan->users->nama}' belum melengkapi data personal, dan status masih belum aktif."), Response::HTTP_NOT_ACCEPTABLE);

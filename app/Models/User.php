@@ -8,6 +8,7 @@ use Spatie\Permission\Traits\HasRoles;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 
@@ -41,25 +42,6 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
     ];
-
-    // Status constants
-    const STATUS_BELUM_AKTIF = 0;
-    const STATUS_AKTIF = 1;
-    const STATUS_DINONAKTIFKAN = 2;
-
-    public function getStatusDescriptionAttribute()
-    {
-        switch ($this->status_penggajian) {
-            case self::STATUS_BELUM_AKTIF:
-                return 'Belum Aktif';
-            case self::STATUS_AKTIF:
-                return 'Aktif';
-            case self::STATUS_DINONAKTIFKAN:
-                return 'Dinonaktifkan';
-            default:
-                return 'N/A';
-        }
-    }
 
     /**
      * Get the data_karyawan associated with the User
@@ -217,5 +199,15 @@ class User extends Authenticatable
     public function user_pelaku(): HasMany
     {
         return $this->hasMany(Pelaporan::class, 'pelaku', 'id');
+    }
+
+    /**
+     * Get the status_aktif that owns the User
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function status_aktif(): BelongsTo
+    {
+        return $this->belongsTo(StatusAktif::class, 'status_aktif', 'id');
     }
 }

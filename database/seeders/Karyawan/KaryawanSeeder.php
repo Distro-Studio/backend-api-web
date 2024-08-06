@@ -58,6 +58,7 @@ class KaryawanSeeder extends Seeder
             $user = User::create([
                 'nama' => 'User ' . $i,
                 'password' => 'password' . $i,
+                'status_aktif' => 1,
             ]);
             $user->roles()->attach(rand(2, 4));
 

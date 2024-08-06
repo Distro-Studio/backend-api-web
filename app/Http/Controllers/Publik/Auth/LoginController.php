@@ -39,8 +39,8 @@ class LoginController extends Controller
         }
 
         // Cek status_aktif
-        if ($user->status_aktif == User::STATUS_BELUM_AKTIF) {
-            auth()->logout(); // Logout user jika status_aktif bernilai 0
+        if ($user->status_aktif == 1) {
+            auth()->logout(); // Logout user jika status_aktif bernilai 1
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, "Kami mendeteksi bahwa akun anda sudah tidak aktif sejak {$user->updated_at}."), Response::HTTP_FORBIDDEN);
         }
 
@@ -50,8 +50,6 @@ class LoginController extends Controller
             'user' => new UserResource(Response::HTTP_OK, "Login berhasil!, Selamat Datang '{$user->nama}'.", $user),
             'token' => $token
         ], Response::HTTP_OK);
-
-        // return $response->withCookie(cookie('authToken', $token, 43200, '/', null, true, true, false, 'Lax'));
     }
 
     public function getInfoUserLogin()
@@ -70,26 +68,4 @@ class LoginController extends Controller
         $deleteCookie = Cookie::forget('authToken');
         return response()->json(new WithoutDataResource(Response::HTTP_OK, 'Anda berhasil melakukan logout.'), Response::HTTP_OK)->withCookie($deleteCookie);
     }
-
-    // public function resetPassword(UpdatePasswordWrongEmailRequest $request)
-    // {
-    //     $data = $request->validated();
-
-    //     // Verifikasi email dan password saat ini
-    //     $user = User::whereHas('data_karyawans', function ($query) use ($data) {
-    //         $query->where('email', $data['email']);
-    //     })->first();
-
-    //     if (!$user || !Hash::check($data['current_password'], $user->password)) {
-    //         return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Email atau password anda saat ini tidak valid.'), Response::HTTP_NOT_FOUND);
-    //     }
-
-    //     // Update password user
-    //     $user->password = Hash::make($data['password']);
-    //     $user->save();
-
-    //     AccountEmailJob::dispatch($data['email'], $data['password'], $user->nama);
-
-    //     return response()->json(new WithoutDataResource(Response::HTTP_OK, 'Password berhasil diperbarui, silahkan login kembali dengan email dan password yang baru.'), Response::HTTP_OK);
-    // }
 }
