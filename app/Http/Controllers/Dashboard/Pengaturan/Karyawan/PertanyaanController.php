@@ -41,40 +41,38 @@ class PertanyaanController extends Controller
         $pertanyaan = Pertanyaan::withTrashed();
 
         // Filter
-        if ($request->has('delete_data')) {
-            $softDeleteFilters = $request->delete_data;
-            $pertanyaan->when(in_array('dihapus', $softDeleteFilters) && !in_array('belum_dihapus', $softDeleteFilters), function ($query) {
-                return $query->onlyTrashed();
-            })->when(!in_array('dihapus', $softDeleteFilters) && in_array('belum_dihapus', $softDeleteFilters), function ($query) {
-                return $query->withoutTrashed();
-            });
-        }
-
-        if ($request->has('nama_jabatan')) {
-            $namaJabatan = $request->nama_jabatan;
-
-            $pertanyaan->whereHas('jabatans', function ($query) use ($namaJabatan) {
-                if (is_array($namaJabatan)) {
-                    $query->whereIn('nama_jabatan', $namaJabatan);
-                } else {
-                    $query->where('nama_jabatan', '=', $namaJabatan);
-                }
-            });
-        }
+        // if ($request->has('delete_data')) {
+        //     $softDeleteFilters = $request->delete_data;
+        //     $pertanyaan->when(in_array('dihapus', $softDeleteFilters) && !in_array('belum_dihapus', $softDeleteFilters), function ($query) {
+        //         return $query->onlyTrashed();
+        //     })->when(!in_array('dihapus', $softDeleteFilters) && in_array('belum_dihapus', $softDeleteFilters), function ($query) {
+        //         return $query->withoutTrashed();
+        //     });
+        // }
+        // if (isset($filters['jabatan'])) {
+        //     $namaUnitKerja = $filters['jabatan'];
+        //     $pertanyaan->whereHas('jabatans', function ($query) use ($namaUnitKerja) {
+        //         if (is_array($namaUnitKerja)) {
+        //             $query->whereIn('id', $namaUnitKerja);
+        //         } else {
+        //             $query->where('id', '=', $namaUnitKerja);
+        //         }
+        //     });
+        // }
 
         // search
-        if ($request->has('search')) {
-            $pertanyaan = $pertanyaan->where(function ($query) use ($request) {
-                $searchTerm = '%' . $request->search . '%';
+        // if ($request->has('search')) {
+        //     $pertanyaan = $pertanyaan->where(function ($query) use ($request) {
+        //         $searchTerm = '%' . $request->search . '%';
 
-                $query->whereHas('jabatans', function ($query) use ($searchTerm) {
-                    $query->where('nama_jabatan', 'like', $searchTerm);
-                })->orWhere('pertanyaan', 'like', $searchTerm);
-            });
-        }
+        //         $query->whereHas('jabatans', function ($query) use ($searchTerm) {
+        //             $query->where('nama_jabatan', 'like', $searchTerm);
+        //         })->orWhere('pertanyaan', 'like', $searchTerm);
+        //     });
+        // }
 
         $dataPertanyaan = $pertanyaan->get();
-        $successMessage = "Data Ter PPH21 berhasil ditampilkan.";
+        $successMessage = "Data kuesioner berhasil ditampilkan.";
         $formattedData = $this->formatData($dataPertanyaan);
         return response()->json([
             'status' => Response::HTTP_OK,

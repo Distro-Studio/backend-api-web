@@ -11,6 +11,7 @@ use Database\Seeders\Constant\Kategori\KategoriDarahSeeder;
 use Database\Seeders\Constant\Kategori\KategoriGajiSeeder;
 use Database\Seeders\Constant\Kategori\KategoriKompensasiSeeder;
 use Database\Seeders\Constant\Kategori\KategoriNotifikasiSeeder;
+use Database\Seeders\Constant\Kategori\KategoriPendidikanSeeder;
 use Database\Seeders\Constant\Kategori\KategoriPotonganSeeder;
 use Database\Seeders\Constant\Kategori\KategoriPresensiSeeder;
 use Database\Seeders\Constant\Kategori\KategoriTrackRecordSeeder;
@@ -68,6 +69,7 @@ class DatabaseSeeder extends Seeder
             KategoriTrackRecordSeeder::class,
             KategoriKompensasiSeeder::class,
             KategoriPotonganSeeder::class,
+            KategoriPendidikanSeeder::class,
             StatusCutiSeeder::class,
             StatusGajiSeeder::class,
             StatusKaryawanSeeder::class,

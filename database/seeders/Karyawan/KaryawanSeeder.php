@@ -13,6 +13,7 @@ use App\Models\DataKaryawan;
 use App\Models\DataKeluarga;
 use App\Models\KategoriAgama;
 use App\Models\KategoriDarah;
+use App\Models\KategoriPendidikan;
 use App\Models\KelompokGaji;
 use App\Models\StatusKaryawan;
 use Illuminate\Database\Seeder;
@@ -51,6 +52,7 @@ class KaryawanSeeder extends Seeder
         $kategori_agama_id = KategoriAgama::pluck('id')->all();
         $status_karyawan_id = StatusKaryawan::pluck('id')->all();
         $kategori_darah_id = KategoriDarah::pluck('id')->all();
+        $kategori_pendidikan_id = KategoriPendidikan::pluck('id')->all();
 
         for ($i = 0; $i < 50; $i++) {
             $user = User::create([
@@ -100,6 +102,7 @@ class KaryawanSeeder extends Seeder
                 "jenis_kelamin" => rand(0, 1),
                 "kategori_agama_id" => $kategori_agama_id[array_rand($kategori_agama_id)],
                 "kategori_darah_id" => $kategori_darah_id[array_rand($kategori_darah_id)],
+                "pendidikan_terakhir" => $kategori_pendidikan_id[array_rand($kategori_pendidikan_id)],
                 "tinggi_badan" => rand(10, 300),
                 "berat_badan" => rand(10, 200),
                 "no_ijazah" => "IJ/VII/" . rand(1214, 500000000),

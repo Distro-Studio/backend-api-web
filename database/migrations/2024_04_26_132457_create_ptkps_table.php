@@ -16,6 +16,7 @@ return new class extends Migration
             $table->string('kode_ptkp');
             $table->foreignId('kategori_ter_id')->constrained('kategori_ters');
             $table->integer('nilai')->nullable();
+            $table->softDeletes();
             $table->timestamps();
         });
     }

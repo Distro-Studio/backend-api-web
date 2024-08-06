@@ -45,23 +45,23 @@ class CutiController extends Controller
         $cuti = TipeCuti::withTrashed();
 
         // Filter
-        if ($request->has('delete_data')) {
-            $softDeleteFilters = $request->delete_data;
-            $cuti->when(in_array('dihapus', $softDeleteFilters) && !in_array('belum_dihapus', $softDeleteFilters), function ($query) {
-                return $query->onlyTrashed();
-            })->when(!in_array('dihapus', $softDeleteFilters) && in_array('belum_dihapus', $softDeleteFilters), function ($query) {
-                return $query->withoutTrashed();
-            });
-        }
+        // if ($request->has('delete_data')) {
+        //     $softDeleteFilters = $request->delete_data;
+        //     $cuti->when(in_array('dihapus', $softDeleteFilters) && !in_array('belum_dihapus', $softDeleteFilters), function ($query) {
+        //         return $query->onlyTrashed();
+        //     })->when(!in_array('dihapus', $softDeleteFilters) && in_array('belum_dihapus', $softDeleteFilters), function ($query) {
+        //         return $query->withoutTrashed();
+        //     });
+        // }
 
         // Search
-        if ($request->has('search')) {
-            $cuti = $cuti->where(function ($query) use ($request) {
-                $searchTerm = '%' . $request->search . '%';
+        // if ($request->has('search')) {
+        //     $cuti = $cuti->where(function ($query) use ($request) {
+        //         $searchTerm = '%' . $request->search . '%';
 
-                $query->orWhere('nama', 'like', $searchTerm);
-            });
-        }
+        //         $query->orWhere('nama', 'like', $searchTerm);
+        //     });
+        // }
 
         $dataTipeCuti = $cuti->get();
         if ($dataTipeCuti->isEmpty()) {

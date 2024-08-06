@@ -29,20 +29,20 @@ class KelompokGajiController extends Controller
         $kelompok_gaji = KelompokGaji::withTrashed();
 
         // Filter
-        if ($request->has('delete_data')) {
-            $softDeleteFilters = $request->delete_data;
-            $kelompok_gaji->when(in_array('dihapus', $softDeleteFilters) && !in_array('belum_dihapus', $softDeleteFilters), function ($query) {
-                return $query->onlyTrashed();
-            })->when(!in_array('dihapus', $softDeleteFilters) && in_array('belum_dihapus', $softDeleteFilters), function ($query) {
-                return $query->withoutTrashed();
-            });
-        }
+        // if ($request->has('delete_data')) {
+        //     $softDeleteFilters = $request->delete_data;
+        //     $kelompok_gaji->when(in_array('dihapus', $softDeleteFilters) && !in_array('belum_dihapus', $softDeleteFilters), function ($query) {
+        //         return $query->onlyTrashed();
+        //     })->when(!in_array('dihapus', $softDeleteFilters) && in_array('belum_dihapus', $softDeleteFilters), function ($query) {
+        //         return $query->withoutTrashed();
+        //     });
+        // }
 
         // Search
-        if ($request->has('search')) {
-            $searchTerm = '%' . $request->search . '%';
-            $kelompok_gaji->where('nama_kelompok', 'like', $searchTerm);
-        }
+        // if ($request->has('search')) {
+        //     $searchTerm = '%' . $request->search . '%';
+        //     $kelompok_gaji->where('nama_kelompok', 'like', $searchTerm);
+        // }
 
         $dataKelompokGaji = $kelompok_gaji->get();
 

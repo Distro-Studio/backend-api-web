@@ -27,24 +27,24 @@ class KompetensiController extends Controller
         $kompetensi = Kompetensi::withTrashed();
 
         // Filter
-        if ($request->has('delete_data')) {
-            $softDeleteFilters = $request->delete_data;
-            $kompetensi->when(in_array('dihapus', $softDeleteFilters) && !in_array('belum_dihapus', $softDeleteFilters), function ($query) {
-                return $query->onlyTrashed();
-            })->when(!in_array('dihapus', $softDeleteFilters) && in_array('belum_dihapus', $softDeleteFilters), function ($query) {
-                return $query->withoutTrashed();
-            });
-        }
+        // if ($request->has('delete_data')) {
+        //     $softDeleteFilters = $request->delete_data;
+        //     $kompetensi->when(in_array('dihapus', $softDeleteFilters) && !in_array('belum_dihapus', $softDeleteFilters), function ($query) {
+        //         return $query->onlyTrashed();
+        //     })->when(!in_array('dihapus', $softDeleteFilters) && in_array('belum_dihapus', $softDeleteFilters), function ($query) {
+        //         return $query->withoutTrashed();
+        //     });
+        // }
 
         // Search
-        if ($request->has('search')) {
-            $kompetensi = $kompetensi->where(function ($query) use ($request) {
-                $searchTerm = '%' . $request->search . '%';
+        // if ($request->has('search')) {
+        //     $kompetensi = $kompetensi->where(function ($query) use ($request) {
+        //         $searchTerm = '%' . $request->search . '%';
 
-                $query->orWhere('nama_kompetensi', 'like', $searchTerm)
-                    ->orWhere('jenis_kompetensi', 'like', $searchTerm);
-            });
-        }
+        //         $query->orWhere('nama_kompetensi', 'like', $searchTerm)
+        //             ->orWhere('jenis_kompetensi', 'like', $searchTerm);
+        //     });
+        // }
 
         $dataKompetensi = $kompetensi->get();
 

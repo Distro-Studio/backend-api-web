@@ -27,28 +27,28 @@ class PremiController extends Controller
         $premi = Premi::withTrashed();
 
         // Filter
-        if ($request->has('delete_data')) {
-            $softDeleteFilters = $request->delete_data;
-            $premi->when(in_array('dihapus', $softDeleteFilters) && !in_array('belum_dihapus', $softDeleteFilters), function ($query) {
-                return $query->onlyTrashed();
-            })->when(!in_array('dihapus', $softDeleteFilters) && in_array('belum_dihapus', $softDeleteFilters), function ($query) {
-                return $query->withoutTrashed();
-            });
-        }
+        // if ($request->has('delete_data')) {
+        //     $softDeleteFilters = $request->delete_data;
+        //     $premi->when(in_array('dihapus', $softDeleteFilters) && !in_array('belum_dihapus', $softDeleteFilters), function ($query) {
+        //         return $query->onlyTrashed();
+        //     })->when(!in_array('dihapus', $softDeleteFilters) && in_array('belum_dihapus', $softDeleteFilters), function ($query) {
+        //         return $query->withoutTrashed();
+        //     });
+        // }
 
-        $jenisPremiFilters = $request->input('jenis_premi', []);
-        if (!empty($jenisPremiFilters)) {
-            $premi->whereIn('jenis_premi', $jenisPremiFilters);
-        }
+        // $jenisPremiFilters = $request->input('jenis_premi', []);
+        // if (!empty($jenisPremiFilters)) {
+        //     $premi->whereIn('jenis_premi', $jenisPremiFilters);
+        // }
 
         // Search
-        if ($request->has('search')) {
-            $premi = $premi->where(function ($query) use ($request) {
-                $searchTerm = '%' . $request->search . '%';
+        // if ($request->has('search')) {
+        //     $premi = $premi->where(function ($query) use ($request) {
+        //         $searchTerm = '%' . $request->search . '%';
 
-                $query->orWhere('nama_premi', 'like', $searchTerm);
-            });
-        }
+        //         $query->orWhere('nama_premi', 'like', $searchTerm);
+        //     });
+        // }
 
         $dataPremi = $premi->get();
         if ($dataPremi->isEmpty()) {

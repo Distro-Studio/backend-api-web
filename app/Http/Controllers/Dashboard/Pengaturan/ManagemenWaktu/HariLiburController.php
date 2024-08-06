@@ -49,22 +49,22 @@ class HariLiburController extends Controller
         $hari_libur = HariLibur::withTrashed();
 
         // Filter
-        if ($request->has('delete_data')) {
-            $softDeleteFilters = $request->delete_data;
-            $hari_libur->when(in_array('dihapus', $softDeleteFilters) && !in_array('belum_dihapus', $softDeleteFilters), function ($query) {
-                return $query->onlyTrashed();
-            })->when(!in_array('dihapus', $softDeleteFilters) && in_array('belum_dihapus', $softDeleteFilters), function ($query) {
-                return $query->withoutTrashed();
-            });
-        }
+        // if ($request->has('delete_data')) {
+        //     $softDeleteFilters = $request->delete_data;
+        //     $hari_libur->when(in_array('dihapus', $softDeleteFilters) && !in_array('belum_dihapus', $softDeleteFilters), function ($query) {
+        //         return $query->onlyTrashed();
+        //     })->when(!in_array('dihapus', $softDeleteFilters) && in_array('belum_dihapus', $softDeleteFilters), function ($query) {
+        //         return $query->withoutTrashed();
+        //     });
+        // }
 
         // Search
-        if ($request->has('search')) {
-            $hari_libur = $hari_libur->where(function ($query) use ($request) {
-                $searchTerm = '%' . $request->search . '%';
-                $query->orWhere('nama', 'like', $searchTerm);
-            });
-        }
+        // if ($request->has('search')) {
+        //     $hari_libur = $hari_libur->where(function ($query) use ($request) {
+        //         $searchTerm = '%' . $request->search . '%';
+        //         $query->orWhere('nama', 'like', $searchTerm);
+        //     });
+        // }
 
         $dataHariLibur = $hari_libur->get();
         if ($dataHariLibur->isEmpty()) {

@@ -43,23 +43,23 @@ class ShiftController extends Controller
         $shift = Shift::withTrashed();
 
         // Filter
-        if ($request->has('delete_data')) {
-            $softDeleteFilters = $request->delete_data;
-            $shift->when(in_array('dihapus', $softDeleteFilters) && !in_array('belum_dihapus', $softDeleteFilters), function ($query) {
-                return $query->onlyTrashed();
-            })->when(!in_array('dihapus', $softDeleteFilters) && in_array('belum_dihapus', $softDeleteFilters), function ($query) {
-                return $query->withoutTrashed();
-            });
-        }
+        // if ($request->has('delete_data')) {
+        //     $softDeleteFilters = $request->delete_data;
+        //     $shift->when(in_array('dihapus', $softDeleteFilters) && !in_array('belum_dihapus', $softDeleteFilters), function ($query) {
+        //         return $query->onlyTrashed();
+        //     })->when(!in_array('dihapus', $softDeleteFilters) && in_array('belum_dihapus', $softDeleteFilters), function ($query) {
+        //         return $query->withoutTrashed();
+        //     });
+        // }
 
         // Search
-        if ($request->has('search')) {
-            $shift = $shift->where(function ($query) use ($request) {
-                $searchTerm = '%' . $request->search . '%';
+        // if ($request->has('search')) {
+        //     $shift = $shift->where(function ($query) use ($request) {
+        //         $searchTerm = '%' . $request->search . '%';
 
-                $query->orWhere('nama', 'like', $searchTerm);
-            });
-        }
+        //         $query->orWhere('nama', 'like', $searchTerm);
+        //     });
+        // }
 
         $dataShift = $shift->get();
         if ($dataShift->isEmpty()) {

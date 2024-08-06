@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -186,5 +185,15 @@ class DataKaryawan extends Model
     public function kategori_darahs(): BelongsTo
     {
         return $this->belongsTo(KategoriDarah::class, 'kategori_darah_id', 'id');
+    }
+
+    /**
+     * Get the pendidikan_terakhir that owns the DataKaryawan
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function pendidikan_terakhir(): BelongsTo
+    {
+        return $this->belongsTo(KategoriPendidikan::class, 'pendidikan_terakhir', 'id');
     }
 }

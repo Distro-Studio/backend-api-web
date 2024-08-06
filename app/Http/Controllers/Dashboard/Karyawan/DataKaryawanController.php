@@ -286,6 +286,17 @@ class DataKaryawanController extends Controller
             });
         }
 
+        if (isset($filters['jabatan'])) {
+            $namaJabatan = $filters['jabatan'];
+            $karyawan->whereHas('jabatans', function ($query) use ($namaJabatan) {
+                if (is_array($namaJabatan)) {
+                    $query->whereIn('id', $namaJabatan);
+                } else {
+                    $query->where('id', '=', $namaJabatan);
+                }
+            });
+        }
+
         if (isset($filters['status_karyawan'])) {
             $statusKaryawan = $filters['status_karyawan'];
             $karyawan->whereHas('status_karyawans', function ($query) use ($statusKaryawan) {
@@ -302,11 +313,13 @@ class DataKaryawanController extends Controller
             if (is_array($masaKerja)) {
                 $karyawan->where(function ($query) use ($masaKerja) {
                     foreach ($masaKerja as $masa) {
-                        $query->orWhereRaw('TIMESTAMPDIFF(YEAR, tgl_masuk, COALESCE(tgl_keluar, NOW())) = ?', [$masa]);
+                        $bulan = $masa * 12;
+                        $query->orWhereRaw('TIMESTAMPDIFF(MONTH, tgl_masuk, COALESCE(tgl_keluar, NOW())) <= ?', [$bulan]);
                     }
                 });
             } else {
-                $karyawan->whereRaw('TIMESTAMPDIFF(YEAR, tgl_masuk, COALESCE(tgl_keluar, NOW())) = ?', [$masaKerja]);
+                $bulan = $masaKerja * 12;
+                $karyawan->whereRaw('TIMESTAMPDIFF(MONTH, tgl_masuk, COALESCE(tgl_keluar, NOW())) <= ?', [$bulan]);
             }
         }
 
@@ -332,6 +345,41 @@ class DataKaryawanController extends Controller
                 $tglMasuk = RandomHelper::convertToDateString($tglMasuk);
                 $karyawan->where('tgl_masuk', $tglMasuk);
             }
+        }
+
+        if (isset($filters['agama'])) {
+            $namaAgama = $filters['agama'];
+            $karyawan->whereHas('kategori_agamas', function ($query) use ($namaAgama) {
+                if (is_array($namaAgama)) {
+                    $query->whereIn('id', $namaAgama);
+                } else {
+                    $query->where('id', '=', $namaAgama);
+                }
+            });
+        }
+
+        if (isset($filters['jenis_kelamin'])) {
+            $jenisKelamin = $filters['jenis_kelamin'];
+            if (is_array($jenisKelamin)) {
+                $karyawan->where(function ($query) use ($jenisKelamin) {
+                    foreach ($jenisKelamin as $jk) {
+                        $query->orWhere('jenis_kelamin', $jk);
+                    }
+                });
+            } else {
+                $karyawan->where('jenis_kelamin', $jenisKelamin);
+            }
+        }
+
+        if (isset($filters['pendidikan_terakhir'])) {
+            $namaPendidikan = $filters['pendidikan_terakhir'];
+            $karyawan->whereHas('kategori_pendidikans', function ($query) use ($namaPendidikan) {
+                if (is_array($namaPendidikan)) {
+                    $query->whereIn('id', $namaPendidikan);
+                } else {
+                    $query->where('id', '=', $namaPendidikan);
+                }
+            });
         }
 
         // Search

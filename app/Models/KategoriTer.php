@@ -5,10 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class KategoriTer extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $guarded = ['id'];
 
@@ -17,7 +18,7 @@ class KategoriTer extends Model
      *
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function ptkp(): HasMany
+    public function ptkps(): HasMany
     {
         return $this->hasMany(Ptkp::class, 'kategori_ter_id', 'id');
     }
@@ -27,7 +28,7 @@ class KategoriTer extends Model
      *
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function ter(): HasMany
+    public function ters(): HasMany
     {
         return $this->hasMany(Ter::class, 'kategori_ter_id', 'id');
     }
