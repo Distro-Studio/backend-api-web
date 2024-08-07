@@ -245,9 +245,17 @@ class DataCutiController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Tipe cuti tidak ditemukan.'), Response::HTTP_NOT_FOUND);
         }
 
+        // Cek apakah pengguna sudah mengambil cuti dengan tipe yang sama dalam tahun berjalan
+        $currentYear = Carbon::now()->year;
+        $cutiTakenThisYear = Cuti::where('user_id', $data['user_id'])
+            ->where('tipe_cuti_id', $data['tipe_cuti_id'])
+            ->whereYear('tgl_from', $currentYear)
+            ->sum('durasi');
+
         // Jika tipe cuti memiliki kuota (kuota > 0) dan durasi melebihi kuota, tampilkan pesan error
-        if ($tipeCuti->kuota > 0 && $durasi > $tipeCuti->kuota) {
-            $message = "Durasi cuti ({$durasi} hari) melebihi kuota yang diizinkan untuk tipe cuti '{$tipeCuti->nama}' ({$tipeCuti->kuota} hari).";
+        $sisaCuti = $tipeCuti->kuota - $cutiTakenThisYear;
+        if ($tipeCuti->kuota > 0 && $durasi > $sisaCuti) {
+            $message = "Durasi cuti ({$durasi} hari) melebihi sisa kuota yang diizinkan untuk tipe cuti '{$tipeCuti->nama}'. Sisa kuota cuti tahun ini: {$sisaCuti} hari.";
             return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, $message), Response::HTTP_BAD_REQUEST);
         }
 
@@ -323,8 +331,21 @@ class DataCutiController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Tipe cuti tidak ditemukan.'), Response::HTTP_NOT_FOUND);
         }
 
-        if ($tipeCuti->kuota > 0 && $durasi > $tipeCuti->kuota) {
-            $message = "Durasi cuti ({$durasi} hari) melebihi kuota yang diizinkan untuk tipe cuti '{$tipeCuti->nama}' ({$tipeCuti->kuota} hari).";
+        // Periksa cuti yang telah diambil pada tahun berjalan
+        $currentYear = Carbon::now()->year;
+        $cutiTakenThisYear = Cuti::where('user_id', $dataCuti->user_id)
+            ->where('tipe_cuti_id', $data['tipe_cuti_id'])
+            ->whereYear('tgl_from', $currentYear)
+            ->where('id', '!=', $id)
+            ->sum('durasi');
+
+        // Tambahkan durasi cuti yang sedang diupdate
+        $totalCutiTaken = $cutiTakenThisYear + $durasi;
+
+        // Hitung sisa kuota cuti
+        $sisaCuti = $tipeCuti->kuota - $cutiTakenThisYear;
+        if ($tipeCuti->kuota > 0 && $totalCutiTaken > $tipeCuti->kuota) {
+            $message = "Durasi cuti ({$durasi} hari) melebihi sisa kuota yang diizinkan untuk tipe cuti '{$tipeCuti->nama}' ({$sisaCuti} hari tersisa).";
             return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, $message), Response::HTTP_BAD_REQUEST);
         }
 
