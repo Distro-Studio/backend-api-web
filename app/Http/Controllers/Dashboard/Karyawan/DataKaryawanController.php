@@ -1389,14 +1389,14 @@ class DataKaryawanController extends Controller
         ], Response::HTTP_OK);
     }
 
-    public function exportKaryawan()
+    public function exportKaryawan(Request $request)
     {
         if (!Gate::allows('export dataKaryawan')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
         try {
-            return Excel::download(new KaryawanExport(), 'karyawan-data.xls');
+            return Excel::download(new KaryawanExport($request->all()), 'karyawan-data.xls');
         } catch (\Exception $e) {
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya terjadi error. Message: ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
         } catch (\Error $e) {

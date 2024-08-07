@@ -101,7 +101,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::group(['prefix' => '/karyawan'], function () {
             // ! Data Karyawan ===========>
             Route::post('/get-data-karyawan', [DataKaryawanController::class, 'index']);
-            Route::get('/export', [DataKaryawanController::class, 'exportKaryawan']);
+            Route::post('/export', [DataKaryawanController::class, 'exportKaryawan']);
             Route::post('/import', [DataKaryawanController::class, 'importKaryawan']);
             Route::post('/{id}/status-karyawan', [DataKaryawanController::class, 'toggleStatusUser']);
             Route::get('/detail-karyawan-user/{user_id}', [DataKaryawanController::class, 'showByUserId']);
