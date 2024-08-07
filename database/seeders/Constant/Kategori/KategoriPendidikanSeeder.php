@@ -13,7 +13,7 @@ class KategoriPendidikanSeeder extends Seeder
      */
     public function run(): void
     {
-        $kategori = ['SD', 'SMP', 'SMA', 'D1', 'D2', 'D3', 'D4', 'S1', 'S2', 'S3'];
+        $kategori = ['SD', 'SMP', 'SMA', 'SMK', 'Diploma 1 (D1)', 'Diploma 2 (D2)', 'Diploma 3 (D3)', 'Diploma 4 (D4) / Sarjana Terapan', 'Sarjana (S1)', 'Magister (S2)', 'Doktor (S3)', 'Pendidikan Non-Formal'];
         foreach ($kategori as $kategori) {
             DB::table('kategori_pendidikans')->insert([
                 'label' => $kategori,
