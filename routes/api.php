@@ -75,9 +75,6 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/get-list-tipe-cuti', [CutiController::class, 'getAllTipeCuti']);
     Route::get('/get-list-pertanyaan', [PertanyaanController::class, 'getAllPertanyaan']);
 
-    Route::get('/get-list-premi', [DataKaryawanController::class, 'getAllDataPremi']);
-    Route::get('/get-list-premi', [DataKaryawanController::class, 'getAllDataPremi']);
-
     Route::group(['prefix' => 'rski/dashboard'], function () {
         Route::get('/logout', [LoginController::class, 'logout'])->middleware('web');
         Route::get('/user-info', [LoginController::class, 'getInfoUserLogin']);

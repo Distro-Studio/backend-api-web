@@ -306,10 +306,18 @@ class DataTransferKaryawanController extends Controller
             //     }
             // }
             if ($request->hasFile('dokumen')) {
-                // Fetch user information
-                $user = User::find($data['user_id']);
+                // Ambil data user dan relasinya
+                $user = User::with('data_karyawans.unit_kerjas', 'data_karyawans.jabatans')->find($data['user_id']);
                 if (!$user) {
                     throw new Exception('Pengguna tidak ditemukan.');
+                }
+
+                // Ambil unit kerja dan jabatan asal dari user yang dipilih
+                $data['unit_kerja_asal'] = $user->data_karyawans->unit_kerjas->id;
+                $data['jabatan_asal'] = $user->data_karyawans->jabatans->id;
+
+                if (is_null($data['unit_kerja_asal']) || is_null($data['jabatan_asal'])) {
+                    throw new Exception('Unit kerja atau jabatan asal tidak ditemukan untuk pengguna ini.');
                 }
 
                 // Upload file using helper
