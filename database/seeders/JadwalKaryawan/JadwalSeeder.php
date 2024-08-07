@@ -23,8 +23,8 @@ class JadwalSeeder extends Seeder
         $timezone = 'Asia/Jakarta';
 
         // Mendapatkan tanggal pertama dan terakhir minggu ini dengan timezone Jakarta
-        $startOfWeek = Carbon::now($timezone)->startOfWeek();
-        $endOfWeek = Carbon::now($timezone)->endOfWeek();
+        $startOfWeek = Carbon::now($timezone)->startOfWeek()->format('Y-m-d');
+        $endOfWeek = Carbon::now($timezone)->endOfWeek()->format('Y-m-d');
 
         foreach ($users as $user_id) {
             $shift_id = $shifts[array_rand($shifts)];
