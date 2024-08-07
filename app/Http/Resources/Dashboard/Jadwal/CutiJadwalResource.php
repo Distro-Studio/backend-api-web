@@ -56,7 +56,18 @@ class CutiJadwalResource extends JsonResource
         return $collection->transform(function ($cuti_jadwal) {
             return [
                 'id' => $cuti_jadwal->id,
-                'user' => $cuti_jadwal->users,
+                'user' => [
+                    'id' => $cuti_jadwal->users->id,
+                    'nama' => $cuti_jadwal->users->nama,
+                    'email_verified_at' => $cuti_jadwal->users->email_verified_at,
+                    'data_karyawan_id' => $cuti_jadwal->users->data_karyawan_id,
+                    'foto_profil' => $cuti_jadwal->users->foto_profil,
+                    'data_completion_step' => $cuti_jadwal->users->data_completion_step,
+                    'status_aktif' => $cuti_jadwal->users->status_aktif,
+                    'created_at' => $cuti_jadwal->users->created_at,
+                    'updated_at' => $cuti_jadwal->users->updated_at
+                ],
+                'unit_kerja' => $cuti_jadwal->users->data_karyawans->unit_kerjas,
                 'tipe_cuti' => $cuti_jadwal->tipe_cutis,
                 'tgl_from' => $cuti_jadwal->tgl_from,
                 'tgl_to' => $cuti_jadwal->tgl_to,

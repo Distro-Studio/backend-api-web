@@ -163,7 +163,7 @@ class DataTransferKaryawanController extends Controller
 
         if (isset($filters['pendidikan_terakhir'])) {
             $namaPendidikan = $filters['pendidikan_terakhir'];
-            $transfer->whereHas('users.data_karyawans.kategori_pendidikans', function ($query) use ($namaPendidikan) {
+            $transfer->whereHas('users.data_karyawans.pendidikan_terakhir', function ($query) use ($namaPendidikan) {
                 if (is_array($namaPendidikan)) {
                     $query->whereIn('id', $namaPendidikan);
                 } else {

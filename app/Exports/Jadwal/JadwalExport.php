@@ -21,6 +21,11 @@ class JadwalExport implements FromCollection, WithHeadings
             ->get();
 
         $schedules = $jadwals->map(function ($schedule, $index) {
+            $convertTanggal_Mulai = RandomHelper::convertToDateString($schedule->tgl_mulai);
+            $convertTanggal_Selesai = RandomHelper::convertToDateString($schedule->tgl_selesai);
+            $tgl_mulai = Carbon::parse($convertTanggal_Mulai)->format('d-m-Y');
+            $tgl_selesai = Carbon::parse($convertTanggal_Selesai)->format('d-m-Y');
+
             $unitKerjas = $schedule->users->data_karyawans->unit_kerjas ?? null;
             $jenisKaryawan = $unitKerjas ? ($unitKerjas->jenis_karyawan ? 'Shift' : 'Non-Shift') : 'N/A'; // 1 = Shift, 0 = Non-Shift
             $namaUnit = $unitKerjas ? $unitKerjas->nama_unit : 'N/A';
@@ -31,8 +36,8 @@ class JadwalExport implements FromCollection, WithHeadings
                 'jenis_karyawan' => $jenisKaryawan,
                 'nama_unit' => $namaUnit,
                 'nama_shift' => $schedule->shifts->nama,
-                'tanggal_mulai' => RandomHelper::convertToDateString($schedule->tgl_mulai),
-                'tanggal_selesai' => RandomHelper::convertToDateString($schedule->tgl_keluar),
+                $tgl_mulai,
+                $tgl_selesai,
                 'jam_from' => $schedule->shifts->jam_from,
                 'jam_to' => $schedule->shifts->jam_to,
                 'created_at' => Carbon::parse($schedule->created_at)->format('d-m-Y H:i:s'),

@@ -3,16 +3,21 @@
 namespace App\Http\Controllers\Dashboard\Karyawan;
 
 use Carbon\Carbon;
+use App\Models\Cuti;
 use App\Models\Ptkp;
 use App\Models\User;
 use App\Models\Premi;
 use App\Models\Berkas;
+use App\Models\Lembur;
 use App\Models\Jabatan;
 use App\Models\Presensi;
 use App\Models\UnitKerja;
 use App\Models\Kompetensi;
+use App\Models\TrackRecord;
+use App\Models\TukarJadwal;
 use Illuminate\Support\Str;
 use App\Models\DataKaryawan;
+use App\Models\DataKeluarga;
 use App\Models\KelompokGaji;
 use Illuminate\Http\Request;
 use App\Helpers\RandomHelper;
@@ -181,6 +186,7 @@ class DataKaryawanController extends Controller
         ], Response::HTTP_OK);
     }
 
+    // detail karyawan dashboard
     public function getDataPresensi($data_karyawan_id)
     {
         if (!Gate::allows('view dataKaryawan')) {
@@ -258,6 +264,448 @@ class DataKaryawanController extends Controller
             'message' => "Detail data presensi karyawan '{$presensi->users->nama}' berhasil ditampilkan.",
             'data' => $formattedData,
         ], Response::HTTP_OK);
+    }
+
+    public function getDataJadwal($data_karyawan_id)
+    {
+        if (!Gate::allows('view dataKaryawan')) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
+
+        // Cari data karyawan berdasarkan data_karyawan_id
+        $karyawan = DataKaryawan::with(['users.jadwals.shifts', 'unit_kerjas'])
+            ->where('email', '!=', 'super_admin@admin.rski')
+            ->find($data_karyawan_id);
+
+        if (!$karyawan) {
+            return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data karyawan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+        }
+
+        // Ambil data user yang terkait dengan karyawan
+        $user = $karyawan->users;
+
+        if (!$user) {
+            return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'User tidak ditemukan untuk data karyawan ini.'), Response::HTTP_NOT_FOUND);
+        }
+
+        // Format data jadwal
+        $user_schedule_array = [];
+        foreach ($user->jadwals as $schedule) {
+            $tglMulai = RandomHelper::convertToDateString($schedule->tgl_mulai);
+            $tglSelesai = RandomHelper::convertToDateString($schedule->tgl_selesai);
+
+            $current_date = Carbon::parse($tglMulai);
+            while ($current_date->lte(Carbon::parse($tglSelesai))) {
+                $date = $current_date->format('Y-m-d');
+                $user_schedule_array[] = [
+                    'id' => $schedule->shifts->id,
+                    'tanggal' => $date,
+                    'nama_shift' => $schedule->shifts->nama,
+                    'jam_from' => $schedule->shifts->jam_from,
+                    'jam_to' => $schedule->shifts->jam_to,
+                ];
+                $current_date->addDay();
+            }
+        }
+
+        // Format respons
+        $formattedData = [
+            'id' => $user->id,
+            'user' => [
+                'id' => $user->id,
+                'nama' => $user->nama,
+                'email_verified_at' => $user->email_verified_at,
+                'data_karyawan_id' => $user->data_karyawan_id,
+                'foto_profil' => $user->foto_profil,
+                'data_completion_step' => $user->data_completion_step,
+                'status_aktif' => $user->status_aktif,
+                'created_at' => $user->created_at,
+                'updated_at' => $user->updated_at
+            ],
+            'unit_kerja' => $karyawan->unit_kerjas,
+            'list_jadwal' => $user_schedule_array,
+        ];
+
+        return response()->json([
+            'status' => Response::HTTP_OK,
+            'message' => "Detail jadwal karyawan '{$user->nama}' berhasil ditampilkan.",
+            'data' => $formattedData,
+        ], Response::HTTP_OK);
+    }
+
+    public function getDataRekamJejak($data_karyawan_id)
+    {
+        if (!Gate::allows('view dataKaryawan')) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
+
+        // Cari karyawan berdasarkan data_karyawan_id
+        $karyawan = DataKaryawan::where('email', '!=', 'super_admin@admin.rski')->find($data_karyawan_id);
+        if (!$karyawan) {
+            return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data karyawan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+        }
+
+        // Ambil user dari karyawan
+        $user = $karyawan->users;
+
+        // Ambil semua rekam jejak dari user_id
+        $rekamJejakList = TrackRecord::where('user_id', $user->id)->get();
+        if ($rekamJejakList->isEmpty()) {
+            return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data rekam jejak karyawan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+        }
+
+        // Format data rekam jejak
+        $formattedData = $rekamJejakList->map(function ($item) {
+            return [
+                'id' => $item->id,
+                'kategori_rekam_jejak' => $item->kategori_track_records,
+                'tgl_masuk' => $item->tgl_masuk,
+                'tgl_keluar' => $item->tgl_keluar,
+                'created_at' => $item->created_at,
+                'updated_at' => $item->updated_at
+            ];
+        });
+
+        // Menghitung masa kerja dengan helper
+        $tglMasuk = RandomHelper::convertToDateString($karyawan->tgl_masuk);
+        $tglKeluar = $user->tgl_keluar ? RandomHelper::convertToDateString($karyawan->tgl_keluar) : null;
+        $masaKerja = $this->calculateTrackRecordMasaKerja($tglMasuk, $tglKeluar);
+
+        $userData = [
+            'user' => $user,
+            'tgl_masuk' => $karyawan->tgl_masuk,
+            'tgl_keluar' => $karyawan->tgl_keluar,
+            'masa_kerja' => $masaKerja
+        ];
+
+        return response()->json([
+            'status' => Response::HTTP_OK,
+            'message' => "Data rekam jejak karyawan '{$user->nama}' berhasil ditampilkan.",
+            'data' => [
+                'data_user' => $userData,
+                'rekam_jejak' => $formattedData
+            ]
+        ], Response::HTTP_OK);
+    }
+
+    public function getDataKeluarga($data_karyawan_id)
+    {
+        if (!Gate::allows('view dataKaryawan')) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
+
+        // Ambil data keluarga berdasarkan data_karyawan_id
+        $keluarga = DataKeluarga::where('data_karyawan_id', $data_karyawan_id)
+            ->with('data_karyawans.users')
+            ->get();
+
+        if ($keluarga->isEmpty()) {
+            return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data keluarga tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+        }
+
+        // Ambil data karyawan dan user dari data keluarga
+        $dataKaryawan = $keluarga->first()->data_karyawans;
+        $user = $dataKaryawan->users;
+
+        // Format data keluarga
+        $formattedData = $keluarga->map(function ($item) {
+            return [
+                'id' => $item->id,
+                'nama' => $item->nama_keluarga,
+                'hubungan' => $item->hubungan,
+                'pendidikan_terakhir' => $item->pendidikan_terakhir,
+                'status_hidup' => $item->status_hidup,
+                'pekerjaan' => $item->pekerjaan,
+                'no_hp' => $item->no_hp,
+                'email' => $item->email,
+            ];
+        });
+
+        return response()->json([
+            'status' => Response::HTTP_OK,
+            'message' => "Detail keluarga karyawan {$user->nama} berhasil ditampilkan.",
+            'data' => [
+                'id' => $dataKaryawan->id,
+                'user' => [
+                    'id' => $user->id,
+                    'nama' => $user->nama,
+                    'email_verified_at' => $user->email_verified_at,
+                    'data_karyawan_id' => $user->data_karyawan_id,
+                    'foto_profil' => $user->foto_profil,
+                    'data_completion_step' => $user->data_completion_step,
+                    'status_aktif' => $user->status_aktif,
+                    'created_at' => $user->created_at,
+                    'updated_at' => $user->updated_at,
+                ],
+                'jumlah_keluarga' => $keluarga->count(),
+                'data_keluarga' => $formattedData,
+            ],
+        ], Response::HTTP_OK);
+    }
+
+    public function getDataDokumen($data_karyawan_id)
+    {
+        if (!Gate::allows('view dataKaryawan')) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
+
+        // Ambil data berkas berdasarkan data_karyawan_id
+        $berkas = Berkas::where('user_id', function ($query) use ($data_karyawan_id) {
+            $query->select('id')->from('users')->where('data_karyawan_id', $data_karyawan_id);
+        })->get();
+
+        if ($berkas->isEmpty()) {
+            return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data dokumen tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+        }
+
+        // Ambil data user dari berkas yang pertama
+        $user = $berkas->first()->users;
+        $baseUrl = env('STORAGE_SERVER_DOMAIN'); // Ganti dengan URL domain Anda
+
+        // Format data berkas
+        $formattedData = $berkas->map(function ($item) use ($baseUrl) {
+            $fileExt = $item->ext ? StorageServerHelper::getExtensionFromMimeType($item->ext) : null;
+            $fileUrl = $baseUrl . $item->path . ($fileExt ? '.' . $fileExt : '');
+
+            return [
+                'id' => $item->id,
+                'file_id' => $item->file_id,
+                'nama' => $item->nama,
+                'kategori_dokumen' => $item->kategori_berkas,
+                'path' => $fileUrl,
+                'tgl_upload' => $item->tgl_upload,
+                'nama_file' => $item->nama_file,
+                'ext' => $item->ext,
+                'size' => $item->size,
+                'created_at' => $item->created_at,
+                'updated_at' => $item->updated_at,
+            ];
+        });
+
+        return response()->json([
+            'status' => Response::HTTP_OK,
+            'message' => "Detail dokumen karyawan '{$user->nama}' berhasil ditampilkan.",
+            'data' => [
+                'id' => $user->data_karyawan_id,
+                'user' => [
+                    'id' => $user->id,
+                    'nama' => $user->nama,
+                    'email_verified_at' => $user->email_verified_at,
+                    'data_karyawan_id' => $user->data_karyawan_id,
+                    'foto_profil' => $user->foto_profil,
+                    'data_completion_step' => $user->data_completion_step,
+                    'status_aktif' => $user->status_aktif,
+                    'created_at' => $user->created_at,
+                    'updated_at' => $user->updated_at,
+                ],
+                'jumlah_dokumen' => $berkas->count(),
+                'data_dokumen' => $formattedData,
+            ],
+        ], Response::HTTP_OK);
+    }
+
+    public function getDataCuti($data_karyawan_id)
+    {
+        if (!Gate::allows('view dataKaryawan')) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
+
+        // Ambil data karyawan berdasarkan data_karyawan_id
+        $karyawan = DataKaryawan::where('email', '!=', 'super_admin@admin.rski')->find($data_karyawan_id);
+        if (!$karyawan) {
+            return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data karyawan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+        }
+
+        // Ambil semua data cuti yang dimiliki karyawan tersebut
+        $dataCuti = Cuti::where('user_id', $karyawan->users->id)->get();
+        if ($dataCuti->isEmpty()) {
+            return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data cuti karyawan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+        }
+
+        // Format data cuti
+        $formattedData = $dataCuti->map(function ($cuti) {
+            return [
+                'id' => $cuti->id,
+                'user' => [
+                    'id' => $cuti->users->id,
+                    'nama' => $cuti->users->nama,
+                    'email_verified_at' => $cuti->users->email_verified_at,
+                    'data_karyawan_id' => $cuti->users->data_karyawan_id,
+                    'foto_profil' => $cuti->users->foto_profil,
+                    'data_completion_step' => $cuti->users->data_completion_step,
+                    'status_aktif' => $cuti->users->status_aktif,
+                    'created_at' => $cuti->users->created_at,
+                    'updated_at' => $cuti->users->updated_at
+                ],
+                'unit_kerja' => $cuti->users->data_karyawans->unit_kerjas,
+                'tipe_cuti' => $cuti->tipe_cutis,
+                'tgl_from' => $cuti->tgl_from,
+                'tgl_to' => $cuti->tgl_to,
+                'catatan' => $cuti->catatan,
+                'durasi' => $cuti->durasi,
+                'status_cuti' => $cuti->status_cutis,
+                'created_at' => $cuti->created_at,
+                'updated_at' => $cuti->updated_at
+            ];
+        });
+
+        return response()->json([
+            'status' => Response::HTTP_OK,
+            'message' => "Detail data cuti karyawan '{$karyawan->users->nama}' berhasil ditampilkan.",
+            'data' => $formattedData
+        ], Response::HTTP_OK);
+    }
+
+    public function getDataTukarJadwal($data_karyawan_id)
+    {
+        if (!Gate::allows('view dataKaryawan')) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
+
+        // Cari user berdasarkan data_karyawan_id
+        $karyawan = DataKaryawan::find($data_karyawan_id);
+        if (!$karyawan) {
+            return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data karyawan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+        }
+
+        // Ambil user id dari karyawan
+        $userId = $karyawan->users->id;
+
+        // Cari tukar jadwal di mana user menjadi user_pengajuan atau user_ditukar
+        $tukarJadwal = TukarJadwal::where('user_pengajuan', $userId)
+            ->orWhere('user_ditukar', $userId)
+            ->get();
+
+        if ($tukarJadwal->isEmpty()) {
+            return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data tukar jadwal tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+        }
+
+        // Format data tukar jadwal
+        $formattedData = $tukarJadwal->map(function ($item) {
+            $userPengajuan = $item->user_pengajuans;
+            $jadwalPengajuan = $item->jadwal_pengajuans;
+            $userDitukar = $item->user_ditukars;
+            $jadwalDitukar = $item->jadwal_ditukars;
+
+            return [
+                'id' => $item->id,
+                'unit_kerja' => $item->user_pengajuans->data_karyawans->unit_kerjas,
+                'user_pengajuan' => [
+                    'user' => [
+                        'id' => $userPengajuan->id,
+                        'nama' => $userPengajuan->nama,
+                        'email_verified_at' => $userPengajuan->email_verified_at,
+                        'data_karyawan_id' => $userPengajuan->data_karyawan_id,
+                        'foto_profil' => $userPengajuan->foto_profil,
+                        'data_completion_step' => $userPengajuan->data_completion_step,
+                        'status_aktif' => $userPengajuan->status_aktif,
+                        'created_at' => $userPengajuan->created_at,
+                        'updated_at' => $userPengajuan->updated_at,
+                    ],
+                    'jadwal' => $jadwalPengajuan,
+                    'status' => $item->status_tukar_jadwals,
+                    'kategori' => $item->kategori_tukar_jadwals,
+                ],
+                'user_ditukar' => [
+                    'user' => [
+                        'id' => $userDitukar->id,
+                        'nama' => $userDitukar->nama,
+                        'email_verified_at' => $userDitukar->email_verified_at,
+                        'data_karyawan_id' => $userDitukar->data_karyawan_id,
+                        'foto_profil' => $userDitukar->foto_profil,
+                        'data_completion_step' => $userDitukar->data_completion_step,
+                        'status_aktif' => $userDitukar->status_aktif,
+                        'created_at' => $userDitukar->created_at,
+                        'updated_at' => $userDitukar->updated_at,
+                    ],
+                    'jadwal' => $jadwalDitukar,
+                    'status' => $item->status_tukar_jadwals,
+                    'kategori' => $item->kategori_tukar_jadwals,
+                ],
+            ];
+        });
+
+        // Menentukan nama yang ditampilkan dalam pesan
+        $message = '';
+        if ($tukarJadwal->first()->user_pengajuan == $userId) {
+            $message = "Detail tukar jadwal karyawan '{$tukarJadwal->first()->user_pengajuans->nama}' berhasil ditampilkan.";
+        } else {
+            $message = "Detail tukar jadwal karyawan '{$tukarJadwal->first()->user_ditukars->nama}' berhasil ditampilkan.";
+        }
+
+        return response()->json([
+            'status' => Response::HTTP_OK,
+            'message' => $message,
+            'data' => $formattedData
+        ], Response::HTTP_OK);
+    }
+
+    public function getDataLembur($data_karyawan_id)
+    {
+        if (!Gate::allows('view dataKaryawan')) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
+
+        // Cari data karyawan berdasarkan data_karyawan_id
+        $karyawan = DataKaryawan::find($data_karyawan_id);
+
+        if (!$karyawan) {
+            return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data karyawan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+        }
+
+        // Ambil semua data lembur berdasarkan user_id yang terkait dengan data_karyawan_id
+        $dataLembur = Lembur::whereHas('users', function ($query) use ($data_karyawan_id) {
+            $query->where('data_karyawan_id', $data_karyawan_id);
+        })->get();
+
+        if ($dataLembur->isEmpty()) {
+            return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data lembur karyawan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+        }
+
+        $formattedData = $dataLembur->map(function ($lembur) {
+            return [
+                'id' => $lembur->id,
+                'user' => [
+                    'id' => $lembur->users->id,
+                    'nama' => $lembur->users->nama,
+                    'email_verified_at' => $lembur->users->email_verified_at,
+                    'data_karyawan_id' => $lembur->users->data_karyawan_id,
+                    'foto_profil' => $lembur->users->foto_profil,
+                    'data_completion_step' => $lembur->users->data_completion_step,
+                    'status_aktif' => $lembur->users->status_aktif,
+                    'created_at' => $lembur->users->created_at,
+                    'updated_at' => $lembur->users->updated_at
+                ],
+                'jadwal' => [
+                    'id' => $lembur->jadwals->id,
+                    'tgl_mulai' => $lembur->jadwals->tgl_mulai,
+                    'tgl_selesai' => $lembur->jadwals->tgl_selesai,
+                    'shift_id' => $lembur->jadwals->shift_id,
+                    'created_at' => $lembur->jadwals->created_at,
+                    'updated_at' => $lembur->jadwals->updated_at
+                ],
+                'tgl_pengajuan' => $lembur->tgl_pengajuan,
+                'kompensasi_lembur_id' => $lembur->kategori_kompensasis,
+                'durasi' => $lembur->durasi,
+                'catatan' => $lembur->catatan,
+                'status_lembur_id' => $lembur->status_lemburs,
+                'created_at' => $lembur->created_at,
+                'updated_at' => $lembur->updated_at
+            ];
+        });
+
+        return response()->json([
+            'status' => Response::HTTP_OK,
+            'message' => "Detail data lembur karyawan '{$karyawan->users->nama}' berhasil ditampilkan.",
+            'data' => $formattedData,
+        ], Response::HTTP_OK);
+    }
+
+    public function getDataFeedback($data_karyawan_id)
+    {
+        if (!Gate::allows('view dataKaryawan')) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
     }
 
     public function index(Request $request)
@@ -373,7 +821,7 @@ class DataKaryawanController extends Controller
 
         if (isset($filters['pendidikan_terakhir'])) {
             $namaPendidikan = $filters['pendidikan_terakhir'];
-            $karyawan->whereHas('kategori_pendidikans', function ($query) use ($namaPendidikan) {
+            $karyawan->whereHas('pendidikan_terakhir', function ($query) use ($namaPendidikan) {
                 if (is_array($namaPendidikan)) {
                     $query->whereIn('id', $namaPendidikan);
                 } else {
@@ -1002,5 +1450,21 @@ class DataKaryawanController extends Controller
         $user->save();
 
         return response()->json(new WithoutDataResource(Response::HTTP_OK, $message), Response::HTTP_OK);
+    }
+
+    private function calculateTrackRecordMasaKerja($tglMasuk, $tglKeluar)
+    {
+        if ($tglMasuk) {
+            $tglMasuk = Carbon::parse($tglMasuk)->format('Y-m-d');
+            $tglSekarang = Carbon::now()->format('Y-m-d');
+
+            if ($tglKeluar) {
+                $tglKeluar = Carbon::parse($tglKeluar)->format('Y-m-d');
+                return Carbon::parse($tglMasuk)->diffInDays(Carbon::parse($tglKeluar));
+            } else {
+                return Carbon::parse($tglMasuk)->diffInDays(Carbon::parse($tglSekarang));
+            }
+        }
+        return null;
     }
 }

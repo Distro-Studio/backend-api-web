@@ -156,79 +156,61 @@ class RekamJejakController extends Controller
         ];
 
         // get semua record dari id
-        $rekamJejakList = TrackRecord::where('user_id', $rekamJejak->user_id)->paginate(10);
-        $formattedData = $rekamJejakList->items();
-        $formattedData = array_map(function ($item) {
-            return [
-                'id' => $item->id,
-                'tgl_masuk' => $item->tgl_masuk,
-                'promosi' => $item->promosi,
-                'mutasi' => $item->mutasi,
-                'penghargaan' => $item->penghargaan,
-                'created_at' => $item->created_at,
-                'updated_at' => $item->updated_at
-            ];
-        }, $formattedData);
+        $rekamJejakList = TrackRecord::where('user_id', $rekamJejak->user_id)->get();
+        // $formattedData =  [
+        //     'id' => $item->id,
+        //     'tgl_masuk' => $item->tgl_masuk,
+        //     'promosi' => $item->promosi,
+        //     'mutasi' => $item->mutasi,
+        //     'penghargaan' => $item->penghargaan,
+        //     'created_at' => $item->created_at,
+        //     'updated_at' => $item->updated_at
+        // ];
 
-        $paginationData = [
-            'links' => [
-                'first' => $rekamJejakList->url(1),
-                'last' => $rekamJejakList->url($rekamJejakList->lastPage()),
-                'prev' => $rekamJejakList->previousPageUrl(),
-                'next' => $rekamJejakList->nextPageUrl(),
-            ],
-            'meta' => [
-                'current_page' => $rekamJejakList->currentPage(),
-                'last_page' => $rekamJejakList->lastPage(),
-                'per_page' => $rekamJejakList->perPage(),
-                'total' => $rekamJejakList->total(),
-            ]
-        ];
-
-        return response()->json([
-            'status' => Response::HTTP_OK,
-            'message' => "Data rekam jejak karyawan {$rekamJejak->users->nama} berhasil ditampilkan.",
-            'data' => [
-                'data_user' => $userData,
-                'transfer_karyawan_id' => $formattedData,
-            ],
-            'pagination' => $paginationData
-        ], Response::HTTP_OK);
+        // return response()->json([
+        //     'status' => Response::HTTP_OK,
+        //     'message' => "Data rekam jejak karyawan {$rekamJejak->users->nama} berhasil ditampilkan.",
+        //     'data' => [
+        //         'data_user' => $userData,
+        //         'transfer_karyawan_id' => $formattedData,
+        //     ],
+        //     'pagination' => $paginationData
+        // ], Response::HTTP_OK);
     }
 
-    public function exportRekamJejak(Request $request)
-    {
-        if (!Gate::allows('export dataKaryawan')) {
-            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
-        }
+    // public function exportRekamJejak(Request $request)
+    // {
+    //     if (!Gate::allows('export dataKaryawan')) {
+    //         return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+    //     }
 
-        try {
-            return Excel::download(new RekamJejakExport(), 'rekam-jejak-karyawan.xls');
-        } catch (\Exception $e) {
-            return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya terjadi error. Message: ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
-        } catch (\Error $e) {
-            return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya terjadi error. Message: ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
-        }
+    //     try {
+    //         return Excel::download(new RekamJejakExport(), 'rekam-jejak-karyawan.xls');
+    //     } catch (\Exception $e) {
+    //         return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya terjadi error. Message: ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
+    //     } catch (\Error $e) {
+    //         return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya terjadi error. Message: ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
+    //     }
 
-        return response()->json(new WithoutDataResource(Response::HTTP_OK, 'Data karyawan berhasil di download.'), Response::HTTP_OK);
-    }
+    //     return response()->json(new WithoutDataResource(Response::HTTP_OK, 'Data karyawan berhasil di download.'), Response::HTTP_OK);
+    // }
 
-    public function importRekamJejak(ImportRekamJejakKaryawanRequest $request)
-    {
-        if (!Gate::allows('import dataKaryawan')) {
-            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
-        }
+    // public function importRekamJejak(ImportRekamJejakKaryawanRequest $request)
+    // {
+    //     if (!Gate::allows('import dataKaryawan')) {
+    //         return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+    //     }
 
-        $file = $request->validated();
+    //     $file = $request->validated();
 
-        try {
-            Excel::import(new RekamJejakImport, $file['rekam_jejak_file']);
-        } catch (\Exception $e) {
-            return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya terjadi kesalahan. Pesan: ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
-        }
+    //     try {
+    //         Excel::import(new RekamJejakImport, $file['rekam_jejak_file']);
+    //     } catch (\Exception $e) {
+    //         return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya terjadi kesalahan. Pesan: ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
+    //     }
 
-        return response()->json(new WithoutDataResource(Response::HTTP_OK, 'Data karyawan berhasil di import kedalam table.'), Response::HTTP_OK);
-    }
+    //     return response()->json(new WithoutDataResource(Response::HTTP_OK, 'Data karyawan berhasil di import kedalam table.'), Response::HTTP_OK);
+    // }
 
     // masa kerja calculation
     private function calculateMasaKerja($tglMasuk, $tglKeluar)

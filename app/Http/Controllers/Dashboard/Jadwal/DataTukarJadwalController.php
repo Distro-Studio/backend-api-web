@@ -230,7 +230,7 @@ class DataTukarJadwalController extends Controller
 
         if (isset($filters['pendidikan_terakhir'])) {
             $namaPendidikan = $filters['pendidikan_terakhir'];
-            $tukarJadwal->whereHas('user_pengajuans.data_karyawans.kategori_pendidikans', function ($query) use ($namaPendidikan) {
+            $tukarJadwal->whereHas('user_pengajuans.data_karyawans.pendidikan_terakhir', function ($query) use ($namaPendidikan) {
                 if (is_array($namaPendidikan)) {
                     $query->whereIn('id', $namaPendidikan);
                 } else {

@@ -56,14 +56,23 @@ class LemburJadwalResource extends JsonResource
         return $collection->transform(function ($lembur) {
             return [
                 'id' => $lembur->id,
-                'user' => $lembur->users,
-                'shift' => $lembur->shifts,
+                'user' => [
+                    'id' => $lembur->users->id,
+                    'nama' => $lembur->users->nama,
+                    'email_verified_at' => $lembur->users->email_verified_at,
+                    'data_karyawan_id' => $lembur->users->data_karyawan_id,
+                    'foto_profil' => $lembur->users->foto_profil,
+                    'data_completion_step' => $lembur->users->data_completion_step,
+                    'status_aktif' => $lembur->users->status_aktif,
+                    'created_at' => $lembur->users->created_at,
+                    'updated_at' => $lembur->users->updated_at
+                ],
+                'jadwal' => $lembur->jadwals,
                 'tgl_pengajuan' => $lembur->tgl_pengajuan,
-                'kompensasi' => $lembur->kompensasi,
-                'tipe' => $lembur->tipe,
+                'kompensasi' => $lembur->kategori_kompensasis,
                 'durasi' => $lembur->durasi,
                 'catatan' => $lembur->catatan,
-                // 'status_lembur' => $lembur->status_lembur,
+                'status' => $lembur->status_lemburs,
                 'created_at' => $lembur->created_at,
                 'updated_at' => $lembur->updated_at
             ];

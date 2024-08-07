@@ -7,27 +7,6 @@ use App\Models\User;
 
 class RandomHelper
 {
-	// public static function generateUniqueUsername(string $fullName): string
-	// {
-	// 	// Mengganti spasi dan karakter non-alfanumerik pada full name dengan underscore
-	// 	$usernameBase = strtolower(preg_replace("/[^a-zA-Z0-9]/", "_", $fullName));
-
-	// 	// Ambil tanggal pembuatan sekarang
-	// 	$creationDate = Carbon::now()->format('dmY');
-
-	// 	// Gabungkan fullname dan creation date
-	// 	$username = $usernameBase . '_' . $creationDate;
-
-	// 	// Periksa apakah username sudah ada
-	// 	$existingUser = User::where('username', $username)->first();
-
-	// 	if ($existingUser) {
-	// 		throw new \Exception('Username already exists.');
-	// 	}
-
-	// 	return $username;
-	// }
-
 	public static function generatePassword(int $length = 12): string
 	{
 		// Karakter yang akan digunakan untuk password
@@ -87,6 +66,30 @@ class RandomHelper
 
 			// Mengembalikan datetime string
 			return $carbonDate->toTimeString();
+		} catch (\Exception $e) {
+			return null; // Atau tangani pengecualian sesuai kebutuhan Anda
+		}
+	}
+
+	public static function convertTimeStringToSeconds($timeString)
+	{
+		try {
+			// Konversi time string ke objek Carbon
+			$carbonDate = Carbon::createFromFormat('H:i:s', $timeString);
+
+			// Mengembalikan waktu dalam satuan detik
+			return ($carbonDate->hour * 3600) + ($carbonDate->minute * 60) + $carbonDate->second;
+		} catch (\Exception $e) {
+			return null; // Atau tangani pengecualian sesuai kebutuhan Anda
+		}
+	}
+
+	public static function convertToHoursMinutes($seconds)
+	{
+		try {
+			$hours = floor($seconds / 3600);
+			$minutes = floor(($seconds % 3600) / 60);
+			return sprintf('%d Jam %d Menit', $hours, $minutes);
 		} catch (\Exception $e) {
 			return null; // Atau tangani pengecualian sesuai kebutuhan Anda
 		}

@@ -6,9 +6,13 @@ use App\Models\Lembur;
 use Illuminate\Http\Request;
 use App\Helpers\RandomHelper;
 use Illuminate\Http\Response;
+use Illuminate\Support\Collection;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Gate;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\Jadwal\LemburJadwalExport;
 use App\Http\Requests\StoreLemburKaryawanRequest;
+use App\Http\Requests\UpdateLemburKaryawanRequest;
 use App\Http\Resources\Dashboard\Jadwal\LemburJadwalResource;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
 
@@ -25,14 +29,28 @@ class DataLemburController extends Controller
 
         $lembur = Lembur::query();
 
+        // Ambil semua filter dari request body
+        $filters = $request->all();
+
         // Filter
-        if (isset($filters['nama_unit'])) {
-            $namaUnitKerja = $filters['nama_unit'];
+        if (isset($filters['unit_kerja'])) {
+            $namaUnitKerja = $filters['unit_kerja'];
             $lembur->whereHas('users.data_karyawans.unit_kerjas', function ($query) use ($namaUnitKerja) {
                 if (is_array($namaUnitKerja)) {
                     $query->whereIn('id', $namaUnitKerja);
                 } else {
                     $query->where('id', '=', $namaUnitKerja);
+                }
+            });
+        }
+
+        if (isset($filters['jabatan'])) {
+            $namaJabatan = $filters['jabatan'];
+            $lembur->whereHas('users.data_karyawans.jabatans', function ($query) use ($namaJabatan) {
+                if (is_array($namaJabatan)) {
+                    $query->whereIn('id', $namaJabatan);
+                } else {
+                    $query->where('id', '=', $namaJabatan);
                 }
             });
         }
@@ -53,12 +71,14 @@ class DataLemburController extends Controller
             if (is_array($masaKerja)) {
                 $lembur->whereHas('users.data_karyawans', function ($query) use ($masaKerja) {
                     foreach ($masaKerja as $masa) {
-                        $query->orWhereRaw('TIMESTAMPDIFF(YEAR, tgl_masuk, COALESCE(tgl_keluar, NOW())) = ?', [$masa]);
+                        $bulan = $masa * 12;
+                        $query->orWhereRaw('TIMESTAMPDIFF(MONTH, tgl_masuk, COALESCE(tgl_keluar, NOW())) <= ?', [$bulan]);
                     }
                 });
             } else {
-                $lembur->whereHas('users.data_karyawans', function ($query) use ($masaKerja) {
-                    $query->whereRaw('TIMESTAMPDIFF(YEAR, tgl_masuk, COALESCE(tgl_keluar, NOW())) = ?', [$masaKerja]);
+                $bulan = $masaKerja * 12;
+                $lembur->whereHas('users.data_karyawans', function ($query) use ($bulan) {
+                    $query->whereRaw('TIMESTAMPDIFF(MONTH, tgl_masuk, COALESCE(tgl_keluar, NOW())) <= ?', [$bulan]);
                 });
             }
         }
@@ -87,6 +107,45 @@ class DataLemburController extends Controller
                     $query->where('tgl_masuk', $convertedDate);
                 });
             }
+        }
+
+        if (isset($filters['agama'])) {
+            $namaAgama = $filters['agama'];
+            $lembur->whereHas('users.data_karyawans.kategori_agamas', function ($query) use ($namaAgama) {
+                if (is_array($namaAgama)) {
+                    $query->whereIn('id', $namaAgama);
+                } else {
+                    $query->where('id', '=', $namaAgama);
+                }
+            });
+        }
+
+        if (isset($filters['jenis_kelamin'])) {
+            $jenisKelamin = $filters['jenis_kelamin'];
+            if (is_array($jenisKelamin)) {
+                $lembur->whereHas('users.data_karyawans', function ($query) use ($jenisKelamin) {
+                    $query->where(function ($query) use ($jenisKelamin) {
+                        foreach ($jenisKelamin as $jk) {
+                            $query->orWhere('jenis_kelamin', $jk);
+                        }
+                    });
+                });
+            } else {
+                $lembur->whereHas('users.data_karyawans', function ($query) use ($jenisKelamin) {
+                    $query->where('jenis_kelamin', $jenisKelamin);
+                });
+            }
+        }
+
+        if (isset($filters['pendidikan_terakhir'])) {
+            $namaPendidikan = $filters['pendidikan_terakhir'];
+            $lembur->whereHas('users.data_karyawans.pendidikan_terakhir', function ($query) use ($namaPendidikan) {
+                if (is_array($namaPendidikan)) {
+                    $query->whereIn('id', $namaPendidikan);
+                } else {
+                    $query->where('id', '=', $namaPendidikan);
+                }
+            });
         }
 
         // Search
@@ -147,7 +206,6 @@ class DataLemburController extends Controller
                 'jadwal' => $lembur->jadwals,
                 'tgl_pengajuan' => $lembur->tgl_pengajuan,
                 'kompensasi' => $lembur->kategori_kompensasis,
-                // 'tipe' => $lembur->tipe,
                 'durasi' => $lembur->durasi,
                 'catatan' => $lembur->catatan,
                 'status_lembur' => $lembur->status_lemburs,
@@ -171,15 +229,59 @@ class DataLemburController extends Controller
         }
 
         $data = $request->validated();
-
-        $durasiJam = $request->input('durasi_jam');
-        $durasiMenit = $request->input('durasi_menit');
-        $totalDurasi = "{$durasiJam}j {$durasiMenit}m";
-        $data['durasi'] = $totalDurasi;
-
         $dataLembur = Lembur::create($data);
+        $successMessage = "Lembur karyawan '{$dataLembur->users->nama}' berhasil ditambahkan.";
 
-        $message = "Lembur karyawan {$dataLembur->users->name} berhasil ditambahkan.";
+        return response()->json(new LemburJadwalResource(Response::HTTP_OK, $successMessage, $dataLembur), Response::HTTP_OK);
+    }
+
+    public function show($id)
+    {
+        if (!Gate::allows('view lemburKaryawan')) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
+
+        $dataLembur = Lembur::find($id);
+        if (!$dataLembur) {
+            return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data lembur karyawan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+        }
+        $message = "Detail lembur karyawan '{$dataLembur->users->nama}' berhasil ditampilkan.";
+
         return response()->json(new LemburJadwalResource(Response::HTTP_OK, $message, $dataLembur), Response::HTTP_OK);
+    }
+
+    public function update(UpdateLemburKaryawanRequest $request, $id)
+    {
+        if (!Gate::allows('edit lemburKaryawan')) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
+
+        $data = $request->validated();
+        $dataLembur = Lembur::find($id);
+        if (!$dataLembur) {
+            return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data lembur karyawan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+        }
+
+        $dataLembur->update($data);
+        $message = "Lembur karyawan '{$dataLembur->users->nama}' berhasil diperbarui.";
+
+        return response()->json(new LemburJadwalResource(Response::HTTP_OK, $message, $dataLembur), Response::HTTP_OK);
+    }
+
+    public function exportJadwalLembur()
+    {
+        if (!Gate::allows('export lemburKaryawan')) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
+
+        try {
+            return Excel::download(new LemburJadwalExport(), 'lembur-karyawan.xls');
+        } catch (\Exception $e) {
+            return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya terjadi error. Message: ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
+        } catch (\Error $e) {
+            return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya terjadi error. Message: ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
+        }
+
+        return response()->json(new WithoutDataResource(Response::HTTP_OK, 'Data jadwal lembur karyawan berhasil di download.'), Response::HTTP_OK);
     }
 }

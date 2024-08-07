@@ -53,7 +53,7 @@ class TransferKaryawanSeeder extends Seeder
 
             $kategori_transfer_id = $kategori_transfer_ids[array_rand($kategori_transfer_ids)];
             $kategori_records_id = $kategori_record_ids[array_rand($kategori_record_ids)];
-            $dokumenPath = '/berkas/karyawan/karyawan-transfer/dokumen_' . $user_id . '.pdf';
+            $dokumenPath = '/berkas/karyawan/karyawan-transfer/dokumen_' . $user_id;
 
             TransferKaryawan::create([
                 'user_id' => $user_id,
@@ -74,7 +74,7 @@ class TransferKaryawanSeeder extends Seeder
                 'kategori_berkas_id' => $kategoriBerkas->id,
                 'path' => $dokumenPath,
                 'tgl_upload' => now(),
-                'nama_file' => 'dokumen_' . $user_id . '.pdf',
+                'nama_file' => 'dokumen_' . $user_id,
                 'ext' => 'application/pdf',
                 'size' => rand(2300, 4800),
                 'file_id' => (string) Str::uuid(), // Generate random UUID for file_id

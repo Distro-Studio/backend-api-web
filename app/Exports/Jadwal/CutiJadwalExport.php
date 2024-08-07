@@ -2,6 +2,7 @@
 
 namespace App\Exports\Jadwal;
 
+use App\Helpers\RandomHelper;
 use Carbon\Carbon;
 use App\Models\Cuti;
 use Maatwebsite\Excel\Concerns\Exportable;
@@ -15,12 +16,13 @@ class CutiJadwalExport implements FromCollection, WithHeadings, WithMapping
 
     public function collection()
     {
-        return Cuti::with(['users', 'tipe_cutis'])->get();
+        return Cuti::with(['users', 'tipe_cutis', 'status_cutis'])->get();
     }
 
     public function headings(): array
     {
         return [
+            'no',
             'nama',
             'tipe_cuti',
             'tgl_from',
@@ -35,23 +37,22 @@ class CutiJadwalExport implements FromCollection, WithHeadings, WithMapping
 
     public function map($cuti): array
     {
-        $currentDate = now();
-        if ($currentDate->lessThan($cuti->tgl_from)) {
-            $status_cuti = 'Dijadwalkan';
-        } elseif ($currentDate->between($cuti->tgl_from, $cuti->tgl_to)) {
-            $status_cuti = 'Berlangsung';
-        } else {
-            $status_cuti = 'Selesai';
-        }
+        static $no = 1;
+
+        $convertTgl_From = RandomHelper::convertToDateString($cuti->tgl_from);
+        $convertTgl_To = RandomHelper::convertToDateString($cuti->tgl_to);
+        $tgl_from = Carbon::parse($convertTgl_From)->format('d-m-Y');
+        $tgl_to = Carbon::parse($convertTgl_To)->format('d-m-Y');
 
         return [
+            $no++,
             $cuti->users->nama,
             $cuti->tipe_cutis->nama,
-            Carbon::parse($cuti->tgl_from)->format('d-m-Y'),
-            Carbon::parse($cuti->tgl_to)->format('d-m-Y'),
+            $tgl_from,
+            $tgl_to,
             $cuti->catatan ?? 'N/A',
             $cuti->durasi . ' Hari',
-            $status_cuti,
+            $cuti->status_cutis->label,
             Carbon::parse($cuti->created_at)->format('d-m-Y H:i:s'),
             Carbon::parse($cuti->updated_at)->format('d-m-Y H:i:s')
         ];

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Dashboard\DashboardController;
 use App\Http\Controllers\Dashboard\Jadwal\CutiJadwalController;
+use App\Http\Controllers\Dashboard\Jadwal\DataCutiController;
 use App\Http\Controllers\Dashboard\Jadwal\DataJadwalController;
 use App\Http\Controllers\Dashboard\Jadwal\DataLemburController;
 use App\Http\Controllers\Dashboard\Jadwal\DataTukarJadwalController;
@@ -71,6 +72,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/get-list-tipecuti', [CutiController::class, 'getAllTipeCuti']);
     Route::get('/get-list-harilibur', [HariLiburController::class, 'getAllHariLibur']);
     Route::get('/get-list-shift', [ShiftController::class, 'getAllShift']);
+    Route::get('/get-list-tipe-cuti', [CutiController::class, 'getAllTipeCuti']);
     Route::get('/get-list-pertanyaan', [PertanyaanController::class, 'getAllPertanyaan']);
 
     Route::get('/get-list-premi', [DataKaryawanController::class, 'getAllDataPremi']);
@@ -107,7 +109,17 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::post('/{id}/status-karyawan', [DataKaryawanController::class, 'toggleStatusUser']);
             Route::get('/detail-karyawan-user/{user_id}', [DataKaryawanController::class, 'showByUserId']);
             Route::get('/detail-karyawan/{data_karyawan_id}', [DataKaryawanController::class, 'showByDataKaryawanId']);
+
             Route::get('/detail-karyawan-presensi/{data_karyawan_id}', [DataKaryawanController::class, 'getDataPresensi']);
+            Route::get('/detail-karyawan-jadwal/{data_karyawan_id}', [DataKaryawanController::class, 'getDataJadwal']);
+            Route::get('/detail-karyawan-rekam-jejak/{data_karyawan_id}', [DataKaryawanController::class, 'getDataRekamJejak']);
+            Route::get('/detail-karyawan-keluarga/{data_karyawan_id}', [DataKaryawanController::class, 'getDataKeluarga']);
+            Route::get('/detail-karyawan-dokumen/{data_karyawan_id}', [DataKaryawanController::class, 'getDataDokumen']);
+            Route::get('/detail-karyawan-cuti/{data_karyawan_id}', [DataKaryawanController::class, 'getDataCuti']);
+            Route::get('/detail-karyawan-tukar-jadwal/{data_karyawan_id}', [DataKaryawanController::class, 'getDataTukarJadwal']);
+            Route::get('/detail-karyawan-lembur/{data_karyawan_id}', [DataKaryawanController::class, 'getDataLembur']);
+            Route::get('/detail-karyawan-feedback/{data_karyawan_id}', [DataKaryawanController::class, 'getDataFeedback']);
+
             Route::apiResource('/data-karyawan', DataKaryawanController::class);
 
             // ! Transfer Karyawan ===========>
@@ -147,23 +159,14 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::apiResource('/tukar-jadwal', DataTukarJadwalController::class);
 
             // ! Lembur ===========>
-            Route::get('/all-users-unitkerja', [JadwalController::class, 'getAllKaryawanUnitKerja']);
-
-            Route::get('/get-lembur', [DataLemburController::class, 'index']);
-            Route::post('/lembur/filter', [DataLemburController::class, 'index']);
-            Route::post('/lembur/search', [DataLemburController::class, 'index']);
-            Route::get('/lembur-export', [DataLemburController::class, 'exportJadwalLembur']);
+            Route::post('/get-lembur', [DataLemburController::class, 'index']);
+            Route::get('/lembur/export', [DataLemburController::class, 'exportJadwalLembur']);
             Route::apiResource('/lembur', DataLemburController::class);
 
             // ! Cuti ===========>
-            Route::get('/all-users-unitkerja', [JadwalController::class, 'getAllKaryawanUnitKerja']);
-            Route::get('/all-cuti', [CutiController::class, 'getAllTipeCuti']);
-
-            Route::get('/all-data-jadwal-cuti', [CutiJadwalController::class, 'getAllJadwalCuti']);
-            Route::post('/jadwal-cuti-filter', [CutiJadwalController::class, 'index']);
-            Route::post('/jadwal-cuti-search', [CutiJadwalController::class, 'index']);
-            Route::get('/jadwal-cuti-export', [CutiJadwalController::class, 'exportJadwalCuti']);
-            Route::apiResource('/data-jadwal-cuti', CutiJadwalController::class);
+            Route::post('/get-cuti', [DataCutiController::class, 'index']);
+            Route::get('/cuti/export', [DataCutiController::class, 'exportJadwalCuti']);
+            Route::apiResource('/cuti', DataCutiController::class);
         });
 
         // TODO: buat view restore data
@@ -203,7 +206,6 @@ Route::middleware(['auth:sanctum'])->group(function () {
         });
 
         Route::group(['prefix' => '/pengaturan'], function () {
-            /* ==================================== Setting Akun ==================================== */
             // ! Roles ===========>
             Route::post('/role/restore/{id}', [RolesController::class, 'restore']);
             Route::apiResource('/role', RolesController::class);
@@ -214,10 +216,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
             // ! Change Password ===========>
             Route::post('/users/change-passwords', [UserPasswordController::class, 'updatePassword']);
-            /* ==================================== Setting Akun ==================================== */
 
-
-            /* ==================================== Setting Karyawan ==================================== */
             // ! Jabatan ===========>
             Route::post('/jabatan/restore/{id}', [JabatanController::class, 'restore']);
             Route::apiResource('/jabatan', JabatanController::class);
@@ -237,10 +236,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
             // ! Pertanyaan ===========>
             Route::post('/pertanyaan/restore/{id}', [PertanyaanController::class, 'restore']);
             Route::apiResource('/pertanyaan', PertanyaanController::class);
-            /* ==================================== Setting Karyawan ==================================== */
 
-
-            /* ==================================== Setting Finance ==================================== */
             // ! Premi ===========>
             Route::post('/premi/restore/{id}', [PremiController::class, 'restore']);
             Route::apiResource('/premi', PremiController::class);
@@ -264,10 +260,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
             // ! THR ===========>
             // Route::get('/all-tunjangan-hari-raya', [THRController::class, 'getAllTHRSetting']);
             // Route::apiResource('/tunjangan-hari-raya', THRController::class);
-            /* ==================================== Setting Finance ==================================== */
 
-
-            /* ==================================== Setting Managemen Waktu ==================================== */
             // ! Shift ===========>
             Route::post('/shift/restore/{id}', [ShiftController::class, 'restore']);
             Route::apiResource('/shift', ShiftController::class);
@@ -284,7 +277,6 @@ Route::middleware(['auth:sanctum'])->group(function () {
             // ! Lokasi Presensi ===========>
             Route::get('/get-lokasi-kantor/{id}', [LokasiKantorController::class, 'getLokasiKantor']);
             Route::post('/lokasi-kantor', [LokasiKantorController::class, 'editLokasiKantor']);
-            /* ==================================== Setting Managemen Waktu ==================================== */
         });
     });
 });

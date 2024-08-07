@@ -202,8 +202,8 @@ class DataJadwalController extends Controller
         $filters = $request->all();
 
         // Filter
-        if (isset($filters['nama_unit'])) {
-            $namaUnitKerja = $filters['nama_unit'];
+        if (isset($filters['unit_kerja'])) {
+            $namaUnitKerja = $filters['unit_kerja'];
             $jadwal->whereHas('users.data_karyawans.unit_kerjas', function ($query) use ($namaUnitKerja) {
                 if (is_array($namaUnitKerja)) {
                     $query->whereIn('id', $namaUnitKerja);
@@ -308,7 +308,7 @@ class DataJadwalController extends Controller
 
         if (isset($filters['pendidikan_terakhir'])) {
             $namaPendidikan = $filters['pendidikan_terakhir'];
-            $jadwal->whereHas('users.data_karyawans.kategori_pendidikans', function ($query) use ($namaPendidikan) {
+            $jadwal->whereHas('users.data_karyawans.pendidikan_terakhir', function ($query) use ($namaPendidikan) {
                 if (is_array($namaPendidikan)) {
                     $query->whereIn('id', $namaPendidikan);
                 } else {
@@ -624,8 +624,11 @@ class DataJadwalController extends Controller
 
         $user_schedule_array = [];
         foreach ($user->jadwals as $schedule) {
-            $current_date = Carbon::parse($schedule->tgl_mulai);
-            while ($current_date->lte(Carbon::parse($schedule->tgl_selesai))) {
+            $tglMulai = RandomHelper::convertToDateString($schedule->tgl_mulai);
+            $tglSelesai = RandomHelper::convertToDateString($schedule->tgl_selesai);
+
+            $current_date = Carbon::parse($tglMulai);
+            while ($current_date->lte(Carbon::parse($tglSelesai))) {
                 $date = $current_date->format('Y-m-d');
                 $user_schedule_array[] = [
                     'id' => $schedule->shifts->id,

@@ -185,20 +185,20 @@ class KeluargaKaryawanController extends Controller
         ], Response::HTTP_OK);
     }
 
-    public function exportKeluargaKaryawan(Request $request)
-    {
-        if (!Gate::allows('export dataKaryawan')) {
-            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
-        }
+    // public function exportKeluargaKaryawan(Request $request)
+    // {
+    //     if (!Gate::allows('export dataKaryawan')) {
+    //         return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+    //     }
 
-        try {
-            return Excel::download(new KeluargaKaryawanExport(), 'keluarga-karyawan.xls');
-        } catch (\Exception $e) {
-            return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya terjadi error. Message: ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
-        } catch (\Error $e) {
-            return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya terjadi error. Message: ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
-        }
+    //     try {
+    //         return Excel::download(new KeluargaKaryawanExport(), 'keluarga-karyawan.xls');
+    //     } catch (\Exception $e) {
+    //         return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya terjadi error. Message: ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
+    //     } catch (\Error $e) {
+    //         return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya terjadi error. Message: ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
+    //     }
 
-        return response()->json(new WithoutDataResource(Response::HTTP_OK, 'Data keluarga karyawan berhasil di download.'), Response::HTTP_OK);
-    }
+    //     return response()->json(new WithoutDataResource(Response::HTTP_OK, 'Data keluarga karyawan berhasil di download.'), Response::HTTP_OK);
+    // }
 }

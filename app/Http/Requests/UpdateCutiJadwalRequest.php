@@ -7,7 +7,7 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Http\Exceptions\HttpResponseException;
 
-class StoreCutiJadwalRequest extends FormRequest
+class UpdateCutiJadwalRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -25,7 +25,7 @@ class StoreCutiJadwalRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'user_id' => 'required|integer|exists:users,id',
+            // 'user_id' => 'required|integer|exists:users,id',
             'tipe_cuti_id' => 'required|integer|exists:tipe_cutis,id',
             'tgl_from' => 'required|string',
             'tgl_to' => 'required|string',
@@ -37,8 +37,8 @@ class StoreCutiJadwalRequest extends FormRequest
     public function messages()
     {
         return [
-            'user_id.required' => 'Silahkan pilih karyawan yang tersedia terlebih dahulu.',
-            'user_id.exists' => 'Nama karyawan yang dipilih tidak valid.',
+            // 'user_id.required' => 'Silahkan pilih karyawan yang tersedia terlebih dahulu.',
+            // 'user_id.exists' => 'Nama karyawan yang dipilih tidak valid.',
             'tipe_cuti_id.required' => 'Silahkan pilih tipe cuti yang tersedia terlebih dahulu.',
             'tipe_cuti_id.exists' => 'Tipe cuti yang dipilih tidak valid.',
             'tgl_from.required' => 'Tanggal mulai cuti karyawan tidak diperbolehkan kosong.',

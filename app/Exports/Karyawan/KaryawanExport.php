@@ -94,6 +94,17 @@ class KaryawanExport implements FromCollection, WithHeadings, WithMapping
             return $role->name;
         })->toArray();
 
+        $convertTgl_Masuk = RandomHelper::convertToDateString($karyawan->tgl_masuk);
+        $convertTgl_Lahir = RandomHelper::convertToDateString($karyawan->tgl_lahir);
+        $convertTgl_Keluar = RandomHelper::convertToDateString($karyawan->tgl_keluar);
+        $convertTgl_Diangkat = RandomHelper::convertToDateString($karyawan->tgl_diangkat);
+        $convertTgl_Berakhir_PKS = RandomHelper::convertToDateString($karyawan->tgl_berakhir_pks);
+        $tgl_masuk = Carbon::parse($convertTgl_Masuk)->format('d-m-Y');
+        $tgl_lahir = Carbon::parse($convertTgl_Lahir)->format('d-m-Y');
+        $tgl_keluar = Carbon::parse($convertTgl_Keluar)->format('d-m-Y');
+        $tgl_diangkat = Carbon::parse($convertTgl_Diangkat)->format('d-m-Y');
+        $tgl_berakhir_pks = Carbon::parse($convertTgl_Berakhir_PKS)->format('d-m-Y');
+
         return [
             self::$number,
             $karyawan->users->nama,
@@ -101,14 +112,14 @@ class KaryawanExport implements FromCollection, WithHeadings, WithMapping
             $karyawan->email,
             $karyawan->no_rm,
             $karyawan->no_manulife,
-            RandomHelper::convertToDateString($karyawan->tgl_masuk),
+            $tgl_masuk,
             optional($karyawan->unit_kerjas)->nama_unit,
             optional($karyawan->jabatans)->nama_jabatan,
             optional($karyawan->kompetensis)->nama_kompetensi,
             $karyawan->nik_ktp,
             optional($karyawan->status_karyawans)->label,
             $karyawan->tempat_lahir,
-            RandomHelper::convertToDateString($karyawan->tgl_lahir),
+            $tgl_lahir,
             optional($karyawan->kelompok_gajis)->nama_kelompok,
             $karyawan->no_rekening,
             $karyawan->tunjangan_jabatan ?? 'N/A',
@@ -118,14 +129,14 @@ class KaryawanExport implements FromCollection, WithHeadings, WithMapping
             $karyawan->uang_lembur ?? 'N/A',
             $karyawan->uang_makan ?? 'N/A',
             optional($karyawan->ptkps)->kode_ptkp,
-            RandomHelper::convertToDateString($karyawan->tgl_keluar),
+            $tgl_keluar,
             $karyawan->no_kk,
             $karyawan->alamat,
             $karyawan->gelar_depan,
             $karyawan->no_hp,
             $karyawan->no_bpjsksh,
             $karyawan->no_bpjsktk,
-            RandomHelper::convertToDateString($karyawan->tgl_diangkat),
+            $tgl_diangkat,
             $karyawan->masa_kerja,
             $karyawan->npwp,
             $karyawan->jenis_kelamin ? 'Laki-laki' : 'Perempuan',
@@ -137,7 +148,7 @@ class KaryawanExport implements FromCollection, WithHeadings, WithMapping
             $karyawan->tahun_lulus,
             $karyawan->no_str,
             Carbon::parse($karyawan->masa_berlaku_str)->format('d-m-Y'),
-            RandomHelper::convertToDateString($karyawan->tgl_berakhir_pks),
+            $tgl_berakhir_pks,
             $karyawan->masa_diklat,
             Carbon::parse($karyawan->created_at)->format('d-m-Y H:i:s'),
             Carbon::parse($karyawan->updated_at)->format('d-m-Y H:i:s')
