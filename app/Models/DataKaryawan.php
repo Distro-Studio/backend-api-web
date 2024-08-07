@@ -188,11 +188,11 @@ class DataKaryawan extends Model
     }
 
     /**
-     * Get the pendidikan_terakhir that owns the DataKaryawan
+     * Get the kategori_pendidikans that owns the DataKaryawan
      *
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function pendidikan_terakhir(): BelongsTo
+    public function kategori_pendidikans(): BelongsTo
     {
         return $this->belongsTo(KategoriPendidikan::class, 'pendidikan_terakhir', 'id');
     }

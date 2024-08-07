@@ -822,11 +822,22 @@ class DataKaryawanController extends Controller
 
         if (isset($filters['pendidikan_terakhir'])) {
             $namaPendidikan = $filters['pendidikan_terakhir'];
-            $karyawan->whereHas('pendidikan_terakhir', function ($query) use ($namaPendidikan) {
+            $karyawan->whereHas('kategori_pendidikans', function ($query) use ($namaPendidikan) {
                 if (is_array($namaPendidikan)) {
                     $query->whereIn('id', $namaPendidikan);
                 } else {
                     $query->where('id', '=', $namaPendidikan);
+                }
+            });
+        }
+
+        if (isset($filters['jenis_karyawan'])) {
+            $jenisKaryawan = $filters['jenis_karyawan'];
+            $karyawan->whereHas('unit_kerjas', function ($query) use ($jenisKaryawan) {
+                if (is_array($jenisKaryawan)) {
+                    $query->whereIn('jenis_karyawan', $jenisKaryawan);
+                } else {
+                    $query->where('jenis_karyawan', '=', $jenisKaryawan);
                 }
             });
         }
@@ -930,6 +941,7 @@ class DataKaryawanController extends Controller
                 'jenis_kelamin' => $karyawan->jenis_kelamin,
                 'agama' => $karyawan->kategori_agamas, // agama_id
                 'golongan_darah' => $karyawan->kategori_darahs, // golongan_darah_id
+                'pendidikan_terakhir' => $karyawan->kategori_pendidikans, // pendidikan_terakhir_id
                 'tinggi_badan' => $karyawan->tinggi_badan,
                 'berat_badan' => $karyawan->berat_badan,
                 'no_ijazah' => $karyawan->no_ijazah,
@@ -1132,6 +1144,7 @@ class DataKaryawanController extends Controller
             'jenis_kelamin' => $karyawan->jenis_kelamin,
             'agama' => $karyawan->kategori_agamas, // agama_id
             'golongan_darah' => $karyawan->kategori_darahs, // golongan_darah_id
+            'pendidikan_terakhir' => $karyawan->kategori_pendidikans, // pendidikan_terakhir_id
             'tinggi_badan' => $karyawan->tinggi_badan,
             'berat_badan' => $karyawan->berat_badan,
             'no_ijazah' => $karyawan->no_ijazah,
@@ -1238,6 +1251,7 @@ class DataKaryawanController extends Controller
             'jenis_kelamin' => $karyawan->jenis_kelamin,
             'agama' => $karyawan->kategori_agamas, // agama_id
             'golongan_darah' => $karyawan->kategori_darahs, // golongan_darah_id
+            'pendidikan_terakhir' => $karyawan->kategori_pendidikans, // pendidikan_terakhir_id
             'tinggi_badan' => $karyawan->tinggi_badan,
             'berat_badan' => $karyawan->berat_badan,
             'no_ijazah' => $karyawan->no_ijazah,

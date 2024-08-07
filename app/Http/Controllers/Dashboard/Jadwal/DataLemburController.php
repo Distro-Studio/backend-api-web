@@ -139,13 +139,30 @@ class DataLemburController extends Controller
 
         if (isset($filters['pendidikan_terakhir'])) {
             $namaPendidikan = $filters['pendidikan_terakhir'];
-            $lembur->whereHas('users.data_karyawans.pendidikan_terakhir', function ($query) use ($namaPendidikan) {
+            $lembur->whereHas('users.data_karyawans.kategori_pendidikans', function ($query) use ($namaPendidikan) {
                 if (is_array($namaPendidikan)) {
                     $query->whereIn('id', $namaPendidikan);
                 } else {
                     $query->where('id', '=', $namaPendidikan);
                 }
             });
+        }
+
+        if (isset($filters['jenis_karyawan'])) {
+            $jenisKaryawan = $filters['jenis_karyawan'];
+            if (is_array($jenisKaryawan)) {
+                $lembur->whereHas('users.data_karyawans.unit_kerjas', function ($query) use ($jenisKaryawan) {
+                    $query->where(function ($query) use ($jenisKaryawan) {
+                        foreach ($jenisKaryawan as $jk) {
+                            $query->orWhere('jenis_karyawan', $jk);
+                        }
+                    });
+                });
+            } else {
+                $lembur->whereHas('users.data_karyawans.unit_kerjas', function ($query) use ($jenisKaryawan) {
+                    $query->where('jenis_karyawan', $jenisKaryawan);
+                });
+            }
         }
 
         // Search

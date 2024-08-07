@@ -22,171 +22,6 @@ use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
 
 class DataJadwalController extends Controller
 {
-    // Orisinil
-    // public function index(Request $request)
-    // {
-    //     if (!Gate::allows('view jadwalKaryawan')) {
-    //         return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
-    //     }
-
-    //     $jadwal = Jadwal::query();
-
-    //     // Ambil semua filter dari request body
-    //     $filters = $request->all();
-
-    //     // Filter
-    //     if (isset($filters['nama_unit'])) {
-    //         $namaUnitKerja = $filters['nama_unit'];
-    //         $jadwal->whereHas('users.data_karyawans.unit_kerjas', function ($query) use ($namaUnitKerja) {
-    //             if (is_array($namaUnitKerja)) {
-    //                 $query->whereIn('id', $namaUnitKerja);
-    //             } else {
-    //                 $query->where('id', '=', $namaUnitKerja);
-    //             }
-    //         });
-    //     }
-
-    //     if (isset($filters['status_karyawan'])) {
-    //         $statusKaryawan = $filters['status_karyawan'];
-    //         $jadwal->whereHas('users.data_karyawans.status_karyawans', function ($query) use ($statusKaryawan) {
-    //             if (is_array($statusKaryawan)) {
-    //                 $query->whereIn('id', $statusKaryawan);
-    //             } else {
-    //                 $query->where('id', '=', $statusKaryawan);
-    //             }
-    //         });
-    //     }
-
-    //     if (isset($filters['masa_kerja'])) {
-    //         $masaKerja = $filters['masa_kerja'];
-    //         if (is_array($masaKerja)) {
-    //             $jadwal->whereHas('users.data_karyawans', function ($query) use ($masaKerja) {
-    //                 foreach ($masaKerja as $masa) {
-    //                     $query->orWhereRaw('TIMESTAMPDIFF(YEAR, tgl_masuk, COALESCE(tgl_keluar, NOW())) = ?', [$masa]);
-    //                 }
-    //             });
-    //         } else {
-    //             $jadwal->whereHas('users.data_karyawans', function ($query) use ($masaKerja) {
-    //                 $query->whereRaw('TIMESTAMPDIFF(YEAR, tgl_masuk, COALESCE(tgl_keluar, NOW())) = ?', [$masaKerja]);
-    //             });
-    //         }
-    //     }
-
-    //     if (isset($filters['status_aktif'])) {
-    //         $statusAktif = $filters['status_aktif'];
-    //         $jadwal->whereHas('users', function ($query) use ($statusAktif) {
-    //             if (is_array($statusAktif)) {
-    //                 $query->whereIn('status_aktif', $statusAktif);
-    //             } else {
-    //                 $query->where('status_aktif', '=', $statusAktif);
-    //             }
-    //         });
-    //     }
-
-    //     if (isset($filters['tgl_masuk'])) {
-    //         $tglMasuk = $filters['tgl_masuk'];
-    //         if (is_array($tglMasuk)) {
-    //             $jadwal->whereHas('users.data_karyawans', function ($query) use ($tglMasuk) {
-    //                 $query->whereIn('tgl_masuk', $tglMasuk);
-    //             });
-    //         } else {
-    //             $tglMasuk = Carbon::parse($tglMasuk)->format('Y-m-d');
-    //             $jadwal->whereHas('users.data_karyawans', function ($query) use ($tglMasuk) {
-    //                 $query->where('tgl_masuk', $tglMasuk);
-    //             });
-    //         }
-    //     }
-
-    //     // Search
-    //     if (isset($filters['search'])) {
-    //         $searchTerm = '%' . $filters['search'] . '%';
-    //         $jadwal->where(function ($query) use ($searchTerm) {
-    //             $query->whereHas('users', function ($query) use ($searchTerm) {
-    //                 $query->where('nama', 'like', $searchTerm);
-    //             })->orWhereHas('users.data_karyawans', function ($query) use ($searchTerm) {
-    //                 $query->where('nik', 'like', $searchTerm);
-    //             });
-    //         });
-    //     }
-
-    //     if ($request->has('tgl_mulai') && $request->has('tgl_selesai')) {
-    //         $start_date = Carbon::parse($request->input('tgl_mulai'));
-    //         $end_date = Carbon::parse($request->input('tgl_selesai'));
-
-    //         if ($end_date->diffInDays($start_date) > 28) {
-    //             return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Rentang tanggal yang diberikan tidak boleh melebihi 28 hari dari tanggal mulai.'), Response::HTTP_BAD_REQUEST);
-    //         }
-
-    //         $date_range = $this->generateDateRange($start_date, $end_date);
-    //     } else {
-    //         return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Tanggal jadwal mulai dan selesai tidak boleh kosong.'), Response::HTTP_BAD_REQUEST);
-    //     }
-
-
-    //     // Per page
-    //     $limit = $request->input('limit', 10); // Default per page is 10
-    //     $limit = is_numeric($limit) ? (int)$limit : 10; // Pastikan limit adalah integer
-
-    //     // Fetch schedules
-    //     $schedules = $jadwal->get()->groupBy('user_id');
-    //     $result = [];
-    //     foreach ($schedules as $user_id => $user_schedules) {
-    //         $user = $user_schedules->first()->users;
-    //         $user_schedule_array = [];
-    //         $user_schedules_by_date = [];
-
-    //         foreach ($user_schedules as $schedule) {
-    //             $current_date = Carbon::parse($schedule->tgl_mulai);
-    //             while ($current_date->lte(Carbon::parse($schedule->tgl_selesai))) {
-    //                 $user_schedules_by_date[$current_date->format('Y-m-d')] = $schedule;
-    //                 $current_date->addDay();
-    //             }
-    //         }
-
-    //         foreach ($date_range as $date) {
-    //             if (isset($user_schedules_by_date[$date])) {
-    //                 $schedule = $user_schedules_by_date[$date];
-    //                 $user_schedule_array[] = [
-    //                     'id' => $schedule->shifts->id,
-    //                     'tanggal' => $date,
-    //                     'nama_shift' => $schedule->shifts->nama,
-    //                     'jam_from' => $schedule->shifts->jam_from,
-    //                     'jam_to' => $schedule->shifts->jam_to,
-    //                 ];
-    //             } else {
-    //                 $user_schedule_array[] = null;
-    //             }
-    //         }
-
-    //         $result[] = [
-    //             'id' => $schedule->id,
-    //             'user' => [
-    //                 'id' => $user->id,
-    //                 'nama' => $user->nama,
-    //                 'email_verified_at' => $user->email_verified_at,
-    //                 'data_karyawan_id' => $user->data_karyawan_id,
-    //                 'foto_profil' => $user->foto_profil,
-    //                 'data_completion_step' => $user->data_completion_step,
-    //                 'status_aktif' => $user->status_aktif,
-    //                 'created_at' => $user->created_at,
-    //                 'updated_at' => $user->updated_at
-    //             ],
-    //             'unit_kerja' => optional($user->data_karyawans)->unit_kerjas,
-    //             'list_jadwal' => $user_schedule_array,
-    //         ];
-    //     }
-
-    //     if (empty($result)) {
-    //         return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data jadwal karyawan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
-    //     }
-
-    //     return response()->json([
-    //         'status' => Response::HTTP_OK,
-    //         'message' => 'Data jadwal karyawan berhasil ditampilkan.',
-    //         'data' => $result
-    //     ], Response::HTTP_OK);
-    // }
-
     public function index(Request $request)
     {
         if (!Gate::allows('view jadwalKaryawan')) {
@@ -308,13 +143,30 @@ class DataJadwalController extends Controller
 
         if (isset($filters['pendidikan_terakhir'])) {
             $namaPendidikan = $filters['pendidikan_terakhir'];
-            $jadwal->whereHas('users.data_karyawans.pendidikan_terakhir', function ($query) use ($namaPendidikan) {
+            $jadwal->whereHas('users.data_karyawans.kategori_pendidikans', function ($query) use ($namaPendidikan) {
                 if (is_array($namaPendidikan)) {
                     $query->whereIn('id', $namaPendidikan);
                 } else {
                     $query->where('id', '=', $namaPendidikan);
                 }
             });
+        }
+
+        if (isset($filters['jenis_karyawan'])) {
+            $jenisKaryawan = $filters['jenis_karyawan'];
+            if (is_array($jenisKaryawan)) {
+                $jadwal->whereHas('users.data_karyawans.unit_kerjas', function ($query) use ($jenisKaryawan) {
+                    $query->where(function ($query) use ($jenisKaryawan) {
+                        foreach ($jenisKaryawan as $jk) {
+                            $query->orWhere('jenis_karyawan', $jk);
+                        }
+                    });
+                });
+            } else {
+                $jadwal->whereHas('users.data_karyawans.unit_kerjas', function ($query) use ($jenisKaryawan) {
+                    $query->where('jenis_karyawan', $jenisKaryawan);
+                });
+            }
         }
 
         // Search
@@ -442,6 +294,16 @@ class DataJadwalController extends Controller
         $data = $request->validated();
         $jadwals = [];
 
+        // Konversi tanggal dari string menggunakan helper
+        $tglMulai = Carbon::parse(RandomHelper::convertToDateString($data['tgl_mulai']), 'Asia/Jakarta');
+        $tglSelesai = Carbon::parse(RandomHelper::convertToDateString($data['tgl_selesai']), 'Asia/Jakarta');
+        $today = Carbon::today('Asia/Jakarta');
+
+        // Validasi tanggal mulai
+        if ($tglMulai->lessThanOrEqualTo($today)) {
+            return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Tidak diperbolehkan menerapkan jadwal untuk hari ini atau hari yang sudah lewat. Hanya diperbolehkan H+1 hari ini.'), Response::HTTP_NOT_ACCEPTABLE);
+        }
+
         DB::beginTransaction();
         try {
             foreach ($data['user_id'] as $userId) {
@@ -460,10 +322,6 @@ class DataJadwalController extends Controller
                         return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, "Data shift dengan ID '{$data['shift_id']}' tidak ditemukan."), Response::HTTP_NOT_FOUND);
                     }
                 }
-
-                // Konversi tanggal dari string
-                $tglMulai = RandomHelper::convertToDateString($data['tgl_mulai']);
-                $tglSelesai = RandomHelper::convertToDateString($data['tgl_selesai']);
 
                 // Check for unique constraints or existing data validation
                 $existingDataValidation = Jadwal::where('user_id', $userId)
