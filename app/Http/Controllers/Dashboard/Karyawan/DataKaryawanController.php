@@ -296,13 +296,14 @@ class DataKaryawanController extends Controller
 
             $current_date = Carbon::parse($tglMulai);
             while ($current_date->lte(Carbon::parse($tglSelesai))) {
-                $date = $current_date->format('Y-m-d');
+                // $date = $current_date->format('Y-m-d');
                 $user_schedule_array[] = [
-                    'id' => $schedule->shifts->id,
-                    'tanggal' => $date,
-                    'nama_shift' => $schedule->shifts->nama,
-                    'jam_from' => $schedule->shifts->jam_from,
-                    'jam_to' => $schedule->shifts->jam_to,
+                    'id' => $schedule->id,
+                    // 'tanggal' => $date,
+                    'tgl_mulai' => $schedule->tgl_mulai,
+                    'tgl_selesai' => $schedule->tgl_selesai,
+                    'shift' => $schedule->shifts,
+                    'updated_at' => $schedule->updated_at
                 ];
                 $current_date->addDay();
             }
