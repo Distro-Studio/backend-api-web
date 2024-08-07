@@ -330,8 +330,10 @@ class DataJadwalController extends Controller
         }
 
         if ($request->has('tgl_mulai') && $request->has('tgl_selesai')) {
-            $start_date = Carbon::parse($request->input('tgl_mulai'));
-            $end_date = Carbon::parse($request->input('tgl_selesai'));
+            $start_dateConvert = RandomHelper::convertToDateString($request->input('tgl_mulai'));
+            $end_dateConvert = RandomHelper::convertToDateString($request->input('tgl_selesai'));
+            $start_date = Carbon::parse($start_dateConvert);
+            $end_date = Carbon::parse($end_dateConvert);
 
             if ($end_date->diffInDays($start_date) > 28) {
                 return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Rentang tanggal yang diberikan tidak boleh melebihi 28 hari dari tanggal mulai.'), Response::HTTP_BAD_REQUEST);
