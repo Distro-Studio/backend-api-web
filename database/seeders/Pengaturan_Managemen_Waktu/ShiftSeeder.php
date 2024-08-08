@@ -9,27 +9,27 @@ use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 
 class ShiftSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
-    public function run(): void
-    {
-        Shift::create([
-            'nama' => 'Pagi',
-            'jam_from' => Carbon::createFromTime(7, 0, 0)->toTimeString(),
-            'jam_to' => Carbon::createFromTime(17, 0, 0)->toTimeString()
-        ]);
+  /**
+   * Run the database seeds.
+   */
+  public function run(): void
+  {
+    Shift::create([
+      'nama' => 'Pagi',
+      'jam_from' => '2024-08-07T07:00:12.000000Z',
+      'jam_to' => '2024-08-07T15:00:12.000000Z'
+    ]);
 
-        Shift::create([
-            'nama' => 'Sore',
-            'jam_from' => Carbon::createFromTime(17, 0, 0)->toTimeString(),
-            'jam_to' => Carbon::createFromTime(22, 0, 0)->toTimeString()
-        ]);
+    Shift::create([
+      'nama' => 'Sore',
+      'jam_from' => '2024-08-07T17:00:12.000000Z',
+      'jam_to' => '2024-08-07T20:00:12.000000Z'
+    ]);
 
-        Shift::create([
-            'nama' => 'Malam',
-            'jam_from' => Carbon::createFromTime(22, 0, 0)->toTimeString(),
-            'jam_to' => Carbon::createFromTime(7, 0, 0)->toTimeString()
-        ]);
-    }
+    Shift::create([
+      'nama' => 'Malam',
+      'jam_from' => '2024-08-07T19:00:12.000000Z',
+      'jam_to' => '2024-08-07T01:00:12.000000Z'
+    ]);
+  }
 }
