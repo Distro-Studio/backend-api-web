@@ -22,6 +22,7 @@ use App\Jobs\Penggajian\CreateGajiJob;
 use App\Exports\Keuangan\PenggajianExport;
 use App\Imports\Keuangan\PenggajianImport;
 use App\Exports\Keuangan\RiwayatGajiExport;
+use App\Helpers\RandomHelper;
 use App\Http\Requests\StorePenggajianRequest;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
 use App\Http\Requests\Excel_Import\ImportKeuanganPenggajianRequest;
@@ -30,24 +31,107 @@ use App\Models\PenyesuaianGaji;
 
 class PenggajianController extends Controller
 {
-    public function calculatedInfo()
+    // public function calculatedInfo()
+    // {
+    //     if (!Gate::allows('view penggajianKaryawan')) {
+    //         return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+    //     }
+
+    //     $periodeSekarang = Carbon::now()->format('Y-m');
+    //     $jumlahKaryawanTetap = DataKaryawan::where('status_karyawan', 'Tetap')->count();
+    //     $jumlahKaryawanKontrak = DataKaryawan::where('status_karyawan', 'Kontrak')->count();
+    //     return response()->json([
+    //         'status' => Response::HTTP_OK,
+    //         'message' => 'Perhitungan informasi tambahan penggajian karyawan.',
+    //         'data' => [
+    //             'periode_sekarang' => $periodeSekarang,
+    //             'karyawan_tetap' => $jumlahKaryawanTetap,
+    //             'karyawan_kontrak' => $jumlahKaryawanKontrak
+    //         ],
+    //     ], Response::HTTP_OK);
+    // }
+
+    public function publikasiPenggajian()
     {
-        if (!Gate::allows('view penggajianKaryawan')) {
+        if (!Gate::allows('create penggajianKaryawan')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
-        $periodeSekarang = Carbon::now()->format('Y-m');
-        $jumlahKaryawanTetap = DataKaryawan::where('status_karyawan', 'Tetap')->count();
-        $jumlahKaryawanKontrak = DataKaryawan::where('status_karyawan', 'Kontrak')->count();
-        return response()->json([
-            'status' => Response::HTTP_OK,
-            'message' => 'Perhitungan informasi tambahan penggajian karyawan.',
-            'data' => [
-                'periode_sekarang' => $periodeSekarang,
-                'karyawan_tetap' => $jumlahKaryawanTetap,
-                'karyawan_kontrak' => $jumlahKaryawanKontrak
-            ],
-        ], Response::HTTP_OK);
+        $currentMonth = Carbon::now()->month;
+        $currentYear = Carbon::now()->year;
+
+        // Ambil jadwal penggajian dari tabel jadwal_penggajians
+        $jadwalPenggajian = DB::table('jadwal_penggajians')
+            ->select('tgl_mulai')
+            ->orderBy('tgl_mulai', 'desc')
+            ->first();
+
+        if (!$jadwalPenggajian) {
+            return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Tidak ada jadwal penggajian yang tersedia.'), Response::HTTP_BAD_REQUEST);
+        }
+
+        $tgl_mulai = Carbon::create($currentYear, $currentMonth, $jadwalPenggajian->tgl_mulai);
+        $currentDate = Carbon::now();
+
+        // Ambil semua penggajian untuk periode saat ini dengan status_gaji_id 1
+        $penggajians = Penggajian::whereMonth('tgl_penggajian', $currentMonth)
+            ->whereYear('tgl_penggajian', $currentYear)
+            ->where('status_gaji_id', 1)
+            ->get();
+
+        if ($penggajians->isEmpty()) {
+            return response()->json(new WithoutDataResource(Response::HTTP_OK, 'Tidak ada data penggajian yang perlu dipublikasikan.'), Response::HTTP_OK);
+        }
+
+        $updatedPenggajians = [];
+        $riwayatPenggajians = [];
+        $periode = $currentDate->locale('id')->isoFormat('MMMM Y');
+
+        foreach ($penggajians as $penggajian) {
+            $riwayatPenggajian = $penggajian->riwayat_penggajians;
+            $tgl_penggajian = Carbon::parse(RandomHelper::convertToDateString($penggajian->tgl_penggajian));
+            // Cek apakah tgl_penggajian sudah terlewat dari tgl_mulai
+            if ($tgl_penggajian->lessThan($tgl_mulai)) {
+                if ($penggajian->status_gaji_id == 2) {
+                    $updatedPenggajians[] = [
+                        'penggajian_id' => $penggajian->id,
+                        'updated_at' => $penggajian->updated_at
+                    ];
+                } else {
+                    $penggajian->status_gaji_id = 2;
+                    $penggajian->save();
+                    $updatedPenggajians[] = [
+                        'penggajian_id' => $penggajian->id,
+                        'updated_at' => $penggajian->updated_at
+                    ];
+                    if ($riwayatPenggajian->status_gaji_id != 2) {
+                        $riwayatPenggajian->status_gaji_id = 2;
+                        $riwayatPenggajian->save();
+                        $riwayatPenggajians[] = [
+                            'riwayat_penggajian_id' => $riwayatPenggajian->id,
+                            'updated_at' => $riwayatPenggajian->updated_at
+                        ];
+                    }
+                }
+            } else {
+                $penggajian->status_gaji_id = 2;
+                $penggajian->save();
+                $updatedPenggajians[] = [
+                    'penggajian_id' => $penggajian->id,
+                    'updated_at' => $penggajian->updated_at
+                ];
+                if ($riwayatPenggajian->status_gaji_id != 2) {
+                    $riwayatPenggajian->status_gaji_id = 2;
+                    $riwayatPenggajian->save();
+                    $riwayatPenggajians[] = [
+                        'riwayat_penggajian_id' => $riwayatPenggajian->id,
+                        'updated_at' => $riwayatPenggajian->updated_at
+                    ];
+                }
+            }
+        }
+
+        return response()->json(new WithoutDataResource(Response::HTTP_OK, 'Data penggajian untuk periode ' . $periode . ' telah dipublikasikan.'), Response::HTTP_OK);
     }
 
     public function index(Request $request)
@@ -56,46 +140,58 @@ class PenggajianController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
-        $riwayatPenggajian = RiwayatPenggajian::query()->with('penggajians');
+        // Tentukan limit default
+        $limit = $request->input('limit', 10); // Default 10 jika tidak ada atau kosong
 
-        // Filter
+        $riwayatPenggajian = RiwayatPenggajian::query();
+
+        // Filter periode tahun jika ada
         if ($request->has('periode_tahun')) {
-            $periode_tahun = $request->periode_tahun;
-            $riwayatPenggajian->whereYear('periode', $periode_tahun);
+            $periode_tahun = $request->input('periode_tahun');
+            if (is_array($periode_tahun)) {
+                $riwayatPenggajian->whereIn(DB::raw('YEAR(periode)'), $periode_tahun);
+            } else {
+                $riwayatPenggajian->whereYear('periode', $periode_tahun);
+            }
         }
 
-        $datariwayatPenggajian = $riwayatPenggajian->paginate(10);
+        if ($limit == 0) {
+            $datariwayatPenggajian = $riwayatPenggajian->get();
+            $paginationData = null;
+        } else {
+            $limit = is_numeric($limit) ? (int)$limit : 10;
+            $datariwayatPenggajian = $riwayatPenggajian->paginate($limit);
+
+            $paginationData = [
+                'links' => [
+                    'first' => $datariwayatPenggajian->url(1),
+                    'last' => $datariwayatPenggajian->url($datariwayatPenggajian->lastPage()),
+                    'prev' => $datariwayatPenggajian->previousPageUrl(),
+                    'next' => $datariwayatPenggajian->nextPageUrl(),
+                ],
+                'meta' => [
+                    'current_page' => $datariwayatPenggajian->currentPage(),
+                    'last_page' => $datariwayatPenggajian->lastPage(),
+                    'per_page' => $datariwayatPenggajian->perPage(),
+                    'total' => $datariwayatPenggajian->total(),
+                ]
+            ];
+        }
         if ($datariwayatPenggajian->isEmpty()) {
             return response()->json(new WithoutDataResource(Response::HTTP_OK, 'Tidak ada data riwayat penggajian karyawan yang tersedia.'), Response::HTTP_OK);
         }
 
-        $formattedData = $datariwayatPenggajian->items();
-        $formattedData = array_map(function ($riwayatGaji) {
+        $formattedData = $datariwayatPenggajian->map(function ($riwayatPenggajian) {
             return [
-                'id' => $riwayatGaji->id,
-                'periode' => $riwayatGaji->periode,
-                'update_terakhir' => $riwayatGaji->updated_at,
-                'karyawan_verifikasi' => $riwayatGaji->karyawan_verifikasi,
-                'status_riwayat_gaji' => $riwayatGaji->status_riwayat_gaji,
-                'created_at' => $riwayatGaji->created_at,
-                'updated_at' => $riwayatGaji->updated_at
+                'id' => $riwayatPenggajian->id,
+                'periode' => $riwayatPenggajian->periode,
+                'pembaruan_terakhir' => $riwayatPenggajian->updated_at,
+                'karyawan_digaji' => $riwayatPenggajian->karyawan_verifikasi,
+                'status_riwayat_gaji' => $riwayatPenggajian->status_gajis,
+                'created_at' => $riwayatPenggajian->created_at,
+                'updated_at' => $riwayatPenggajian->updated_at
             ];
-        }, $formattedData);
-
-        $paginationData = [
-            'links' => [
-                'first' => $datariwayatPenggajian->url(1),
-                'last' => $datariwayatPenggajian->url($datariwayatPenggajian->lastPage()),
-                'prev' => $datariwayatPenggajian->previousPageUrl(),
-                'next' => $datariwayatPenggajian->nextPageUrl(),
-            ],
-            'meta' => [
-                'current_page' => $datariwayatPenggajian->currentPage(),
-                'last_page' => $datariwayatPenggajian->lastPage(),
-                'per_page' => $datariwayatPenggajian->perPage(),
-                'total' => $datariwayatPenggajian->total(),
-            ]
-        ];
+        });
 
         return response()->json([
             'status' => Response::HTTP_OK,
@@ -112,7 +208,7 @@ class PenggajianController extends Controller
         }
 
         $data_karyawan_ids = $request->input('data_karyawan_ids', []);
-        $sertakan_bor = $request->has('sertakan_bor') && $request->sertakan_bor == 0;
+        $sertakan_bor = $request->has('sertakan_bor') && $request->sertakan_bor == 1;
 
         // Ambil jadwal penggajian dari tabel jadwal_penggajians
         $jadwalPenggajian = DB::table('jadwal_penggajians')
@@ -130,7 +226,7 @@ class PenggajianController extends Controller
         $endOfMonth = Carbon::now()->endOfMonth();
 
         if (Carbon::now()->lessThan($tgl_mulai) || Carbon::now()->greaterThan($endOfMonth)) {
-            return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Tanggal penggajian hanya dapat dilakukan mulai tanggal {$tgl_mulai->format('Y-m-d')} hingga akhir bulan."), Response::HTTP_BAD_REQUEST);
+            return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Tanggal penggajian hanya dapat dilakukan mulai tanggal '{$tgl_mulai->format('Y-m-d')}' hingga akhir bulan."), Response::HTTP_BAD_REQUEST);
         }
 
         // Validasi untuk memastikan penggajian belum dilakukan pada periode ini
@@ -143,6 +239,10 @@ class PenggajianController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Penggajian sudah dilakukan pada {$existingRiwayat->created_at}."), Response::HTTP_BAD_REQUEST);
         }
 
+        // Ambil nilai status dari tabel status_gajis
+        $statusBelumDipublikasi = DB::table('status_gajis')->where('label', 'Belum Dipublikasi')->value('id');
+        $statusSudahDipublikasi = DB::table('status_gajis')->where('label', 'Sudah Dipublikasi')->value('id');
+
         DB::beginTransaction();
         try {
             // Hitung jumlah karyawan yang terverifikasi berdasarkan data_karyawan_ids
@@ -150,11 +250,11 @@ class PenggajianController extends Controller
 
             // Buat entri baru di tabel riwayat_penggajians untuk periode bulan ini
             $periode = Carbon::now()->startOfMonth()->format('Y-m-d');
-            $status_riwayat_gaji = Carbon::now()->greaterThanOrEqualTo($tgl_mulai) ? RiwayatPenggajian::STATUS_PUBLISHED : RiwayatPenggajian::STATUS_CREATED;
+            $status_riwayat_gaji = Carbon::now()->greaterThanOrEqualTo($tgl_mulai) ? $statusSudahDipublikasi : $statusBelumDipublikasi;
             $riwayatPenggajian = RiwayatPenggajian::create([
                 'periode' => $periode,
                 'karyawan_verifikasi' => $verifikasiKaryawan,
-                'status_riwayat_gaji' => $status_riwayat_gaji,
+                'status_gaji_id' => $status_riwayat_gaji,
             ]);
 
             // Dispatch the job to handle the calculation in the background
@@ -164,7 +264,7 @@ class PenggajianController extends Controller
             $periodeAt = Carbon::parse($riwayatPenggajian->periode)->locale('id')->isoFormat('MMMM Y');
             return response()->json([
                 'status' => Response::HTTP_OK,
-                'message' => "Riwayat penggajian karyawan berhasil disimpan untuk periode {$periodeAt}.",
+                'message' => "Riwayat penggajian karyawan berhasil disimpan untuk periode '{$periodeAt}'.",
                 'data' => $riwayatPenggajian
             ], Response::HTTP_OK);
         } catch (\Exception $e) {
@@ -180,7 +280,11 @@ class PenggajianController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
-        $riwayatPenggajian = RiwayatPenggajian::with('penggajians')
+        $riwayatPenggajian = RiwayatPenggajian::with([
+            'penggajians.data_karyawans.users',
+            'penggajians.data_karyawans.unit_kerjas',
+            'penggajians.data_karyawans.kelompok_gajis'
+        ])
             ->where('id', $riwayat_penggajian_id)
             ->first();
 
@@ -191,22 +295,32 @@ class PenggajianController extends Controller
         $riwayatPenggajianData = [
             'id' => $riwayatPenggajian->id,
             'periode' => $riwayatPenggajian->periode,
-            'karyawan_verifikasi' => $riwayatPenggajian->karyawan_verifikasi,
-            'status_riwayat_gaji' => $riwayatPenggajian->status_riwayat_gaji,
-            'update_terakhir' => $riwayatPenggajian->updated_at,
+            'pembaruan_terakhir' => $riwayatPenggajian->updated_at,
+            'karyawan_digaji' => $riwayatPenggajian->karyawan_verifikasi,
+            'status_riwayat_gaji' => $riwayatPenggajian->status_gajis
         ];
 
-        $penggajians = $riwayatPenggajian->penggajians()->paginate(10);
+        $penggajians = $riwayatPenggajian->penggajians;
 
         $formattedData = $penggajians->map(function ($penggajian) {
-            $dataKaryawan = DB::table('data_karyawans')->where('id', $penggajian->data_karyawan_id)->first();
-            $unitKerja = DB::table('unit_kerjas')->where('id', $dataKaryawan->unit_kerja_id)->first();
-            $kelompokGaji = DB::table('kelompok_gajis')->where('id', $dataKaryawan->kelompok_gaji_id)->first();
-            $user = DB::table('users')->where('id', $dataKaryawan->user_id)->select('id', 'nama', 'username', 'role_id', 'foto_profil', 'status_akun', 'data_completion_step', 'created_at', 'updated_at')->first();
+            $dataKaryawan = $penggajian->data_karyawans;
+            $user = $dataKaryawan->users;
+            $unitKerja = $dataKaryawan->unit_kerjas;
+            $kelompokGaji = $dataKaryawan->kelompok_gajis;
 
             return [
                 'id' => $penggajian->id,
-                'user' => $user,
+                'user' => [
+                    'id' => $user->id,
+                    'nama' => $user->nama,
+                    'email_verified_at' => $user->email_verified_at,
+                    'data_karyawan_id' => $user->data_karyawan_id,
+                    'foto_profil' => $user->foto_profil,
+                    'data_completion_step' => $user->data_completion_step,
+                    'status_aktif' => $user->status_aktif,
+                    'created_at' => $user->created_at,
+                    'updated_at' => $user->updated_at
+                ],
                 'unit_kerja' => $unitKerja,
                 'kelompok_gaji' => $kelompokGaji,
                 'gaji_bruto' => $penggajian->gaji_bruto,
@@ -215,33 +329,17 @@ class PenggajianController extends Controller
                 'pph_21' => $penggajian->pph_21,
                 'reward' => $penggajian->reward,
                 'take_home_pay' => $penggajian->take_home_pay,
-                'status_penggajian' => $penggajian->status_penggajian,
+                'status_penggajian' => $penggajian->status_gajis,
             ];
         });
 
-        $paginationData = [
-            'links' => [
-                'first' => $penggajians->url(1),
-                'last' => $penggajians->url($penggajians->lastPage()),
-                'prev' => $penggajians->previousPageUrl(),
-                'next' => $penggajians->nextPageUrl(),
-            ],
-            'meta' => [
-                'current_page' => $penggajians->currentPage(),
-                'last_page' => $penggajians->lastPage(),
-                'per_page' => $penggajians->perPage(),
-                'total' => $penggajians->total(),
-            ]
-        ];
-
         return response()->json([
             'status' => Response::HTTP_OK,
-            'message' => "Detail data riwayat penggajian periode {$riwayatPenggajian->periode} berhasil ditampilkan.",
+            'message' => "Detail data riwayat penggajian periode '{$riwayatPenggajian->periode}' berhasil ditampilkan.",
             'data' => [
                 'data_riwayat' => $riwayatPenggajianData,
                 'data_penggajian' => $formattedData
-            ],
-            'pagination' => $paginationData
+            ]
         ], Response::HTTP_OK);
     }
 
@@ -251,90 +349,73 @@ class PenggajianController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
-        $penggajians = Penggajian::with('detail_gajis')
+        $penggajian = Penggajian::with([
+            'detail_gajis',
+            'data_karyawans.users',
+            'data_karyawans.unit_kerjas',
+            'data_karyawans.kelompok_gajis',
+            'data_karyawans.ptkps'
+        ])
             ->where('id', $penggajian_id)
             ->first();
 
-        if (!$penggajians) {
+        if (!$penggajian) {
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data penggajian tidak ditemukan.'), Response::HTTP_NOT_FOUND);
         }
 
-        $details = DetailGaji::where('penggajian_id', $penggajian_id)->get();
+        $dataKaryawan = $penggajian->data_karyawans;
+        $user = $dataKaryawan->users;
+        $unitKerja = $dataKaryawan->unit_kerjas;
+        $kelompokGaji = $dataKaryawan->kelompok_gajis;
+        $ptkp = $dataKaryawan->ptkps;
 
-        $dataKaryawan = DB::table('data_karyawans')->where('id', $penggajians->data_karyawan_id)->first();
-        $unitKerja = DB::table('unit_kerjas')->where('id', $dataKaryawan->unit_kerja_id)->first();
-        $kelompokGaji = DB::table('kelompok_gajis')->where('id', $dataKaryawan->kelompok_gaji_id)->first();
-        $user = DB::table('users')->where('id', $dataKaryawan->user_id)->select('id', 'nama', 'username', 'role_id', 'foto_profil', 'status_akun', 'data_completion_step', 'created_at', 'updated_at')->first();
-        $ptkp = DB::table('ptkps')->where('id', $dataKaryawan->ptkp_id)->first();
-
-        $detailGajis = $details->map(function ($detail) {
+        $detailGajis = $penggajian->detail_gajis->map(function ($detail) {
             return [
-                'kategori' => $detail->kategori,
+                'kategori_gaji' => $detail->kategori_gajis,
                 'nama_detail' => $detail->nama_detail,
                 'besaran' => $detail->besaran,
+                'created_at' => $detail->created_at,
+                'updated_at' => $detail->updated_at
             ];
         });
 
         $formattedData = [
-            'user' => $user,
+            'user' => [
+                'id' => $user->id,
+                'nama' => $user->nama,
+                'email_verified_at' => $user->email_verified_at,
+                'data_karyawan_id' => $user->data_karyawan_id,
+                'foto_profil' => $user->foto_profil,
+                'data_completion_step' => $user->data_completion_step,
+                'status_aktif' => $user->status_aktif,
+                'created_at' => $user->created_at,
+                'updated_at' => $user->updated_at
+            ],
             'unit_kerja' => $unitKerja,
             'kelompok_gaji' => $kelompokGaji,
             'ptkp' => $ptkp,
             'detail_gaji' => $detailGajis,
-            'take_home_pay' => $penggajians->take_home_pay,
+            'take_home_pay' => $penggajian->take_home_pay,
         ];
 
         return response()->json([
             'status' => Response::HTTP_OK,
-            'message' => "Detail gaji karyawan {$user->nama} berhasil ditampilkan.",
+            'message' => "Detail gaji karyawan '{$user->nama}' berhasil ditampilkan.",
             'data' => $formattedData
         ], Response::HTTP_OK);
     }
 
-    // ! ini tidak perlu
-    public function exportRiwayatPenggajian(Request $request)
-    {
-        if (!Gate::allows('export penggajianKaryawan')) {
-            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
-        }
-        // Ambil parameter months dan year dari request
-        $months = $request->input('months', []);
-        $year = $request->input('year');
-
-        // Validasi tahun
-        // if (!$year || $year > Carbon::now()->year) {
-        //     return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Tahun penggajian tidak valid, silahkan gunakan tahun saat ini atau lebih kecil.'), Response::HTTP_BAD_REQUEST);
-        // }
-
-        // Pastikan months adalah array
-        if (!is_array($months)) {
-            return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Bulan penggajian harus berupa array.'), Response::HTTP_BAD_REQUEST);
-        }
-
-        try {
-            return Excel::download(new RiwayatGajiExport($months, $year), 'keuangan-riwayat-penggajian.xls');
-        } catch (\Exception $e) {
-            return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya terjadi error. Message: ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
-        } catch (\Error $e) {
-            return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya terjadi error. Message: ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
-        }
-
-        return response()->json(new WithoutDataResource(Response::HTTP_OK, 'Data penggajian karyawan berhasil di download.'), Response::HTTP_OK);
-    }
-    // ! ini tidak perlu
-
-    // TODO: bagian ini tambahkan array month dan year
-    // TODO: tidak usah request array unit kerja, tetapi kelompokkan unit kerja pada sheet
     public function exportRekapPenerimaanGaji(Request $request)
     {
         if (!Gate::allows('export penggajianKaryawan')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
-        $unit_kerja_ids = $request->input('unit_kerja_id', []);
+        $months = $request->input('months', []);
+        $years = $request->input('years', []);
 
         try {
-            return Excel::download(new RekapGajiPenerimaanExport($unit_kerja_ids), 'rekap-penerimaan-gaji.xls');
+            return Excel::download(new RekapGajiPenerimaanExport($months, $years), 'rekap-penerimaan-gaji.xls');
         } catch (\Exception $e) {
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya terjadi error. Message: ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
         } catch (\Error $e) {
@@ -344,18 +425,17 @@ class PenggajianController extends Controller
         return response()->json(new WithoutDataResource(Response::HTTP_OK, 'Data penggajian karyawan berhasil di download.'), Response::HTTP_OK);
     }
 
-    // TODO: bagian ini tambahkan array month dan year
-    // TODO: tidak usah request array unit kerja, tetapi kelompokkan unit kerja pada sheet
     public function exportRekapPotonganGaji(Request $request)
     {
         if (!Gate::allows('export penggajianKaryawan')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
-        $unit_kerja_ids = $request->input('unit_kerja_id', []);
+        $months = $request->input('months', []);
+        $years = $request->input('years', []);
 
         try {
-            return Excel::download(new RekapGajiPotonganExport($unit_kerja_ids), 'rekap-potongan-gaji.xls');
+            return Excel::download(new RekapGajiPotonganExport($months, $years), 'rekap-potongan-gaji.xls');
         } catch (\Exception $e) {
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya terjadi error. Message: ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
         } catch (\Error $e) {
@@ -365,16 +445,17 @@ class PenggajianController extends Controller
         return response()->json(new WithoutDataResource(Response::HTTP_OK, 'Data rekap potongan gaji karyawan berhasil di download.'), Response::HTTP_OK);
     }
 
-    // TODO: export bank cuman perbulan saja
-    // TODO: bagian ini tambahkan array month dan year
     public function exportLaporanGajiBank(Request $request)
     {
         if (!Gate::allows('export penggajianKaryawan')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
+        $months = $request->input('months', []);
+        $years = $request->input('years', []);
+
         try {
-            return Excel::download(new LaporanGajiBankExport(), 'laporan-penggajian-bank.xls');
+            return Excel::download(new LaporanGajiBankExport($months, $years), 'laporan-penggajian-bank.xls');
         } catch (\Exception $e) {
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya terjadi error. Message: ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
         } catch (\Error $e) {

@@ -1,20 +1,17 @@
 <?php
 
-namespace App\Exports\Keuangan\LaporanPenggajian\Sheet;
+namespace App\Exports\Sheet;
 
+use App\Helpers\RandomHelper;
 use Carbon\Carbon;
 use App\Models\User;
-use App\Models\DetailGaji;
 use App\Models\RiwayatPenggajian;
 use Maatwebsite\Excel\Concerns\WithTitle;
-use Maatwebsite\Excel\Concerns\Exportable;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\FromCollection;
 
-class THRGajiSheet implements FromCollection, WithHeadings, WithTitle
+class RekapGajiTHRSheet implements FromCollection, WithHeadings, WithTitle
 {
-    use Exportable;
-
     protected $year;
 
     public function __construct($year)
@@ -26,7 +23,7 @@ class THRGajiSheet implements FromCollection, WithHeadings, WithTitle
     {
         $riwayatPenggajian = RiwayatPenggajian::with(['penggajians' => function ($query) {
             $query->whereHas('detail_gajis', function ($query) {
-                $query->where('kategori', DetailGaji::STATUS_PENAMBAH)
+                $query->where('kategori_gaji_id', 2)
                     ->where('nama_detail', 'THR')
                     ->whereNotNull('besaran');
             });
@@ -35,21 +32,23 @@ class THRGajiSheet implements FromCollection, WithHeadings, WithTitle
             ->get();
 
         $exportData = $riwayatPenggajian->flatMap(function ($riwayatGaji) {
-            return $riwayatGaji->penggajians->map(function ($penggajian) use ($riwayatGaji) {
+            static $no = 1;
+            return $riwayatGaji->penggajians->map(function ($penggajian) use ($riwayatGaji, &$no) {
                 // Ambil nama karyawan dari tabel users
                 $user = User::whereHas('data_karyawans', function ($query) use ($penggajian) {
                     $query->where('id', $penggajian->data_karyawan_id);
                 })->first();
 
-                $thrDetail = $penggajian->detail_gajis->where('kategori', DetailGaji::STATUS_PENAMBAH)
+                $thrDetail = $penggajian->detail_gajis->where('kategori_gaji_id', 2)
                     ->where('nama_detail', 'THR')
                     ->whereNotNull('besaran')
                     ->first();
 
                 return [
-                    'periode' => Carbon::parse($riwayatGaji->periode)->locale('id')->isoFormat('MMMM Y'),
-                    'jumlah_karyawan_gaji' => $riwayatGaji->karyawan_verifikasi,
-                    'status_riwayat_gaji' => $riwayatGaji->status_description,
+                    'no' => $no++,
+                    'periode' => Carbon::parse(RandomHelper::convertToDateString($riwayatGaji->periode))->locale('id')->isoFormat('MMMM Y'),
+                    // 'jumlah_karyawan_gaji' => $riwayatGaji->karyawan_verifikasi,
+                    // 'status_riwayat_gaji' => $riwayatGaji->status_gajis->label,
                     'nama_karyawan' => $user->nama,
                     'gaji_pokok' => $penggajian->gaji_pokok,
                     'total_tunjangan' => $penggajian->total_tunjangan,
@@ -59,9 +58,9 @@ class THRGajiSheet implements FromCollection, WithHeadings, WithTitle
                     'pph_21' => $penggajian->pph_21,
                     'take_home_pay' => $penggajian->take_home_pay,
                     'thr' => $thrDetail->besaran ?? 'N/A',
-                    'status_penggajian' => $penggajian->status_description,
-                    'created_at' => $penggajian->created_at->format('Y-m-d'),
-                    'updated_at' => $penggajian->updated_at->format('Y-m-d'),
+                    'status_penggajian' => $penggajian->status_gajis->label,
+                    'created_at' => $penggajian->created_at->format('d-m-y'),
+                    'updated_at' => $penggajian->updated_at->format('d-m-y'),
                 ];
             });
         });
@@ -73,10 +72,12 @@ class THRGajiSheet implements FromCollection, WithHeadings, WithTitle
     {
         return [
             ["THR Periode Tahun: {$this->year}"],
+            ["Jumlah Karyawan Digaji: " . RiwayatPenggajian::whereYear('periode', $this->year)->sum('karyawan_verifikasi')],
             [
-                'periode_bulan',
-                'jumlah_karyawan_gaji',
-                'status_riwayat_gaji',
+                'no',
+                'pembagian_thr',
+                // 'jumlah_karyawan_gaji',
+                // 'status_riwayat_gaji',
                 'nama_karyawan',
                 'gaji_pokok',
                 'total_tunjangan',

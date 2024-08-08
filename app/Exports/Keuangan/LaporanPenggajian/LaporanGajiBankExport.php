@@ -2,42 +2,40 @@
 
 namespace App\Exports\Keuangan\LaporanPenggajian;
 
-use App\Models\DataKaryawan;
-use App\Models\Penggajian;
+use App\Models\UnitKerja;
 use Maatwebsite\Excel\Concerns\Exportable;
-use Maatwebsite\Excel\Concerns\WithMapping;
-use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\FromCollection;
+use App\Exports\Sheet\RekapGajiLaporanBankSheet;
+use Maatwebsite\Excel\Concerns\WithMultipleSheets;
 
-class LaporanGajiBankExport implements FromCollection, WithHeadings, WithMapping
+class LaporanGajiBankExport implements FromCollection, WithMultipleSheets
 {
     use Exportable;
-    private $rowNumber = 1;
+
+   protected $months;
+    protected $years;
+
+    public function __construct(array $months, array $years)
+    {
+        $this->months = $months;
+        $this->years = $years;
+    }
 
     public function collection()
     {
-        return Penggajian::with('data_karyawans.users')->get();
+        return collect([]);
     }
 
-    public function headings(): array
+    public function sheets(): array
     {
-        return [
-            'no',
-            'nik',
-            'nama',
-            'no_rek',
-            'jumlah',
-        ];
-    }
+        $sheets = [];
 
-    public function map($dataKaryawan): array
-    {
-        return [
-            $this->rowNumber++,
-            $dataKaryawan->data_karyawans->nik,
-            $dataKaryawan->data_karyawans->users->nama,
-            $dataKaryawan->data_karyawans->no_rekening,
-            $dataKaryawan->take_home_pay,
-        ];
+        foreach ($this->years as $year) {
+            foreach ($this->months as $month) {
+                $sheets[] = new RekapGajiLaporanBankSheet($month, $year);
+            }
+        }
+
+        return $sheets;
     }
 }

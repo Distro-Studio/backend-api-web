@@ -13,7 +13,7 @@ class KategoriTrackRecordSeeder extends Seeder
      */
     public function run(): void
     {
-        $kategori = ['Test 1', 'Test 2', 'Test 3', 'Test 4'];
+        $kategori = ['Perubahan Data', 'Mutasi Pegawai', 'Promosi Karyawan', 'Feedback'];
 
         foreach ($kategori as $kategori) {
             DB::table('kategori_track_records')->insert([

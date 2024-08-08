@@ -14,11 +14,11 @@ return new class extends Migration
         Schema::create('penyesuaian_gajis', function (Blueprint $table) {
             $table->id();
             $table->foreignId('penggajian_id')->constrained('penggajians');
-            $table->foreignId('kategori_gaji_id')->constrained('kategori_gajis'); // 1 = pengurang, 2 = penambah
+            $table->foreignId('kategori_gaji_id')->constrained('kategori_gajis'); // 1 = Penghasilan Dasar, 2 = Penambah, 3 = Pengurang
             $table->string('nama_detail');
             $table->integer('besaran');
-            $table->date('bulan_mulai')->nullable();
-            $table->date('bulan_selesai')->nullable();
+            $table->string('bulan_mulai')->nullable();
+            $table->string('bulan_selesai')->nullable();
             $table->softDeletes();
             $table->timestamps();
         });

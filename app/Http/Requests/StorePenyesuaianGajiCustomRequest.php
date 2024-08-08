@@ -27,8 +27,8 @@ class StorePenyesuaianGajiCustomRequest extends FormRequest
         return [
             'nama_detail' => 'required|string',
             'besaran' => 'required|numeric',
-            'bulan_mulai' => 'nullable|date',
-            'bulan_selesai' => 'nullable|date|after_or_equal:bulan_mulai',
+            'bulan_mulai' => 'nullable|string',
+            'bulan_selesai' => 'nullable|string|after_or_equal:bulan_mulai',
         ];
     }
 
@@ -39,8 +39,8 @@ class StorePenyesuaianGajiCustomRequest extends FormRequest
             'nama_detail.string' => 'Nama pengurang gaji tidak diperbolehkan mengandung angka.',
             'besaran.required' => 'Besaran pengurang gaji tidak diperbolehkan kosong.',
             'besaran.numeric' => 'Besaran pengurang gaji tidak diperbolehkan mengandung huruf.',
-            'bulan_mulai.date' => 'Data tanggal mulai yang valid adalah berupa tanggal.',
-            'bulan_selesai.date' => 'Data tanggal selesai yang valid adalah berupa tanggal.',
+            'bulan_mulai.string' => 'Data tanggal mulai hanya diperbolehkan mengandung huruf dan angka.',
+            'bulan_selesai.string' => 'Data tanggal selesai hanya diperbolehkan mengandung huruf dan angka.',
             'bulan_selesai.after_or_equal' => 'Bulan selesai harus setelah atau sama dengan bulan mulai.'
         ];
     }

@@ -1,39 +1,34 @@
 <?php
 
-namespace App\Exports\Keuangan\LaporanPenggajian\Sheet;
+namespace App\Exports\Sheet;
 
 use Carbon\Carbon;
 use App\Models\UnitKerja;
-use App\Models\DataKaryawan;
-use App\Models\PenyesuaianGaji;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Concerns\WithTitle;
-use Maatwebsite\Excel\Concerns\Exportable;
 use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\FromCollection;
 
 class RekapGajiPotonganSheet implements FromCollection, WithHeadings, WithMapping, WithTitle
 {
-    use Exportable;
-
     protected $unit_kerja_id;
     protected $unit_kerja_nama;
-    protected $jumlah_karyawan;
+    protected $month;
+    protected $year;
     protected $periode_sekarang;
 
-    public function __construct($unit_kerja_id)
+    public function __construct($unit_kerja_id, $month, $year)
     {
         $this->unit_kerja_id = $unit_kerja_id;
         $this->unit_kerja_nama = UnitKerja::find($unit_kerja_id)->nama_unit;
-        $this->jumlah_karyawan = DataKaryawan::where('unit_kerja_id', $unit_kerja_id)->count();
-        $this->periode_sekarang = Carbon::now()->locale('id')->isoFormat('MMMM Y');
+        $this->month = $month;
+        $this->year = $year;
+        $this->periode_sekarang = Carbon::create($year, $month)->locale('id')->isoFormat('MMMM Y');
     }
 
     public function collection()
     {
-        $currentMonth = Carbon::now()->month;
-        $currentYear = Carbon::now()->year;
         $penggajianData = DB::table('penggajians')
             ->join('data_karyawans', 'penggajians.data_karyawan_id', '=', 'data_karyawans.id')
             ->join('users', 'data_karyawans.user_id', '=', 'users.id')
@@ -48,8 +43,8 @@ class RekapGajiPotonganSheet implements FromCollection, WithHeadings, WithMappin
                 'penggajians.take_home_pay'
             )
             ->where('data_karyawans.unit_kerja_id', $this->unit_kerja_id)
-            ->whereMonth('penggajians.tgl_penggajian', $currentMonth)
-            ->whereYear('penggajians.tgl_penggajian', $currentYear)
+            ->whereMonth('penggajians.tgl_penggajian', $this->month)
+            ->whereYear('penggajians.tgl_penggajian', $this->year)
             ->get()
             ->groupBy('data_karyawan');
 
@@ -62,6 +57,8 @@ class RekapGajiPotonganSheet implements FromCollection, WithHeadings, WithMappin
                 'premis.besaran_premi as besaran_premi'
             )
             ->where('data_karyawans.unit_kerja_id', $this->unit_kerja_id)
+            ->whereMonth('pengurang_gajis.created_at', $this->month)
+            ->whereYear('pengurang_gajis.created_at', $this->year)
             ->get()
             ->groupBy('data_karyawan');
 
@@ -74,9 +71,9 @@ class RekapGajiPotonganSheet implements FromCollection, WithHeadings, WithMappin
                 'penyesuaian_gajis.besaran as besaran'
             )
             ->where('data_karyawans.unit_kerja_id', $this->unit_kerja_id)
-            ->where('penyesuaian_gajis.kategori', PenyesuaianGaji::STATUS_PENGURANG)
-            ->whereMonth('penyesuaian_gajis.created_at', $currentMonth)
-            ->whereYear('penyesuaian_gajis.created_at', $currentYear)
+            ->where('penyesuaian_gajis.kategori_gaji_id', 3)
+            ->whereMonth('penyesuaian_gajis.created_at', $this->month)
+            ->whereYear('penyesuaian_gajis.created_at', $this->year)
             ->get()
             ->groupBy('data_karyawan');
 
@@ -127,7 +124,7 @@ class RekapGajiPotonganSheet implements FromCollection, WithHeadings, WithMappin
 
         // Add unique headings from penyesuaian_gajis
         $penyesuaianHeadings = DB::table('penyesuaian_gajis')
-            ->where('kategori', PenyesuaianGaji::STATUS_PENGURANG)
+            ->where('kategori_gaji_id', 3)
             ->distinct()
             ->pluck('nama_detail')
             ->map(function ($item) {
@@ -137,7 +134,6 @@ class RekapGajiPotonganSheet implements FromCollection, WithHeadings, WithMappin
 
         $heading = [
             ["Unit Kerja: {$this->unit_kerja_nama}"],
-            ["Jumlah karyawan per unit kerja: {$this->jumlah_karyawan}"],
             ["Periode: {$this->periode_sekarang}"],
             array_merge(
                 [
@@ -178,7 +174,7 @@ class RekapGajiPotonganSheet implements FromCollection, WithHeadings, WithMappin
         }
 
         $penyesuaianHeadings = DB::table('penyesuaian_gajis')
-            ->where('kategori', PenyesuaianGaji::STATUS_PENGURANG)
+            ->where('kategori_gaji_id', 3)
             ->distinct()
             ->pluck('nama_detail')
             ->toArray();
@@ -192,6 +188,6 @@ class RekapGajiPotonganSheet implements FromCollection, WithHeadings, WithMappin
 
     public function title(): string
     {
-        return $this->unit_kerja_nama;
+        return $this->unit_kerja_nama . ' - ' . $this->periode_sekarang;
     }
 }

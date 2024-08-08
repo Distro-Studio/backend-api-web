@@ -13,25 +13,6 @@ class DetailGaji extends Model
 
     protected $guarded = ['id'];
 
-    // Status constants
-    const STATUS_PENGURANG = 1;
-    const STATUS_PENAMBAH = 2;
-    const STATUS_GAJI_POKOK = 3;
-
-    public function getStatusDescriptionAttribute()
-    {
-        switch ($this->kategori) {
-            case self::STATUS_GAJI_POKOK:
-                return 'Gaji Pokok';
-            case self::STATUS_PENAMBAH:
-                return 'Penambah';
-            case self::STATUS_PENGURANG:
-                return 'Pengurang';
-            default:
-                return 'N/A';
-        }
-    }
-
     /**
      * Get the penggajians that owns the DetailGaji
      *

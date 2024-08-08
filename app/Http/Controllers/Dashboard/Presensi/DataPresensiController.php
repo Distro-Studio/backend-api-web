@@ -331,15 +331,29 @@ class DataPresensiController extends Controller
         $fotoKeluarExt = $fotoKeluarBerkas ? StorageServerHelper::getExtensionFromMimeType($fotoKeluarBerkas->ext) : null;
         $fotoKeluarUrl = $fotoKeluarBerkas ? $baseUrl . $fotoKeluarBerkas->path . '.' . $fotoKeluarExt : null;
 
+        // Ambil data lokasi kantor
+        $lokasiKantor = LokasiKantor::find(1);
 
         $formattedData = [
             'id' => $presensi->id,
             'user' => $presensi->users,
             'unit_kerja' => $presensi->data_karyawans->unit_kerjas,
-            'jadwal' => $presensi->jadwals,
+            'jadwal' => [
+                'id' => $presensi->jadwals->id,
+                'tgl_mulai' => $presensi->jadwals->tgl_mulai,
+                'tgl_selesai' => $presensi->jadwals->tgl_selesai,
+                'shift' => $presensi->jadwals->shifts,
+            ],
             'jam_masuk' => $presensi->jam_masuk,
             'jam_keluar' => $presensi->jam_keluar,
             'durasi' => $presensi->durasi,
+            'lokasi_kantor' => [
+                'id' => $lokasiKantor->id,
+                'alamat' => $lokasiKantor->alamat,
+                'lat' => $lokasiKantor->lat,
+                'long' => $lokasiKantor->long,
+                'radius' => $lokasiKantor->radius,
+            ],
             'lat_masuk' => $presensi->lat,
             'long_masuk' => $presensi->long,
             'lat_keluar' => $presensi->latkeluar,

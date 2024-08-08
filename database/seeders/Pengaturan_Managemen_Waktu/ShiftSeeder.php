@@ -16,20 +16,20 @@ class ShiftSeeder extends Seeder
     {
         Shift::create([
             'nama' => 'Pagi',
-            'jam_from' => '07:00:00',
-            'jam_to' => '17:00:00'
+            'jam_from' => Carbon::createFromTime(7, 0, 0)->toTimeString(),
+            'jam_to' => Carbon::createFromTime(17, 0, 0)->toTimeString()
         ]);
 
         Shift::create([
             'nama' => 'Sore',
-            'jam_from' => '17:00:00',
-            'jam_to' => '22:00:00'
+            'jam_from' => Carbon::createFromTime(17, 0, 0)->toTimeString(),
+            'jam_to' => Carbon::createFromTime(22, 0, 0)->toTimeString()
         ]);
 
         Shift::create([
             'nama' => 'Malam',
-            'jam_from' => '22:00:00',
-            'jam_to' => '07:00:00'
+            'jam_from' => Carbon::createFromTime(22, 0, 0)->toTimeString(),
+            'jam_to' => Carbon::createFromTime(7, 0, 0)->toTimeString()
         ]);
     }
 }

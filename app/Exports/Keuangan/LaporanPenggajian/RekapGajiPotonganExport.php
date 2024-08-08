@@ -3,13 +3,9 @@
 namespace App\Exports\Keuangan\LaporanPenggajian;
 
 use App\Exports\Keuangan\LaporanPenggajian\Sheet\RekapGajiPotonganSheet;
-use Carbon\Carbon;
+use App\Exports\Sheet\RekapGajiPotonganSheet as SheetRekapGajiPotonganSheet;
 use App\Models\UnitKerja;
-use App\Models\DataKaryawan;
-use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Concerns\Exportable;
-use Maatwebsite\Excel\Concerns\WithMapping;
-use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithMultipleSheets;
 
@@ -17,11 +13,13 @@ class RekapGajiPotonganExport implements FromCollection, WithMultipleSheets
 {
     use Exportable;
 
-    protected $unit_kerja_ids;
+    protected $months;
+    protected $years;
 
-    public function __construct($unit_kerja_ids)
+    public function __construct(array $months, array $years)
     {
-        $this->unit_kerja_ids = $unit_kerja_ids;
+        $this->months = $months;
+        $this->years = $years;
     }
 
     public function collection()
@@ -32,9 +30,21 @@ class RekapGajiPotonganExport implements FromCollection, WithMultipleSheets
     public function sheets(): array
     {
         $sheets = [];
-        foreach ($this->unit_kerja_ids as $unit_kerja_id) {
-            $sheets[] = new RekapGajiPotonganSheet($unit_kerja_id);
+
+        foreach ($this->years as $year) {
+            foreach ($this->months as $month) {
+                // Get unit_kerjas that have users with payroll data for the given month and year
+                $unitKerjas = UnitKerja::whereHas('data_karyawan.penggajians', function ($query) use ($month, $year) {
+                    $query->whereMonth('tgl_penggajian', $month)
+                        ->whereYear('tgl_penggajian', $year);
+                })->get();
+
+                foreach ($unitKerjas as $unitKerja) {
+                    $sheets[] = new SheetRekapGajiPotonganSheet($unitKerja->id, $month, $year);
+                }
+            }
         }
+
         return $sheets;
     }
 }
