@@ -47,76 +47,76 @@ use Database\Seeders\Pengaturan_Managemen_Waktu\TipeCutiSeeder;
 
 class DatabaseSeeder extends Seeder
 {
-    /**
-     * Seed the application's database.
-     */
-    public function run(): void
-    {
-        $this->call([
-            StatusAktifUserSeeder::class,
-            PermissionSeeder::class,
-            RoleSeeder::class,
-            AccountSeeder::class,
+  /**
+   * Seed the application's database.
+   */
+  public function run(): void
+  {
+    $this->call([
+      StatusAktifUserSeeder::class,
+      PermissionSeeder::class,
+      RoleSeeder::class,
+      AccountSeeder::class,
 
-            /* ==== Kategori & Status ==== */
-            KategoriActivityLogSeeder::class,
-            KategoriAgamaSeeder::class,
-            KategoriBerkasSeeder::class,
-            KategoriGajiSeeder::class,
-            KategoriNotifikasiSeeder::class,
-            KategoriPresensiSeeder::class,
-            KategoriTukarJadwalSeeder::class,
-            KategoriTransferKaryawanSeeder::class,
-            KategoriDarahSeeder::class,
-            KategoriTrackRecordSeeder::class,
-            KategoriKompensasiSeeder::class,
-            KategoriPotonganSeeder::class,
-            KategoriPendidikanSeeder::class,
-            StatusCutiSeeder::class,
-            StatusGajiSeeder::class,
-            StatusKaryawanSeeder::class,
-            StatusLemburSeeder::class,
-            StatusTukarJadwalSeeder::class,
+        /* ==== Kategori & Status ==== */
+      KategoriActivityLogSeeder::class,
+      KategoriAgamaSeeder::class,
+      KategoriBerkasSeeder::class,
+      KategoriGajiSeeder::class,
+      KategoriNotifikasiSeeder::class,
+      KategoriPresensiSeeder::class,
+      KategoriTukarJadwalSeeder::class,
+      KategoriTransferKaryawanSeeder::class,
+      KategoriDarahSeeder::class,
+      KategoriTrackRecordSeeder::class,
+      KategoriKompensasiSeeder::class,
+      KategoriPotonganSeeder::class,
+      KategoriPendidikanSeeder::class,
+      StatusCutiSeeder::class,
+      StatusGajiSeeder::class,
+      StatusKaryawanSeeder::class,
+      StatusLemburSeeder::class,
+      StatusTukarJadwalSeeder::class,
 
-            LokasiKantorSeeder::class,
+      LokasiKantorSeeder::class,
 
-            /* ==== Pengaturan Karyawan ==== */
-            JabatanSeeder::class,
-            KelompokGajiSeeder::class,
-            KompetensiSeeder::class,
-            UnitKerjaSeeder::class,
-            PertanyaanSeeder::class,
+        /* ==== Pengaturan Karyawan ==== */
+      JabatanSeeder::class,
+      KelompokGajiSeeder::class,
+      KompetensiSeeder::class,
+      UnitKerjaSeeder::class,
+      PertanyaanSeeder::class,
 
-            /* ==== Pengaturan Finance ==== */
-            KategoriTERSeeder::class,
-            PTKPSeeder::class,
-            PremiSeeder::class,
-            TERSeeder::class,
+        /* ==== Pengaturan Finance ==== */
+      KategoriTERSeeder::class,
+      PTKPSeeder::class,
+      PremiSeeder::class,
+      TERSeeder::class,
 
-            /* ==== Pengaturan Managemen Waktu ==== */
-            ShiftSeeder::class,
-            HariLiburSeeder::class,
-            TipeCutiSeeder::class,
+        /* ==== Pengaturan Managemen Waktu ==== */
+      ShiftSeeder::class,
+      HariLiburSeeder::class,
+      TipeCutiSeeder::class,
 
-            /* ==== Karyawan ==== */
-            KaryawanSeeder::class,
-            KeluargaKaryawanSeeder::class,
-            TransferKaryawanSeeder::class,
+        /* ==== Karyawan ==== */
+      KaryawanSeeder::class,
+      KeluargaKaryawanSeeder::class,
+      TransferKaryawanSeeder::class,
 
-            // /* ==== Jadwals ==== */
-            JadwalSeeder::class,
-            LemburSeeder::class,
-            CutiJadwalSeeder::class,
-            TukarJadwalSeeder::class,
+        // /* ==== Jadwals ==== */
+      JadwalSeeder::class,
+      LemburSeeder::class,
+      CutiJadwalSeeder::class,
+      TukarJadwalSeeder::class,
 
-            // /* ==== Presensi ==== */
-            PresensiSeeder::class,
+        // /* ==== Presensi ==== */
+      PresensiSeeder::class,
 
-            // /* ==== Keuangan ==== */
-            // TanggalGajiSeeder::class,
-            // PenggajianSeeder::class,
-            // RiwayatPenggajianSeeder::class,
-            // THRPenggajianSeeder::class,
-        ]);
-    }
+      // /* ==== Keuangan ==== */
+      // TanggalGajiSeeder::class,
+      // PenggajianSeeder::class,
+      // RiwayatPenggajianSeeder::class,
+      // THRPenggajianSeeder::class,
+    ]);
+  }
 }
