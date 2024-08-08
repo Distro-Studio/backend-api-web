@@ -2,6 +2,7 @@
 
 namespace App\Jobs\Penggajian;
 
+use App\Helpers\RandomHelper;
 use Carbon\Carbon;
 use App\Models\DetailGaji;
 use App\Models\Penggajian;
@@ -35,6 +36,13 @@ class CreateGajiJob implements ShouldQueue
         $currentDate = Carbon::now();
         $currentMonth = $currentDate->month;
         $currentYear = $currentDate->year;
+
+        // Ambil nilai status dari tabel status_gajis
+        $statusBelumDipublikasi = DB::table('status_gajis')->where('label', 'Belum Dipublikasi')->value('id');
+        $statusSudahDipublikasi = DB::table('status_gajis')->where('label', 'Sudah Dipublikasi')->value('id');
+        $kategori_penghasilan_dasar = DB::table('kategori_gajis')->where('label', 'Penghasilan Dasar')->value('id');
+        $kategori_penambah = DB::table('kategori_gajis')->where('label', 'Penambah')->value('id');
+        $kategori_pengurang = DB::table('kategori_gajis')->where('label', 'Pengurang')->value('id');
 
         // Cek apakah ada THR untuk periode saat ini
         $thrExists = DB::table('run_thrs')
@@ -103,7 +111,8 @@ class CreateGajiJob implements ShouldQueue
             $totalPremi = $this->calculatedPremi($data_karyawan_id, $penghasilanBruto, $dataKaryawan->gaji_pokok);
 
             // Tentukan status penggajian
-            $status_penggajian = $currentDate->greaterThanOrEqualTo($tgl_mulai) ? Penggajian::STATUS_PUBLISHED : Penggajian::STATUS_CREATED;
+            // $status_penggajian = $currentDate->greaterThanOrEqualTo($tgl_mulai) ? Penggajian::STATUS_PUBLISHED : Penggajian::STATUS_CREATED;
+            $status_penggajian = $currentDate->greaterThanOrEqualTo($tgl_mulai) ? $statusSudahDipublikasi : $statusBelumDipublikasi;
 
             // Hitung PPh 21 bulanan dan PPh 21 Desember
             $currentMonth = Carbon::now()->month;
@@ -116,7 +125,7 @@ class CreateGajiJob implements ShouldQueue
                 'reward' => $totalReward,
                 'gaji_bruto' => $penghasilanBruto,
                 'total_premi' => $totalPremi,
-                'status_penggajian' => $status_penggajian
+                'status_gaji_id' => $status_penggajian
             ];
 
             if ($currentMonth >= 1 && $currentMonth <= 11) {
@@ -156,76 +165,76 @@ class CreateGajiJob implements ShouldQueue
             }
 
             // calculatedPenyesuaianPenambah menambah take_home_pay
-            $penyesuaianPenambahDetails = $this->calculatedPenyesuaianPenambah($penggajian->id, $penggajianData['take_home_pay']);
+            $penyesuaianPenambahDetails = $this->calculatedPenyesuaianPenambah($kategori_penambah, $penggajian->id, $penggajianData['take_home_pay']);
             // calculatedPenyesuaianPengurang mengurangi take_home_pay
-            $penyesuaianPengurangDetails = $this->calculatedPenyesuaianPengurang($penggajian->id, $penggajianData['take_home_pay']);
+            $penyesuaianPengurangDetails = $this->calculatedPenyesuaianPengurang($kategori_pengurang ,$penggajian->id, $penggajianData['take_home_pay']);
 
             $penggajian->update(['take_home_pay' => $penggajianData['take_home_pay']]);
 
             $details = [
                 [
                     'penggajian_id' => $penggajian->id,
-                    'kategori' => DetailGaji::STATUS_GAJI_POKOK,
+                    'kategori_gaji_id' => $kategori_penghasilan_dasar,
                     'nama_detail' => 'Gaji Pokok',
                     'besaran' => $dataKaryawan->gaji_pokok == 0 ? null : $dataKaryawan->gaji_pokok
                 ],
                 [
                     'penggajian_id' => $penggajian->id,
-                    'kategori' => DetailGaji::STATUS_PENAMBAH,
+                    'kategori_gaji_id' => $kategori_penambah,
                     'nama_detail' => 'Tunjangan Jabatan',
                     'besaran' => $dataKaryawan->tunjangan_jabatan == 0 ? null : $dataKaryawan->tunjangan_jabatan
                 ],
                 [
                     'penggajian_id' => $penggajian->id,
-                    'kategori' => DetailGaji::STATUS_PENAMBAH,
+                    'kategori_gaji_id' => $kategori_penambah,
                     'nama_detail' => 'Tunjangan Fungsional',
                     'besaran' => $dataKaryawan->tunjangan_fungsional == 0 ? null : $dataKaryawan->tunjangan_fungsional
                 ],
                 [
                     'penggajian_id' => $penggajian->id,
-                    'kategori' => DetailGaji::STATUS_PENAMBAH,
+                    'kategori_gaji_id' => $kategori_penambah,
                     'nama_detail' => 'Tunjangan Khusus',
                     'besaran' => $dataKaryawan->tunjangan_khusus == 0 ? null : $dataKaryawan->tunjangan_khusus
                 ],
                 [
                     'penggajian_id' => $penggajian->id,
-                    'kategori' => DetailGaji::STATUS_PENAMBAH,
+                    'kategori_gaji_id' => $kategori_penambah,
                     'nama_detail' => 'Tunjangan Lainnya',
                     'besaran' => $dataKaryawan->tunjangan_lainnya == 0 ? null : $dataKaryawan->tunjangan_lainnya
                 ],
                 [
                     'penggajian_id' => $penggajian->id,
-                    'kategori' => DetailGaji::STATUS_PENAMBAH,
+                    'kategori_gaji_id' => $kategori_penambah,
                     'nama_detail' => 'Uang Lembur',
                     'besaran' => $dataKaryawan->uang_lembur == 0 ? null : $dataKaryawan->uang_lembur
                 ],
                 [
                     'penggajian_id' => $penggajian->id,
-                    'kategori' => DetailGaji::STATUS_PENAMBAH,
+                    'kategori_gaji_id' => $kategori_penambah,
                     'nama_detail' => 'Uang Makan',
                     'besaran' => $dataKaryawan->uang_makan == 0 ? null : $dataKaryawan->uang_makan
                 ],
                 [
                     'penggajian_id' => $penggajian->id,
-                    'kategori' => DetailGaji::STATUS_PENAMBAH,
+                    'kategori_gaji_id' => $kategori_penambah,
                     'nama_detail' => 'Bonus BOR',
                     'besaran' => $rewardBOR == 0 ? null : $rewardBOR
                 ],
                 [
                     'penggajian_id' => $penggajian->id,
-                    'kategori' => DetailGaji::STATUS_PENAMBAH,
+                    'kategori_gaji_id' => $kategori_penambah,
                     'nama_detail' => 'Bonus Presensi',
                     'besaran' => $rewardBonusPresensi == 0 ? null : $rewardBonusPresensi
                 ],
                 [
                     'penggajian_id' => $penggajian->id,
-                    'kategori' => DetailGaji::STATUS_PENAMBAH,
+                    'kategori_gaji_id' => $kategori_penambah,
                     'nama_detail' => 'THR',
                     'besaran' => $penghasilanTHR == 0 ? null : $penghasilanTHR
                 ],
                 [
                     'penggajian_id' => $penggajian->id,
-                    'kategori' => DetailGaji::STATUS_PENGURANG,
+                    'kategori_gaji_id' => $kategori_pengurang,
                     'nama_detail' => 'PPH21',
                     'besaran' => $currentMonth == 12 ? ($pph21Desember == 0 ? null : $pph21Desember) : ($pph21Bulanan == 0 ? null : $pph21Bulanan)
                 ]
@@ -242,7 +251,7 @@ class CreateGajiJob implements ShouldQueue
                 $premiAmount = $this->calculatedPremiDetail($premi, $penghasilanBruto, $dataKaryawan->gaji_pokok);
                 $details[] = [
                     'penggajian_id' => $penggajian->id,
-                    'kategori' => DetailGaji::STATUS_PENGURANG,
+                    'kategori_gaji_id' => $kategori_pengurang,
                     'nama_detail' => $premi->nama_premi,
                     'besaran' => $premiAmount == 0 ? null : $premiAmount
                 ];
@@ -261,7 +270,8 @@ class CreateGajiJob implements ShouldQueue
     private function calculatedTHR($dataKaryawan)
     {
         $thr = 0;
-        $tglMulaiKerja = Carbon::parse($dataKaryawan->tgl_masuk);
+        // $tglMulaiKerja = Carbon::parse($dataKaryawan->tgl_masuk);
+        $tglMulaiKerja = Carbon::parse(RandomHelper::convertToDateString($dataKaryawan->tgl_masuk));
         $masaKerja = $tglMulaiKerja->diffInMonths(Carbon::now());
 
         if ($dataKaryawan->status_karyawan == "Tetap") {
@@ -539,20 +549,22 @@ class CreateGajiJob implements ShouldQueue
         return $pph21;
     }
 
-    private function calculatedPenyesuaianPenambah($penggajian_id, &$takeHomePay)
+    private function calculatedPenyesuaianPenambah($kategori_penambah ,$penggajian_id, &$takeHomePay)
     {
         $details = [];
 
         // Ambil data penyesuaian gaji penambah berdasarkan penggajian_id
         $penyesuaianGajis = DB::table('penyesuaian_gajis')
             ->where('penggajian_id', $penggajian_id)
-            ->where('kategori', PenyesuaianGaji::STATUS_PENAMBAH)
+            ->where('kategori_gaji_id', $kategori_penambah)
             ->get();
 
         // Iterasi setiap penyesuaian gaji untuk validasi dan perhitungan
         foreach ($penyesuaianGajis as $penyesuaianGaji) {
-            $bulanMulai = $penyesuaianGaji->bulan_mulai ? Carbon::parse($penyesuaianGaji->bulan_mulai) : null;
-            $bulanSelesai = $penyesuaianGaji->bulan_selesai ? Carbon::parse($penyesuaianGaji->bulan_selesai) : null;
+            // $bulanMulai = $penyesuaianGaji->bulan_mulai ? Carbon::parse($penyesuaianGaji->bulan_mulai) : null;
+            // $bulanSelesai = $penyesuaianGaji->bulan_selesai ? Carbon::parse($penyesuaianGaji->bulan_selesai) : null;
+            $bulanMulai = $penyesuaianGaji->bulan_mulai ? Carbon::parse(RandomHelper::convertToDateString($penyesuaianGaji->bulan_mulai)) : null;
+            $bulanSelesai = $penyesuaianGaji->bulan_selesai ? Carbon::parse(RandomHelper::convertToDateString($penyesuaianGaji->bulan_selesai)) : null;
             $currentDate = Carbon::now();
 
             // Cek apakah saat ini berada pada rentang bulan mulai dan selesai atau jika null
@@ -568,7 +580,7 @@ class CreateGajiJob implements ShouldQueue
                 // Tambahkan detail penyesuaian gaji ke array details
                 $details[] = [
                     'penggajian_id' => $penggajian_id,
-                    'kategori' => PenyesuaianGaji::STATUS_PENAMBAH,
+                    'kategori_gaji_id' => $kategori_penambah,
                     'nama_detail' => $penyesuaianGaji->nama_detail,
                     'besaran' => $penyesuaianGaji->besaran
                 ];
@@ -578,20 +590,22 @@ class CreateGajiJob implements ShouldQueue
         return $details;
     }
 
-    private function calculatedPenyesuaianPengurang($penggajian_id, &$takeHomePay)
+    private function calculatedPenyesuaianPengurang($kategori_pengurang ,$penggajian_id, &$takeHomePay)
     {
         $details = [];
 
         // Ambil data penyesuaian gaji pengurang berdasarkan penggajian_id
         $penyesuaianGajis = DB::table('penyesuaian_gajis')
             ->where('penggajian_id', $penggajian_id)
-            ->where('kategori', PenyesuaianGaji::STATUS_PENGURANG)
+            ->where('kategori_gaji_id', $kategori_pengurang)
             ->get();
 
         // Iterasi setiap penyesuaian gaji untuk validasi dan perhitungan
         foreach ($penyesuaianGajis as $penyesuaianGaji) {
-            $bulanMulai = $penyesuaianGaji->bulan_mulai ? Carbon::parse($penyesuaianGaji->bulan_mulai) : null;
-            $bulanSelesai = $penyesuaianGaji->bulan_selesai ? Carbon::parse($penyesuaianGaji->bulan_selesai) : null;
+            // $bulanMulai = $penyesuaianGaji->bulan_mulai ? Carbon::parse($penyesuaianGaji->bulan_mulai) : null;
+            // $bulanSelesai = $penyesuaianGaji->bulan_selesai ? Carbon::parse($penyesuaianGaji->bulan_selesai) : null;
+            $bulanMulai = $penyesuaianGaji->bulan_mulai ? Carbon::parse(RandomHelper::convertToDateString($penyesuaianGaji->bulan_mulai)) : null;
+            $bulanSelesai = $penyesuaianGaji->bulan_selesai ? Carbon::parse(RandomHelper::convertToDateString($penyesuaianGaji->bulan_selesai)) : null;
             $currentDate = Carbon::now();
 
             // Cek apakah saat ini berada pada rentang bulan mulai dan selesai atau jika null
@@ -607,7 +621,7 @@ class CreateGajiJob implements ShouldQueue
                 // Tambahkan detail penyesuaian gaji ke array details
                 $details[] = [
                     'penggajian_id' => $penggajian_id,
-                    'kategori' => PenyesuaianGaji::STATUS_PENGURANG,
+                    'kategori_gaji_id' => $kategori_pengurang,
                     'nama_detail' => $penyesuaianGaji->nama_detail,
                     'besaran' => $penyesuaianGaji->besaran
                 ];

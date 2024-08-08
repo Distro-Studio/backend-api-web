@@ -14,22 +14,6 @@ class RiwayatPenggajian extends Model
 
     protected $guarded = ['id'];
 
-    // Status constants
-    const STATUS_CREATED = 1;
-    const STATUS_PUBLISHED = 2;
-
-    public function getStatusDescriptionAttribute()
-    {
-        switch ($this->status_riwayat_gaji) {
-            case self::STATUS_CREATED:
-                return 'Butuh Verifikasi';
-            case self::STATUS_PUBLISHED:
-                return 'Berhasil Dipublikasi';
-            default:
-                return 'N/A';
-        }
-    }
-
     /**
      * Get all of the penggajians for the RiwayatPenggajian
      *

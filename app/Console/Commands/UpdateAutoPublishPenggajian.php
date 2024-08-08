@@ -41,21 +41,30 @@ class UpdateAutoPublishPenggajian extends Command
             return;
         }
 
+        // Ambil nilai status dari tabel status_gajis
+        $statusCreated = DB::table('status_gajis')->where('label', 'Belum Dipublikasi')->value('id');
+        $statusPublished = DB::table('status_gajis')->where('label', 'Sudah Dipublikasi')->value('id');
+
+        if (is_null($statusCreated) || is_null($statusPublished)) {
+            Log::error('Status gaji tidak ditemukan di tabel status_gajis.');
+            return;
+        }
+
         $currentMonth = $currentDate->month;
         $currentYear = $currentDate->year;
         $tgl_mulai = Carbon::create($currentYear, $currentMonth, $jadwalPenggajian->tgl_mulai);
         $tgl_selesai = $tgl_mulai->copy()->addDay(1);
 
         if ($currentDate->isSameDay($tgl_mulai) || $currentDate->isSameDay($tgl_selesai)) {
-            $riwayatPenggajians = RiwayatPenggajian::where('status_riwayat_gaji', RiwayatPenggajian::STATUS_CREATED)->get();
+            $riwayatPenggajians = RiwayatPenggajian::where('status_gaji_id', $statusCreated)->get();
 
             foreach ($riwayatPenggajians as $riwayatPenggajian) {
                 if ($currentDate->greaterThanOrEqualTo($tgl_mulai) && $currentDate->lessThanOrEqualTo($tgl_selesai)) {
                     DB::beginTransaction();
                     try {
-                        $riwayatPenggajian->update(['status_riwayat_gaji' => RiwayatPenggajian::STATUS_PUBLISHED]);
+                        $riwayatPenggajian->update(['status_gaji_id' => $statusPublished]);
 
-                        Penggajian::where('riwayat_penggajian_id', $riwayatPenggajian->id)->update(['status_penggajian' => Penggajian::STATUS_PUBLISHED]);
+                        Penggajian::where('riwayat_penggajian_id', $riwayatPenggajian->id)->update(['status_gaji_id' => $statusPublished]);
 
                         DB::commit();
                         Log::info("Riwayat penggajian ID {$riwayatPenggajian->id} berhasil dipublikasikan otomatis.");

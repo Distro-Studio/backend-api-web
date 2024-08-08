@@ -386,7 +386,7 @@ class DataTransferKaryawanController extends Controller
                 'user_id' => $users->id,
                 'tgl_masuk' => $users->data_karyawans->tgl_masuk,
                 'tgl_keluar' => $users->data_karyawans->tgl_keluar,
-                'kategori_record_id' => $data['kategori_transfer_id'],
+                'kategori_record_id' => 2,
             ]);
 
             $details = [

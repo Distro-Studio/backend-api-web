@@ -166,35 +166,31 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::apiResource('/cuti', DataCutiController::class);
         });
 
-        // TODO: buat view restore data
         Route::group(['prefix' => '/keuangan'], function () {
             // ! Penggajian ===========>
             Route::get('/calculated-info-penggajian', [PenggajianController::class, 'calculatedInfo']);
+            Route::post('/get-penggajian', [PenggajianController::class, 'index']);
 
-            Route::post('/penggajian-filter', [PenggajianController::class, 'index']);
-            Route::post('/penggajian-search', [PenggajianController::class, 'index']);
-            Route::get('/penggajian-export-riwayat', [PenggajianController::class, 'exportRiwayatPenggajian']);
-            Route::get('/penggajian-export-penerimaan', [PenggajianController::class, 'exportRekapPenerimaanGaji']);
-            Route::get('/penggajian-export-potongan', [PenggajianController::class, 'exportRekapPotonganGaji']);
-            Route::get('/penggajian-export-bank', [PenggajianController::class, 'exportLaporanGajiBank']);
-            Route::get('/data-penggajian/detail/{penggajian_id}', [PenggajianController::class, 'showDetailGajiUser']);
-            Route::post('/data-penggajian/detail/{penggajian_id}/create-penambah-gaji', [PenyesuaianGajiController::class, 'storePenyesuaianGajiPenambah']);
-            Route::post('/data-penggajian/detail/{penggajian_id}/create-pengurang-gaji', [PenyesuaianGajiController::class, 'storePenyesuaianGajiPengurang']);
-            Route::apiResource('/data-penggajian', PenggajianController::class);
+            Route::post('/penggajian/export-penerimaan', [PenggajianController::class, 'exportRekapPenerimaanGaji']);
+            Route::post('/penggajian/export-potongan', [PenggajianController::class, 'exportRekapPotonganGaji']);
+            Route::post('/penggajian/export-bank', [PenggajianController::class, 'exportLaporanGajiBank']);
+            Route::get('/penggajian/detail/{penggajian_id}', [PenggajianController::class, 'showDetailGajiUser']);
+
+            Route::post('/penggajian/detail/{penggajian_id}/create-penambah-gaji', [PenyesuaianGajiController::class, 'storePenyesuaianGajiPenambah']);
+            Route::post('/penggajian/detail/{penggajian_id}/create-pengurang-gaji', [PenyesuaianGajiController::class, 'storePenyesuaianGajiPengurang']);
+
+            Route::apiResource('/penggajian', PenggajianController::class);
+            Route::post('/publikasi-penggajian', [PenggajianController::class, 'publikasiPenggajian']);
 
             // ! Penyesuaian Gaji ===========>
-            Route::get('/all-karyawan-penggajian', [PenyesuaianGajiController::class, 'getAllKaryawanPenggajian']);
-            Route::post('/penyesuaian-gaji-filter', [PenyesuaianGajiController::class, 'index']);
-            Route::post('/penyesuaian-gaji-search', [PenyesuaianGajiController::class, 'index']);
-            Route::get('/penyesuaian-gaji-export', [PenyesuaianGajiController::class, 'exportPenyesuaianGaji']);
-            Route::apiResource('/data-penyesuaian-gaji', PenyesuaianGajiController::class);
+            Route::post('/get-penyesuaian-gaji', [PenyesuaianGajiController::class, 'index']);
+            Route::get('/penyesuaian-gaji/export', [PenyesuaianGajiController::class, 'exportPenyesuaianGaji']);
+            Route::apiResource('/penyesuaian-gaji', PenyesuaianGajiController::class);
 
             // ! THR Penggajian ===========>
-            Route::get('/all-karyawan-tetap', [THRPenggajianController::class, 'getDataKaryawan']);
-            Route::post('/thr-filter', [THRPenggajianController::class, 'index']);
-            Route::post('/thr-search', [THRPenggajianController::class, 'index']);
-            Route::get('/thr-export', [THRPenggajianController::class, 'exportTHRPenggajian']);
-            Route::apiResource('/data-thr-penggajian', THRPenggajianController::class);
+            Route::post('/get-thr', [THRPenggajianController::class, 'index']);
+            Route::get('/run-thr/export', [THRPenggajianController::class, 'exportTHRPenggajian']);
+            Route::apiResource('/run-thr', THRPenggajianController::class);
         });
 
         // TODO: Diklat validasi dari permission

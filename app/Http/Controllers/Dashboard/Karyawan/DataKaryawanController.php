@@ -19,6 +19,7 @@ use Illuminate\Support\Str;
 use App\Models\DataKaryawan;
 use App\Models\DataKeluarga;
 use App\Models\KelompokGaji;
+use App\Models\LokasiKantor;
 use Illuminate\Http\Request;
 use App\Helpers\RandomHelper;
 use Illuminate\Http\Response;
@@ -222,14 +223,29 @@ class DataKaryawanController extends Controller
         $fotoKeluarExt = $fotoKeluarBerkas ? StorageServerHelper::getExtensionFromMimeType($fotoKeluarBerkas->ext) : null;
         $fotoKeluarUrl = $fotoKeluarBerkas ? $baseUrl . $fotoKeluarBerkas->path . '.' . $fotoKeluarExt : null;
 
+        // Ambil data lokasi kantor
+        $lokasiKantor = LokasiKantor::find(1);
+
         $formattedData = [
             'id' => $presensi->id,
             'user' => $presensi->users,
             'unit_kerja' => $presensi->data_karyawans->unit_kerjas,
-            'jadwal' => $presensi->jadwals,
+            'jadwal' => [
+                'id' => $presensi->jadwals->id,
+                'tgl_mulai' => $presensi->jadwals->tgl_mulai,
+                'tgl_selesai' => $presensi->jadwals->tgl_selesai,
+                'shift' => $presensi->jadwals->shifts,
+            ],
             'jam_masuk' => $presensi->jam_masuk,
             'jam_keluar' => $presensi->jam_keluar,
             'durasi' => $presensi->durasi,
+            'lokasi_kantor' => [
+                'id' => $lokasiKantor->id,
+                'alamat' => $lokasiKantor->alamat,
+                'lat' => $lokasiKantor->lat,
+                'long' => $lokasiKantor->long,
+                'radius' => $lokasiKantor->radius,
+            ],
             'lat_masuk' => $presensi->lat,
             'long_masuk' => $presensi->long,
             'lat_keluar' => $presensi->latkeluar,
@@ -311,7 +327,7 @@ class DataKaryawanController extends Controller
 
         // Format respons
         $formattedData = [
-            'id' => $user->id,
+            'id' => $karyawan->id,
             'user' => [
                 'id' => $user->id,
                 'nama' => $user->nama,
@@ -372,19 +388,16 @@ class DataKaryawanController extends Controller
         $tglKeluar = $user->tgl_keluar ? RandomHelper::convertToDateString($karyawan->tgl_keluar) : null;
         $masaKerja = $this->calculateTrackRecordMasaKerja($tglMasuk, $tglKeluar);
 
-        $userData = [
-            'user' => $user,
-            'tgl_masuk' => $karyawan->tgl_masuk,
-            'tgl_keluar' => $karyawan->tgl_keluar,
-            'masa_kerja' => $masaKerja
-        ];
-
         return response()->json([
             'status' => Response::HTTP_OK,
             'message' => "Data rekam jejak karyawan '{$user->nama}' berhasil ditampilkan.",
             'data' => [
-                'data_user' => $userData,
-                'rekam_jejak' => $formattedData
+                'id' => $karyawan->id,
+                'user' => $user,
+                'tgl_masuk' => $karyawan->tgl_masuk,
+                'tgl_keluar' => $karyawan->tgl_keluar,
+                'masa_kerja' => $masaKerja,
+                'list_rekam_jejak' => $formattedData
             ]
         ], Response::HTTP_OK);
     }
@@ -523,22 +536,10 @@ class DataKaryawanController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data cuti karyawan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
         }
 
-        // Format data cuti
-        $formattedData = $dataCuti->map(function ($cuti) {
+        // Format list cuti
+        $listCuti = $dataCuti->map(function ($cuti) {
             return [
                 'id' => $cuti->id,
-                'user' => [
-                    'id' => $cuti->users->id,
-                    'nama' => $cuti->users->nama,
-                    'email_verified_at' => $cuti->users->email_verified_at,
-                    'data_karyawan_id' => $cuti->users->data_karyawan_id,
-                    'foto_profil' => $cuti->users->foto_profil,
-                    'data_completion_step' => $cuti->users->data_completion_step,
-                    'status_aktif' => $cuti->users->status_aktif,
-                    'created_at' => $cuti->users->created_at,
-                    'updated_at' => $cuti->users->updated_at
-                ],
-                'unit_kerja' => $cuti->users->data_karyawans->unit_kerjas,
                 'tipe_cuti' => $cuti->tipe_cutis,
                 'tgl_from' => $cuti->tgl_from,
                 'tgl_to' => $cuti->tgl_to,
@@ -549,6 +550,24 @@ class DataKaryawanController extends Controller
                 'updated_at' => $cuti->updated_at
             ];
         });
+
+        // Format data user
+        $formattedData = [
+            'id' => $karyawan->id,
+            'user' => [
+                'id' => $karyawan->users->id,
+                'nama' => $karyawan->users->nama,
+                'email_verified_at' => $karyawan->users->email_verified_at,
+                'data_karyawan_id' => $karyawan->users->data_karyawan_id,
+                'foto_profil' => $karyawan->users->foto_profil,
+                'data_completion_step' => $karyawan->users->data_completion_step,
+                'status_aktif' => $karyawan->users->status_aktif,
+                'created_at' => $karyawan->users->created_at,
+                'updated_at' => $karyawan->users->updated_at
+            ],
+            'unit_kerja' => $karyawan->unit_kerjas,
+            'list_cuti' => $listCuti
+        ];
 
         return response()->json([
             'status' => Response::HTTP_OK,
@@ -582,49 +601,49 @@ class DataKaryawanController extends Controller
         }
 
         // Format data tukar jadwal
-        $formattedData = $tukarJadwal->map(function ($item) {
-            $userPengajuan = $item->user_pengajuans;
-            $jadwalPengajuan = $item->jadwal_pengajuans;
-            $userDitukar = $item->user_ditukars;
-            $jadwalDitukar = $item->jadwal_ditukars;
+        $formattedData = $tukarJadwal->map(function ($item) use ($userId) {
+            $isUserPengajuan = $item->user_pengajuan == $userId;
 
             return [
                 'id' => $item->id,
-                'unit_kerja' => $item->user_pengajuans->data_karyawans->unit_kerjas,
                 'user_pengajuan' => [
                     'user' => [
-                        'id' => $userPengajuan->id,
-                        'nama' => $userPengajuan->nama,
-                        'email_verified_at' => $userPengajuan->email_verified_at,
-                        'data_karyawan_id' => $userPengajuan->data_karyawan_id,
-                        'foto_profil' => $userPengajuan->foto_profil,
-                        'data_completion_step' => $userPengajuan->data_completion_step,
-                        'status_aktif' => $userPengajuan->status_aktif,
-                        'created_at' => $userPengajuan->created_at,
-                        'updated_at' => $userPengajuan->updated_at,
+                        'id' => $item->user_pengajuans->id,
+                        'nama' => $item->user_pengajuans->nama,
+                        'email_verified_at' => $item->user_pengajuans->email_verified_at,
+                        'data_karyawan_id' => $item->user_pengajuans->data_karyawan_id,
+                        'foto_profil' => $item->user_pengajuans->foto_profil,
+                        'data_completion_step' => $item->user_pengajuans->data_completion_step,
+                        'status_aktif' => $item->user_pengajuans->status_aktif,
+                        'created_at' => $item->user_pengajuans->created_at,
+                        'updated_at' => $item->user_pengajuans->updated_at,
                     ],
-                    'jadwal' => $jadwalPengajuan,
+                    'jadwal' => $item->jadwal_pengajuans,
                     'status' => $item->status_tukar_jadwals,
                     'kategori' => $item->kategori_tukar_jadwals,
                 ],
                 'user_ditukar' => [
                     'user' => [
-                        'id' => $userDitukar->id,
-                        'nama' => $userDitukar->nama,
-                        'email_verified_at' => $userDitukar->email_verified_at,
-                        'data_karyawan_id' => $userDitukar->data_karyawan_id,
-                        'foto_profil' => $userDitukar->foto_profil,
-                        'data_completion_step' => $userDitukar->data_completion_step,
-                        'status_aktif' => $userDitukar->status_aktif,
-                        'created_at' => $userDitukar->created_at,
-                        'updated_at' => $userDitukar->updated_at,
+                        'id' => $item->user_ditukars->id,
+                        'nama' => $item->user_ditukars->nama,
+                        'email_verified_at' => $item->user_ditukars->email_verified_at,
+                        'data_karyawan_id' => $item->user_ditukars->data_karyawan_id,
+                        'foto_profil' => $item->user_ditukars->foto_profil,
+                        'data_completion_step' => $item->user_ditukars->data_completion_step,
+                        'status_aktif' => $item->user_ditukars->status_aktif,
+                        'created_at' => $item->user_ditukars->created_at,
+                        'updated_at' => $item->user_ditukars->updated_at,
                     ],
-                    'jadwal' => $jadwalDitukar,
+                    'jadwal' => $item->jadwal_ditukars,
                     'status' => $item->status_tukar_jadwals,
                     'kategori' => $item->kategori_tukar_jadwals,
                 ],
             ];
         });
+
+        // Menentukan data user dan unit_kerja
+        $dataUser = $karyawan->users;
+        $unitKerja = $karyawan->unit_kerjas;
 
         // Menentukan nama yang ditampilkan dalam pesan
         $message = '';
@@ -637,7 +656,12 @@ class DataKaryawanController extends Controller
         return response()->json([
             'status' => Response::HTTP_OK,
             'message' => $message,
-            'data' => $formattedData
+            'data' => [
+                'id' => $karyawan->id,
+                'user' => $dataUser,
+                'unit_kerja' => $unitKerja,
+                'list_tukar_jadwal' => $formattedData
+            ]
         ], Response::HTTP_OK);
     }
 
@@ -663,42 +687,49 @@ class DataKaryawanController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data lembur karyawan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
         }
 
+        // Format data lembur
         $formattedData = $dataLembur->map(function ($lembur) {
             return [
                 'id' => $lembur->id,
-                'user' => [
-                    'id' => $lembur->users->id,
-                    'nama' => $lembur->users->nama,
-                    'email_verified_at' => $lembur->users->email_verified_at,
-                    'data_karyawan_id' => $lembur->users->data_karyawan_id,
-                    'foto_profil' => $lembur->users->foto_profil,
-                    'data_completion_step' => $lembur->users->data_completion_step,
-                    'status_aktif' => $lembur->users->status_aktif,
-                    'created_at' => $lembur->users->created_at,
-                    'updated_at' => $lembur->users->updated_at
-                ],
                 'jadwal' => [
                     'id' => $lembur->jadwals->id,
                     'tgl_mulai' => $lembur->jadwals->tgl_mulai,
                     'tgl_selesai' => $lembur->jadwals->tgl_selesai,
-                    'shift_id' => $lembur->jadwals->shift_id,
-                    'created_at' => $lembur->jadwals->created_at,
-                    'updated_at' => $lembur->jadwals->updated_at
+                    'shift' => $lembur->jadwals->shifts
                 ],
                 'tgl_pengajuan' => $lembur->tgl_pengajuan,
-                'kompensasi_lembur_id' => $lembur->kategori_kompensasis,
+                'kompensasi_lembur' => $lembur->kategori_kompensasis,
                 'durasi' => $lembur->durasi,
                 'catatan' => $lembur->catatan,
-                'status_lembur_id' => $lembur->status_lemburs,
+                'status_lembur' => $lembur->status_lemburs,
                 'created_at' => $lembur->created_at,
                 'updated_at' => $lembur->updated_at
             ];
         });
 
+        // Menentukan data user dan unit_kerja
+        $dataUser = [
+            'id' => $karyawan->users->id,
+            'nama' => $karyawan->users->nama,
+            'email_verified_at' => $karyawan->users->email_verified_at,
+            'data_karyawan_id' => $karyawan->users->data_karyawan_id,
+            'foto_profil' => $karyawan->users->foto_profil,
+            'data_completion_step' => $karyawan->users->data_completion_step,
+            'status_aktif' => $karyawan->users->status_aktif,
+            'created_at' => $karyawan->users->created_at,
+            'updated_at' => $karyawan->users->updated_at
+        ];
+        $unitKerja = $karyawan->unit_kerjas;
+
         return response()->json([
             'status' => Response::HTTP_OK,
             'message' => "Detail data lembur karyawan '{$karyawan->users->nama}' berhasil ditampilkan.",
-            'data' => $formattedData,
+            'data' => [
+                'id' => $karyawan->id,
+                'user' => $dataUser,
+                'unit_kerja' => $unitKerja,
+                'list_lembur' => $formattedData
+            ]
         ], Response::HTTP_OK);
     }
 

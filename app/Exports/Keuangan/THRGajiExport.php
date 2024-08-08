@@ -11,6 +11,7 @@ use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithMultipleSheets;
 use App\Exports\Keuangan\LaporanPenggajian\Sheet\THRGajiSheet;
+use App\Exports\Sheet\RekapGajiTHRSheet;
 
 class THRGajiExport implements FromCollection, WithMultipleSheets
 {
@@ -29,7 +30,7 @@ class THRGajiExport implements FromCollection, WithMultipleSheets
             ->pluck('year');
 
         foreach ($years as $year) {
-            $sheets[] = new THRGajiSheet($year);
+            $sheets[] = new RekapGajiTHRSheet($year);
         }
 
         return $sheets;

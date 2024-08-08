@@ -291,10 +291,24 @@ class DataCutiController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
-        $dataCuti = Cuti::find($id);
+        $dataCuti = Cuti::with(['users.data_karyawans.unit_kerjas', 'users.cutis', 'tipe_cutis', 'status_cutis'])->find($id);
         if (!$dataCuti) {
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data cuti karyawan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
         }
+
+        $listCuti = $dataCuti->users->cutis->map(function ($cuti) {
+            return [
+                'id' => $cuti->id,
+                'tipe_cuti' => $cuti->tipe_cutis,
+                'tgl_from' => $cuti->tgl_from,
+                'tgl_to' => $cuti->tgl_to,
+                'catatan' => $cuti->catatan,
+                'durasi' => $cuti->durasi,
+                'status_cuti' => $cuti->status_cutis,
+                'created_at' => $cuti->created_at,
+                'updated_at' => $cuti->updated_at
+            ];
+        });
 
         $formattedData = [
             'id' => $dataCuti->id,
@@ -310,17 +324,14 @@ class DataCutiController extends Controller
                 'updated_at' => $dataCuti->users->updated_at
             ],
             'unit_kerja' => $dataCuti->users->data_karyawans->unit_kerjas,
-            'tipe_cuti' => $dataCuti->tipe_cutis,
-            'tgl_from' => $dataCuti->tgl_from,
-            'tgl_to' => $dataCuti->tgl_to,
-            'catatan' => $dataCuti->catatan,
-            'durasi' => $dataCuti->durasi,
-            'status_cuti' => $dataCuti->status_cutis,
-            'created_at' => $dataCuti->created_at,
-            'updated_at' => $dataCuti->updated_at
+            'list_cuti' => $listCuti
         ];
 
-        return response()->json(new CutiJadwalResource(Response::HTTP_OK, "Data cuti karyawan '{$dataCuti->users->nama}' berhasil ditampilkan.", $dataCuti), Response::HTTP_OK);
+        return response()->json([
+            'status' => Response::HTTP_OK,
+            'message' => "Data cuti karyawan '{$dataCuti->users->nama}' berhasil ditampilkan.",
+            'data' => $formattedData,
+        ], Response::HTTP_OK);
     }
 
     public function update(UpdateCutiJadwalRequest $request, $id)

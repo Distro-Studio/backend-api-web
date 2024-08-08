@@ -13,22 +13,6 @@ class PenyesuaianGaji extends Model
 
     protected $guarded = ['id'];
 
-    // Status constants
-    const STATUS_PENGURANG = 1;
-    const STATUS_PENAMBAH = 2;
-
-    public function getStatusDescriptionAttribute()
-    {
-        switch ($this->kategori) {
-            case self::STATUS_PENGURANG:
-                return 'Pengurang';
-            case self::STATUS_PENAMBAH:
-                return 'Penambah';
-            default:
-                return 'N/A';
-        }
-    }
-
     /**
      * Get the penggajians that owns the PenyesuaianGaji
      *

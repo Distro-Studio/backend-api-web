@@ -23,9 +23,7 @@ return new class extends Migration
             $table->integer('total_premi');
             $table->integer('pph_21');
             $table->integer('take_home_pay');
-            $table->foreignId('status_gaji_id')->constrained('status_gajis'); // 1 = created 2 = published
-            $table->text('alasan')->nullable();
-            $table->softDeletes();
+            $table->foreignId('status_gaji_id')->constrained('status_gajis'); // 1 = Belum Dipublikasi 2 = Sudah Dipublikasi
             $table->timestamps();
         });
     }
