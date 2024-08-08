@@ -28,7 +28,7 @@ class StoreJadwalKaryawanRequest extends FormRequest
             'user_id' => 'required|array',
             'user_id.*' => 'integer|exists:users,id',
             'tgl_mulai' => 'required|string',
-            'tgl_selesai' => 'nullable|string',
+            // 'tgl_selesai' => 'nullable|string',
             'shift_id' => 'nullable|integer'
         ];
     }
@@ -42,7 +42,7 @@ class StoreJadwalKaryawanRequest extends FormRequest
             'user_id.*.exists' => 'Nama karyawan tersebut tidak valid.',
             'tgl_mulai.required' => 'Tanggal mulai jadwal karyawan tidak diperbolehkan kosong.',
             'tgl_mulai.string' => 'Tanggal mulai jadwal karyawan yang diperbolehkan berupa angka dan teks.',
-            'tgl_selesai.string' => 'Tanggal selesai jadwal karyawan yang diperbolehkan berupa angka dan teks.',
+            // 'tgl_selesai.string' => 'Tanggal selesai jadwal karyawan yang diperbolehkan berupa angka dan teks.',
             // 'shift_id.required' => 'Silahkan pilih shift jadwal karyawan terlebih dahulu.',
             'shift_id.integer' => 'Shift jadwal karyawan tidak diperbolehkan mengandung selain angka.',
             'shift_id.exists' => 'Shift jadwal karyawan tersebut tidak valid.',

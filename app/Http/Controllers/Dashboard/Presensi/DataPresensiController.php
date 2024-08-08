@@ -53,6 +53,11 @@ class DataPresensiController extends Controller
         $kategoriCutiId = DB::table('kategori_presensis')->where('label', 'Cuti')->value('id');
         $kategoriAbsenId = DB::table('kategori_presensis')->where('label', 'Absen')->value('id');
 
+        // Validasi untuk memastikan kategori ditemukan
+        if (is_null($kategoriTepatWaktuId) || is_null($kategoriTerlambatId) || is_null($kategoriCutiId) || is_null($kategoriAbsenId)) {
+            return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Kategori presensi tidak ditemukan.'), Response::HTTP_BAD_REQUEST);
+        }
+
         // Hitung jumlah presensi dalam setiap kategori
         $countTepatWaktu = Presensi::where('kategori_presensi_id', $kategoriTepatWaktuId)
             ->whereDate('jam_masuk', $today)
@@ -70,11 +75,13 @@ class DataPresensiController extends Controller
             ->whereDate('jam_masuk', $today)
             ->count('user_id');
 
+        // Perhitungan untuk libur
         $countLibur = Jadwal::whereNull('shift_id')
             ->whereDate('tgl_mulai', '<=', $today)
             ->whereDate('tgl_selesai', '>=', $today)
             ->count('user_id');
 
+        // Hitung total hadir dan total tidak hadir
         $totalHadir = $countTepatWaktu + $countTerlambat;
         $totalTidakHadir = $countCuti + $countAbsen + $countLibur;
 

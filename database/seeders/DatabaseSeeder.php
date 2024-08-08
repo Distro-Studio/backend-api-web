@@ -117,6 +117,9 @@ class DatabaseSeeder extends Seeder
             // PenggajianSeeder::class,
             // RiwayatPenggajianSeeder::class,
             // THRPenggajianSeeder::class,
+
+            PengumumanSeeder::class,
+            NotifikasiSeeder::class,
         ]);
     }
 }

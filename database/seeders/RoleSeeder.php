@@ -57,6 +57,8 @@ class RoleSeeder extends Seeder
             'create presensiKaryawan', 'edit presensiKaryawan', 'delete presensiKaryawan', 'view presensiKaryawan', 'import presensiKaryawan', 'export presensiKaryawan',
 
             'verifikasi data1', 'verifikasi data2',
+            'create pengumuman', 'edit pengumuman', 'delete pengumuman', 'view pengumuman',
+            'create notifikasi', 'edit notifikasi', 'delete notifikasi', 'view notifikasi',
 
             'create user', 'edit user', 'delete user', 'view user', 'import user', 'export user',
             'create dataKaryawan', 'edit dataKaryawan', 'delete dataKaryawan', 'view dataKaryawan', 'import dataKaryawan', 'export dataKaryawan',
