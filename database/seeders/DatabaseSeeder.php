@@ -58,7 +58,7 @@ class DatabaseSeeder extends Seeder
       RoleSeeder::class,
       AccountSeeder::class,
 
-        /* ==== Kategori & Status ==== */
+      /* ==== Kategori & Status ==== */
       KategoriActivityLogSeeder::class,
       KategoriAgamaSeeder::class,
       KategoriBerkasSeeder::class,
@@ -80,36 +80,36 @@ class DatabaseSeeder extends Seeder
 
       LokasiKantorSeeder::class,
 
-        /* ==== Pengaturan Karyawan ==== */
+      /* ==== Pengaturan Karyawan ==== */
       JabatanSeeder::class,
       KelompokGajiSeeder::class,
       KompetensiSeeder::class,
       UnitKerjaSeeder::class,
       PertanyaanSeeder::class,
 
-        /* ==== Pengaturan Finance ==== */
+      /* ==== Pengaturan Finance ==== */
       KategoriTERSeeder::class,
       PTKPSeeder::class,
       PremiSeeder::class,
       TERSeeder::class,
 
-        /* ==== Pengaturan Managemen Waktu ==== */
+      /* ==== Pengaturan Managemen Waktu ==== */
       ShiftSeeder::class,
       HariLiburSeeder::class,
       TipeCutiSeeder::class,
 
-        /* ==== Karyawan ==== */
+      /* ==== Karyawan ==== */
       KaryawanSeeder::class,
       KeluargaKaryawanSeeder::class,
       TransferKaryawanSeeder::class,
 
-        // /* ==== Jadwals ==== */
+      // /* ==== Jadwals ==== */
       JadwalSeeder::class,
       LemburSeeder::class,
       CutiJadwalSeeder::class,
       TukarJadwalSeeder::class,
 
-        // /* ==== Presensi ==== */
+      // /* ==== Presensi ==== */
       PresensiSeeder::class,
 
       // /* ==== Keuangan ==== */
@@ -117,6 +117,9 @@ class DatabaseSeeder extends Seeder
       // PenggajianSeeder::class,
       // RiwayatPenggajianSeeder::class,
       // THRPenggajianSeeder::class,
+
+      PengumumanSeeder::class,
+      NotifikasiSeeder::class,
     ]);
   }
 }

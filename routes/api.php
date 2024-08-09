@@ -1,22 +1,13 @@
 <?php
 
 use App\Http\Controllers\Dashboard\DashboardController;
-use App\Http\Controllers\Dashboard\Jadwal\CutiJadwalController;
+use App\Http\Controllers\Dashboard\InboxController;
 use App\Http\Controllers\Dashboard\Jadwal\DataCutiController;
 use App\Http\Controllers\Dashboard\Jadwal\DataJadwalController;
 use App\Http\Controllers\Dashboard\Jadwal\DataLemburController;
 use App\Http\Controllers\Dashboard\Jadwal\DataTukarJadwalController;
-use App\Http\Controllers\Dashboard\Jadwal\JadwalController;
-use App\Http\Controllers\Dashboard\Jadwal\LemburJadwalController;
-use App\Http\Controllers\Dashboard\Jadwal\TukarJadwalController;
-use App\Http\Controllers\Dashboard\Karyawan\AkunKaryawanController;
 use App\Http\Controllers\Dashboard\Karyawan\DataKaryawanController;
 use App\Http\Controllers\Dashboard\Karyawan\DataTransferKaryawanController;
-use App\Http\Controllers\Dashboard\Karyawan\KaryawanController;
-use App\Http\Controllers\Dashboard\Karyawan\KeluargaKaryawanController;
-use App\Http\Controllers\Dashboard\Karyawan\PekerjaKontrakController;
-use App\Http\Controllers\Dashboard\Karyawan\RekamJejakController;
-use App\Http\Controllers\Dashboard\Karyawan\TransferKaryawanController;
 use App\Http\Controllers\Dashboard\Keuangan\PenggajianController;
 use App\Http\Controllers\Dashboard\Keuangan\PenyesuaianGajiController;
 use App\Http\Controllers\Dashboard\Keuangan\THRPenggajianController;
@@ -28,7 +19,6 @@ use App\Http\Controllers\Dashboard\Pengaturan\Finance\KategoriTER21Controller;
 use App\Http\Controllers\Dashboard\Pengaturan\Finance\PremiController;
 use App\Http\Controllers\Dashboard\Pengaturan\Finance\PTKPController;
 use App\Http\Controllers\Dashboard\Pengaturan\Finance\TER21Controller;
-use App\Http\Controllers\Dashboard\Pengaturan\Finance\THRController;
 use App\Http\Controllers\Dashboard\Pengaturan\Karyawan\JabatanController;
 use App\Http\Controllers\Dashboard\Pengaturan\Karyawan\KelompokGajiController;
 use App\Http\Controllers\Dashboard\Pengaturan\Karyawan\KompetensiController;
@@ -38,6 +28,7 @@ use App\Http\Controllers\Dashboard\Pengaturan\ManagemenWaktu\CutiController;
 use App\Http\Controllers\Dashboard\Pengaturan\ManagemenWaktu\HariLiburController;
 use App\Http\Controllers\Dashboard\Pengaturan\ManagemenWaktu\LokasiKantorController;
 use App\Http\Controllers\Dashboard\Pengaturan\ManagemenWaktu\ShiftController;
+use App\Http\Controllers\Dashboard\PengumumanController;
 use App\Http\Controllers\Dashboard\Presensi\DataPresensiController;
 use App\Http\Controllers\Publik\Auth\LoginController;
 use Illuminate\Support\Facades\Route;
@@ -79,14 +70,16 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('/logout', [LoginController::class, 'logout'])->middleware('web');
         Route::get('/user-info', [LoginController::class, 'getInfoUserLogin']);
 
-        Route::group(['prefix' => '/dashboard'], function () {
-            Route::get('/calculated-header', [DashboardController::class, 'calculatedHeader']);
-            Route::get('/calculated-jenis-kelamin', [DashboardController::class, 'calculatedKelamin']);
-            Route::get('/calculated-jabatan', [DashboardController::class, 'calculatedJabatan']);
-            Route::get('/calculated-kepegawaian', [DashboardController::class, 'calculatedKepegawaian']);
-            Route::get('/calculated-header', [DashboardController::class, 'index']);
-            Route::get('/calculated-header', [DashboardController::class, 'index']);
-        });
+        Route::get('/calculated-header', [DashboardController::class, 'calculatedHeader']);
+        Route::get('/calculated-jenis-kelamin', [DashboardController::class, 'calculatedKelamin']);
+        Route::get('/calculated-jabatan', [DashboardController::class, 'calculatedJabatan']);
+        Route::get('/calculated-kepegawaian', [DashboardController::class, 'calculatedKepegawaian']);
+        Route::get('/get-lembur-today', [DashboardController::class, 'getLemburToday']);
+        Route::apiResource('/pengumuman', PengumumanController::class);
+        Route::get('/get-unread-notifikasi', [InboxController::class, 'calculatedUnread']);
+        Route::get('/notifikasi', [InboxController::class, 'index']);
+        Route::get('/notifikasi/{id}', [InboxController::class, 'show']);
+        Route::delete('/notifikasi/delete-read-notifikasi', [InboxController::class, 'destroyRead']);
 
         // TODO: aktifkan send email di create & transfer karyawan
         // TODO: ganti email di create & transfer karyawan
@@ -117,6 +110,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::get('/detail-karyawan-lembur/{data_karyawan_id}', [DataKaryawanController::class, 'getDataLembur']);
             Route::get('/detail-karyawan-feedback/{data_karyawan_id}', [DataKaryawanController::class, 'getDataFeedback']);
 
+            Route::get('/download-template-karyawan', [DataKaryawanController::class, 'downloadKaryawanTemplate']);
             Route::apiResource('/data-karyawan', DataKaryawanController::class);
 
             // ! Transfer Karyawan ===========>
@@ -132,7 +126,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::post('/search', [DataPresensiController::class, 'index']);
             Route::post('/export', [DataPresensiController::class, 'exportPresensi']);
             Route::post('/import', [DataPresensiController::class, 'importPresensi']);
-            Route::get('/download-template', [DataPresensiController::class, 'downloadPresensiTemplate']);
+            Route::get('/download-template-presensi', [DataPresensiController::class, 'downloadPresensiTemplate']);
             Route::apiResource('/data-presensi', DataPresensiController::class);
 
             Route::get('/calculated', [DataPresensiController::class, 'calculatedPresensi']);

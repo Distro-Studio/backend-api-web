@@ -31,8 +31,10 @@ class DataTukarJadwalController extends Controller
         $jadwal = Jadwal::with('shifts')->where('user_id', $userId)->get();
 
         // Ambil range tanggal untuk jadwal
-        $start_date = $jadwal->min('tgl_mulai');
-        $end_date = $jadwal->max('tgl_selesai');
+        // $start_date = $jadwal->min('tgl_mulai');
+        // $end_date = $jadwal->max('tgl_selesai');
+        $start_date = Carbon::parse(RandomHelper::convertToDateString($jadwal->min('tgl_mulai')));
+        $end_date = Carbon::parse(RandomHelper::convertToDateString($jadwal->max('tgl_selesai')));
         $date_range = $this->generateDateRange($start_date, $end_date);
 
         $user_schedule_array = $this->formatSchedules($jadwal, $date_range);
@@ -93,15 +95,15 @@ class DataTukarJadwalController extends Controller
         $jadwal = Jadwal::with('shifts')->where('user_id', $userId)->get();
 
         // Ambil range tanggal untuk jadwal
-        $start_date = $jadwal->min('tgl_mulai');
-        $end_date = $jadwal->max('tgl_selesai');
+        $start_date = Carbon::parse(RandomHelper::convertToDateString($jadwal->min('tgl_mulai')));
+        $end_date = Carbon::parse(RandomHelper::convertToDateString($jadwal->max('tgl_selesai')));
         $date_range = $this->generateDateRange($start_date, $end_date);
 
         $user_schedule_array = $this->formatSchedules($jadwal, $date_range);
 
         return response()->json([
             'status' => Response::HTTP_OK,
-            'message' => "Detai jadwall dan karyawan ditukar berhasil ditampilkan.",
+            'message' => "Detai jadwal dan karyawan ditukar berhasil ditampilkan.",
             'data' => [
                 'user' => $user,
                 'list_jadwal' => $user_schedule_array
@@ -349,7 +351,7 @@ class DataTukarJadwalController extends Controller
         $userDitukar = User::findOrFail($data['user_ditukar']);
         $jadwalPengajuan = Jadwal::findOrFail($data['jadwal_pengajuan']);
         $jadwalDitukar = Jadwal::findOrFail($data['jadwal_ditukar']);
-        
+
         // Konversi tanggal dari string untuk validasi
         $tglMulaiPengajuan = RandomHelper::convertToDateString($jadwalPengajuan->tgl_mulai);
         $tglMulaiDitukar = RandomHelper::convertToDateString($jadwalDitukar->tgl_mulai);
@@ -588,9 +590,10 @@ class DataTukarJadwalController extends Controller
                     'jam_from' => $schedule->shifts->jam_from,
                     'jam_to' => $schedule->shifts->jam_to,
                 ];
-            } else {
-                $user_schedule_array[] = null;
             }
+            // else {
+            //     $user_schedule_array[] = null;
+            // }
         }
 
         return $user_schedule_array;

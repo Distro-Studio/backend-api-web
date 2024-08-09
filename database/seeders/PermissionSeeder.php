@@ -31,6 +31,10 @@ class PermissionSeeder extends Seeder
             'Karyawan Akun' => ['create user', 'edit user', 'delete user', 'view user', 'import user', 'export user'],
             'Karyawan Data' => ['create dataKaryawan', 'edit dataKaryawan', 'delete dataKaryawan', 'view dataKaryawan', 'import dataKaryawan', 'export dataKaryawan'],
 
+            // Dashboard
+            'Pengumuman' => ['create pengumuman', 'edit pengumuman', 'delete pengumuman', 'view pengumuman'],
+            'Notifikasi' => ['create notifikasi', 'edit notifikasi', 'delete notifikasi', 'view notifikasi'],
+
             // Master setting
             'Verifikasi Data' => ['verifikasi data1', 'verifikasi data2'],
             'Pengaturan Role' => ['create role', 'edit role', 'delete role', 'view role', 'import role', 'export role'],

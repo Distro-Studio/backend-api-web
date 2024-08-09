@@ -36,6 +36,7 @@ use Illuminate\Support\Facades\Mail;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Mail\SendAccountResetPassword;
 use App\Exports\Karyawan\KaryawanExport;
+use App\Exports\TemplateKaryawanExport;
 use App\Imports\Karyawan\KaryawanImport;
 use App\Http\Requests\StoreDataKaryawanRequest;
 use App\Jobs\EmailNotification\AccountEmailJob;
@@ -1496,6 +1497,23 @@ class DataKaryawanController extends Controller
     $user->save();
 
     return response()->json(new WithoutDataResource(Response::HTTP_OK, $message), Response::HTTP_OK);
+  }
+
+  public function downloadKaryawanTemplate()
+  {
+    if (!Gate::allows('export presensiKaryawan')) {
+      return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+    }
+
+    try {
+      return Excel::download(new TemplateKaryawanExport, 'template_import_karyawan.csv');
+    } catch (\Exception $e) {
+      return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya terjadi error. Message: ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
+    } catch (\Error $e) {
+      return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya terjadi error. Message: ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
+    }
+
+    return response()->json(new WithoutDataResource(Response::HTTP_OK, 'Template import presensi karyawan berhasil di download.'), Response::HTTP_OK);
   }
 
   private function calculateTrackRecordMasaKerja($tglMasuk, $tglKeluar)

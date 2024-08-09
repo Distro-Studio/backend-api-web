@@ -16,6 +16,7 @@ return new class extends Migration
             $table->string('judul');
             $table->text('konten');
             $table->boolean('is_read')->default(0);
+            $table->string('tgl_berakhir');
             $table->timestamps();
         });
     }
