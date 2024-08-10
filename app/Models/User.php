@@ -210,4 +210,14 @@ class User extends Authenticatable
     {
         return $this->belongsTo(StatusAktif::class, 'status_aktif', 'id');
     }
+
+    /**
+     * Get all of the peserta_diklat for the User
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function peserta_diklat(): HasMany
+    {
+        return $this->hasMany(PesertaDiklat::class, 'peserta', 'id');
+    }
 }

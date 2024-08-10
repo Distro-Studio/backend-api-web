@@ -46,7 +46,7 @@ class HariLiburController extends Controller
         // Menghapus secara soft delete hari libur yang telah terlewat
         HariLibur::where('tanggal', '<', Carbon::today())->delete();
 
-        $hari_libur = HariLibur::withTrashed();
+        $hari_libur = HariLibur::withTrashed()->orderBy('created_at', 'desc');
 
         // Filter
         // if ($request->has('delete_data')) {

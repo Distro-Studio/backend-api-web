@@ -12,29 +12,29 @@ use Illuminate\Foundation\Bus\Dispatchable;
 
 class AccountEmailJob implements ShouldQueue
 {
-  use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-  protected $email;
-  // protected $username;
-  protected $password;
-  protected $nama;
+    protected $email;
+    // protected $username;
+    protected $password;
+    protected $nama;
 
-  /**
-   * Create a new job instance.
-   */
-  public function __construct($email, $password, $nama)
-  {
-    $this->email = $email;
-    // $this->username = $username;
-    $this->password = $password;
-    $this->nama = $nama;
-  }
+    /**
+     * Create a new job instance.
+     */
+    public function __construct($email, $password, $nama)
+    {
+        $this->email = $email;
+        // $this->username = $username;
+        $this->password = $password;
+        $this->nama = $nama;
+    }
 
-  /**
-   * Execute the job.
-   */
-  public function handle(): void
-  {
-    Mail::to($this->email)->send(new SendAccoundUsersMail($this->email, $this->password, $this->nama));
-  }
+    /**
+     * Execute the job.
+     */
+    public function handle(): void
+    {
+        Mail::to($this->email)->send(new SendAccoundUsersMail($this->email, $this->password, $this->nama));
+    }
 }

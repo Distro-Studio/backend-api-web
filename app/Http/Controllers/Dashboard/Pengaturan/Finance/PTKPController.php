@@ -20,7 +20,7 @@ class PTKPController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
-        $ptkp = Ptkp::withTrashed();
+        $ptkp = Ptkp::withTrashed()->orderBy('created_at', 'desc');
 
         // Search
         if ($request->has('search')) {

@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Dashboard\Karyawan;
 
 use Exception;
-use Carbon\Carbon;
 use App\Models\User;
 use App\Models\Berkas;
 use App\Models\TrackRecord;
@@ -24,7 +23,6 @@ use App\Jobs\EmailNotification\TransferEmailJob;
 use App\Http\Requests\StoreTransferKaryawanRequest;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
 use App\Http\Resources\Dashboard\Karyawan\TransferKaryawanResource;
-use Illuminate\Support\Facades\Auth;
 
 class DataTransferKaryawanController extends Controller
 {
@@ -51,7 +49,7 @@ class DataTransferKaryawanController extends Controller
         // Per page
         $limit = $request->input('limit', 10); // Default per page is 10
 
-        $transfer = TransferKaryawan::query();
+        $transfer = TransferKaryawan::query()->orderBy('created_at', 'desc');
 
         // Ambil semua filter dari request body
         $filters = $request->all();
@@ -187,6 +185,17 @@ class DataTransferKaryawanController extends Controller
                     $query->where('jenis_karyawan', $jenisKaryawan);
                 });
             }
+        }
+
+        if (isset($filters['kategori_transfer'])) {
+            $namaTransferKategori = $filters['kategori_transfer'];
+            $transfer->whereHas('kategori_transfer_karyawans', function ($query) use ($namaTransferKategori) {
+                if (is_array($namaTransferKategori)) {
+                    $query->whereIn('id', $namaTransferKategori);
+                } else {
+                    $query->where('id', '=', $namaTransferKategori);
+                }
+            });
         }
 
         // Search
@@ -350,7 +359,7 @@ class DataTransferKaryawanController extends Controller
                     throw new Exception('Kategori berkas tidak ditemukan.');
                 }
 
-                // Store in 'berkas' table on your server
+                // Store in 'berkas' table
                 $berkas = Berkas::create([
                     'user_id' => $data['user_id'],
                     'file_id' => $dataupload['id_file']['id'],
@@ -362,7 +371,7 @@ class DataTransferKaryawanController extends Controller
                     'ext' => $dataupload['ext'],
                     'size' => $dataupload['size'],
                 ]);
-                Log::info('Berkas Transfer ' . $user->nama . ' berhasil di upload');
+                Log::info('Berkas Transfer ' . $user->nama . ' berhasil di upload.');
 
                 if (!$berkas) {
                     throw new Exception('Berkas gagal di upload');

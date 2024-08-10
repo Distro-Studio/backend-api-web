@@ -24,7 +24,7 @@ class JabatanController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
-        $jabatan = Jabatan::withTrashed();
+        $jabatan = Jabatan::withTrashed()->orderBy('created_at', 'desc');
 
         // Filter
         // if ($request->has('delete_data')) {

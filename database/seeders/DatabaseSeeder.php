@@ -8,6 +8,7 @@ use Database\Seeders\Constant\Kategori\KategoriActivityLogSeeder;
 use Database\Seeders\Constant\Kategori\KategoriAgamaSeeder;
 use Database\Seeders\Constant\Kategori\KategoriBerkasSeeder;
 use Database\Seeders\Constant\Kategori\KategoriDarahSeeder;
+use Database\Seeders\Constant\Kategori\KategoriDiklatSeeder;
 use Database\Seeders\Constant\Kategori\KategoriGajiSeeder;
 use Database\Seeders\Constant\Kategori\KategoriKompensasiSeeder;
 use Database\Seeders\Constant\Kategori\KategoriNotifikasiSeeder;
@@ -19,6 +20,7 @@ use Database\Seeders\Constant\Kategori\KategoriTransferKaryawanSeeder;
 use Database\Seeders\Constant\Kategori\KategoriTukarJadwalSeeder;
 use Database\Seeders\Constant\Status\StatusAktifUserSeeder;
 use Database\Seeders\Constant\Status\StatusCutiSeeder;
+use Database\Seeders\Constant\Status\StatusDiklatSeeder;
 use Database\Seeders\Constant\Status\StatusGajiSeeder;
 use Database\Seeders\Constant\Status\StatusKaryawanSeeder;
 use Database\Seeders\Constant\Status\StatusLemburSeeder;
@@ -44,6 +46,7 @@ use Database\Seeders\Pengaturan_Managemen_Waktu\ShiftSeeder;
 use Database\Seeders\Pengaturan_Managemen_Waktu\HariLiburSeeder;
 use Database\Seeders\Pengaturan_Managemen_Waktu\LokasiKantorSeeder;
 use Database\Seeders\Pengaturan_Managemen_Waktu\TipeCutiSeeder;
+use Database\Seeders\Perusahaan\DiklatSeeder;
 
 class DatabaseSeeder extends Seeder
 {
@@ -72,10 +75,12 @@ class DatabaseSeeder extends Seeder
       KategoriKompensasiSeeder::class,
       KategoriPotonganSeeder::class,
       KategoriPendidikanSeeder::class,
+      KategoriDiklatSeeder::class,
+      StatusDiklatSeeder::class,
       StatusCutiSeeder::class,
       StatusGajiSeeder::class,
       StatusKaryawanSeeder::class,
-      StatusLemburSeeder::class,
+      // StatusLemburSeeder::class,
       StatusTukarJadwalSeeder::class,
 
       LokasiKantorSeeder::class,
@@ -118,6 +123,8 @@ class DatabaseSeeder extends Seeder
       // RiwayatPenggajianSeeder::class,
       // THRPenggajianSeeder::class,
 
+      /* ==== Perusahaan ==== */
+      DiklatSeeder::class,
       PengumumanSeeder::class,
       NotifikasiSeeder::class,
     ]);

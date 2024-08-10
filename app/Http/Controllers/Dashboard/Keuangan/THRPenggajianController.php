@@ -2,16 +2,17 @@
 
 namespace App\Http\Controllers\Dashboard\Keuangan;
 
-use App\Exports\Keuangan\THRGajiExport;
-use App\Helpers\RandomHelper;
 use Carbon\Carbon;
+use App\Models\DataKaryawan;
 use Illuminate\Http\Request;
+use App\Helpers\RandomHelper;
 use Illuminate\Http\Response;
 use App\Models\RiwayatPenggajian;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Gate;
 use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\Keuangan\THRGajiExport;
 use App\Http\Requests\StoreRunTHRRequest;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
 
@@ -31,7 +32,7 @@ class THRPenggajianController extends Controller
                 $query->where('kategori_gaji_id', 2)
                     ->where('nama_detail', 'THR')
                     ->whereNotNull('besaran');
-            });
+            })->orderBy('created_at', 'desc');
 
         // Filter periode tahun jika ada
         if ($request->has('periode_tahun')) {
@@ -95,7 +96,7 @@ class THRPenggajianController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
-        $data_karyawan_ids = $request->input('data_karyawan_ids', []);
+        $data_karyawan_ids = DataKaryawan::where('email', '!=', 'super_admin@admin.rski')->pluck('id')->toArray();
         // $tglRunTHR = Carbon::parse($request->input('tgl_run_thr'));
         $tglRunTHR = Carbon::parse(RandomHelper::convertToDateString($request->input('tgl_run_thr')));
         $currentYear = Carbon::now()->year;

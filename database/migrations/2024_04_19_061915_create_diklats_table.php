@@ -15,12 +15,16 @@ return new class extends Migration
             $table->id();
             $table->string('gambar')->nullable();
             $table->string('nama');
-            $table->string('jenis');
-            $table->date('tgl_diklat');
-            $table->string('tempat');
-            $table->string('waktu');
-            $table->string('penanggung_jawab');
-            $table->string('peserta');
+            $table->foreignId('kategori_diklat_id')->constrained('kategori_diklats');
+            $table->foreignId('status_diklat_id')->constrained('status_diklats');
+            $table->string('deskripsi');
+            $table->integer('kuota');
+            $table->string('tgl_mulai');
+            $table->string('tgl_selesai');
+            $table->string('jam_mulai');
+            $table->string('jam_selesai');
+            $table->integer('durasi');
+            $table->string('lokasi');
             $table->timestamps();
         });
     }

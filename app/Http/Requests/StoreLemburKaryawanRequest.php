@@ -31,7 +31,7 @@ class StoreLemburKaryawanRequest extends FormRequest
             'kompensasi_lembur_id' => 'required|integer|exists:kategori_kompensasis,id',
             'durasi' => 'required|string',
             'catatan' => 'required|string',
-            'status_lembur_id' => 'required|integer|exists:status_lemburs,id',
+            // 'status_lembur_id' => 'required|integer|exists:status_lemburs,id',
         ];
     }
 
@@ -53,9 +53,9 @@ class StoreLemburKaryawanRequest extends FormRequest
             'durasi.string' => 'Durasi lembur karyawan harus berupa angka dan huruf.',
             'catatan.required' => 'Catatan lembur karyawan tidak diperbolehkan kosong.',
             'catatan.string' => 'Catatan lembur karyawan tidak diperbolehkan mengandung angka atau karakter lainnya.',
-            'status_lembur_id.required' => 'Silahkan pilih status lembur yang tersedia terlebih dahulu.',
-            'status_lembur_id.integer' => 'Data status lembur yang valid adalah berupa satuan angka.',
-            'status_lembur_id.exists' => 'Data status lembur yang terdipilih tidak tersedia.',
+            // 'status_lembur_id.required' => 'Silahkan pilih status lembur yang tersedia terlebih dahulu.',
+            // 'status_lembur_id.integer' => 'Data status lembur yang valid adalah berupa satuan angka.',
+            // 'status_lembur_id.exists' => 'Data status lembur yang terdipilih tidak tersedia.',
         ];
     }
 

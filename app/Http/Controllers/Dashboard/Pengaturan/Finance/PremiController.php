@@ -24,7 +24,7 @@ class PremiController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
-        $premi = Premi::withTrashed();
+        $premi = Premi::withTrashed()->orderBy('created_at', 'desc');
 
         // Filter
         // if ($request->has('delete_data')) {

@@ -40,7 +40,7 @@ class TER21Controller extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
-        $ter = Ter::withTrashed();
+        $ter = Ter::withTrashed()->orderBy('created_at', 'desc');
 
         // Filter
         // if ($request->has('delete_data')) {
