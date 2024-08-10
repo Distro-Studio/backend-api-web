@@ -27,7 +27,7 @@ class PengumumanController extends Controller
         Pengumuman::where('tgl_berakhir', '<', $cutoffDate)->delete();
 
         // Fetch announcements that have not yet ended
-        $pengumuman = Pengumuman::where('tgl_berakhir', '>=', $today->format('Y-m-d'))->get();
+        $pengumuman = Pengumuman::where('tgl_berakhir', '>=', $today->format('Y-m-d'))->orderBy('created_at', 'desc')->get();
 
         if ($pengumuman->isEmpty()) {
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data pengumuman tidak ditemukan.'), Response::HTTP_NOT_FOUND);

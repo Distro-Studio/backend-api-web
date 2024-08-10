@@ -14,6 +14,11 @@ class PermissionSeeder extends Seeder
     public function run(): void
     {
         $permissions = [
+            // Perusahaan
+            'Diklat' => ['create diklat', 'view diklat', 'export diklat'],
+            'Pelaporan Karyawan' => ['view pelaporanKaryawan', 'export pelaporanKaryawan'],
+            'Penilaian Karyawan' => ['view penilaianKaryawan', 'export penilaianKaryawan'],
+
             // Keuangan
             'Penggajian THR Karyawan' => ['create thrKaryawan', 'view thrKaryawan', 'export thrKaryawan'],
             'Penggajian Karyawan' => ['create penggajianKaryawan', 'edit penggajianKaryawan', 'view penggajianKaryawan', 'delete penggajianKaryawan', 'import penggajianKaryawan', 'export penggajianKaryawan'],
@@ -36,7 +41,7 @@ class PermissionSeeder extends Seeder
             'Notifikasi' => ['create notifikasi', 'edit notifikasi', 'delete notifikasi', 'view notifikasi'],
 
             // Master setting
-            'Verifikasi Data' => ['verifikasi data1', 'verifikasi data2'],
+            'Verifikasi Data' => ['verifikasi verifikastor1', 'verifikasi verifikastor2'],
             'Pengaturan Role' => ['create role', 'edit role', 'delete role', 'view role', 'import role', 'export role'],
             'Pengaturan Permission' => ['create permission', 'edit permission', 'delete permission', 'view permission'],
             'Pengaturan Unit Kerja' => ['create unitKerja', 'edit unitKerja', 'delete unitKerja', 'view unitKerja', 'import unitKerja', 'export unitKerja'],

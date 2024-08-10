@@ -26,7 +26,7 @@ class UnitKerjaController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
-        $unit_kerja = UnitKerja::withTrashed();
+        $unit_kerja = UnitKerja::withTrashed()->orderBy('created_at', 'desc');
 
         // Filter
         // if ($request->has('delete_data')) {

@@ -28,7 +28,7 @@ class DataCutiController extends Controller
         // Per page
         $limit = $request->input('limit', 10); // Default per page is 10
 
-        $cuti = Cuti::query();
+        $cuti = Cuti::query()->orderBy('created_at', 'desc');
 
         // Ambil semua filter dari request body
         $filters = $request->all();
@@ -166,6 +166,28 @@ class DataCutiController extends Controller
             }
         }
 
+        if (isset($filters['tipe_cuti'])) {
+            $namaTipeCuti = $filters['tipe_cuti'];
+            $cuti->whereHas('tipe_cutis', function ($query) use ($namaTipeCuti) {
+                if (is_array($namaTipeCuti)) {
+                    $query->whereIn('id', $namaTipeCuti);
+                } else {
+                    $query->where('id', '=', $namaTipeCuti);
+                }
+            });
+        }
+
+        if (isset($filters['status_cuti'])) {
+            $namaStatusCuti = $filters['status_cuti'];
+            $cuti->whereHas('status_cutis', function ($query) use ($namaStatusCuti) {
+                if (is_array($namaStatusCuti)) {
+                    $query->whereIn('id', $namaStatusCuti);
+                } else {
+                    $query->where('id', '=', $namaStatusCuti);
+                }
+            });
+        }
+
         // Search
         if (isset($filters['search'])) {
             $searchTerm = '%' . $filters['search'] . '%';
@@ -254,7 +276,7 @@ class DataCutiController extends Controller
         $tglTo = RandomHelper::convertToDateString($data['tgl_to']);
 
         // Menghitung durasi cuti dalam hari
-        $durasi = Carbon::parse($tglFrom)->diffInDays(Carbon::parse($tglTo)) + 1;
+        $durasi = Carbon::parse($tglFrom)->diffInDays(Carbon::parse($tglTo));
 
         // Validasi durasi cuti terhadap kuota tipe cuti
         $tipeCuti = TipeCuti::find($data['tipe_cuti_id']);

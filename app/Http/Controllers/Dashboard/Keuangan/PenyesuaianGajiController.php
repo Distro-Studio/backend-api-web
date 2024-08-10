@@ -30,7 +30,7 @@ class PenyesuaianGajiController extends Controller
         // Tentukan limit default
         $limit = $request->input('limit', 10); // Default 10 jika tidak ada atau kosong
 
-        $PenyesuaianGaji = PenyesuaianGaji::query();
+        $PenyesuaianGaji = PenyesuaianGaji::query()->orderBy('created_at', 'desc');
 
         // Ambil semua filter dari request body
         $filters = $request->all();

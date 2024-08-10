@@ -21,7 +21,7 @@ class LemburSeeder extends Seeder
         $user_ids = User::pluck('id')->all();
         $jadwal_ids = Jadwal::pluck('id')->all();
         $kompensasi_lembur_ids = KategoriKompensasi::pluck('id')->all();
-        $status_lembur_ids = StatusLembur::pluck('id')->all();
+        // $status_lembur_ids = StatusLembur::pluck('id')->all();
 
         for ($i = 0; $i < 20; $i++) {
             if (count($user_ids) <= $i) {
@@ -39,7 +39,7 @@ class LemburSeeder extends Seeder
                 'kompensasi_lembur_id' => $kompensasi_lembur_ids[array_rand($kompensasi_lembur_ids)],
                 'durasi' => $durasi_mulai . 'J ' . $durasi_selesai . 'M',
                 'catatan' => 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
-                'status_lembur_id' => $status_lembur_ids[array_rand($status_lembur_ids)],
+                // 'status_lembur_id' => $status_lembur_ids[array_rand($status_lembur_ids)],
             ]);
             $lembur->save();
         }

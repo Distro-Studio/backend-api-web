@@ -26,7 +26,7 @@ class KelompokGajiController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
-        $kelompok_gaji = KelompokGaji::withTrashed();
+        $kelompok_gaji = KelompokGaji::withTrashed()->orderBy('created_at', 'desc');
 
         // Filter
         // if ($request->has('delete_data')) {

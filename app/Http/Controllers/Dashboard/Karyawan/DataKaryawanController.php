@@ -195,26 +195,47 @@ class DataKaryawanController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
-        // Mendapatkan tanggal hari ini
-        $today = Carbon::today()->format('Y-m-d');
-
         // Mendapatkan data presensi karyawan berdasarkan data_karyawan_id dan filter hari ini
-        $presensi = Presensi::with([
+        $presensiHariIni = Presensi::with([
             'users',
             'jadwals.shifts',
             'data_karyawans.unit_kerjas',
             'kategori_presensis'
         ])
             ->where('data_karyawan_id', $data_karyawan_id)
-            ->whereDate('jam_masuk', $today)
+            ->whereDate('jam_masuk', Carbon::today())
             ->first();
 
-        if (!$presensi) {
+        if (!$presensiHariIni) {
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data presensi tidak ditemukan untuk hari ini.'), Response::HTTP_NOT_FOUND);
         }
 
-        $fotoMasukBerkas = Berkas::where('id', $presensi->foto_masuk)->first();
-        $fotoKeluarBerkas = Berkas::where('id', $presensi->foto_keluar)->first();
+        // Ambil semua presensi bulan ini dari karyawan yang sama
+        $presensiBulanIni = Presensi::where('data_karyawan_id', $data_karyawan_id)
+            ->whereYear('jam_masuk', Carbon::now()->year)
+            ->whereMonth('jam_masuk', Carbon::now()->month)
+            ->orderBy('jam_masuk')
+            ->get();
+
+        // Memformat aktivitas presensi
+        $aktivitasPresensi = [];
+        foreach ($presensiBulanIni as $presensi) {
+            if ($presensi->jam_masuk) {
+                $aktivitasPresensi[] = [
+                    'presensi' => 'Masuk',
+                    'tanggal' => $presensi->jam_masuk
+                ];
+            }
+            if ($presensi->jam_keluar) {
+                $aktivitasPresensi[] = [
+                    'presensi' => 'Keluar',
+                    'tanggal' => $presensi->jam_keluar
+                ];
+            }
+        }
+
+        $fotoMasukBerkas = Berkas::where('id', $presensiHariIni->foto_masuk)->first();
+        $fotoKeluarBerkas = Berkas::where('id', $presensiHariIni->foto_keluar)->first();
 
         $baseUrl = env('STORAGE_SERVER_DOMAIN'); // Ganti dengan URL domain Anda
 
@@ -228,18 +249,18 @@ class DataKaryawanController extends Controller
         $lokasiKantor = LokasiKantor::find(1);
 
         $formattedData = [
-            'id' => $presensi->id,
-            'user' => $presensi->users,
-            'unit_kerja' => $presensi->data_karyawans->unit_kerjas,
+            'id' => $presensiHariIni->id,
+            'user' => $presensiHariIni->users,
+            'unit_kerja' => $presensiHariIni->data_karyawans->unit_kerjas,
             'jadwal' => [
-                'id' => $presensi->jadwals->id,
-                'tgl_mulai' => $presensi->jadwals->tgl_mulai,
-                'tgl_selesai' => $presensi->jadwals->tgl_selesai,
-                'shift' => $presensi->jadwals->shifts,
+                'id' => $presensiHariIni->jadwals->id,
+                'tgl_mulai' => $presensiHariIni->jadwals->tgl_mulai,
+                'tgl_selesai' => $presensiHariIni->jadwals->tgl_selesai,
+                'shift' => $presensiHariIni->jadwals->shifts,
             ],
-            'jam_masuk' => $presensi->jam_masuk,
-            'jam_keluar' => $presensi->jam_keluar,
-            'durasi' => $presensi->durasi,
+            'jam_masuk' => $presensiHariIni->jam_masuk,
+            'jam_keluar' => $presensiHariIni->jam_keluar,
+            'durasi' => $presensiHariIni->durasi,
             'lokasi_kantor' => [
                 'id' => $lokasiKantor->id,
                 'alamat' => $lokasiKantor->alamat,
@@ -247,10 +268,10 @@ class DataKaryawanController extends Controller
                 'long' => $lokasiKantor->long,
                 'radius' => $lokasiKantor->radius,
             ],
-            'lat_masuk' => $presensi->lat,
-            'long_masuk' => $presensi->long,
-            'lat_keluar' => $presensi->latkeluar,
-            'long_keluar' => $presensi->longkeluar,
+            'lat_masuk' => $presensiHariIni->lat,
+            'long_masuk' => $presensiHariIni->long,
+            'lat_keluar' => $presensiHariIni->latkeluar,
+            'long_keluar' => $presensiHariIni->longkeluar,
             'foto_masuk' => [
                 'id' => $fotoMasukBerkas->id,
                 'user_id' => $fotoMasukBerkas->user_id,
@@ -271,14 +292,15 @@ class DataKaryawanController extends Controller
                 'ext' => $fotoKeluarBerkas->ext,
                 'size' => $fotoKeluarBerkas->size,
             ],
-            'kategori_presensi' => $presensi->kategori_presensis,
-            'created_at' => $presensi->created_at,
-            'updated_at' => $presensi->updated_at
+            'kategori_presensi' => $presensiHariIni->kategori_presensis,
+            'aktivitas_presensi' => $aktivitasPresensi,
+            'created_at' => $presensiHariIni->created_at,
+            'updated_at' => $presensiHariIni->updated_at
         ];
 
         return response()->json([
             'status' => Response::HTTP_OK,
-            'message' => "Detail data presensi karyawan '{$presensi->users->nama}' berhasil ditampilkan.",
+            'message' => "Detail data presensi karyawan '{$presensiHariIni->users->nama}' berhasil ditampilkan.",
             'data' => $formattedData,
         ], Response::HTTP_OK);
     }
@@ -395,9 +417,9 @@ class DataKaryawanController extends Controller
             'data' => [
                 'id' => $karyawan->id,
                 'user' => $user,
-                'tgl_masuk' => $karyawan->tgl_masuk,
-                'tgl_keluar' => $karyawan->tgl_keluar,
-                'masa_kerja' => $masaKerja,
+                'tgl_masuk_karyawan' => $karyawan->tgl_masuk,
+                'tgl_keluar_karyawan' => $karyawan->tgl_keluar,
+                'masa_kerja_karyawan' => $masaKerja,
                 'list_rekam_jejak' => $formattedData
             ]
         ], Response::HTTP_OK);
@@ -604,7 +626,6 @@ class DataKaryawanController extends Controller
         // Format data tukar jadwal
         $formattedData = $tukarJadwal->map(function ($item) use ($userId) {
             $isUserPengajuan = $item->user_pengajuan == $userId;
-
             return [
                 'id' => $item->id,
                 'user_pengajuan' => [
@@ -750,7 +771,7 @@ class DataKaryawanController extends Controller
         // Per page
         $limit = $request->input('limit', 10); // Default per page is 10
 
-        $karyawan = DataKaryawan::query()->where('email', '!=', 'super_admin@admin.rski');
+        $karyawan = DataKaryawan::query()->where('email', '!=', 'super_admin@admin.rski')->orderBy('created_at', 'desc');
 
         // Ambil semua filter dari request body
         $filters = $request->all();
@@ -1491,7 +1512,7 @@ class DataKaryawanController extends Controller
             $user->status_aktif = 2;
             $message = "Karyawan '{$karyawan->users->nama}' berhasil diaktifkan.";
         } else {
-            return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, "Karyawan '{$karyawan->users->nama}' belum melengkapi data personal, dan status masih belum aktif."), Response::HTTP_NOT_ACCEPTABLE);
+            return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, "Karyawan '{$karyawan->users->nama}' belum melengkapi data karyawan."), Response::HTTP_NOT_ACCEPTABLE);
         }
 
         $user->save();
@@ -1506,7 +1527,7 @@ class DataKaryawanController extends Controller
         }
 
         try {
-            return Excel::download(new TemplateKaryawanExport, 'template_import_karyawan.csv');
+            return Excel::download(new TemplateKaryawanExport, 'template_import_karyawan.xls');
         } catch (\Exception $e) {
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya terjadi error. Message: ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
         } catch (\Error $e) {

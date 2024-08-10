@@ -29,6 +29,7 @@ use App\Http\Controllers\Dashboard\Pengaturan\ManagemenWaktu\HariLiburController
 use App\Http\Controllers\Dashboard\Pengaturan\ManagemenWaktu\LokasiKantorController;
 use App\Http\Controllers\Dashboard\Pengaturan\ManagemenWaktu\ShiftController;
 use App\Http\Controllers\Dashboard\PengumumanController;
+use App\Http\Controllers\Dashboard\Perusahaan\DiklatController;
 use App\Http\Controllers\Dashboard\Presensi\DataPresensiController;
 use App\Http\Controllers\Publik\Auth\LoginController;
 use Illuminate\Support\Facades\Route;
@@ -122,8 +123,6 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::group(['prefix' => '/presensi'], function () {
             // ! Presensi Tabel ===========>
             Route::post('/get-data-presensi', [DataPresensiController::class, 'index']);
-            Route::post('/filter', [DataPresensiController::class, 'index']);
-            Route::post('/search', [DataPresensiController::class, 'index']);
             Route::post('/export', [DataPresensiController::class, 'exportPresensi']);
             Route::post('/import', [DataPresensiController::class, 'importPresensi']);
             Route::get('/download-template-presensi', [DataPresensiController::class, 'downloadPresensiTemplate']);
@@ -187,9 +186,10 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::apiResource('/run-thr', THRPenggajianController::class);
         });
 
-        // TODO: Diklat validasi dari permission
-        // TODO: export diklat base on karyawan yg sudah diklat pada diklat tertentu
         Route::group(['prefix' => '/perusahaan'], function () {
+            Route::post('/get-data-diklat', [DiklatController::class, 'index']);
+            Route::post('/diklat', [DiklatController::class, 'store']);
+            Route::get('/diklat/export', [DiklatController::class, 'exportDiklat']);
         });
 
         Route::group(['prefix' => '/pengaturan'], function () {

@@ -24,7 +24,7 @@ class KompetensiController extends Controller
         if (!Gate::allows('view kompetensi')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
-        $kompetensi = Kompetensi::withTrashed();
+        $kompetensi = Kompetensi::withTrashed()->orderBy('created_at', 'desc');
 
         // Filter
         // if ($request->has('delete_data')) {

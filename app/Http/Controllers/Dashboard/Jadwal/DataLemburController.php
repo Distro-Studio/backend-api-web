@@ -27,7 +27,7 @@ class DataLemburController extends Controller
         // Per page
         $limit = $request->input('limit', 10); // Default per page is 10
 
-        $lembur = Lembur::query();
+        $lembur = Lembur::query()->orderBy('created_at', 'desc');
 
         // Ambil semua filter dari request body
         $filters = $request->all();
@@ -207,6 +207,8 @@ class DataLemburController extends Controller
         }
 
         $formattedData = $dataLembur->map(function ($lembur) {
+            $timeString = RandomHelper::convertToTimeString($lembur->durasi);
+            $durasi = RandomHelper::convertTimeStringToSeconds($timeString);
             return [
                 'id' => $lembur->id,
                 'user' => [
@@ -223,7 +225,7 @@ class DataLemburController extends Controller
                 'jadwal' => $lembur->jadwals,
                 'tgl_pengajuan' => $lembur->tgl_pengajuan,
                 'kompensasi' => $lembur->kategori_kompensasis,
-                'durasi' => $lembur->durasi,
+                'durasi' => $durasi,
                 'catatan' => $lembur->catatan,
                 'status_lembur' => $lembur->status_lemburs,
                 'created_at' => $lembur->created_at,

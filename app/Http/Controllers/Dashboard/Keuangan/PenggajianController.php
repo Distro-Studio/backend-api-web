@@ -143,7 +143,7 @@ class PenggajianController extends Controller
         // Tentukan limit default
         $limit = $request->input('limit', 10); // Default 10 jika tidak ada atau kosong
 
-        $riwayatPenggajian = RiwayatPenggajian::query();
+        $riwayatPenggajian = RiwayatPenggajian::query()->orderBy('created_at', 'desc');
 
         // Filter periode tahun jika ada
         if ($request->has('periode_tahun')) {
@@ -201,13 +201,13 @@ class PenggajianController extends Controller
         ], Response::HTTP_OK);
     }
 
-    public function store(StorePenggajianRequest $request)
+    public function store(Request $request)
     {
         if (!Gate::allows('create penggajianKaryawan')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
-        $data_karyawan_ids = $request->input('data_karyawan_ids', []);
+        $data_karyawan_ids = DataKaryawan::where('email', '!=', 'super_admin@admin.rski')->pluck('id')->toArray();
         $sertakan_bor = $request->has('sertakan_bor') && $request->sertakan_bor == 1;
 
         // Ambil jadwal penggajian dari tabel jadwal_penggajians

@@ -20,7 +20,7 @@ class KategoriTER21Controller extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
-        $kategori_ter = KategoriTer::withTrashed();
+        $kategori_ter = KategoriTer::withTrashed()->orderBy('created_at', 'desc');
 
         // Search
         // if ($request->has('search')) {

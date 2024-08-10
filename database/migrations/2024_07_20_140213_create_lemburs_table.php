@@ -20,7 +20,7 @@ return new class extends Migration
             // $table->string('tipe'); //! MASIH RANCU
             $table->string('durasi');
             $table->text('catatan');
-            $table->foreignId('status_lembur_id')->constrained('status_lemburs');
+            // $table->foreignId('status_lembur_id')->constrained('status_lemburs');
             $table->timestamps();
         });
     }

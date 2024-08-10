@@ -25,8 +25,8 @@ class StoreRunTHRRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'data_karyawan_ids' => 'required|array',
-            'data_karyawan_ids.*' => 'exists:data_karyawans,id',
+            // 'data_karyawan_ids' => 'required|array',
+            // 'data_karyawan_ids.*' => 'exists:data_karyawans,id',
             'tgl_run_thr' => 'required|string'
         ];
     }
@@ -34,9 +34,9 @@ class StoreRunTHRRequest extends FormRequest
     public function messages()
     {
         return [
-            'data_karyawan_ids.required' => 'Silahkan pilih nama karyawan terlebih dahulu.',
-            'data_karyawan_ids.array' => 'Nama karyawan yang dipilih harus berupa array.',
-            'data_karyawan_ids.*.exists' => 'Nama karyawan yang dipilih tidak valid.',
+            // 'data_karyawan_ids.required' => 'Silahkan pilih nama karyawan terlebih dahulu.',
+            // 'data_karyawan_ids.array' => 'Nama karyawan yang dipilih harus berupa array.',
+            // 'data_karyawan_ids.*.exists' => 'Nama karyawan yang dipilih tidak valid.',
             'tgl_run_thr.required' => 'Penetapan tanggal THR tidak diperbolehkan kosong.',
             'tgl_run_thr.string' => 'Penetapan tanggal THR hanya diperbolehkan menggunakan angka dan huruf.',
         ];
