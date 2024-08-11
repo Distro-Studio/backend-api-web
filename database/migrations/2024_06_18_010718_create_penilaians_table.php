@@ -19,6 +19,7 @@ return new class extends Migration
             $table->foreignId('unit_kerja_penilai')->constrained('unit_kerjas');
             $table->foreignId('jabatan_dinilai')->constrained('jabatans');
             $table->foreignId('jabatan_penilai')->constrained('jabatans');
+            $table->integer('total_pertanyaan');
             $table->integer('rata_rata');
             $table->timestamps();
         });

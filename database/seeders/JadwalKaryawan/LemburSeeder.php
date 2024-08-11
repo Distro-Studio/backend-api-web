@@ -40,6 +40,7 @@ class LemburSeeder extends Seeder
                 'durasi' => $durasi_mulai . 'J ' . $durasi_selesai . 'M',
                 'catatan' => 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
                 // 'status_lembur_id' => $status_lembur_ids[array_rand($status_lembur_ids)],
+                'status_lembur_id' => 1,
             ]);
             $lembur->save();
         }

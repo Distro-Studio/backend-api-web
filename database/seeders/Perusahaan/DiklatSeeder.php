@@ -8,6 +8,8 @@ use App\Models\Berkas;
 use App\Models\Diklat;
 use Illuminate\Support\Str;
 use App\Models\KategoriBerkas;
+use App\Models\KategoriDiklat;
+use App\Models\StatusDiklat;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
@@ -19,8 +21,8 @@ class DiklatSeeder extends Seeder
      */
     public function run(): void
     {
-        $kategoriDiklatIds = DB::table('kategori_diklats')->pluck('id')->all();
-        $statusDiklatIds = DB::table('status_diklats')->pluck('id')->all();
+        $kategoriDiklatIds = KategoriDiklat::pluck('id')->all();
+        $statusDiklatIds = StatusDiklat::pluck('id')->all();
         $kategoriBerkas = KategoriBerkas::where('label', 'System')->first();
         $user_ids = User::where('nama', '!=', 'Super Admin')->pluck('id')->all();
 

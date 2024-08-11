@@ -78,7 +78,7 @@ class TransferKaryawanResource extends JsonResource
                 'unit_kerja_tujuan' => $transfer->unit_kerja_tujuans,
                 'jabatan_asal' => $transfer->jabatan_asals,
                 'jabatan_tujuan' => $transfer->jabatan_tujuans,
-                'kategori_transfer_id' => $transfer->kategori_transfer_karyawans,
+                'kategori_transfer' => $transfer->kategori_transfer_karyawans,
                 'alasan' => $transfer->alasan,
                 'dokumen' => $transfer->dokumen,
                 'created_at' => $transfer->created_at,

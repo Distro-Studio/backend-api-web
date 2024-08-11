@@ -73,6 +73,7 @@ class CutiJadwalResource extends JsonResource
                 'tgl_to' => $cuti_jadwal->tgl_to,
                 'catatan' => $cuti_jadwal->catatan,
                 'durasi' => $cuti_jadwal->durasi,
+                'status_cuti' => $cuti_jadwal->status_cutis,
                 'created_at' => $cuti_jadwal->created_at,
                 'updated_at' => $cuti_jadwal->updated_at
             ];

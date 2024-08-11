@@ -13,7 +13,8 @@ class KategoriTransferKaryawanSeeder extends Seeder
      */
     public function run(): void
     {
-        $kategori = ['Pribadi', 'Umum', 'System', 'Lainnya'];
+        // $kategori = ['Pribadi', 'Umum', 'System', 'Lainnya'];
+        $kategori = ['Promosi Karyawan', 'Mutasi Pegawai'];
 
         foreach ($kategori as $kategori) {
             DB::table('kategori_transfer_karyawans')->insert([

@@ -272,11 +272,13 @@ class DataCutiController extends Controller
         $data = $request->validated();
 
         // Mengonversi tanggal dari request menggunakan helper hanya untuk perhitungan durasi
-        $tglFrom = RandomHelper::convertToDateString($data['tgl_from']);
-        $tglTo = RandomHelper::convertToDateString($data['tgl_to']);
+        $tglFrom = RandomHelper::convertSpecialDateFormat($data['tgl_from']);
+        $tglTo = RandomHelper::convertSpecialDateFormat($data['tgl_to']);
+        // dd($tglFrom, $tglTo);
 
         // Menghitung durasi cuti dalam hari
-        $durasi = Carbon::parse($tglFrom)->diffInDays(Carbon::parse($tglTo));
+        $durasi = Carbon::parse($tglFrom)->diffInDays($tglTo);
+        // dd($durasi);
 
         // Validasi durasi cuti terhadap kuota tipe cuti
         $tipeCuti = TipeCuti::find($data['tipe_cuti_id']);
@@ -291,7 +293,7 @@ class DataCutiController extends Controller
             ->whereYear('tgl_from', $currentYear)
             ->sum('durasi');
 
-        // Jika tipe cuti memiliki kuota (kuota > 0) dan durasi melebihi kuota, tampilkan pesan error
+        // Jika tipe cuti memiliki kuota (kuota > 0) dan durasi melebihi kuota
         $sisaCuti = $tipeCuti->kuota - $cutiTakenThisYear;
         if ($tipeCuti->kuota > 0 && $durasi > $sisaCuti) {
             $message = "Durasi cuti ({$durasi} hari) melebihi sisa kuota yang diizinkan untuk tipe cuti '{$tipeCuti->nama}'. Sisa kuota cuti tahun ini: {$sisaCuti} hari.";
@@ -300,6 +302,7 @@ class DataCutiController extends Controller
 
         // Menambahkan durasi ke data sebelum menyimpan
         $data['durasi'] = $durasi;
+        $data['status_cuti_id'] = 2;
         $dataCuti = Cuti::create($data);
 
         $message = "Data cuti karyawan '{$dataCuti->users->nama}' berhasil dibuat untuk tipe cuti '{$dataCuti->tipe_cutis->nama}' dengan durasi {$dataCuti->durasi} hari.";

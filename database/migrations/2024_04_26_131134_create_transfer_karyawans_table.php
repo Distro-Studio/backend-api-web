@@ -16,9 +16,9 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained('users');
             $table->string('tgl_mulai');
             $table->foreignId('unit_kerja_asal')->constrained('unit_kerjas');
-            $table->foreignId('unit_kerja_tujuan')->constrained('unit_kerjas');
+            $table->foreignId('unit_kerja_tujuan')->nullable()->constrained('unit_kerjas');
             $table->foreignId('jabatan_asal')->constrained('jabatans');
-            $table->foreignId('jabatan_tujuan')->constrained('jabatans');
+            $table->foreignId('jabatan_tujuan')->nullable()->constrained('jabatans');
             $table->foreignId('kategori_transfer_id')->constrained('kategori_transfer_karyawans');
             $table->text('alasan');
             $table->string('dokumen');

@@ -133,12 +133,10 @@ class DataTukarJadwalController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
-        // Per page
         $limit = $request->input('limit', 10); // Default per page is 10
 
         $tukarJadwal = TukarJadwal::query()->orderBy('created_at', 'desc');
 
-        // Ambil semua filter dari request body
         $filters = $request->all();
 
         // Filter
@@ -342,14 +340,6 @@ class DataTukarJadwalController extends Controller
                     'created_at' => $tukar_jadwal->user_pengajuans->created_at,
                     'updated_at' => $tukar_jadwal->user_pengajuans->updated_at
                 ],
-                'jadwal_pengajuan' => [
-                    'id' => $tukar_jadwal->jadwal_pengajuans->id,
-                    'tgl_mulai' => $tukar_jadwal->jadwal_pengajuans->tgl_mulai,
-                    'tgl_selesai' => $tukar_jadwal->jadwal_pengajuans->tgl_selesai,
-                    'shift' => $tukar_jadwal->jadwal_pengajuans->shifts,
-                    'created_at' => $tukar_jadwal->jadwal_pengajuans->created_at,
-                    'updated_at' => $tukar_jadwal->jadwal_pengajuans->updated_at
-                ],
                 'karyawan_ditukar' => [
                     'id' => $tukar_jadwal->user_ditukars->id,
                     'nama' => $tukar_jadwal->user_ditukars->nama,
@@ -361,13 +351,25 @@ class DataTukarJadwalController extends Controller
                     'created_at' => $tukar_jadwal->user_ditukars->created_at,
                     'updated_at' => $tukar_jadwal->user_ditukars->updated_at
                 ],
-                'jadwal_ditukar' => [
-                    'id' => $tukar_jadwal->jadwal_ditukars->id,
-                    'tgl_mulai' => $tukar_jadwal->jadwal_ditukars->tgl_mulai,
-                    'tgl_selesai' => $tukar_jadwal->jadwal_ditukars->tgl_selesai,
-                    'shift' => $tukar_jadwal->jadwal_ditukars->shifts,
-                    'created_at' => $tukar_jadwal->jadwal_ditukars->created_at,
-                    'updated_at' => $tukar_jadwal->jadwal_ditukars->updated_at
+                'pertukaran_jadwal' => [
+                    [
+                        'jadwal_karyawan_pengajuan' => [
+                            'id' => $tukar_jadwal->jadwal_pengajuans->id,
+                            'tgl_mulai' => $tukar_jadwal->jadwal_pengajuans->tgl_mulai,
+                            'tgl_selesai' => $tukar_jadwal->jadwal_pengajuans->tgl_selesai,
+                            'shift' => $tukar_jadwal->jadwal_pengajuans->shifts,
+                            'created_at' => $tukar_jadwal->jadwal_pengajuans->created_at,
+                            'updated_at' => $tukar_jadwal->jadwal_pengajuans->updated_at
+                        ],
+                        'jadwal_karyawan_ditukar' => [
+                            'id' => $tukar_jadwal->jadwal_ditukars->id,
+                            'tgl_mulai' => $tukar_jadwal->jadwal_ditukars->tgl_mulai,
+                            'tgl_selesai' => $tukar_jadwal->jadwal_ditukars->tgl_selesai,
+                            'shift' => $tukar_jadwal->jadwal_ditukars->shifts,
+                            'created_at' => $tukar_jadwal->jadwal_ditukars->created_at,
+                            'updated_at' => $tukar_jadwal->jadwal_ditukars->updated_at
+                        ]
+                    ]
                 ],
                 'created_at' => $tukar_jadwal->created_at,
                 'updated_at' => $tukar_jadwal->updated_at

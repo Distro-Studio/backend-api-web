@@ -156,7 +156,7 @@ class User extends Authenticatable
      *
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function verifikator_1(): HasMany
+    public function verifikator_1_riwayatgajis(): HasMany
     {
         return $this->hasMany(RiwayatPenggajian::class, 'verifikator_1', 'id');
     }
@@ -166,7 +166,7 @@ class User extends Authenticatable
      *
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function verifikator_2(): HasMany
+    public function verifikator_2_riwayatgajis(): HasMany
     {
         return $this->hasMany(RiwayatPenggajian::class, 'verifikator_2', 'id');
     }
@@ -219,5 +219,15 @@ class User extends Authenticatable
     public function peserta_diklat(): HasMany
     {
         return $this->hasMany(PesertaDiklat::class, 'peserta', 'id');
+    }
+
+    /**
+     * Get all of the verifikator_1 for the User
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function verifikator_1_riwayatperubahans(): HasMany
+    {
+        return $this->hasMany(RiwayatPerubahan::class, 'verifikator_1', 'id');
     }
 }

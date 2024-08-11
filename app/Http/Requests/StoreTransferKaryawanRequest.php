@@ -27,11 +27,12 @@ class StoreTransferKaryawanRequest extends FormRequest
         return [
             'user_id' => 'required|integer|exists:users,id',
             'tgl_mulai' => 'required|string',
-            'unit_kerja_tujuan' => 'required|integer|exists:unit_kerjas,id',
-            'jabatan_tujuan' => 'required|integer|exists:jabatans,id',
+            'unit_kerja_tujuan' => 'nullable|integer|exists:unit_kerjas,id',
+            'jabatan_tujuan' => 'nullable|integer|exists:jabatans,id',
             'kategori_transfer_id' => 'required|integer|exists:kategori_transfer_karyawans,id',
             'alasan' => 'required|string',
-            'dokumen' => 'required|file|max:10240|mimes:pdf,doc,docx,xls,xlsx,zip,rar',
+            'dokumen' => 'required|file|max:10240|mimes:pdf,doc,docx,xls,xlsx,csv,txt,zip,rar',
+            // 'role_id' => 'nullable|integer|exists:roles,id',
         ];
     }
 
@@ -43,10 +44,8 @@ class StoreTransferKaryawanRequest extends FormRequest
             'user_id.exists' => 'Pengguna yang dipilih tidak valid.',
             'tgl_mulai.required' => 'Silahkan masukkan tanggal mulai kerja terlebih dahulu.',
             'tgl_mulai.string' => 'Data tanggal mulai kerja tidak diperbolehkan mengandung selain angka dan huruf.',
-            'unit_kerja_tujuan.required' => 'Silahkan pilih tujuan unit kerja karyawan yang tersedia terlebih dahulu.',
             'unit_kerja_tujuan.integer' => 'Data tujuan unit kerja karyawan yang valid adalah berupa satuan angka.',
             'unit_kerja_tujuan.exists' => 'Unit kerja karyawan yang dituju tidak valid.',
-            'jabatan_tujuan.required' => 'Silahkan pilih tujuan jabatan karyawan yang tersedia terlebih dahulu.',
             'jabatan_tujuan.integer' => 'Data tujuan jabatan karyawan yang valid adalah berupa satuan angka.',
             'jabatan_tujuan.exists' => 'Jabatan karyawan yang dituju tidak valid.',
             'kategori_transfer_id.required' => 'Silahkan pilih kategori transfer yang tersedia terlebih dahulu.',
@@ -55,9 +54,11 @@ class StoreTransferKaryawanRequest extends FormRequest
             'alasan.required' => 'Alasan transfer karyawan tidak diperbolehkan kosong.',
             'alasan.string' => 'Alasan transfer karyawan tidak diperbolehkan mengandung angka atau karakter lainnya.',
             'dokumen.required' => 'Dokumen transfer karyawan tidak diperbolehkan kosong.',
-            'dokumen.file' => 'Dokumen yang diperbolehkan berupa berkas file .PDF, .XLS, .XLSX, .DOC, .DOCX, .ZIP, dan .RAR',
-            'dokumen.mimes' => 'Dokumen yang diperbolehkan berupa berkas file .PDF, .XLS, .XLSX, .DOC, .DOCX, .ZIP, dan .RAR',
+            'dokumen.file' => 'Dokumen yang diperbolehkan berupa berkas file .PDF, .XLS, .XLSX, .CSV, .DOC, .DOCX, .ZIP, dan .RAR',
+            'dokumen.mimes' => 'Dokumen yang diperbolehkan berupa berkas file .PDF, .XLS, .XLSX, .CSV, .DOC, .DOCX, .ZIP, dan .RAR',
             'dokumen.max' => 'Dokumen yang diunggah harus kurang dari 10 MB.',
+            // 'role_id.integer' => 'Data role yang valid adalah berupa satuan angka.',
+            // 'role_id.exists' => 'Role yang dipilih tidak valid.',
         ];
     }
 

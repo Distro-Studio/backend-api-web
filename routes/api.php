@@ -7,6 +7,7 @@ use App\Http\Controllers\Dashboard\Jadwal\DataJadwalController;
 use App\Http\Controllers\Dashboard\Jadwal\DataLemburController;
 use App\Http\Controllers\Dashboard\Jadwal\DataTukarJadwalController;
 use App\Http\Controllers\Dashboard\Karyawan\DataKaryawanController;
+use App\Http\Controllers\Dashboard\Karyawan\DataRiwayatPerubahanController;
 use App\Http\Controllers\Dashboard\Karyawan\DataTransferKaryawanController;
 use App\Http\Controllers\Dashboard\Keuangan\PenggajianController;
 use App\Http\Controllers\Dashboard\Keuangan\PenyesuaianGajiController;
@@ -30,6 +31,8 @@ use App\Http\Controllers\Dashboard\Pengaturan\ManagemenWaktu\LokasiKantorControl
 use App\Http\Controllers\Dashboard\Pengaturan\ManagemenWaktu\ShiftController;
 use App\Http\Controllers\Dashboard\PengumumanController;
 use App\Http\Controllers\Dashboard\Perusahaan\DiklatController;
+use App\Http\Controllers\Dashboard\Perusahaan\PelaporanController;
+use App\Http\Controllers\Dashboard\Perusahaan\PenilaianController;
 use App\Http\Controllers\Dashboard\Presensi\DataPresensiController;
 use App\Http\Controllers\Publik\Auth\LoginController;
 use Illuminate\Support\Facades\Route;
@@ -109,7 +112,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::get('/detail-karyawan-cuti/{data_karyawan_id}', [DataKaryawanController::class, 'getDataCuti']);
             Route::get('/detail-karyawan-tukar-jadwal/{data_karyawan_id}', [DataKaryawanController::class, 'getDataTukarJadwal']);
             Route::get('/detail-karyawan-lembur/{data_karyawan_id}', [DataKaryawanController::class, 'getDataLembur']);
-            Route::get('/detail-karyawan-feedback/{data_karyawan_id}', [DataKaryawanController::class, 'getDataFeedback']);
+            Route::get('/detail-karyawan-feedback-penilaian/{data_karyawan_id}', [DataKaryawanController::class, 'getDataFeedbackPenilaian']);
 
             Route::get('/download-template-karyawan', [DataKaryawanController::class, 'downloadKaryawanTemplate']);
             Route::apiResource('/data-karyawan', DataKaryawanController::class);
@@ -118,6 +121,10 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::post('/transfer/get-data-trasnfer', [DataTransferKaryawanController::class, 'index']);
             Route::get('/transfer/export', [DataTransferKaryawanController::class, 'exportTransferKaryawan']);
             Route::apiResource('/transfer', DataTransferKaryawanController::class);
+
+            // ! Riwayat Perubahan Karyawan ===========>
+            Route::post('/riwayat-perubahan/get-riwayat-perubahan-karyawan', [DataRiwayatPerubahanController::class, 'index']);
+            Route::post('/riwayat-perubahan/verifikasi-data/{id}', [DataRiwayatPerubahanController::class, 'verifikasi_perubahan']);
         });
 
         Route::group(['prefix' => '/presensi'], function () {
@@ -186,10 +193,20 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::apiResource('/run-thr', THRPenggajianController::class);
         });
 
+        // TODO: PENILAIAN LOM FIX
         Route::group(['prefix' => '/perusahaan'], function () {
+            // ! Diklat ===========>
             Route::post('/get-data-diklat', [DiklatController::class, 'index']);
             Route::post('/diklat', [DiklatController::class, 'store']);
             Route::get('/diklat/export', [DiklatController::class, 'exportDiklat']);
+
+            // ! Pelaporan ===========>
+            Route::post('/get-data-pelaporan', [PelaporanController::class, 'index']);
+            Route::get('/pelaporan/export', [PelaporanController::class, 'exportPelaporan']);
+
+            // ! Penilaian ===========>
+            Route::post('/get-data-penilaian', [PenilaianController::class, 'index']);
+            Route::get('/penilaian/export', [PenilaianController::class, 'exportPenilaian']);
         });
 
         Route::group(['prefix' => '/pengaturan'], function () {

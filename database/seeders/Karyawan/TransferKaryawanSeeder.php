@@ -81,12 +81,12 @@ class TransferKaryawanSeeder extends Seeder
             ]);
 
             // Create track record
-            TrackRecord::create([
-                'user_id' => $user_id,
-                'kategori_record_id' => $kategori_records_id,
-                'tgl_masuk' => date('Y-m-d', rand(mktime(0, 0, 0, 1, 1, 2021), mktime(0, 0, 0, 12, 31, 2023))), // Example tgl_masuk
-                'tgl_keluar' => now(), // Example tgl_keluar
-            ]);
+            // TrackRecord::create([
+            //     'user_id' => $user_id,
+            //     'kategori_record_id' => $kategori_records_id,
+            //     'tgl_masuk' => date('Y-m-d', rand(mktime(0, 0, 0, 1, 1, 2021), mktime(0, 0, 0, 12, 31, 2023))), // Example tgl_masuk
+            //     'tgl_keluar' => now(), // Example tgl_keluar
+            // ]);
         }
     }
 }

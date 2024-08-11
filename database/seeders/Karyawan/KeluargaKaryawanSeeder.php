@@ -47,7 +47,7 @@ class KeluargaKaryawanSeeder extends Seeder
                 DataKeluarga::create([
                     'data_karyawan_id' => $karyawan_id,
                     'nama_keluarga' => 'Nama Keluarga ' . $karyawan_id . ' ' . $i,
-                    'hubungan' => ['Suami', 'Istri', 'Anak'][array_rand(['Suami', 'Istri', 'Anak'])],
+                    'hubungan' => ['Anak', 'Suami', 'Istri', 'Nenek', 'Kakek', 'Ayah Suami', 'Ibu Suami', 'Ayah Istri', 'Ibu Istri'][array_rand(['Anak', 'Suami', 'Istri', 'Nenek', 'Kakek', 'Ayah Suami', 'Ibu Suami', 'Ayah Istri', 'Ibu Istri'])],
                     'pendidikan_terakhir' => $pendidikan[array_rand($pendidikan)],
                     'status_hidup' => rand(0, 1),
                     'pekerjaan' => 'Pekerjaan ' . $karyawan_id . ' ' . $i,

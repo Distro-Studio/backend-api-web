@@ -15,9 +15,9 @@ return new class extends Migration
             $table->id();
             $table->foreignId('data_karyawan_id')->constrained('data_karyawans');
             $table->string('nama_keluarga');
-            $table->string('hubungan');
+            $table->enum('hubungan', ['Ayah', 'Ibu', 'Anak', 'Suami', 'Istri', 'Nenek', 'Kakek', 'Ayah Suami', 'Ibu Suami', 'Ayah Istri', 'Ibu Istri']);
             $table->string('pendidikan_terakhir');
-            $table->boolean('status_hidup')->default(false);
+            $table->boolean('status_hidup');
             $table->string('pekerjaan')->nullable();
             $table->string('no_hp')->nullable();
             $table->string('email')->nullable();

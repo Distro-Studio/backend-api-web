@@ -33,7 +33,6 @@ class PermissionSeeder extends Seeder
             'Presensi Karyawan' => ['create presensiKaryawan', 'edit presensiKaryawan', 'delete presensiKaryawan', 'view presensiKaryawan', 'import presensiKaryawan', 'export presensiKaryawan'],
 
             // Karyawan
-            'Karyawan Akun' => ['create user', 'edit user', 'delete user', 'view user', 'import user', 'export user'],
             'Karyawan Data' => ['create dataKaryawan', 'edit dataKaryawan', 'delete dataKaryawan', 'view dataKaryawan', 'import dataKaryawan', 'export dataKaryawan'],
 
             // Dashboard
@@ -41,7 +40,7 @@ class PermissionSeeder extends Seeder
             'Notifikasi' => ['create notifikasi', 'edit notifikasi', 'delete notifikasi', 'view notifikasi'],
 
             // Master setting
-            'Verifikasi Data' => ['verifikasi verifikastor1', 'verifikasi verifikastor2'],
+            'Verifikasi Data' => ['verifikasi data', 'verifikasi verifikator1', 'verifikasi verifikator2'],
             'Pengaturan Role' => ['create role', 'edit role', 'delete role', 'view role', 'import role', 'export role'],
             'Pengaturan Permission' => ['create permission', 'edit permission', 'delete permission', 'view permission'],
             'Pengaturan Unit Kerja' => ['create unitKerja', 'edit unitKerja', 'delete unitKerja', 'view unitKerja', 'import unitKerja', 'export unitKerja'],

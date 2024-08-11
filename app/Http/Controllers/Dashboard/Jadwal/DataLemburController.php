@@ -248,6 +248,9 @@ class DataLemburController extends Controller
         }
 
         $data = $request->validated();
+        // Set default value for status_lembur_id
+        $data['status_lembur_id'] = 1;
+
         $dataLembur = Lembur::create($data);
         $successMessage = "Lembur karyawan '{$dataLembur->users->nama}' berhasil ditambahkan.";
 

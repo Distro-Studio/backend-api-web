@@ -30,7 +30,7 @@ class StoreCutiJadwalRequest extends FormRequest
             'tgl_from' => 'required|string',
             'tgl_to' => 'required|string',
             'catatan' => 'nullable|string',
-            'status_cuti_id' => 'required|integer|exists:status_cutis,id',
+            // 'status_cuti_id' => 'required|integer|exists:status_cutis,id',
         ];
     }
 
@@ -46,8 +46,8 @@ class StoreCutiJadwalRequest extends FormRequest
             'tgl_to.required' => 'Tanggal selesai cuti karyawan tidak diperbolehkan kosong.',
             'tgl_to.string' => 'Tanggal selesai cuti karyawan tidak diperbolehkan selain angka atau huruf.',
             'catatan.string' => 'Catatan cuti karyawan tidak diperbolehkan selain angka atau huruf.',
-            'status_cuti_id.required' => 'Silahkan pilih status cuti yang tersedia terlebih dahulu.',
-            'status_cuti_id.exists' => 'Status cuti yang dipilih tidak valid.',
+            // 'status_cuti_id.required' => 'Silahkan pilih status cuti yang tersedia terlebih dahulu.',
+            // 'status_cuti_id.exists' => 'Status cuti yang dipilih tidak valid.',
         ];
     }
 

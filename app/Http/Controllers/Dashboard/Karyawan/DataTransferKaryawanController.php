@@ -295,42 +295,6 @@ class DataTransferKaryawanController extends Controller
         // with server
         DB::beginTransaction();
         try {
-            // if ($request->hasFile('dokumen')) {
-            //     // Fetch user information
-            //     $user = User::find($data['user_id']);
-            //     if (!$user) {
-            //         throw new Exception('Pengguna tidak ditemukan.');
-            //     }
-
-            //     // Upload file using helper
-            //     $dataupload = StorageSeverHelper::uploadToServer($request, 'Check in - ' . Auth::user()->nama);
-            //     // $dataupload = StorageSeverHelper::uploadToServer($request);
-            //     $data['dokumen'] = $dataupload['path'];
-
-            //     // Fetch kategori_berkas for 'System'
-            //     $kategoriBerkas = KategoriBerkas::where('label', 'System')->first();
-            //     if (!$kategoriBerkas) {
-            //         throw new Exception('Kategori berkas tidak ditemukan.');
-            //     }
-
-            //     // Store in 'berkas' table on your server
-            //     $berkas = Berkas::create([
-            //         'user_id' => $data['user_id'],
-            //         'file_id' => $dataupload['id_file']['id'],
-            //         'nama' => 'Berkas Transfer - ' . $user->nama,
-            //         'kategori_berkas_id' => $kategoriBerkas->id,
-            //         'path' => $dataupload['path'],
-            //         'tgl_upload' => now(),
-            //         'nama_file' => $dataupload['nama_file'],
-            //         'ext' => $dataupload['ext'],
-            //         'size' => $dataupload['size'],
-            //     ]);
-            //     Log::info('Berkas Transfer ' . $user->nama . ' berhasil di upload');
-
-            //     if (!$berkas) {
-            //         throw new Exception('Berkas gagal di upload');
-            //     }
-            // }
             if ($request->hasFile('dokumen')) {
                 // Ambil data user dan relasinya
                 $user = User::with('data_karyawans.unit_kerjas', 'data_karyawans.jabatans')->find($data['user_id']);
@@ -390,12 +354,13 @@ class DataTransferKaryawanController extends Controller
             $alasan = $transfer->alasan;
             $tgl_mulai = $transfer->tgl_mulai;
 
-            // create track record
+            // Create track record based on kategori_transfer_id
+            $kategori_record_id = ($data['kategori_transfer_id'] == 1) ? 3 : 2;
             TrackRecord::create([
                 'user_id' => $users->id,
                 'tgl_masuk' => $users->data_karyawans->tgl_masuk,
                 'tgl_keluar' => $users->data_karyawans->tgl_keluar,
-                'kategori_record_id' => 2,
+                'kategori_record_id' => $kategori_record_id,
             ]);
 
             $details = [

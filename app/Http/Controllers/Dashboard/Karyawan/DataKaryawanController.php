@@ -15,7 +15,6 @@ use App\Models\UnitKerja;
 use App\Models\Kompetensi;
 use App\Models\TrackRecord;
 use App\Models\TukarJadwal;
-use Illuminate\Support\Str;
 use App\Models\DataKaryawan;
 use App\Models\DataKeluarga;
 use App\Models\KelompokGaji;
@@ -24,24 +23,23 @@ use Illuminate\Http\Request;
 use App\Helpers\RandomHelper;
 use Illuminate\Http\Response;
 use App\Models\StatusKaryawan;
-use App\Mail\SendAccoundUsersMail;
+use App\Models\RiwayatPerubahan;
+use App\Models\TransferKaryawan;
 use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Models\Role;
 use App\Helpers\StorageServerHelper;
 use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Mail\SendAccountResetPassword;
-use App\Exports\Karyawan\KaryawanExport;
 use App\Exports\TemplateKaryawanExport;
+use App\Exports\Karyawan\KaryawanExport;
 use App\Imports\Karyawan\KaryawanImport;
 use App\Http\Requests\StoreDataKaryawanRequest;
 use App\Jobs\EmailNotification\AccountEmailJob;
 use App\Http\Requests\UpdateDataKaryawanRequest;
-use App\Http\Requests\UpdateUserPasswordRequest;
 use App\Http\Requests\Excel_Import\ImportKaryawanRequest;
 use App\Http\Resources\Dashboard\Karyawan\KaryawanResource;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
@@ -373,6 +371,86 @@ class DataKaryawanController extends Controller
     ], Response::HTTP_OK);
   }
 
+  // ini tanpa perubahan dan feedback
+  // public function getDataRekamJejak($data_karyawan_id)
+  // {
+  //   if (!Gate::allows('view dataKaryawan')) {
+  //     return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+  //   }
+
+  //   // Cari karyawan berdasarkan data_karyawan_id
+  //   $karyawan = DataKaryawan::where('email', '!=', 'super_admin@admin.rski')->find($data_karyawan_id);
+  //   if (!$karyawan) {
+  //     return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data karyawan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+  //   }
+
+  //   // Ambil user dari karyawan
+  //   $user = $karyawan->users;
+
+  //   // Ambil semua rekam jejak dari user_id
+  //   $rekamJejakList = TrackRecord::where('user_id', $user->id)
+  //     ->whereIn('kategori_record_id', [2, 3])
+  //     ->get();
+  //   if ($rekamJejakList->isEmpty()) {
+  //     return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data rekam jejak karyawan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+  //   }
+
+  //   // Format data rekam jejak
+  //   $formattedData = $rekamJejakList->map(function ($item) {
+  //     $user = $item->users;
+
+  //     // Ambil data transfer jika ada
+  //     $transfer = TransferKaryawan::where('user_id', $user->id)->first();
+
+  //     return [
+  //       'id' => $item->id,
+  //       'user' => [
+  //         'id' => $user->id,
+  //         'nama' => $user->nama,
+  //         'email_verified_at' => $user->email_verified_at,
+  //         'data_karyawan_id' => $user->data_karyawan_id,
+  //         'foto_profil' => $user->foto_profil,
+  //         'data_completion_step' => $user->data_completion_step,
+  //         'status_aktif' => $user->status_aktif,
+  //         'created_at' => $user->created_at,
+  //         'updated_at' => $user->updated_at
+  //       ],
+  //       'kategori_rekam_jejak' => $item->kategori_track_records,
+  //       'content' => [
+  //         'tgl_masuk' => $item->tgl_masuk,
+  //         'tgl_keluar' => $item->tgl_keluar,
+  //         'unit_kerja_asal' => $transfer->unit_kerja_asals,
+  //         'unit_kerja_tujuan' => $transfer->unit_kerja_tujuans,
+  //         'jabatan_asal' => $transfer->jabatan_asals,
+  //         'jabatan_tujuan' => $transfer->jabatan_tujuans,
+  //         'kategori_transfer' => $transfer->kategori_transfer_karyawans,
+  //         'alasan' => $transfer->alasan,
+  //         'dokumen' => $transfer->dokumen,
+  //         'created_at' => $item->created_at,
+  //         'updated_at' => $item->updated_at
+  //       ]
+  //     ];
+  //   });
+
+  //   // Menghitung masa kerja dengan helper
+  //   $tglMasuk = RandomHelper::convertToDateString($karyawan->tgl_masuk);
+  //   $tglKeluar = $user->tgl_keluar ? RandomHelper::convertToDateString($karyawan->tgl_keluar) : null;
+  //   $masaKerja = $this->calculateTrackRecordMasaKerja($tglMasuk, $tglKeluar);
+
+  //   return response()->json([
+  //     'status' => Response::HTTP_OK,
+  //     'message' => "Data rekam jejak karyawan '{$user->nama}' berhasil ditampilkan.",
+  //     'data' => [
+  //       'id' => $karyawan->id,
+  //       'user' => $user,
+  //       'tgl_masuk_karyawan' => $karyawan->tgl_masuk,
+  //       'tgl_keluar_karyawan' => $karyawan->tgl_keluar,
+  //       'masa_kerja_karyawan' => $masaKerja,
+  //       'list_rekam_jejak' => $formattedData
+  //     ]
+  //   ], Response::HTTP_OK);
+  // }
+
   public function getDataRekamJejak($data_karyawan_id)
   {
     if (!Gate::allows('view dataKaryawan')) {
@@ -388,23 +466,94 @@ class DataKaryawanController extends Controller
     // Ambil user dari karyawan
     $user = $karyawan->users;
 
-    // Ambil semua rekam jejak dari user_id
-    $rekamJejakList = TrackRecord::where('user_id', $user->id)->get();
-    if ($rekamJejakList->isEmpty()) {
+    // Ambil semua rekam jejak dari user_id dengan kategori_record_id 2 dan 3
+    $rekamJejakList = TrackRecord::where('user_id', $user->id)
+      ->whereIn('kategori_record_id', [2, 3])
+      ->get();
+
+    // Ambil semua data perubahan dengan kategori_record_id 1
+    $dataPerubahanList = TrackRecord::with(['users', 'kategori_track_records'])
+      ->where('user_id', $user->id)
+      ->where('kategori_record_id', 1)
+      ->get();
+
+    if ($rekamJejakList->isEmpty() && $dataPerubahanList->isEmpty()) {
       return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data rekam jejak karyawan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
     }
 
-    // Format data rekam jejak
-    $formattedData = $rekamJejakList->map(function ($item) {
+    // Format data rekam jejak kategori 2 dan 3
+    $formattedRekamJejak = $rekamJejakList->map(function ($item) {
+      $user = $item->users;
+      $transfer = TransferKaryawan::where('user_id', $user->id)->first();
+
       return [
         'id' => $item->id,
+        'user' => [
+          'id' => $user->id,
+          'nama' => $user->nama,
+          'email_verified_at' => $user->email_verified_at,
+          'data_karyawan_id' => $user->data_karyawan_id,
+          'foto_profil' => $user->foto_profil,
+          'data_completion_step' => $user->data_completion_step,
+          'status_aktif' => $user->status_aktif,
+          'created_at' => $user->created_at,
+          'updated_at' => $user->updated_at
+        ],
         'kategori_rekam_jejak' => $item->kategori_track_records,
-        'tgl_masuk' => $item->tgl_masuk,
-        'tgl_keluar' => $item->tgl_keluar,
-        'created_at' => $item->created_at,
-        'updated_at' => $item->updated_at
+        'content' => [
+          'kategori_transfer' => $transfer->kategori_transfer_karyawans,
+          'tgl_masuk' => $item->tgl_masuk,
+          'tgl_keluar' => $item->tgl_keluar,
+          'unit_kerja_asal' => $transfer->unit_kerja_asals,
+          'unit_kerja_tujuan' => $transfer->unit_kerja_tujuans,
+          'jabatan_asal' => $transfer->jabatan_asals,
+          'jabatan_tujuan' => $transfer->jabatan_tujuans,
+          'alasan' => $transfer->alasan,
+          'dokumen' => $transfer->dokumen,
+          'created_at' => $item->created_at,
+          'updated_at' => $item->updated_at
+        ]
       ];
     });
+
+    // Format data perubahan kategori 1
+    $formattedDataPerubahan = [];
+    foreach ($dataPerubahanList as $data_perubahan) {
+      $relasiUser = $data_perubahan->users;
+      $relasiKategori = $data_perubahan->kategori_track_records;
+      $perubahanDataList = RiwayatPerubahan::where('data_karyawan_id', $user->id)->get();
+
+      foreach ($perubahanDataList as $perubahanData) {
+        $formattedDataPerubahan[] = [
+          'id' => $data_perubahan->id,
+          'user' => [
+            'id' => $relasiUser->id,
+            'nama' => $relasiUser->nama,
+            'email_verified_at' => $relasiUser->email_verified_at,
+            'data_karyawan_id' => $relasiUser->data_karyawan_id,
+            'foto_profil' => $relasiUser->foto_profil,
+            'data_completion_step' => $relasiUser->data_completion_step,
+            'status_aktif' => $relasiUser->status_aktif,
+            'created_at' => $relasiUser->created_at,
+            'updated_at' => $relasiUser->updated_at
+          ],
+          'kategori_rekam_jejak' => $relasiKategori,
+          'content' => [
+            'kolom' => $perubahanData->kolom,
+            'original_data' => $perubahanData->original_data,
+            'updated_data' => $perubahanData->updated_data,
+            'status_perubahan' => $perubahanData->status_perubahans,
+            'verifikator_1' => $perubahanData->verifikator_1_users,
+            'alasan' => $perubahanData->alasan,
+            'created_at' => $perubahanData->created_at,
+            'updated_at' => $perubahanData->updated_at
+          ]
+        ];
+      }
+    }
+
+    // Menggabungkan semua data yang diformat
+    $allFormattedData = $formattedRekamJejak->merge($formattedDataPerubahan);
 
     // Menghitung masa kerja dengan helper
     $tglMasuk = RandomHelper::convertToDateString($karyawan->tgl_masuk);
@@ -420,7 +569,7 @@ class DataKaryawanController extends Controller
         'tgl_masuk_karyawan' => $karyawan->tgl_masuk,
         'tgl_keluar_karyawan' => $karyawan->tgl_keluar,
         'masa_kerja_karyawan' => $masaKerja,
-        'list_rekam_jejak' => $formattedData
+        'list_rekam_jejak' => $allFormattedData
       ]
     ], Response::HTTP_OK);
   }
@@ -755,7 +904,7 @@ class DataKaryawanController extends Controller
     ], Response::HTTP_OK);
   }
 
-  public function getDataFeedback($data_karyawan_id)
+  public function getDataFeedbackPenilaian($data_karyawan_id)
   {
     if (!Gate::allows('view dataKaryawan')) {
       return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
@@ -1099,49 +1248,181 @@ class DataKaryawanController extends Controller
     }
   }
 
-  // show by user id
+  // show by user id 
+  // ini tanpa url "lihat"
+  // public function showByUserId($user_id)
+  // {
+  //   if (!Gate::allows('view dataKaryawan')) {
+  //     return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+  //   }
+
+  //   // Cari user berdasarkan user_id
+  //   $user = User::find($user_id);
+
+  //   if (!$user) {
+  //     return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Akun karyawan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+  //   }
+
+  //   // Ambil data_karyawan_id dari user
+  //   $data_karyawan_id = $user->data_karyawan_id;
+
+  //   // Cari data karyawan berdasarkan data_karyawan_id
+  //   $karyawan = DataKaryawan::where('email', '!=', 'super_admin@admin.rski')->find($data_karyawan_id);
+
+  //   if (!$karyawan) {
+  //     return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data karyawan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+  //   }
+  //   $role = $karyawan->users->roles->first();
+
+  //   // Ambil data pengurang gaji
+  //   $pengurangGaji = DB::table('pengurang_gajis')
+  //     ->join('premis', 'pengurang_gajis.premi_id', '=', 'premis.id')
+  //     ->where('pengurang_gajis.data_karyawan_id', $karyawan->id)
+  //     ->select(
+  //       'premis.id',
+  //       'premis.nama_premi',
+  //       'premis.kategori_potongan_id',
+  //       'premis.jenis_premi',
+  //       'premis.besaran_premi',
+  //       'premis.minimal_rate',
+  //       'premis.maksimal_rate',
+  //       'premis.created_at',
+  //       'premis.updated_at'
+  //     )
+  //     ->get();
+
+  //   $formattedData = [
+  //     'id' => $karyawan->id,
+  //     'user' => [
+  //       'id' => $karyawan->users->id,
+  //       'nama' => $karyawan->users->nama,
+  //       'email_verified_at' => $karyawan->users->email_verified_at,
+  //       'data_karyawan_id' => $karyawan->users->data_karyawan_id,
+  //       'foto_profil' => $karyawan->users->foto_profil,
+  //       'data_completion_step' => $karyawan->users->data_completion_step,
+  //       'status_aktif' => $karyawan->users->status_aktif,
+  //       'created_at' => $karyawan->users->created_at,
+  //       'updated_at' => $karyawan->users->updated_at
+  //     ],
+  //     'role' => [
+  //       'id' => $role->id,
+  //       'name' => $role->name,
+  //       'deskripsi' => $role->deskripsi,
+  //       'created_at' => $role->created_at,
+  //       'updated_at' => $role->updated_at
+  //     ], // role_id
+  //     'potongan_gaji' => $pengurangGaji,
+  //     'nik' => $karyawan->nik,
+  //     'email' => $karyawan->email,
+  //     'no_rm' => $karyawan->no_rm,
+  //     'no_sip' => $karyawan->no_sip,
+  //     'path_sip'
+  //     'no_manulife' => $karyawan->no_manulife,
+  //     'tgl_masuk' => $karyawan->tgl_masuk,
+  //     'unit_kerja' => $karyawan->unit_kerjas, // unit_kerja_id
+  //     'jabatan' => $karyawan->jabatans, // jabatan_id
+  //     'kompetensi' => $karyawan->kompetensis, // kompetensi_id
+  //     'nik_ktp' => $karyawan->nik_ktp,
+  //     'path_nik_ktp' => 
+  //     'status_karyawan' => $karyawan->status_karyawans, // status_karyawan_id
+  //     'tempat_lahir' => $karyawan->tempat_lahir,
+  //     'tgl_lahir' => $karyawan->tgl_lahir,
+  //     'kelompok_gaji' => $karyawan->kelompok_gajis, // kelompok_gaji_id
+  //     'no_rekening' => $karyawan->no_rekening,
+  //     'tunjangan_jabatan' => $karyawan->tunjangan_jabatan,
+  //     'tunjangan_fungsional' => $karyawan->tunjangan_fungsional,
+  //     'tunjangan_khusus' => $karyawan->tunjangan_khusus,
+  //     'tunjangan_lainnya' => $karyawan->tunjangan_lainnya,
+  //     'uang_lembur' => $karyawan->uang_lembur,
+  //     'uang_makan' => $karyawan->uang_makan,
+  //     'ptkp' => $karyawan->ptkps, // ptkp_id
+  //     'tgl_keluar' => $karyawan->tgl_keluar,
+  //     'no_kk' => $karyawan->no_kk,
+  //     'path_kartu_keluarga' => 
+  //     'alamat' => $karyawan->alamat,
+  //     'gelar_depan' => $karyawan->gelar_depan,
+  //     'no_hp' => $karyawan->no_hp,
+  //     'no_bpjsksh' => $karyawan->no_bpjsksh,
+  //     'path_bpjsksh' =>
+  //     'no_bpjs_kesehatan' => $karyawan->no_bpjsktk,
+  //     'tgl_diangkat' => $karyawan->tgl_diangkat,
+  //     'masa_kerja' => $karyawan->masa_kerja,
+  //     'npwp' => $karyawan->npwp,
+  //     'jenis_kelamin' => $karyawan->jenis_kelamin,
+  //     'agama' => $karyawan->kategori_agamas, // agama_id
+  //     'golongan_darah' => $karyawan->kategori_darahs, // golongan_darah_id
+  //     'pendidikan_terakhir' => $karyawan->kategori_pendidikans, // pendidikan_terakhir_id
+  //     'tinggi_badan' => $karyawan->tinggi_badan,
+  //     'berat_badan' => $karyawan->berat_badan,
+  //     'no_ijazah' => $karyawan->no_ijazah,
+  //     'path_ijazah' =>
+  //     'tahun_lulus' => $karyawan->tahun_lulus,
+  //     'no_str' => $karyawan->no_str,
+  //     'path_str' =>
+  //     'masa_berlaku_str' => $karyawan->masa_berlaku_str,
+  //     'tgl_berakhir_pks' => $karyawan->tgl_berakhir_pks,
+  //     'masa_diklat' => $karyawan->masa_diklat,
+  //     'created_at' => $karyawan->created_at,
+  //     'updated_at' => $karyawan->updated_at
+  //   ];
+
+  //   return response()->json([
+  //     'status' => Response::HTTP_OK,
+  //     'message' => "Detail karyawan '{$karyawan->users->nama}' berhasil ditampilkan.",
+  //     'data' => $formattedData,
+  //   ], Response::HTTP_OK);
+  // }
+
   public function showByUserId($user_id)
   {
     if (!Gate::allows('view dataKaryawan')) {
       return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
     }
 
-    // Cari user berdasarkan user_id
+    // Find the user by user_id
     $user = User::find($user_id);
 
     if (!$user) {
       return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Akun karyawan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
     }
 
-    // Ambil data_karyawan_id dari user
+    // Get data_karyawan_id from user
     $data_karyawan_id = $user->data_karyawan_id;
 
-    // Cari data karyawan berdasarkan data_karyawan_id
+    // Find karyawan by data_karyawan_id
     $karyawan = DataKaryawan::where('email', '!=', 'super_admin@admin.rski')->find($data_karyawan_id);
 
     if (!$karyawan) {
       return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data karyawan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
     }
+
     $role = $karyawan->users->roles->first();
 
-    // Ambil data pengurang gaji
-    $pengurangGaji = DB::table('pengurang_gajis')
-      ->join('premis', 'pengurang_gajis.premi_id', '=', 'premis.id')
-      ->where('pengurang_gajis.data_karyawan_id', $karyawan->id)
-      ->select(
-        'premis.id',
-        'premis.nama_premi',
-        'premis.kategori_potongan_id',
-        'premis.jenis_premi',
-        'premis.besaran_premi',
-        'premis.minimal_rate',
-        'premis.maksimal_rate',
-        'premis.created_at',
-        'premis.updated_at'
-      )
-      ->get();
+    // Retrieve the associated files (berkas)
+    $berkasFields = [
+      'path_sip' => $karyawan->no_sip,
+      'path_nik_ktp' => $karyawan->nik_ktp,
+      'path_kartu_keluarga' => $karyawan->no_kk,
+      'path_bpjsksh' => $karyawan->no_bpjsksh,
+      'path_ijazah' => $karyawan->no_ijazah,
+      'path_str' => $karyawan->no_str,
+    ];
 
-    $formattedData = [
+    $baseUrl = env('STORAGE_SERVER_DOMAIN'); // Replace with your actual storage server URL
+
+    $formattedPaths = [];
+    foreach ($berkasFields as $field => $berkasId) {
+      $berkas = Berkas::where('id', $berkasId)->first();
+      if ($berkas) {
+        $extension = StorageServerHelper::getExtensionFromMimeType($berkas->ext);
+        $formattedPaths[$field] = $baseUrl . $berkas->path . '.' . $extension;
+      } else {
+        $formattedPaths[$field] = null;
+      }
+    }
+
+    // Format the karyawan data
+    $formattedData = array_merge([
       'id' => $karyawan->id,
       'user' => [
         'id' => $karyawan->users->id,
@@ -1160,22 +1441,36 @@ class DataKaryawanController extends Controller
         'deskripsi' => $role->deskripsi,
         'created_at' => $role->created_at,
         'updated_at' => $role->updated_at
-      ], // role_id
-      'potongan_gaji' => $pengurangGaji,
+      ],
+      'potongan_gaji' => DB::table('pengurang_gajis')
+        ->join('premis', 'pengurang_gajis.premi_id', '=', 'premis.id')
+        ->where('pengurang_gajis.data_karyawan_id', $karyawan->id)
+        ->select(
+          'premis.id',
+          'premis.nama_premi',
+          'premis.kategori_potongan_id',
+          'premis.jenis_premi',
+          'premis.besaran_premi',
+          'premis.minimal_rate',
+          'premis.maksimal_rate',
+          'premis.created_at',
+          'premis.updated_at'
+        )
+        ->get(),
       'nik' => $karyawan->nik,
       'email' => $karyawan->email,
       'no_rm' => $karyawan->no_rm,
       'no_sip' => $karyawan->no_sip,
       'no_manulife' => $karyawan->no_manulife,
       'tgl_masuk' => $karyawan->tgl_masuk,
-      'unit_kerja' => $karyawan->unit_kerjas, // unit_kerja_id
-      'jabatan' => $karyawan->jabatans, // jabatan_id
-      'kompetensi' => $karyawan->kompetensis, // kompetensi_id
+      'unit_kerja' => $karyawan->unit_kerjas,
+      'jabatan' => $karyawan->jabatans,
+      'kompetensi' => $karyawan->kompetensis,
       'nik_ktp' => $karyawan->nik_ktp,
-      'status_karyawan' => $karyawan->status_karyawans, // status_karyawan_id
+      'status_karyawan' => $karyawan->status_karyawans,
       'tempat_lahir' => $karyawan->tempat_lahir,
       'tgl_lahir' => $karyawan->tgl_lahir,
-      'kelompok_gaji' => $karyawan->kelompok_gajis, // kelompok_gaji_id
+      'kelompok_gaji' => $karyawan->kelompok_gajis,
       'no_rekening' => $karyawan->no_rekening,
       'tunjangan_jabatan' => $karyawan->tunjangan_jabatan,
       'tunjangan_fungsional' => $karyawan->tunjangan_fungsional,
@@ -1183,21 +1478,21 @@ class DataKaryawanController extends Controller
       'tunjangan_lainnya' => $karyawan->tunjangan_lainnya,
       'uang_lembur' => $karyawan->uang_lembur,
       'uang_makan' => $karyawan->uang_makan,
-      'ptkp' => $karyawan->ptkps, // ptkp_id
+      'ptkp' => $karyawan->ptkps,
       'tgl_keluar' => $karyawan->tgl_keluar,
       'no_kk' => $karyawan->no_kk,
       'alamat' => $karyawan->alamat,
       'gelar_depan' => $karyawan->gelar_depan,
       'no_hp' => $karyawan->no_hp,
       'no_bpjsksh' => $karyawan->no_bpjsksh,
-      'no_bpjsktk' => $karyawan->no_bpjsktk,
+      'no_bpjs_kesehatan' => $karyawan->no_bpjsktk,
       'tgl_diangkat' => $karyawan->tgl_diangkat,
       'masa_kerja' => $karyawan->masa_kerja,
       'npwp' => $karyawan->npwp,
       'jenis_kelamin' => $karyawan->jenis_kelamin,
-      'agama' => $karyawan->kategori_agamas, // agama_id
-      'golongan_darah' => $karyawan->kategori_darahs, // golongan_darah_id
-      'pendidikan_terakhir' => $karyawan->kategori_pendidikans, // pendidikan_terakhir_id
+      'agama' => $karyawan->kategori_agamas,
+      'golongan_darah' => $karyawan->kategori_darahs,
+      'pendidikan_terakhir' => $karyawan->kategori_pendidikans,
       'tinggi_badan' => $karyawan->tinggi_badan,
       'berat_badan' => $karyawan->berat_badan,
       'no_ijazah' => $karyawan->no_ijazah,
@@ -1208,7 +1503,7 @@ class DataKaryawanController extends Controller
       'masa_diklat' => $karyawan->masa_diklat,
       'created_at' => $karyawan->created_at,
       'updated_at' => $karyawan->updated_at
-    ];
+    ], $formattedPaths);
 
     return response()->json([
       'status' => Response::HTTP_OK,
@@ -1218,37 +1513,153 @@ class DataKaryawanController extends Controller
   }
 
   // show by data karyawan
+  // ini tanpa url "lihat"
+  // public function showByDataKaryawanId($data_karyawan_id)
+  // {
+  //   if (!Gate::allows('view dataKaryawan')) {
+  //     return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+  //   }
+
+  //   // Cari data karyawan berdasarkan data_karyawan_id
+  //   $karyawan = DataKaryawan::where('email', '!=', 'super_admin@admin.rski')->find($data_karyawan_id);
+
+  //   if (!$karyawan) {
+  //     return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data karyawan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+  //   }
+  //   $role = $karyawan->users->roles->first();
+  //   // Ambil data pengurang gaji
+  //   $pengurangGaji = DB::table('pengurang_gajis')
+  //     ->join('premis', 'pengurang_gajis.premi_id', '=', 'premis.id')
+  //     ->where('pengurang_gajis.data_karyawan_id', $karyawan->id)
+  //     ->select(
+  //       'premis.id',
+  //       'premis.nama_premi',
+  //       'premis.kategori_potongan_id',
+  //       'premis.jenis_premi',
+  //       'premis.besaran_premi',
+  //       'premis.minimal_rate',
+  //       'premis.maksimal_rate',
+  //       'premis.created_at',
+  //       'premis.updated_at'
+  //     )
+  //     ->get();
+
+  //   $formattedData = [
+  //     'id' => $karyawan->id,
+  //     'user' => [
+  //       'id' => $karyawan->users->id,
+  //       'nama' => $karyawan->users->nama,
+  //       'email_verified_at' => $karyawan->users->email_verified_at,
+  //       'data_karyawan_id' => $karyawan->users->data_karyawan_id,
+  //       'foto_profil' => $karyawan->users->foto_profil,
+  //       'data_completion_step' => $karyawan->users->data_completion_step,
+  //       'status_aktif' => $karyawan->users->status_aktif,
+  //       'created_at' => $karyawan->users->created_at,
+  //       'updated_at' => $karyawan->users->updated_at
+  //     ],
+  //     'role' => [
+  //       'id' => $role->id,
+  //       'name' => $role->name,
+  //       'deskripsi' => $role->deskripsi,
+  //       'created_at' => $role->created_at,
+  //       'updated_at' => $role->updated_at
+  //     ], // role_id
+  //     'potongan_gaji' => $pengurangGaji,
+  //     'email' => $karyawan->email,
+  //     'nik' => $karyawan->nik,
+  //     'no_rm' => $karyawan->no_rm,
+  //     'no_sip' => $karyawan->no_sip,
+  //     'no_manulife' => $karyawan->no_manulife,
+  //     'tgl_masuk' => $karyawan->tgl_masuk,
+  //     'unit_kerja' => $karyawan->unit_kerjas, // unit_kerja_id
+  //     'jabatan' => $karyawan->jabatans, // jabatan_id
+  //     'kompetensi' => $karyawan->kompetensis, // kompetensi_id
+  //     'nik_ktp' => $karyawan->nik_ktp,
+  //     'status_karyawan' => $karyawan->status_karyawans, // status_karyawan_id
+  //     'tempat_lahir' => $karyawan->tempat_lahir,
+  //     'tgl_lahir' => $karyawan->tgl_lahir,
+  //     'kelompok_gaji' => $karyawan->kelompok_gajis, // kelompok_gaji_id
+  //     'no_rekening' => $karyawan->no_rekening,
+  //     'tunjangan_jabatan' => $karyawan->tunjangan_jabatan,
+  //     'tunjangan_fungsional' => $karyawan->tunjangan_fungsional,
+  //     'tunjangan_khusus' => $karyawan->tunjangan_khusus,
+  //     'tunjangan_lainnya' => $karyawan->tunjangan_lainnya,
+  //     'uang_lembur' => $karyawan->uang_lembur,
+  //     'uang_makan' => $karyawan->uang_makan,
+  //     'ptkp' => $karyawan->ptkps, // ptkp_id
+  //     'tgl_keluar' => $karyawan->tgl_keluar,
+  //     'no_kk' => $karyawan->no_kk,
+  //     'alamat' => $karyawan->alamat,
+  //     'gelar_depan' => $karyawan->gelar_depan,
+  //     'no_hp' => $karyawan->no_hp,
+  //     'no_bpjsksh' => $karyawan->no_bpjsksh,
+  //     'no_bpjsktk' => $karyawan->no_bpjsktk,
+  //     'tgl_diangkat' => $karyawan->tgl_diangkat,
+  //     'masa_kerja' => $karyawan->masa_kerja,
+  //     'npwp' => $karyawan->npwp,
+  //     'jenis_kelamin' => $karyawan->jenis_kelamin,
+  //     'agama' => $karyawan->kategori_agamas, // agama_id
+  //     'golongan_darah' => $karyawan->kategori_darahs, // golongan_darah_id
+  //     'pendidikan_terakhir' => $karyawan->kategori_pendidikans, // pendidikan_terakhir_id
+  //     'tinggi_badan' => $karyawan->tinggi_badan,
+  //     'berat_badan' => $karyawan->berat_badan,
+  //     'no_ijazah' => $karyawan->no_ijazah,
+  //     'tahun_lulus' => $karyawan->tahun_lulus,
+  //     'no_str' => $karyawan->no_str,
+  //     'masa_berlaku_str' => $karyawan->masa_berlaku_str,
+  //     'tgl_berakhir_pks' => $karyawan->tgl_berakhir_pks,
+  //     'masa_diklat' => $karyawan->masa_diklat,
+  //     'created_at' => $karyawan->created_at,
+  //     'updated_at' => $karyawan->updated_at
+  //   ];
+
+  //   return response()->json([
+  //     'status' => Response::HTTP_OK,
+  //     'message' => "Detail karyawan '{$karyawan->users->nama}' berhasil ditampilkan.",
+  //     'data' => $formattedData,
+  //   ], Response::HTTP_OK);
+  // }
+
   public function showByDataKaryawanId($data_karyawan_id)
   {
     if (!Gate::allows('view dataKaryawan')) {
       return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
     }
 
-    // Cari data karyawan berdasarkan data_karyawan_id
+    // Find karyawan by data_karyawan_id
     $karyawan = DataKaryawan::where('email', '!=', 'super_admin@admin.rski')->find($data_karyawan_id);
 
     if (!$karyawan) {
       return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data karyawan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
     }
-    $role = $karyawan->users->roles->first();
-    // Ambil data pengurang gaji
-    $pengurangGaji = DB::table('pengurang_gajis')
-      ->join('premis', 'pengurang_gajis.premi_id', '=', 'premis.id')
-      ->where('pengurang_gajis.data_karyawan_id', $karyawan->id)
-      ->select(
-        'premis.id',
-        'premis.nama_premi',
-        'premis.kategori_potongan_id',
-        'premis.jenis_premi',
-        'premis.besaran_premi',
-        'premis.minimal_rate',
-        'premis.maksimal_rate',
-        'premis.created_at',
-        'premis.updated_at'
-      )
-      ->get();
 
-    $formattedData = [
+    $role = $karyawan->users->roles->first();
+
+    // Retrieve the associated files (berkas)
+    $berkasFields = [
+      'path_sip' => $karyawan->no_sip,
+      'path_nik_ktp' => $karyawan->nik_ktp,
+      'path_kartu_keluarga' => $karyawan->no_kk,
+      'path_bpjsksh' => $karyawan->no_bpjsksh,
+      'path_ijazah' => $karyawan->no_ijazah,
+      'path_str' => $karyawan->no_str,
+    ];
+
+    $baseUrl = env('STORAGE_SERVER_DOMAIN'); // Replace with your actual storage server URL
+
+    $formattedPaths = [];
+    foreach ($berkasFields as $field => $berkasId) {
+      $berkas = Berkas::where('id', $berkasId)->first();
+      if ($berkas) {
+        $extension = StorageServerHelper::getExtensionFromMimeType($berkas->ext);
+        $formattedPaths[$field] = $baseUrl . $berkas->path . '.' . $extension;
+      } else {
+        $formattedPaths[$field] = null;
+      }
+    }
+
+    // Format the karyawan data
+    $formattedData = array_merge([
       'id' => $karyawan->id,
       'user' => [
         'id' => $karyawan->users->id,
@@ -1268,7 +1679,21 @@ class DataKaryawanController extends Controller
         'created_at' => $role->created_at,
         'updated_at' => $role->updated_at
       ], // role_id
-      'potongan_gaji' => $pengurangGaji,
+      'potongan_gaji' => DB::table('pengurang_gajis')
+        ->join('premis', 'pengurang_gajis.premi_id', '=', 'premis.id')
+        ->where('pengurang_gajis.data_karyawan_id', $karyawan->id)
+        ->select(
+          'premis.id',
+          'premis.nama_premi',
+          'premis.kategori_potongan_id',
+          'premis.jenis_premi',
+          'premis.besaran_premi',
+          'premis.minimal_rate',
+          'premis.maksimal_rate',
+          'premis.created_at',
+          'premis.updated_at'
+        )
+        ->get(),
       'email' => $karyawan->email,
       'nik' => $karyawan->nik,
       'no_rm' => $karyawan->no_rm,
@@ -1315,7 +1740,7 @@ class DataKaryawanController extends Controller
       'masa_diklat' => $karyawan->masa_diklat,
       'created_at' => $karyawan->created_at,
       'updated_at' => $karyawan->updated_at
-    ];
+    ], $formattedPaths);
 
     return response()->json([
       'status' => Response::HTTP_OK,

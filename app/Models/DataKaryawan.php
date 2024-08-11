@@ -196,4 +196,14 @@ class DataKaryawan extends Model
     {
         return $this->belongsTo(KategoriPendidikan::class, 'pendidikan_terakhir', 'id');
     }
+
+    /**
+     * Get all of the riwayat_perubahans for the DataKaryawan
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function riwayat_perubahans(): HasMany
+    {
+        return $this->hasMany(RiwayatPerubahan::class, 'data_karyawan_id', 'id');
+    }
 }

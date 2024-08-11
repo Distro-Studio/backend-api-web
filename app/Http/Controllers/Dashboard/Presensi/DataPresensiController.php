@@ -315,6 +315,125 @@ class DataPresensiController extends Controller
         ], Response::HTTP_OK);
     }
 
+    // public function show($id)
+    // {
+    //     if (!Gate::allows('view presensiKaryawan')) {
+    //         return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+    //     }
+
+    //     $presensi = Presensi::find($id);
+
+    //     if (!$presensi) {
+    //         return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data presensi tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+    //     }
+
+    //     $userId = $presensi->user_id;
+
+    //     // Cari presensi pada hari ini untuk user yang sama
+    //     $presensiHariIni = Presensi::where('user_id', $userId)
+    //         ->whereDate('jam_masuk', Carbon::today())
+    //         ->first();
+
+    //     // Jika tidak ada presensi hari ini
+    //     if (!$presensiHariIni) {
+    //         return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data presensi untuk hari ini tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+    //     }
+
+    //     // Ambil semua presensi bulan ini dari user yang sama
+    //     $presensiBulanIni = Presensi::where('user_id', $userId)
+    //         ->whereYear('jam_masuk', Carbon::now()->year)
+    //         ->whereMonth('jam_masuk', Carbon::now()->month)
+    //         ->orderBy('jam_masuk')
+    //         ->get();
+
+    //     // Memformat aktivitas presensi
+    //     $aktivitasPresensi = [];
+    //     foreach ($presensiBulanIni as $presensi) {
+    //         if ($presensi->jam_masuk) {
+    //             $aktivitasPresensi[] = [
+    //                 'presensi' => 'Masuk',
+    //                 'tanggal' => $presensi->jam_masuk
+    //             ];
+    //         }
+    //         if ($presensi->jam_keluar) {
+    //             $aktivitasPresensi[] = [
+    //                 'presensi' => 'Keluar',
+    //                 'tanggal' => $presensi->jam_keluar
+    //             ];
+    //         }
+    //     }
+
+    //     $fotoMasukBerkas = Berkas::where('id', $presensiHariIni->foto_masuk)->first();
+    //     $fotoKeluarBerkas = Berkas::where('id', $presensiHariIni->foto_keluar)->first();
+
+    //     $baseUrl = env('STORAGE_SERVER_DOMAIN'); // Ganti dengan URL
+
+    //     $fotoMasukExt = $fotoMasukBerkas ? StorageServerHelper::getExtensionFromMimeType($fotoMasukBerkas->ext) : null;
+    //     $fotoMasukUrl = $fotoMasukBerkas ? $baseUrl . $fotoMasukBerkas->path . '.' . $fotoMasukExt : null;
+
+    //     $fotoKeluarExt = $fotoKeluarBerkas ? StorageServerHelper::getExtensionFromMimeType($fotoKeluarBerkas->ext) : null;
+    //     $fotoKeluarUrl = $fotoKeluarBerkas ? $baseUrl . $fotoKeluarBerkas->path . '.' . $fotoKeluarExt : null;
+
+    //     // Ambil data lokasi kantor
+    //     $lokasiKantor = LokasiKantor::find(1);
+
+    //     $formattedData = [
+    //         'id' => $presensiHariIni->id,
+    //         'user' => $presensiHariIni->users,
+    //         'unit_kerja' => $presensiHariIni->data_karyawans->unit_kerjas,
+    //         'jadwal' => [
+    //             'id' => $presensiHariIni->jadwals->id,
+    //             'tgl_mulai' => $presensiHariIni->jadwals->tgl_mulai,
+    //             'tgl_selesai' => $presensiHariIni->jadwals->tgl_selesai,
+    //             'shift' => $presensiHariIni->jadwals->shifts,
+    //         ],
+    //         'jam_masuk' => $presensiHariIni->jam_masuk,
+    //         'jam_keluar' => $presensiHariIni->jam_keluar,
+    //         'durasi' => $presensiHariIni->durasi,
+    //         'lokasi_kantor' => [
+    //             'id' => $lokasiKantor->id,
+    //             'alamat' => $lokasiKantor->alamat,
+    //             'lat' => $lokasiKantor->lat,
+    //             'long' => $lokasiKantor->long,
+    //             'radius' => $lokasiKantor->radius,
+    //         ],
+    //         'lat_masuk' => $presensiHariIni->lat,
+    //         'long_masuk' => $presensiHariIni->long,
+    //         'lat_keluar' => $presensiHariIni->latkeluar,
+    //         'long_keluar' => $presensiHariIni->longkeluar,
+    //         'foto_masuk' => [
+    //             'id' => $fotoMasukBerkas->id,
+    //             'user_id' => $fotoMasukBerkas->user_id,
+    //             'file_id' => $fotoMasukBerkas->file_id,
+    //             'nama' => $fotoMasukBerkas->nama,
+    //             'nama_file' => $fotoMasukBerkas->nama_file,
+    //             'path' => $fotoMasukUrl,
+    //             'ext' => $fotoMasukBerkas->ext,
+    //             'size' => $fotoMasukBerkas->size,
+    //         ],
+    //         'foto_keluar' => [
+    //             'id' => $fotoKeluarBerkas->id,
+    //             'user_id' => $fotoKeluarBerkas->user_id,
+    //             'file_id' => $fotoKeluarBerkas->file_id,
+    //             'nama' => $fotoKeluarBerkas->nama,
+    //             'nama_file' => $fotoKeluarBerkas->nama_file,
+    //             'path' => $fotoKeluarUrl,
+    //             'ext' => $fotoKeluarBerkas->ext,
+    //             'size' => $fotoKeluarBerkas->size,
+    //         ],
+    //         'kategori_presensi' => $presensiHariIni->kategori_presensis,
+    //         'aktivitas_presensi' => $aktivitasPresensi,
+    //         'created_at' => $presensiHariIni->created_at,
+    //         'updated_at' => $presensiHariIni->updated_at
+    //     ];
+
+    //     return response()->json([
+    //         'status' => Response::HTTP_OK,
+    //         'message' => "Detail data presensi karyawan '{$presensiHariIni->users->nama}' berhasil ditampilkan.",
+    //         'data' => $formattedData,
+    //     ], Response::HTTP_OK);
+    // }
+
     public function show($id)
     {
         if (!Gate::allows('view presensiKaryawan')) {
@@ -328,109 +447,103 @@ class DataPresensiController extends Controller
         }
 
         $userId = $presensi->user_id;
+        $limit = request()->input('limit', 10);
 
-        // Cari presensi pada hari ini untuk user yang sama
-        $presensiHariIni = Presensi::where('user_id', $userId)
-            ->whereDate('jam_masuk', Carbon::today())
-            ->first();
+        $dataPresensi = Presensi::where('user_id', $userId)
+            ->orderBy('created_at', 'desc')
+            ->paginate($limit);
 
         // Jika tidak ada presensi hari ini
-        if (!$presensiHariIni) {
-            return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data presensi untuk hari ini tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+        if (!$dataPresensi) {
+            return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data presensi tidak ditemukan.'), Response::HTTP_NOT_FOUND);
         }
-
-        // Ambil semua presensi bulan ini dari user yang sama
-        $presensiBulanIni = Presensi::where('user_id', $userId)
-            ->whereYear('jam_masuk', Carbon::now()->year)
-            ->whereMonth('jam_masuk', Carbon::now()->month)
-            ->orderBy('jam_masuk')
-            ->get();
 
         // Memformat aktivitas presensi
-        $aktivitasPresensi = [];
-        foreach ($presensiBulanIni as $presensi) {
-            if ($presensi->jam_masuk) {
-                $aktivitasPresensi[] = [
-                    'presensi' => 'Masuk',
-                    'tanggal' => $presensi->jam_masuk
-                ];
-            }
-            if ($presensi->jam_keluar) {
-                $aktivitasPresensi[] = [
-                    'presensi' => 'Keluar',
-                    'tanggal' => $presensi->jam_keluar
-                ];
-            }
-        }
+        $formattedData = $dataPresensi->map(function ($presensi) {
+            $fotoMasukBerkas = Berkas::where('id', $presensi->foto_masuk)->first();
+            $fotoKeluarBerkas = Berkas::where('id', $presensi->foto_keluar)->first();
 
-        $fotoMasukBerkas = Berkas::where('id', $presensiHariIni->foto_masuk)->first();
-        $fotoKeluarBerkas = Berkas::where('id', $presensiHariIni->foto_keluar)->first();
+            $baseUrl = env('STORAGE_SERVER_DOMAIN'); // Ganti dengan URL
 
-        $baseUrl = env('STORAGE_SERVER_DOMAIN'); // Ganti dengan URL
+            $fotoMasukExt = $fotoMasukBerkas ? StorageServerHelper::getExtensionFromMimeType($fotoMasukBerkas->ext) : null;
+            $fotoMasukUrl = $fotoMasukBerkas ? $baseUrl . $fotoMasukBerkas->path . '.' . $fotoMasukExt : null;
 
-        $fotoMasukExt = $fotoMasukBerkas ? StorageServerHelper::getExtensionFromMimeType($fotoMasukBerkas->ext) : null;
-        $fotoMasukUrl = $fotoMasukBerkas ? $baseUrl . $fotoMasukBerkas->path . '.' . $fotoMasukExt : null;
+            $fotoKeluarExt = $fotoKeluarBerkas ? StorageServerHelper::getExtensionFromMimeType($fotoKeluarBerkas->ext) : null;
+            $fotoKeluarUrl = $fotoKeluarBerkas ? $baseUrl . $fotoKeluarBerkas->path . '.' . $fotoKeluarExt : null;
 
-        $fotoKeluarExt = $fotoKeluarBerkas ? StorageServerHelper::getExtensionFromMimeType($fotoKeluarBerkas->ext) : null;
-        $fotoKeluarUrl = $fotoKeluarBerkas ? $baseUrl . $fotoKeluarBerkas->path . '.' . $fotoKeluarExt : null;
+            // Ambil data lokasi kantor
+            $lokasiKantor = LokasiKantor::find(1);
 
-        // Ambil data lokasi kantor
-        $lokasiKantor = LokasiKantor::find(1);
+            return [
+                'id' => $presensi->id,
+                'user' => $presensi->users,
+                'unit_kerja' => $presensi->data_karyawans->unit_kerjas,
+                'jadwal' => [
+                    'id' => $presensi->jadwals->id,
+                    'tgl_mulai' => $presensi->jadwals->tgl_mulai,
+                    'tgl_selesai' => $presensi->jadwals->tgl_selesai,
+                    'shift' => $presensi->jadwals->shifts,
+                ],
+                'jam_masuk' => $presensi->jam_masuk,
+                'jam_keluar' => $presensi->jam_keluar,
+                'durasi' => $presensi->durasi,
+                'lokasi_kantor' => [
+                    'id' => $lokasiKantor->id,
+                    'alamat' => $lokasiKantor->alamat,
+                    'lat' => $lokasiKantor->lat,
+                    'long' => $lokasiKantor->long,
+                    'radius' => $lokasiKantor->radius,
+                ],
+                'lat_masuk' => $presensi->lat,
+                'long_masuk' => $presensi->long,
+                'lat_keluar' => $presensi->latkeluar,
+                'long_keluar' => $presensi->longkeluar,
+                'foto_masuk' => [
+                    'id' => $fotoMasukBerkas->id,
+                    'user_id' => $fotoMasukBerkas->user_id,
+                    'file_id' => $fotoMasukBerkas->file_id,
+                    'nama' => $fotoMasukBerkas->nama,
+                    'nama_file' => $fotoMasukBerkas->nama_file,
+                    'path' => $fotoMasukUrl,
+                    'ext' => $fotoMasukBerkas->ext,
+                    'size' => $fotoMasukBerkas->size,
+                ],
+                'foto_keluar' => [
+                    'id' => $fotoKeluarBerkas->id,
+                    'user_id' => $fotoKeluarBerkas->user_id,
+                    'file_id' => $fotoKeluarBerkas->file_id,
+                    'nama' => $fotoKeluarBerkas->nama,
+                    'nama_file' => $fotoKeluarBerkas->nama_file,
+                    'path' => $fotoKeluarUrl,
+                    'ext' => $fotoKeluarBerkas->ext,
+                    'size' => $fotoKeluarBerkas->size,
+                ],
+                'kategori_presensi' => $presensi->kategori_presensis,
+                'created_at' => $presensi->created_at,
+                'updated_at' => $presensi->updated_at
+            ];
+        });
 
-        $formattedData = [
-            'id' => $presensiHariIni->id,
-            'user' => $presensiHariIni->users,
-            'unit_kerja' => $presensiHariIni->data_karyawans->unit_kerjas,
-            'jadwal' => [
-                'id' => $presensiHariIni->jadwals->id,
-                'tgl_mulai' => $presensiHariIni->jadwals->tgl_mulai,
-                'tgl_selesai' => $presensiHariIni->jadwals->tgl_selesai,
-                'shift' => $presensiHariIni->jadwals->shifts,
+        $paginationData = [
+            'links' => [
+                'first' => $dataPresensi->url(1),
+                'last' => $dataPresensi->url($dataPresensi->lastPage()),
+                'prev' => $dataPresensi->previousPageUrl(),
+                'next' => $dataPresensi->nextPageUrl(),
             ],
-            'jam_masuk' => $presensiHariIni->jam_masuk,
-            'jam_keluar' => $presensiHariIni->jam_keluar,
-            'durasi' => $presensiHariIni->durasi,
-            'lokasi_kantor' => [
-                'id' => $lokasiKantor->id,
-                'alamat' => $lokasiKantor->alamat,
-                'lat' => $lokasiKantor->lat,
-                'long' => $lokasiKantor->long,
-                'radius' => $lokasiKantor->radius,
-            ],
-            'lat_masuk' => $presensiHariIni->lat,
-            'long_masuk' => $presensiHariIni->long,
-            'lat_keluar' => $presensiHariIni->latkeluar,
-            'long_keluar' => $presensiHariIni->longkeluar,
-            'foto_masuk' => [
-                'id' => $fotoMasukBerkas->id,
-                'user_id' => $fotoMasukBerkas->user_id,
-                'file_id' => $fotoMasukBerkas->file_id,
-                'nama' => $fotoMasukBerkas->nama,
-                'nama_file' => $fotoMasukBerkas->nama_file,
-                'path' => $fotoMasukUrl,
-                'ext' => $fotoMasukBerkas->ext,
-                'size' => $fotoMasukBerkas->size,
-            ],
-            'foto_keluar' => [
-                'id' => $fotoKeluarBerkas->id,
-                'user_id' => $fotoKeluarBerkas->user_id,
-                'file_id' => $fotoKeluarBerkas->file_id,
-                'nama' => $fotoKeluarBerkas->nama,
-                'nama_file' => $fotoKeluarBerkas->nama_file,
-                'path' => $fotoKeluarUrl,
-                'ext' => $fotoKeluarBerkas->ext,
-                'size' => $fotoKeluarBerkas->size,
-            ],
-            'kategori_presensi' => $presensiHariIni->kategori_presensis,
-            'aktivitas_presensi' => $aktivitasPresensi,
-            'created_at' => $presensiHariIni->created_at,
-            'updated_at' => $presensiHariIni->updated_at
+            'meta' => [
+                'current_page' => $dataPresensi->currentPage(),
+                'last_page' => $dataPresensi->lastPage(),
+                'per_page' => $dataPresensi->perPage(),
+                'total' => $dataPresensi->total(),
+            ]
         ];
 
         return response()->json([
             'status' => Response::HTTP_OK,
-            'message' => "Detail data presensi karyawan '{$presensiHariIni->users->nama}' berhasil ditampilkan.",
+            'message' => "Detail data presensi karyawan '{$presensi->users->nama}' berhasil ditampilkan.",
             'data' => $formattedData,
+            'pagination' => $paginationData
         ], Response::HTTP_OK);
     }
 
