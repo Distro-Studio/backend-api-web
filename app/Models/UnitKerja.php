@@ -21,24 +21,4 @@ class UnitKerja extends Model
     {
         return $this->hasMany(DataKaryawan::class, 'unit_kerja_id', 'id');
     }
-
-    /**
-     * Get all of the unit_kerja_dinilai for the UnitKerja
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
-     */
-    public function unit_kerja_dinilai(): HasMany
-    {
-        return $this->hasMany(Penilaian::class, 'unit_kerja_dinilai', 'id');
-    }
-
-    /**
-     * Get all of the unit_kerja_penilai for the UnitKerja
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
-     */
-    public function unit_kerja_penilai(): HasMany
-    {
-        return $this->hasMany(Penilaian::class, 'unit_kerja_penilai', 'id');
-    }
 }

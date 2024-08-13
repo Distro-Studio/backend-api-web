@@ -13,12 +13,11 @@ return new class extends Migration
     {
         Schema::create('pertanyaans', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('role_id');
+            $table->foreignId('penilaian_id')->constrained('penilaians');
             $table->string('pertanyaan');
-            $table->unsignedBigInteger('jabatan_id');
             $table->softDeletes();
             $table->timestamps();
-
-            $table->foreign('jabatan_id')->references('id')->on('jabatans');
         });
     }
 

@@ -9,6 +9,7 @@ use App\Models\Jabatan;
 use App\Models\Presensi;
 use App\Models\DataKaryawan;
 use Illuminate\Http\Request;
+use App\Helpers\RandomHelper;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
@@ -23,16 +24,18 @@ class DashboardController extends Controller
         // Retrieve the ID for each category
         $kategoriCutiId = DB::table('kategori_presensis')->where('label', 'Cuti')->value('id');
         $kategoriAbsenId = DB::table('kategori_presensis')->where('label', 'Absen')->value('id');
-        $kategoriLiburId = DB::table('kategori_presensis')->where('label', 'Libur')->value('id');
 
         // Calculate total number of employees excluding the super admin
         $calculatedKaryawan = DataKaryawan::where('email', '!=', 'super_admin@admin.rski')->count();
 
-        // Calculate the number of employees on holiday today
-        $countLibur = Jadwal::whereNull('shift_id')
-            ->whereDate('tgl_mulai', '<=', $today)
-            ->whereDate('tgl_selesai', '>=', $today)
-            ->count('user_id');
+        // Konversi tanggal tgl_mulai dan tgl_selesai menjadi format yang sesuai untuk perbandingan
+        $jadwalLibur = Jadwal::where('shift_id', 0)->get();
+
+        $countLibur = $jadwalLibur->filter(function ($jadwal) use ($today) {
+            $tglMulai = Carbon::parse(RandomHelper::convertSpecialDateFormat($jadwal->tgl_mulai))->format('Y-m-d');
+            $tglSelesai = Carbon::parse(RandomHelper::convertSpecialDateFormat($jadwal->tgl_selesai))->format('Y-m-d');
+            return $tglMulai <= $today && $tglSelesai >= $today;
+        })->count();
 
         // Calculate the number of employees on leave today
         $countCuti = Presensi::where('kategori_presensi_id', $kategoriCutiId)

@@ -6,28 +6,18 @@ use App\Exports\Keuangan\LaporanPenggajian\LaporanGajiBankExport;
 use App\Exports\Keuangan\LaporanPenggajian\RekapGajiPenerimaanExport;
 use App\Exports\Keuangan\LaporanPenggajian\RekapGajiPotonganExport;
 use Carbon\Carbon;
-use App\Models\Ptkp;
-use App\Models\DetailGaji;
 use App\Models\Penggajian;
 use App\Models\DataKaryawan;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use App\Models\RiwayatPenggajian;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Gate;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Jobs\Penggajian\CreateGajiJob;
-use App\Exports\Keuangan\PenggajianExport;
-use App\Imports\Keuangan\PenggajianImport;
-use App\Exports\Keuangan\RiwayatGajiExport;
 use App\Helpers\RandomHelper;
-use App\Http\Requests\StorePenggajianRequest;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
-use App\Http\Requests\Excel_Import\ImportKeuanganPenggajianRequest;
-use App\Http\Requests\StorePenyesuaianGajiRequest;
-use App\Models\PenyesuaianGaji;
 
 class PenggajianController extends Controller
 {
@@ -67,7 +57,7 @@ class PenggajianController extends Controller
             ->first();
 
         if (!$jadwalPenggajian) {
-            return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Tidak ada jadwal penggajian yang tersedia.'), Response::HTTP_BAD_REQUEST);
+            return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Tidak ada tanggal penggajian yang tersedia.'), Response::HTTP_BAD_REQUEST);
         }
 
         $tgl_mulai = Carbon::create($currentYear, $currentMonth, $jadwalPenggajian->tgl_mulai);
@@ -89,15 +79,52 @@ class PenggajianController extends Controller
 
         foreach ($penggajians as $penggajian) {
             $riwayatPenggajian = $penggajian->riwayat_penggajians;
-            $tgl_penggajian = Carbon::parse(RandomHelper::convertToDateString($penggajian->tgl_penggajian));
+            $tgl_penggajian = Carbon::parse(RandomHelper::convertSpecialDateFormat($penggajian->tgl_penggajian));
             // Cek apakah tgl_penggajian sudah terlewat dari tgl_mulai
-            if ($tgl_penggajian->lessThan($tgl_mulai)) {
-                if ($penggajian->status_gaji_id == 2) {
-                    $updatedPenggajians[] = [
-                        'penggajian_id' => $penggajian->id,
-                        'updated_at' => $penggajian->updated_at
-                    ];
-                } else {
+            // if ($tgl_penggajian->lessThan($tgl_mulai)) {
+            //     if ($penggajian->status_gaji_id == 2) {
+            //         $updatedPenggajians[] = [
+            //             'penggajian_id' => $penggajian->id,
+            //             'updated_at' => $penggajian->updated_at
+            //         ];
+            //     } else {
+            //         $penggajian->status_gaji_id = 2;
+            //         $penggajian->save();
+            //         $updatedPenggajians[] = [
+            //             'penggajian_id' => $penggajian->id,
+            //             'updated_at' => $penggajian->updated_at
+            //         ];
+            //         if ($riwayatPenggajian->status_gaji_id != 2) {
+            //             $riwayatPenggajian->status_gaji_id = 2;
+            //             $riwayatPenggajian->save();
+            //             $riwayatPenggajians[] = [
+            //                 'riwayat_penggajian_id' => $riwayatPenggajian->id,
+            //                 'updated_at' => $riwayatPenggajian->updated_at
+            //             ];
+            //         }
+            //     }
+            // } else {
+            //     $penggajian->status_gaji_id = 2;
+            //     $penggajian->save();
+            //     $updatedPenggajians[] = [
+            //         'penggajian_id' => $penggajian->id,
+            //         'updated_at' => $penggajian->updated_at
+            //     ];
+            //     if ($riwayatPenggajian->status_gaji_id != 2) {
+            //         $riwayatPenggajian->status_gaji_id = 2;
+            //         $riwayatPenggajian->save();
+            //         $riwayatPenggajians[] = [
+            //             'riwayat_penggajian_id' => $riwayatPenggajian->id,
+            //             'updated_at' => $riwayatPenggajian->updated_at
+            //         ];
+            //     }
+            // }
+
+            // ini yg baru
+            // Validasi agar publikasi dilakukan hanya dalam rentang tgl_penggajian sampai tgl_mulai
+            if ($currentDate->greaterThanOrEqualTo($tgl_penggajian) && $currentDate->lessThanOrEqualTo($tgl_mulai)) {
+                // Update status penggajian ke "Dipublikasikan" jika belum
+                if ($penggajian->status_gaji_id != 2) {
                     $penggajian->status_gaji_id = 2;
                     $penggajian->save();
                     $updatedPenggajians[] = [
@@ -114,24 +141,11 @@ class PenggajianController extends Controller
                     }
                 }
             } else {
-                $penggajian->status_gaji_id = 2;
-                $penggajian->save();
-                $updatedPenggajians[] = [
-                    'penggajian_id' => $penggajian->id,
-                    'updated_at' => $penggajian->updated_at
-                ];
-                if ($riwayatPenggajian->status_gaji_id != 2) {
-                    $riwayatPenggajian->status_gaji_id = 2;
-                    $riwayatPenggajian->save();
-                    $riwayatPenggajians[] = [
-                        'riwayat_penggajian_id' => $riwayatPenggajian->id,
-                        'updated_at' => $riwayatPenggajian->updated_at
-                    ];
-                }
+                return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Publikasi penggajian hanya dapat dilakukan dari tanggal '{$tgl_penggajian->format('Y-m-d')}' hingga tanggal '{$tgl_mulai->format('Y-m-d')}'."), Response::HTTP_BAD_REQUEST);
             }
         }
 
-        return response()->json(new WithoutDataResource(Response::HTTP_OK, 'Data penggajian untuk periode ' . $periode . ' telah dipublikasikan.'), Response::HTTP_OK);
+        return response()->json(new WithoutDataResource(Response::HTTP_OK, "Data penggajian untuk periode '{$periode}' telah dipublikasikan."), Response::HTTP_OK);
     }
 
     public function index(Request $request)
@@ -223,10 +237,10 @@ class PenggajianController extends Controller
         $currentMonth = Carbon::now()->month;
         $currentYear = Carbon::now()->year;
         $tgl_mulai = Carbon::create($currentYear, $currentMonth, $jadwalPenggajian->tgl_mulai);
-        $endOfMonth = Carbon::now()->endOfMonth();
+        $awalBulan = Carbon::now()->startOfMonth();
 
-        if (Carbon::now()->lessThan($tgl_mulai) || Carbon::now()->greaterThan($endOfMonth)) {
-            return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Tanggal penggajian hanya dapat dilakukan mulai tanggal '{$tgl_mulai->format('Y-m-d')}' hingga akhir bulan."), Response::HTTP_BAD_REQUEST);
+        if (Carbon::now()->lessThan($awalBulan) || Carbon::now()->greaterThan($tgl_mulai)) {
+            return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Tanggal penggajian hanya dapat dilakukan mulai tanggal 1 hingga tanggal '{$tgl_mulai->format('Y-m-d')}'."), Response::HTTP_BAD_REQUEST);
         }
 
         // Validasi untuk memastikan penggajian belum dilakukan pada periode ini
@@ -411,6 +425,12 @@ class PenggajianController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
+        $dataPenggajian = Penggajian::all();
+        if ($dataPenggajian->isEmpty()) {
+            // Kembalikan respons JSON ketika tabel kosong
+            return response()->json(new WithoutDataResource(Response::HTTP_OK, 'Tidak ada data penggajian karyawan yang tersedia untuk diekspor.'), Response::HTTP_OK);
+        }
+
         $months = $request->input('months', []);
         $years = $request->input('years', []);
 
@@ -431,6 +451,12 @@ class PenggajianController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
+        $dataPenggajian = Penggajian::all();
+        if ($dataPenggajian->isEmpty()) {
+            // Kembalikan respons JSON ketika tabel kosong
+            return response()->json(new WithoutDataResource(Response::HTTP_OK, 'Tidak ada data penggajian karyawan yang tersedia untuk diekspor.'), Response::HTTP_OK);
+        }
+
         $months = $request->input('months', []);
         $years = $request->input('years', []);
 
@@ -449,6 +475,12 @@ class PenggajianController extends Controller
     {
         if (!Gate::allows('export penggajianKaryawan')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
+
+        $dataPenggajian = Penggajian::all();
+        if ($dataPenggajian->isEmpty()) {
+            // Kembalikan respons JSON ketika tabel kosong
+            return response()->json(new WithoutDataResource(Response::HTTP_OK, 'Tidak ada data penggajian karyawan yang tersedia untuk diekspor.'), Response::HTTP_OK);
         }
 
         $months = $request->input('months', []);

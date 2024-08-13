@@ -102,12 +102,12 @@ class DataJadwalController extends Controller
         if (isset($filters['tgl_masuk'])) {
             $tglMasuk = $filters['tgl_masuk'];
             if (is_array($tglMasuk)) {
-                $convertedDates = array_map([RandomHelper::class, 'convertToDateString'], $tglMasuk);
+                $convertedDates = array_map([RandomHelper::class, 'convertSpecialDateFormat'], $tglMasuk);
                 $jadwal->whereHas('users.data_karyawans', function ($query) use ($convertedDates) {
                     $query->whereIn('tgl_masuk', $convertedDates);
                 });
             } else {
-                $convertedDate = RandomHelper::convertToDateString($tglMasuk);
+                $convertedDate = RandomHelper::convertSpecialDateFormat($tglMasuk);
                 $jadwal->whereHas('users.data_karyawans', function ($query) use ($convertedDate) {
                     $query->where('tgl_masuk', $convertedDate);
                 });
@@ -183,8 +183,8 @@ class DataJadwalController extends Controller
         }
 
         if ($request->has('tgl_mulai') && $request->has('tgl_selesai')) {
-            $start_dateConvert = RandomHelper::convertToDateString($request->input('tgl_mulai'));
-            $end_dateConvert = RandomHelper::convertToDateString($request->input('tgl_selesai'));
+            $start_dateConvert = RandomHelper::convertSpecialDateFormat($request->input('tgl_mulai'));
+            $end_dateConvert = RandomHelper::convertSpecialDateFormat($request->input('tgl_selesai'));
             $start_date = Carbon::parse($start_dateConvert);
             $end_date = Carbon::parse($end_dateConvert);
 
@@ -304,6 +304,90 @@ class DataJadwalController extends Controller
     }
 
     // new updates -> validasi dari jam shift
+    // public function store(StoreJadwalKaryawanRequest $request)
+    // {
+    //     if (!Gate::allows('create jadwalKaryawan')) {
+    //         return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+    //     }
+
+    //     $data = $request->validated();
+    //     $jadwals = [];
+
+    //     // Konversi tanggal dari string menggunakan helper
+    //     $tanggalMulai = Carbon::parse(RandomHelper::convertSpecialDateFormat($data['tgl_mulai']));
+    //     $today = Carbon::today();
+
+    //     // Validasi tanggal mulai
+    //     if ($tanggalMulai->lessThanOrEqualTo($today)) {
+    //         return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Tidak diperbolehkan menerapkan jadwal untuk hari ini atau hari terlewat. Hanya diperbolehkan H+1 hari ini.'), Response::HTTP_NOT_ACCEPTABLE);
+    //     }
+
+    //     DB::beginTransaction();
+    //     try {
+    //         foreach ($data['user_id'] as $userId) {
+    //             // Check if the user exists
+    //             $user = User::find($userId);
+    //             if (!$user) {
+    //                 DB::rollBack();
+    //                 return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, "Data karyawan dengan ID '{$userId}' tidak ditemukan."), Response::HTTP_NOT_FOUND);
+    //             }
+
+    //             // Check if the shift exists if shift_id is not null
+    //             $shift = null;
+    //             // if (!is_null($data['shift_id'])) {
+    //             if ($data['shift_id'] != 0) { // Skip validation if shift_id is 0
+    //                 $shift = Shift::find($data['shift_id']);
+    //                 if (!$shift) {
+    //                     DB::rollBack();
+    //                     return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, "Data shift dengan ID '{$data['shift_id']}' tidak ditemukan."), Response::HTTP_NOT_FOUND);
+    //                 }
+    //             }
+
+    //             // Determine tgl_selesai based on shift times
+    //             $tglSelesai = $tanggalMulai->copy(); // Start with the same date
+    //             if ($shift) {
+    //                 $jamFrom = Carbon::parse(RandomHelper::convertToTimeString($shift->jam_from));
+    //                 $jamTo = Carbon::parse(RandomHelper::convertToTimeString($shift->jam_to));
+    //                 if ($jamTo->lessThan($jamFrom)) {
+    //                     $tglSelesai->addDay();
+    //                 }
+    //             } else {
+    //                 $tglSelesai = $tanggalMulai; // When shift_id is null, tgl_selesai is same as tgl_mulai
+    //             }
+
+    //             // Check for existing schedule for the same user and date
+    //             $existingSchedule = Jadwal::where('user_id', $userId)
+    //                 ->whereDate('tgl_mulai', $tanggalMulai)
+    //                 ->first();
+    //             if ($existingSchedule) {
+    //                 DB::rollBack();
+    //                 return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Jadwal karyawan dengan ID '{$userId}' sudah tersedia pada tanggal '{$tanggalMulai->toDateString()}'."), Response::HTTP_BAD_REQUEST);
+    //             }
+
+    //             // Create the new schedule
+    //             $jadwalArray = [
+    //                 'user_id' => $userId,
+    //                 'tgl_mulai' => $tanggalMulai->toDateString(),
+    //                 'tgl_selesai' => $tglSelesai->toDateString(),
+    //                 // 'tgl_mulai' => $data['tgl_mulai'],
+    //                 // 'tgl_selesai' => $data['tgl_selesai'],
+    //                 'shift_id' => $data['shift_id'],
+    //             ];
+
+    //             $jadwal = Jadwal::create($jadwalArray);
+    //             $jadwal->load(['users', 'shifts']);
+    //             $jadwals[] = $jadwal;
+    //         }
+
+    //         DB::commit();
+    //         return response()->json(new WithoutDataResource(Response::HTTP_OK, "Data jadwal karyawan berhasil ditambahkan."), Response::HTTP_OK);
+    //     } catch (\Exception $e) {
+    //         DB::rollBack();
+    //         return response()->json(new WithoutDataResource(Response::HTTP_INTERNAL_SERVER_ERROR, 'Error: ' . $e->getMessage()), Response::HTTP_INTERNAL_SERVER_ERROR);
+    //     }
+    // }
+
+    // update fix the issue with jadwal create tgl_mulai
     public function store(StoreJadwalKaryawanRequest $request)
     {
         if (!Gate::allows('create jadwalKaryawan')) {
@@ -314,7 +398,8 @@ class DataJadwalController extends Controller
         $jadwals = [];
 
         // Konversi tanggal dari string menggunakan helper
-        $tanggalMulai = Carbon::parse(RandomHelper::convertToDateString($data['tgl_mulai']));
+        $tanggalMulai = Carbon::parse(RandomHelper::convertSpecialDateFormat($data['tgl_mulai']));
+        $tanggalSelesai = Carbon::parse(RandomHelper::convertSpecialDateFormat($data['tgl_selesai']));
         $today = Carbon::today();
 
         // Validasi tanggal mulai
@@ -332,48 +417,57 @@ class DataJadwalController extends Controller
                     return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, "Data karyawan dengan ID '{$userId}' tidak ditemukan."), Response::HTTP_NOT_FOUND);
                 }
 
-                // Check if the shift exists if shift_id is not null
-                $shift = null;
-                if (!is_null($data['shift_id'])) {
-                    $shift = Shift::find($data['shift_id']);
-                    if (!$shift) {
+                // Reset tanggalMulai untuk setiap user
+                $currentTanggalMulai = $tanggalMulai->copy();
+
+                // Loop through each day in the range from tgl_mulai to tgl_selesai
+                while ($currentTanggalMulai->lessThanOrEqualTo($tanggalSelesai)) {
+                    // Check if the shift exists if shift_id is not null
+                    $shift = null;
+                    if ($data['shift_id'] != 0) { // Skip validation if shift_id is 0
+                        $shift = Shift::find($data['shift_id']);
+                        if (!$shift) {
+                            DB::rollBack();
+                            return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, "Data shift dengan ID '{$data['shift_id']}' tidak ditemukan."), Response::HTTP_NOT_FOUND);
+                        }
+                    }
+
+                    // Determine tgl_selesai based on shift times
+                    $tglSelesai = $currentTanggalMulai->copy(); // Start with the same date
+                    if ($shift) {
+                        $jamFrom = Carbon::parse(RandomHelper::convertToTimeString($shift->jam_from));
+                        $jamTo = Carbon::parse(RandomHelper::convertToTimeString($shift->jam_to));
+                        if ($jamTo->lessThan($jamFrom)) {
+                            $tglSelesai->addDay();
+                        }
+                    } else {
+                        $tglSelesai = $currentTanggalMulai; // When shift_id is null, tgl_selesai is same as tgl_mulai
+                    }
+
+                    // Check for existing schedule for the same user and date
+                    $existingSchedule = Jadwal::where('user_id', $userId)
+                        ->whereDate('tgl_mulai', $currentTanggalMulai)
+                        ->first();
+                    if ($existingSchedule) {
                         DB::rollBack();
-                        return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, "Data shift dengan ID '{$data['shift_id']}' tidak ditemukan."), Response::HTTP_NOT_FOUND);
+                        return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Jadwal karyawan dengan ID '{$userId}' sudah tersedia pada tanggal '{$currentTanggalMulai->toDateString()}'."), Response::HTTP_BAD_REQUEST);
                     }
+
+                    // Create the new schedule
+                    $jadwalArray = [
+                        'user_id' => $userId,
+                        'tgl_mulai' => $currentTanggalMulai->toDateString(),
+                        'tgl_selesai' => $tglSelesai->toDateString(),
+                        'shift_id' => $data['shift_id'],
+                    ];
+
+                    $jadwal = Jadwal::create($jadwalArray);
+                    $jadwal->load(['users', 'shifts']);
+                    $jadwals[] = $jadwal;
+
+                    // Increment the currentTanggalMulai for the next iteration (next day)
+                    $currentTanggalMulai->addDay();
                 }
-
-                // Determine tgl_selesai based on shift times
-                $tglSelesai = $tanggalMulai->copy(); // Start with the same date
-                if ($shift) {
-                    $jamFrom = Carbon::parse(RandomHelper::convertToTimeString($shift->jam_from));
-                    $jamTo = Carbon::parse(RandomHelper::convertToTimeString($shift->jam_to));
-                    if ($jamTo->lessThan($jamFrom)) {
-                        $tglSelesai->addDay();
-                    }
-                } else {
-                    $tglSelesai = $tanggalMulai; // When shift_id is null, tgl_selesai is same as tgl_mulai
-                }
-
-                // Check for existing schedule for the same user and date
-                $existingSchedule = Jadwal::where('user_id', $userId)
-                    ->whereDate('tgl_mulai', $tanggalMulai)
-                    ->first();
-                if ($existingSchedule) {
-                    DB::rollBack();
-                    return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Jadwal karyawan dengan ID '{$userId}' sudah tersedia pada tanggal '{$tanggalMulai->toDateString()}'."), Response::HTTP_BAD_REQUEST);
-                }
-
-                // Create the new schedule
-                $jadwalArray = [
-                    'user_id' => $userId,
-                    'tgl_mulai' => $tanggalMulai->toDateString(),
-                    'tgl_selesai' => $tglSelesai->toDateString(),
-                    'shift_id' => $data['shift_id'],
-                ];
-
-                $jadwal = Jadwal::create($jadwalArray);
-                $jadwal->load(['users', 'shifts']);
-                $jadwals[] = $jadwal;
             }
 
             DB::commit();
@@ -392,7 +486,7 @@ class DataJadwalController extends Controller
 
         $data = $request->validated();
         $shiftId = $data['shift_id'] ?? null;
-        $tanggalMulai = Carbon::parse(RandomHelper::convertToDateString($data['tgl_mulai']));
+        $tanggalMulai = Carbon::parse(RandomHelper::convertSpecialDateFormat($data['tgl_mulai']));
         $today = Carbon::now()->format('Y-m-d');
 
         // Validasi tanggal mulai
@@ -421,10 +515,10 @@ class DataJadwalController extends Controller
                 return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Karyawan sudah memiliki shift pada tanggal ini.'), Response::HTTP_BAD_REQUEST);
             }
 
-            // Calculate tgl_selesai based on shift times if shift_id is provided
+            // Calculate tgl_selesai based on shift times if shift_id is provided and not 0
             $tglSelesai = $tanggalMulai->copy(); // Start with the same date
 
-            if (!is_null($shiftId)) {
+            if ($shiftId != 0) {
                 $shift = Shift::findOrFail($shiftId);
                 $jamFrom = Carbon::parse(RandomHelper::convertToTimeString($shift->jam_from));
                 $jamTo = Carbon::parse(RandomHelper::convertToTimeString($shift->jam_to));
@@ -460,8 +554,8 @@ class DataJadwalController extends Controller
 
         $user_schedule_array = [];
         foreach ($user->jadwals as $schedule) {
-            $tglMulai = RandomHelper::convertToDateString($schedule->tgl_mulai);
-            $tglSelesai = RandomHelper::convertToDateString($schedule->tgl_selesai);
+            $tglMulai = RandomHelper::convertSpecialDateFormat($schedule->tgl_mulai);
+            $tglSelesai = RandomHelper::convertSpecialDateFormat($schedule->tgl_selesai);
 
             $current_date = Carbon::parse($tglMulai);
             while ($current_date->lte(Carbon::parse($tglSelesai))) {
@@ -509,10 +603,10 @@ class DataJadwalController extends Controller
 
         $data = $request->validated();
         $shiftId = $data['shift_id'] ?? null;
-        $tanggalMulai = Carbon::parse(RandomHelper::convertToDateString($data['tgl_mulai']));
-        $today = Carbon::today();
+        $tanggalMulai = Carbon::parse(RandomHelper::convertSpecialDateFormat($data['tgl_mulai']))->format('Y-m-d');
+        $today = Carbon::today()->format('Y-m-d');
 
-        if ($tanggalMulai->isSameDay($today)) {
+        if ($tanggalMulai == $today) {
             return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Anda tidak dapat mengupdate jadwal pada tanggal hari ini.'), Response::HTTP_BAD_REQUEST);
         }
 
@@ -533,19 +627,31 @@ class DataJadwalController extends Controller
 
             if ($existingShift) {
                 // If shift_id is null, set tgl_selesai equal to tgl_mulai
-                if (is_null($shiftId)) {
-                    $tglSelesai = $tanggalMulai;
-                } else {
-                    // Retrieve the shift and calculate tgl_selesai
+                // if (is_null($shiftId)) {
+                //     $tglSelesai = $tanggalMulai;
+                // } else {
+                //     // Retrieve the shift and calculate tgl_selesai
+                //     $shift = Shift::findOrFail($shiftId);
+                //     $jamFrom = Carbon::parse(RandomHelper::convertToTimeString($shift->jam_from));
+                //     $jamTo = Carbon::parse(RandomHelper::convertToTimeString($shift->jam_to));
+
+                //     if ($jamTo->lessThanOrEqualTo($jamFrom)) {
+                //         $tglSelesai = $tanggalMulai->copy()->addDay();
+                //     } else {
+                //         // Shift ends on the same day
+                //         $tglSelesai = $tanggalMulai;
+                //     }
+                // }
+
+                $tglSelesai = Carbon::parse($tanggalMulai); // Default to the same day
+
+                if ($shiftId != 0) { // Skip validation if shift_id is 0
                     $shift = Shift::findOrFail($shiftId);
                     $jamFrom = Carbon::parse(RandomHelper::convertToTimeString($shift->jam_from));
                     $jamTo = Carbon::parse(RandomHelper::convertToTimeString($shift->jam_to));
 
                     if ($jamTo->lessThanOrEqualTo($jamFrom)) {
-                        $tglSelesai = $tanggalMulai->copy()->addDay();
-                    } else {
-                        // Shift ends on the same day
-                        $tglSelesai = $tanggalMulai;
+                        $tglSelesai->addDay();
                     }
                 }
 
@@ -573,15 +679,17 @@ class DataJadwalController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
-        try {
-            return Excel::download(new JadwalExport(), 'jadwal-karyawans.xls');
-        } catch (\Exception $e) {
-            return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya terjadi error. Message: ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
-        } catch (\Error $e) {
-            return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya terjadi error. Message: ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
+        $dataCuti = Jadwal::all(); // Sesuaikan dengan model atau query Anda
+        if ($dataCuti->isEmpty()) {
+            // Kembalikan respons JSON ketika tabel kosong
+            return response()->json(new WithoutDataResource(Response::HTTP_OK, 'Tidak ada data jadwal karyawan yang tersedia untuk diekspor.'), Response::HTTP_OK);
         }
 
-        return response()->json(new WithoutDataResource(Response::HTTP_OK, 'Data jadwal karyawan berhasil di download.'), Response::HTTP_OK);
+        try {
+            return Excel::download(new JadwalExport(), 'jadwal-karyawan.xls');
+        } catch (\Throwable $e) {
+            return response()->json(new WithoutDataResource(Response::HTTP_INTERNAL_SERVER_ERROR, 'Maaf sepertinya terjadi error. Message: ' . $e->getMessage()), Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
     }
 
     public function importJadwalKaryawan(ImportJadwalKaryawan $request)

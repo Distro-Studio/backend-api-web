@@ -49,9 +49,14 @@ class StorageServerHelper
 		]);
 
 		$logininfo = $response->json();
+		Log::info($logininfo);
 
 		if ($response->failed() || !isset($logininfo['data']['token'])) {
-			throw new \Exception('Gagal login ke server berkas.');
+			// throw new \Exception('Gagal login ke server berkas.');
+			Log::error('Failed to login to storage server', [
+				'status_code' => $response->status(),
+				'error_message' => $response->body()
+			]);
 		}
 
 		self::$token = $logininfo['data']['token'];

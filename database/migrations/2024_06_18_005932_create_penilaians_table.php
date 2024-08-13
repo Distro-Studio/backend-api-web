@@ -11,14 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('jadwals', function (Blueprint $table) {
+        Schema::create('penilaians', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained('users');
             $table->string('tgl_mulai');
-            $table->string('tgl_selesai')->nullable();
-            // $table->foreignId('shift_id')->nullable()->constrained('shifts');
-            // $table->foreignId('shift_id')->constrained('shifts');
-            $table->unsignedBigInteger('shift_id')->nullable();
+            $table->string('tgl_selesai');
+            $table->foreignId('status_karyawan_id')->constrained('status_karyawans');
+            $table->integer('lama_bekerja')->nullable();
+            $table->integer('total_pertanyaan')->nullable();
+            $table->integer('rata_rata')->nullable();
             $table->timestamps();
         });
     }
@@ -28,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('jadwals');
+        Schema::dropIfExists('penilaians');
     }
 };

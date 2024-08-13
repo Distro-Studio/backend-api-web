@@ -21,4 +21,14 @@ class StatusKaryawan extends Model
     {
         return $this->hasMany(DataKaryawan::class, 'status_karyawan_id', 'id');
     }
+
+    /**
+     * Get all of the penilaians for the StatusKaryawan
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function penilaians(): HasMany
+    {
+        return $this->hasMany(Penilaian::class, 'status_karyawan_id', 'id');
+    }
 }

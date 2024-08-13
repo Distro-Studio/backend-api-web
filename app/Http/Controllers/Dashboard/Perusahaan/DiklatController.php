@@ -163,7 +163,6 @@ class DiklatController extends Controller
                     'ext' => $dataupload['ext'],
                     'size' => $dataupload['size'],
                 ]);
-                Log::info('Berkas Diklat ' . $authUser->nama . ' berhasil di upload');
                 if (!$berkas) {
                     throw new Exception('Berkas gagal di upload.');
                 }
@@ -211,14 +210,16 @@ class DiklatController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
-        try {
-            return Excel::download(new DiklatExport(), 'perusahaan-diklat.xls');
-        } catch (\Exception $e) {
-            return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya terjadi error. Message: ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
-        } catch (\Error $e) {
-            return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya terjadi error. Message: ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
+        $dataCuti = Diklat::all();
+        if ($dataCuti->isEmpty()) {
+            // Kembalikan respons JSON ketika tabel kosong
+            return response()->json(new WithoutDataResource(Response::HTTP_OK, 'Tidak ada data diklat yang tersedia untuk diekspor.'), Response::HTTP_OK);
         }
 
-        return response()->json(new WithoutDataResource(Response::HTTP_OK, 'Data jadwal karyawan berhasil di download.'), Response::HTTP_OK);
+        try {
+            return Excel::download(new DiklatExport(), 'perusahaan-diklat.xls');
+        } catch (\Throwable $e) {
+            return response()->json(new WithoutDataResource(Response::HTTP_INTERNAL_SERVER_ERROR, 'Maaf sepertinya terjadi error. Message: ' . $e->getMessage()), Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
     }
 }

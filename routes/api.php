@@ -95,6 +95,9 @@ Route::middleware(['auth:sanctum'])->group(function () {
         // ! Ubah export berdasarkan filter
         // ! Buat fitur detail karyawan
         // ! Schema & data time tanggal full string aja
+
+        // TODO: Ubah string acak untuk nama berkas server 'nama_file'
+        // TODO: Untuk verifikasi data karyawan, klik verif -> update ke data yang diverif
         Route::group(['prefix' => '/karyawan'], function () {
             // ! Data Karyawan ===========>
             Route::post('/get-data-karyawan', [DataKaryawanController::class, 'index']);
@@ -194,6 +197,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         });
 
         // TODO: PENILAIAN LOM FIX
+        // ! Diklat verifikasi
         Route::group(['prefix' => '/perusahaan'], function () {
             // ! Diklat ===========>
             Route::post('/get-data-diklat', [DiklatController::class, 'index']);
@@ -207,6 +211,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
             // ! Penilaian ===========>
             Route::post('/get-data-penilaian', [PenilaianController::class, 'index']);
             Route::get('/penilaian/export', [PenilaianController::class, 'exportPenilaian']);
+            Route::get('/penilaian/{id}', [PenilaianController::class, 'show']);
         });
 
         Route::group(['prefix' => '/pengaturan'], function () {

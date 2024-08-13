@@ -13,6 +13,16 @@ class Jawaban extends Model
     protected $guarded = ['id'];
 
     /**
+     * Get the users that owns the Jawaban
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function users(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'user_id', 'id');
+    }
+
+    /**
      * Get the pertanyaans that owns the Jawaban
      *
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
@@ -20,15 +30,5 @@ class Jawaban extends Model
     public function pertanyaans(): BelongsTo
     {
         return $this->belongsTo(Pertanyaan::class, 'pertanyaan_id', 'id');
-    }
-
-    /**
-     * Get the penilaians that owns the Jawaban
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
-     */
-    public function penilaians(): BelongsTo
-    {
-        return $this->belongsTo(Penilaian::class, 'penilaian_id', 'id');
     }
 }

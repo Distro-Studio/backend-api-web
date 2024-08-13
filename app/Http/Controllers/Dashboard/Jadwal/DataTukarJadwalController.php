@@ -39,8 +39,8 @@ class DataTukarJadwalController extends Controller
         // Ambil range tanggal untuk jadwal
         // $start_date = $jadwal->min('tgl_mulai');
         // $end_date = $jadwal->max('tgl_selesai');
-        $start_date = Carbon::parse(RandomHelper::convertToDateString($jadwal->min('tgl_mulai')));
-        $end_date = Carbon::parse(RandomHelper::convertToDateString($jadwal->max('tgl_selesai')));
+        $start_date = Carbon::parse(RandomHelper::convertSpecialDateFormat($jadwal->min('tgl_mulai')));
+        $end_date = Carbon::parse(RandomHelper::convertSpecialDateFormat($jadwal->max('tgl_selesai')));
         $date_range = $this->generateDateRange($start_date, $end_date);
 
         $user_schedule_array = $this->formatSchedules($jadwal, $date_range);
@@ -56,6 +56,43 @@ class DataTukarJadwalController extends Controller
     }
 
     // ambil user ditukar dari jadwal pengajuan
+    // ini lom update
+    // public function getUserDitukar($jadwalId)
+    // {
+    //     if (!Gate::allows('view tukarJadwal')) {
+    //         return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+    //     }
+
+    //     $jadwal = Jadwal::find($jadwalId);
+    //     if (!$jadwal) {
+    //         return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Jadwal karyawan pengajuan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+    //     }
+
+    //     $unitKerjaId = $jadwal->users->data_karyawans->unit_kerjas->id;
+    //     $tglMulai = Carbon::parse($jadwal->tgl_mulai)->format('Y-m-d');
+    //     $tglSelesai = Carbon::parse($jadwal->tgl_selesai)->format('Y-m-d');
+
+    //     $users = User::whereHas('jadwals', function ($query) use ($jadwal, $tglMulai, $tglSelesai) {
+    //         $query->where('shift_id', '!=', $jadwal->shift_id)
+    //             ->whereBetween('tgl_mulai', [$tglMulai, $tglSelesai])
+    //             ->whereBetween('tgl_selesai', [$tglMulai, $tglSelesai]);
+    //     })->whereHas('data_karyawans.unit_kerjas', function ($query) use ($unitKerjaId) {
+    //         $query->where('id', $unitKerjaId);
+    //     })->where('id', '!=', $jadwal->user_id)
+    //         ->where('nama', '!=', 'Super Admin')
+    //         ->get();
+
+    //     if ($users->isEmpty()) {
+    //         return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Karyawan ditukar tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+    //     }
+
+    //     return response()->json([
+    //         'status' => Response::HTTP_OK,
+    //         'message' => "Karyawan ditukar berhasil didapatkan.",
+    //         'data' => $users
+    //     ]);
+    // }
+
     public function getUserDitukar($jadwalId)
     {
         if (!Gate::allows('view tukarJadwal')) {
@@ -68,18 +105,33 @@ class DataTukarJadwalController extends Controller
         }
 
         $unitKerjaId = $jadwal->users->data_karyawans->unit_kerjas->id;
-        $tglMulai = Carbon::parse($jadwal->tgl_mulai)->format('Y-m-d');
-        $tglSelesai = Carbon::parse($jadwal->tgl_selesai)->format('Y-m-d');
+
+        // Gunakan helper untuk memastikan tanggal dikonversi dari format d/m/Y
+        $tglMulai = Carbon::parse(RandomHelper::convertSpecialDateFormat($jadwal->tgl_mulai))->format('d-m-Y');
+        $tglSelesai = Carbon::parse(RandomHelper::convertSpecialDateFormat($jadwal->tgl_selesai))->format('d-m-Y');
 
         $users = User::whereHas('jadwals', function ($query) use ($jadwal, $tglMulai, $tglSelesai) {
             $query->where('shift_id', '!=', $jadwal->shift_id)
-                ->whereBetween('tgl_mulai', [$tglMulai, $tglSelesai])
-                ->whereBetween('tgl_selesai', [$tglMulai, $tglSelesai]);
+                ->where(function ($query) use ($tglMulai, $tglSelesai) {
+                    $query->where(function ($q) use ($tglMulai) {
+                        $q->where('tgl_mulai', '<=', $tglMulai)
+                            ->where('tgl_selesai', '>=', $tglMulai);
+                    })
+                        ->orWhere(function ($q) use ($tglSelesai) {
+                            $q->where('tgl_mulai', '<=', $tglSelesai)
+                                ->where('tgl_selesai', '>=', $tglSelesai);
+                        })
+                        ->orWhere(function ($q) use ($tglMulai, $tglSelesai) {
+                            $q->where('tgl_mulai', '>=', $tglMulai)
+                                ->where('tgl_selesai', '<=', $tglSelesai);
+                        });
+                });
         })->whereHas('data_karyawans.unit_kerjas', function ($query) use ($unitKerjaId) {
             $query->where('id', $unitKerjaId);
         })->where('id', '!=', $jadwal->user_id)
             ->where('nama', '!=', 'Super Admin')
             ->get();
+        // dd($users);
 
         if ($users->isEmpty()) {
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Karyawan ditukar tidak ditemukan.'), Response::HTTP_NOT_FOUND);
@@ -111,8 +163,8 @@ class DataTukarJadwalController extends Controller
         }
 
         // Ambil range tanggal untuk jadwal
-        $start_date = Carbon::parse(RandomHelper::convertToDateString($jadwal->min('tgl_mulai')));
-        $end_date = Carbon::parse(RandomHelper::convertToDateString($jadwal->max('tgl_selesai')));
+        $start_date = Carbon::parse(RandomHelper::convertSpecialDateFormat($jadwal->min('tgl_mulai')));
+        $end_date = Carbon::parse(RandomHelper::convertSpecialDateFormat($jadwal->max('tgl_selesai')));
         $date_range = $this->generateDateRange($start_date, $end_date);
 
         $user_schedule_array = $this->formatSchedules($jadwal, $date_range);
@@ -204,12 +256,12 @@ class DataTukarJadwalController extends Controller
         if (isset($filters['tgl_masuk'])) {
             $tglMasuk = $filters['tgl_masuk'];
             if (is_array($tglMasuk)) {
-                $convertedDates = array_map([RandomHelper::class, 'convertToDateString'], $tglMasuk);
+                $convertedDates = array_map([RandomHelper::class, 'convertSpecialDateFormat'], $tglMasuk);
                 $tukarJadwal->whereHas('user_pengajuans.data_karyawans', function ($query) use ($convertedDates) {
                     $query->whereIn('tgl_masuk', $convertedDates);
                 });
             } else {
-                $convertedDate = RandomHelper::convertToDateString($tglMasuk);
+                $convertedDate = RandomHelper::convertSpecialDateFormat($tglMasuk);
                 $tukarJadwal->whereHas('user_pengajuans.data_karyawans', function ($query) use ($convertedDate) {
                     $query->where('tgl_masuk', $convertedDate);
                 });
@@ -398,8 +450,8 @@ class DataTukarJadwalController extends Controller
         $jadwalDitukar = Jadwal::findOrFail($data['jadwal_ditukar']);
 
         // Konversi tanggal dari string untuk validasi
-        $tglMulaiPengajuan = RandomHelper::convertToDateString($jadwalPengajuan->tgl_mulai);
-        $tglMulaiDitukar = RandomHelper::convertToDateString($jadwalDitukar->tgl_mulai);
+        $tglMulaiPengajuan = RandomHelper::convertSpecialDateFormat($jadwalPengajuan->tgl_mulai);
+        $tglMulaiDitukar = RandomHelper::convertSpecialDateFormat($jadwalDitukar->tgl_mulai);
 
         // Verifikasi unit kerja
         if ($userPengajuan->data_karyawans->unit_kerjas->id !== $userDitukar->data_karyawans->unit_kerjas->id) {
@@ -588,21 +640,23 @@ class DataTukarJadwalController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
-        try {
-            return Excel::download(new TukarJadwalExport(), 'jadwal-penukaran-jadwal.xls');
-        } catch (\Exception $e) {
-            return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya terjadi error. Message: ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
-        } catch (\Error $e) {
-            return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya terjadi error. Message: ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
+        $dataCuti = TukarJadwal::all(); // Sesuaikan dengan model atau query Anda
+        if ($dataCuti->isEmpty()) {
+            // Kembalikan respons JSON ketika tabel kosong
+            return response()->json(new WithoutDataResource(Response::HTTP_OK, 'Tidak ada data tukar jadwal karyawan yang tersedia untuk diekspor.'), Response::HTTP_OK);
         }
 
-        return response()->json(new WithoutDataResource(Response::HTTP_OK, 'Data jadwal lembur karyawan berhasil di download.'), Response::HTTP_OK);
+        try {
+            return Excel::download(new TukarJadwalExport(), 'pertukaran-jadwal.xls');
+        } catch (\Throwable $e) {
+            return response()->json(new WithoutDataResource(Response::HTTP_INTERNAL_SERVER_ERROR, 'Maaf sepertinya terjadi error. Message: ' . $e->getMessage()), Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
     }
 
     private function generateDateRange($start_date, $end_date)
     {
         $dates = [];
-        $current = Carbon::parse($start_date);
+        $current = Carbon::parse($start_date);  // Pastikan ini sudah dalam format Y-m-d
         $end = Carbon::parse($end_date);
 
         while ($current->lte($end)) {
@@ -613,32 +667,93 @@ class DataTukarJadwalController extends Controller
         return $dates;
     }
 
+    // ini bug jadwal malam tampil 2x
+    // private function formatSchedules($jadwal, $date_range)
+    // {
+    //     $user_schedules_by_date = [];
+    //     // Iterasi melalui jadwal dan rentang tanggal, menyimpan semua jadwal yang sesuai
+    //     foreach ($jadwal as $schedule) {
+    //         // Pastikan tanggal dalam format Y-m-d menggunakan helper sebelum parsing dengan Carbon
+    //         $tgl_mulai_formatted = Carbon::parse(RandomHelper::convertSpecialDateFormat($schedule->tgl_mulai));
+    //         $tgl_selesai_formatted = Carbon::parse(RandomHelper::convertSpecialDateFormat($schedule->tgl_selesai));
+
+    //         $current_date = $tgl_mulai_formatted->copy();
+    //         while ($current_date->lte($tgl_selesai_formatted)) {
+    //             $date_key = $current_date->format('Y-m-d');
+
+    //             // Jika ada beberapa jadwal dalam satu hari, kita perlu mengelolanya
+    //             if (!isset($user_schedules_by_date[$date_key])) {
+    //                 $user_schedules_by_date[$date_key] = [];
+    //             }
+    //             $user_schedules_by_date[$date_key][] = $schedule;
+
+    //             $current_date->addDay();
+    //         }
+    //     }
+
+    //     $user_schedule_array = [];
+    //     foreach ($date_range as $date) {
+    //         if (isset($user_schedules_by_date[$date])) {
+    //             foreach ($user_schedules_by_date[$date] as $schedule) {
+    //                 $user_schedule_array[] = [
+    //                     'id' => $schedule->id,
+    //                     'tanggal' => $date,
+    //                     'nama_shift' => $schedule->shifts->nama,
+    //                     'jam_from' => $schedule->shifts->jam_from,
+    //                     'jam_to' => $schedule->shifts->jam_to,
+    //                 ];
+    //             }
+    //         }
+    //     }
+
+    //     return $user_schedule_array;
+    // }
+
     private function formatSchedules($jadwal, $date_range)
     {
         $user_schedules_by_date = [];
+        // Iterasi melalui jadwal dan rentang tanggal, menyimpan semua jadwal yang sesuai
         foreach ($jadwal as $schedule) {
-            $current_date = Carbon::parse($schedule->tgl_mulai);
-            while ($current_date->lte(Carbon::parse($schedule->tgl_selesai))) {
-                $user_schedules_by_date[$current_date->format('Y-m-d')] = $schedule;
-                $current_date->addDay();
+            $tgl_mulai_formatted = Carbon::parse(RandomHelper::convertSpecialDateFormat($schedule->tgl_mulai));
+            $tgl_selesai_formatted = Carbon::parse(RandomHelper::convertSpecialDateFormat($schedule->tgl_selesai));
+
+            $current_date = $tgl_mulai_formatted->copy();
+
+            // Tentukan apakah ini adalah shift yang berakhir keesokan harinya
+            $is_overnight_shift = $tgl_selesai_formatted->greaterThan($tgl_mulai_formatted);
+
+            // Jika ini adalah shift yang berlangsung hingga keesokan hari, hanya tampilkan sekali pada hari `tgl_mulai`
+            if ($is_overnight_shift) {
+                $date_key = $tgl_mulai_formatted->format('Y-m-d');
+                if (!isset($user_schedules_by_date[$date_key])) {
+                    $user_schedules_by_date[$date_key] = [];
+                }
+                $user_schedules_by_date[$date_key][] = $schedule;
+            } else {
+                while ($current_date->lte($tgl_selesai_formatted)) {
+                    $date_key = $current_date->format('Y-m-d');
+                    if (!isset($user_schedules_by_date[$date_key])) {
+                        $user_schedules_by_date[$date_key] = [];
+                    }
+                    $user_schedules_by_date[$date_key][] = $schedule;
+                    $current_date->addDay();
+                }
             }
         }
 
         $user_schedule_array = [];
         foreach ($date_range as $date) {
             if (isset($user_schedules_by_date[$date])) {
-                $schedule = $user_schedules_by_date[$date];
-                $user_schedule_array[] = [
-                    'id' => $schedule->id,
-                    'tanggal' => $date,
-                    'nama_shift' => $schedule->shifts->nama,
-                    'jam_from' => $schedule->shifts->jam_from,
-                    'jam_to' => $schedule->shifts->jam_to,
-                ];
+                foreach ($user_schedules_by_date[$date] as $schedule) {
+                    $user_schedule_array[] = [
+                        'id' => $schedule->id,
+                        'tanggal' => $date,
+                        'nama_shift' => $schedule->shifts->nama,
+                        'jam_from' => $schedule->shifts->jam_from,
+                        'jam_to' => $schedule->shifts->jam_to,
+                    ];
+                }
             }
-            // else {
-            //     $user_schedule_array[] = null;
-            // }
         }
 
         return $user_schedule_array;

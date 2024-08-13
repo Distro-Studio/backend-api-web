@@ -15,6 +15,7 @@ use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\Keuangan\THRGajiExport;
 use App\Http\Requests\StoreRunTHRRequest;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
+use App\Models\Thr;
 
 class THRPenggajianController extends Controller
 {
@@ -98,7 +99,7 @@ class THRPenggajianController extends Controller
 
         $data_karyawan_ids = DataKaryawan::where('email', '!=', 'super_admin@admin.rski')->pluck('id')->toArray();
         // $tglRunTHR = Carbon::parse($request->input('tgl_run_thr'));
-        $tglRunTHR = Carbon::parse(RandomHelper::convertToDateString($request->input('tgl_run_thr')));
+        $tglRunTHR = Carbon::parse(RandomHelper::convertSpecialDateFormat($request->input('tgl_run_thr')));
         $currentYear = Carbon::now()->year;
         $currentMonth = Carbon::now()->month;
         $currentDate = Carbon::now()->timezone('Asia/Jakarta');
@@ -251,14 +252,16 @@ class THRPenggajianController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
-        try {
-            return Excel::download(new THRGajiExport(), 'penggajian-thr.xls');
-        } catch (\Exception $e) {
-            return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya terjadi error. Message: ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
-        } catch (\Error $e) {
-            return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya terjadi error. Message: ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
+        $dataCuti = Thr::all();
+        if ($dataCuti->isEmpty()) {
+            // Kembalikan respons JSON ketika tabel kosong
+            return response()->json(new WithoutDataResource(Response::HTTP_OK, 'Tidak ada data penggajian THR karyawan yang tersedia untuk diekspor.'), Response::HTTP_OK);
         }
 
-        return response()->json(new WithoutDataResource(Response::HTTP_OK, 'Data penggajian THR berhasil di download.'), Response::HTTP_OK);
+        try {
+            return Excel::download(new THRGajiExport(), 'penggajian-thr-karyawan.xls');
+        } catch (\Throwable $e) {
+            return response()->json(new WithoutDataResource(Response::HTTP_INTERNAL_SERVER_ERROR, 'Maaf sepertinya terjadi error. Message: ' . $e->getMessage()), Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
     }
 }

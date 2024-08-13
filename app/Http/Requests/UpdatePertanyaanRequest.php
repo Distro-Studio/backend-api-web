@@ -25,19 +25,23 @@ class UpdatePertanyaanRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'role_id' => 'required|integer|exists:roles,id',
+            'penilaian_id' => 'required|integer|exists:penilaians,id',
             'pertanyaan' => 'required|string',
-            'jabatan_id' => 'required|integer|exists:jabatans,id',
         ];
     }
 
     public function messages(): array
     {
         return [
+            'role_id.required' => 'Silahkan pilih role yang tersedia terlebih dahulu.',
+            'role_id.integer' => 'Data role yang valid adalah berupa satuan angka.',
+            'role_id.exists' => 'Data role yang terdipilih tidak tersedia.',
+            'penilaian_id.required' => 'Silahkan pilih penilaian yang tersedia terlebih dahulu.',
+            'penilaian_id.integer' => 'Data penilaian yang valid adalah berupa satuan angka.',
+            'penilaian_id.exists' => 'Data penilaian yang terdipilih tidak tersedia.',
             'pertanyaan.required' => 'Pertanyaan kuesioner tidak diperbolehkan kosong.',
             'pertanyaan.string' => 'Pertanyaan kuesioner tidak diperbolehkan mengandung angka atau karakter lainnya.',
-            'jabatan_id.required' => 'Silahkan pilih jabatan yang tersedia terlebih dahulu.',
-            'jabatan_id.integer' => 'Data jabatan yang valid adalah berupa satuan angka.',
-            'jabatan_id.exists' => 'Data jabatan yang terdipilih tidak tersedia.',
         ];
     }
 

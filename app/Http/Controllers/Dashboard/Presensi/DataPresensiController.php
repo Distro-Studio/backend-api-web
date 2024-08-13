@@ -75,11 +75,14 @@ class DataPresensiController extends Controller
             ->whereDate('jam_masuk', $today)
             ->count('user_id');
 
-        // Perhitungan untuk libur
-        $countLibur = Jadwal::whereNull('shift_id')
-            ->whereDate('tgl_mulai', '<=', $today)
-            ->whereDate('tgl_selesai', '>=', $today)
-            ->count('user_id');
+        // Konversi tanggal tgl_mulai dan tgl_selesai menjadi format yang sesuai untuk perbandingan
+        $jadwalLibur = Jadwal::where('shift_id', 0)->get();
+
+        $countLibur = $jadwalLibur->filter(function ($jadwal) use ($today) {
+            $tglMulai = Carbon::parse(RandomHelper::convertSpecialDateFormat($jadwal->tgl_mulai))->format('Y-m-d');
+            $tglSelesai = Carbon::parse(RandomHelper::convertSpecialDateFormat($jadwal->tgl_selesai))->format('Y-m-d');
+            return $tglMulai <= $today && $tglSelesai >= $today;
+        })->count();
 
         // Hitung total hadir dan total tidak hadir
         $totalHadir = $countTepatWaktu + $countTerlambat;
@@ -116,7 +119,7 @@ class DataPresensiController extends Controller
 
         // Filter
         if ($request->has('tanggal')) {
-            $tanggal = RandomHelper::convertToDateString($request->tanggal);
+            $tanggal = RandomHelper::convertSpecialDateFormat($request->tanggal);
             $presensi->whereDate('jam_masuk', $tanggal);
         } else {
             return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Pilih tanggal terlebih dahulu untuk menampilkan presensi.'), Response::HTTP_BAD_REQUEST);
@@ -187,12 +190,12 @@ class DataPresensiController extends Controller
         if (isset($filters['tgl_masuk'])) {
             $tglMasuk = $filters['tgl_masuk'];
             if (is_array($tglMasuk)) {
-                $convertedDates = array_map([RandomHelper::class, 'convertToDateString'], $tglMasuk);
+                $convertedDates = array_map([RandomHelper::class, 'convertSpecialDateFormat'], $tglMasuk);
                 $presensi->whereHas('users.data_karyawans', function ($query) use ($convertedDates) {
                     $query->whereIn('tgl_masuk', $convertedDates);
                 });
             } else {
-                $convertedDate = RandomHelper::convertToDateString($tglMasuk);
+                $convertedDate = RandomHelper::convertSpecialDateFormat($tglMasuk);
                 $presensi->whereHas('users.data_karyawans', function ($query) use ($convertedDate) {
                     $query->where('tgl_masuk', $convertedDate);
                 });
@@ -547,6 +550,41 @@ class DataPresensiController extends Controller
         ], Response::HTTP_OK);
     }
 
+    // old
+    // public function exportPresensi(Request $request)
+    // {
+    //     if (!Gate::allows('export presensiKaryawan')) {
+    //         return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+    //     }
+
+    //     $month = $request->input('month');
+    //     $year = $request->input('year');
+
+    //     if (empty($month) || empty($year)) {
+    //         return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Periode bulan dan tahun tidak boleh kosong.'), Response::HTTP_BAD_REQUEST);
+    //     }
+
+    //     // Error
+    //     $startDate = Carbon::createFromDate($year, $month, 1)->startOfMonth();
+    //     $endDate = Carbon::createFromDate($year, $month, 1)->endOfMonth();
+
+    //     $presensiCount = Presensi::whereBetween('jam_masuk', [$startDate, $endDate])->count();
+
+    //     if ($presensiCount === 0) {
+    //         return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data presensi tidak ditemukan untuk periode yang diminta.'), Response::HTTP_NOT_FOUND);
+    //     }
+
+    //     try {
+    //         return Excel::download(new PresensiExport([$month], $year), 'presensi-karyawan.xls');
+    //     } catch (\Exception $e) {
+    //         return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya terjadi error. Message: ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
+    //     } catch (\Error $e) {
+    //         return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya terjadi error. Message: ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
+    //     }
+
+    //     return response()->json(new WithoutDataResource(Response::HTTP_OK, 'Data presensi karyawan berhasil di download.'), Response::HTTP_OK);
+    // }
+
     public function exportPresensi(Request $request)
     {
         if (!Gate::allows('export presensiKaryawan')) {
@@ -560,9 +598,12 @@ class DataPresensiController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Periode bulan dan tahun tidak boleh kosong.'), Response::HTTP_BAD_REQUEST);
         }
 
-        // Error
-        $startDate = Carbon::createFromDate($year, $month, 1)->startOfMonth();
-        $endDate = Carbon::createFromDate($year, $month, 1)->endOfMonth();
+        try {
+            $startDate = Carbon::createFromDate($year, $month, 1)->startOfMonth();
+            $endDate = Carbon::createFromDate($year, $month, 1)->endOfMonth();
+        } catch (\Exception $e) {
+            return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Tanggal yang dimasukkan tidak valid.'), Response::HTTP_BAD_REQUEST);
+        }
 
         $presensiCount = Presensi::whereBetween('jam_masuk', [$startDate, $endDate])->count();
 
@@ -572,13 +613,9 @@ class DataPresensiController extends Controller
 
         try {
             return Excel::download(new PresensiExport([$month], $year), 'presensi-karyawan.xls');
-        } catch (\Exception $e) {
-            return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya terjadi error. Message: ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
-        } catch (\Error $e) {
-            return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya terjadi error. Message: ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
+        } catch (\Throwable $e) {
+            return response()->json(new WithoutDataResource(Response::HTTP_INTERNAL_SERVER_ERROR, 'Maaf sepertinya terjadi error. Message: ' . $e->getMessage()), Response::HTTP_INTERNAL_SERVER_ERROR);
         }
-
-        return response()->json(new WithoutDataResource(Response::HTTP_OK, 'Data presensi karyawan berhasil di download.'), Response::HTTP_OK);
     }
 
     public function downloadPresensiTemplate()

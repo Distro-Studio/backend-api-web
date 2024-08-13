@@ -98,12 +98,12 @@ class DataCutiController extends Controller
         if (isset($filters['tgl_masuk'])) {
             $tglMasuk = $filters['tgl_masuk'];
             if (is_array($tglMasuk)) {
-                $convertedDates = array_map([RandomHelper::class, 'convertToDateString'], $tglMasuk);
+                $convertedDates = array_map([RandomHelper::class, 'convertSpecialDateFormat'], $tglMasuk);
                 $cuti->whereHas('users.data_karyawans', function ($query) use ($convertedDates) {
                     $query->whereIn('tgl_masuk', $convertedDates);
                 });
             } else {
-                $convertedDate = RandomHelper::convertToDateString($tglMasuk);
+                $convertedDate = RandomHelper::convertSpecialDateFormat($tglMasuk);
                 $cuti->whereHas('users.data_karyawans', function ($query) use ($convertedDate) {
                     $query->where('tgl_masuk', $convertedDate);
                 });
@@ -226,7 +226,11 @@ class DataCutiController extends Controller
         }
 
         if ($dataCuti->isEmpty()) {
-            return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data cuti karyawan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+            return response()->json([
+                'status' => Response::HTTP_OK,
+                'message' => 'Data cuti karyawan tidak ditemukan.',
+                'data' => []
+            ], Response::HTTP_OK);
         }
 
         $formattedData = $dataCuti->map(function ($dataCuti) {
@@ -372,8 +376,8 @@ class DataCutiController extends Controller
         }
 
         // Mengonversi tanggal dari request menggunakan helper hanya untuk perhitungan durasi
-        $tglFrom = RandomHelper::convertToDateString($data['tgl_from']);
-        $tglTo = RandomHelper::convertToDateString($data['tgl_to']);
+        $tglFrom = RandomHelper::convertSpecialDateFormat($data['tgl_from']);
+        $tglTo = RandomHelper::convertSpecialDateFormat($data['tgl_to']);
 
         // Menghitung durasi cuti dalam hari
         $durasi = Carbon::parse($tglFrom)->diffInDays(Carbon::parse($tglTo)) + 1;
@@ -418,14 +422,16 @@ class DataCutiController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
-        try {
-            return Excel::download(new CutiJadwalExport(), 'cuti-karyawan.xls');
-        } catch (\Exception $e) {
-            return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya terjadi error. Message: ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
-        } catch (\Error $e) {
-            return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya terjadi error. Message: ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
+        $dataCuti = Cuti::all();
+        if ($dataCuti->isEmpty()) {
+            // Kembalikan respons JSON ketika tabel kosong
+            return response()->json(new WithoutDataResource(Response::HTTP_OK, 'Tidak ada data cuti karyawan yang tersedia untuk diekspor.'), Response::HTTP_OK);
         }
 
-        return response()->json(new WithoutDataResource(Response::HTTP_OK, 'Data jadwal cuti karyawan berhasil di download.'), Response::HTTP_OK);
+        try {
+            return Excel::download(new CutiJadwalExport(), 'cuti-karyawan.xls');
+        } catch (\Throwable $e) {
+            return response()->json(new WithoutDataResource(Response::HTTP_INTERNAL_SERVER_ERROR, 'Maaf sepertinya terjadi error. Message: ' . $e->getMessage()), Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
     }
 }

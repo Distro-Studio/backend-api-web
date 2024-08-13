@@ -3,18 +3,14 @@
 namespace App\Http\Controllers\Dashboard\Pengaturan\Karyawan;
 
 use App\Models\Pertanyaan;
-use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Collection;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Gate;
-use Maatwebsite\Excel\Facades\Excel;
 use App\Http\Requests\StorePertanyaanRequest;
 use App\Http\Requests\UpdatePertanyaanRequest;
-use App\Exports\Pengaturan\Karyawan\PertanyaanExport;
-use App\Imports\Pengaturan\Karyawan\PertanyaanImport;
-use App\Http\Requests\Excel_Import\ImportPertanyaanRequest;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
+use Spatie\Permission\Models\Role;
 
 class PertanyaanController extends Controller
 {
@@ -32,44 +28,13 @@ class PertanyaanController extends Controller
         ], Response::HTTP_OK);
     }
 
-    public function index(Request $request)
+    public function index()
     {
         if (!Gate::allows('view kuesioner')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
         $pertanyaan = Pertanyaan::withTrashed()->orderBy('created_at', 'desc');
-
-        // Filter
-        // if ($request->has('delete_data')) {
-        //     $softDeleteFilters = $request->delete_data;
-        //     $pertanyaan->when(in_array('dihapus', $softDeleteFilters) && !in_array('belum_dihapus', $softDeleteFilters), function ($query) {
-        //         return $query->onlyTrashed();
-        //     })->when(!in_array('dihapus', $softDeleteFilters) && in_array('belum_dihapus', $softDeleteFilters), function ($query) {
-        //         return $query->withoutTrashed();
-        //     });
-        // }
-        // if (isset($filters['jabatan'])) {
-        //     $namaUnitKerja = $filters['jabatan'];
-        //     $pertanyaan->whereHas('jabatans', function ($query) use ($namaUnitKerja) {
-        //         if (is_array($namaUnitKerja)) {
-        //             $query->whereIn('id', $namaUnitKerja);
-        //         } else {
-        //             $query->where('id', '=', $namaUnitKerja);
-        //         }
-        //     });
-        // }
-
-        // search
-        // if ($request->has('search')) {
-        //     $pertanyaan = $pertanyaan->where(function ($query) use ($request) {
-        //         $searchTerm = '%' . $request->search . '%';
-
-        //         $query->whereHas('jabatans', function ($query) use ($searchTerm) {
-        //             $query->where('nama_jabatan', 'like', $searchTerm);
-        //         })->orWhere('pertanyaan', 'like', $searchTerm);
-        //     });
-        // }
 
         $dataPertanyaan = $pertanyaan->get();
         $successMessage = "Data kuesioner berhasil ditampilkan.";
@@ -90,7 +55,7 @@ class PertanyaanController extends Controller
         $data = $request->validated();
 
         $pertanyaan = Pertanyaan::create($data);
-        $successMessage = "Data pertanyaan kuesioner untuk jabatan '{$pertanyaan->jabatans->nama_jabatan}' berhasil dibuat.";
+        $successMessage = "Data pertanyaan untuk role '{$pertanyaan->roles->name}' berstatus '{$pertanyaan->penilaians->status_karyawans->label}' berhasil dibuat.";
         $formattedData = $this->formatData(collect([$pertanyaan]))->first();
 
         return response()->json([
@@ -110,7 +75,7 @@ class PertanyaanController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data pertanyaan kuesioner tidak ditemukan.'), Response::HTTP_NOT_FOUND);
         }
 
-        $successMessage = "Data pertanyaan kuesioner dari jabatan '{$pertanyaan->jabatans->nama_jabatan}' berhasil ditampilkan.";
+        $successMessage = "Data pertanyaan untuk role '{$pertanyaan->roles->name}' berstatus '{$pertanyaan->penilaians->status_karyawans->label}' berhasil ditampilkan.";
         $formattedData = $this->formatData(collect([$pertanyaan]))->first();
 
         return response()->json([
@@ -138,7 +103,7 @@ class PertanyaanController extends Controller
 
         $pertanyaan->update($data);
         $updatedPertanyaan = $pertanyaan->fresh();
-        $successMessage = "Data pertanyaan kuesioner untuk jabatan '{$updatedPertanyaan->jabatans->nama_jabatan}' diubah.";
+        $successMessage = "Data pertanyaan untuk role '{$updatedPertanyaan->roles->name}' berstatus '{$updatedPertanyaan->penilaians->status_karyawans->label}' berhasil diperbarui.";
         $formattedData = $this->formatData(collect([$pertanyaan]))->first();
 
         return response()->json([
@@ -156,7 +121,7 @@ class PertanyaanController extends Controller
 
         $pertanyaan->delete();
 
-        $successMessage = "Data pertanyaan kuesioner dari jabatan '{$pertanyaan->jabatans->nama_jabatan}' berhasil dihapus.";
+        $successMessage = "Data pertanyaan untuk role '{$pertanyaan->roles->name}' berstatus '{$pertanyaan->penilaians->status_karyawans->label}' berhasil dihapus.";
         return response()->json(new WithoutDataResource(Response::HTTP_OK, $successMessage), Response::HTTP_OK);
     }
 
@@ -171,11 +136,11 @@ class PertanyaanController extends Controller
         $pertanyaan->restore();
 
         if (is_null($pertanyaan->deleted_at)) {
-            $successMessage = "Data pertanyaan kuesioner dari jabatan '{$pertanyaan->jabatans->nama_jabatan}' berhasil dipulihkan.";
+            $successMessage = "Data pertanyaan untuk role '{$pertanyaan->roles->name}' berstatus '{$pertanyaan->penilaians->status_karyawans->label}' berhasil dipulihkan.";
             return response()->json(new WithoutDataResource(Response::HTTP_OK, $successMessage), Response::HTTP_OK);
         } else {
             $successMessage = 'Restore data tidak dapat diproses, Silahkan hubungi admin untuk dilakukan pengecekan ulang.';
-            return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, $successMessage), Response::HTTP_BAD_REQUEST);
+            return response()->json(new WithoutDataResource(Response::HTTP_INTERNAL_SERVER_ERROR, $successMessage), Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -184,8 +149,15 @@ class PertanyaanController extends Controller
         return $collection->transform(function ($pertanyaan) {
             return [
                 'id' => $pertanyaan->id,
+                'peruntukan_role' => $pertanyaan->roles,
+                'penilaian' => [
+                    'id' => $pertanyaan->penilaians->id,
+                    'status_karyawan' => $pertanyaan->penilaians->status_karyawans,
+                    'tgl_mulai' => $pertanyaan->penilaians->tgl_mulai,
+                    'tgl_selesai' => $pertanyaan->penilaians->tgl_selesai,
+                    'lama_bekerja' => $pertanyaan->penilaians->lama_bekerja
+                ],
                 'pertanyaan' => $pertanyaan->pertanyaan,
-                'jabatan' => $pertanyaan->jabatans,
                 'deleted_at' => $pertanyaan->deleted_at,
                 'created_at' => $pertanyaan->created_at,
                 'updated_at' => $pertanyaan->updated_at

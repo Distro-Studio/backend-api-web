@@ -27,7 +27,7 @@ class UpdatePengumumanRequest extends FormRequest
         return [
             'judul' => 'required|string|max:255',
             'konten' => 'required|string',
-            'tgl_berakhir' => 'required|string|after_or_equal:today',
+            'tgl_berakhir' => 'required|string',
         ];
     }
 
@@ -37,7 +37,6 @@ class UpdatePengumumanRequest extends FormRequest
             'judul.required' => 'Judul pengumuman tidak diperbolehkan kosong.',
             'konten.required' => 'Konten pengumuman tidak diperbolehkan kosong.',
             'tgl_berakhir.required' => 'Tanggal berakhir pengumuman tidak diperbolehkan kosong.',
-            'tgl_berakhir.after_or_equal' => 'Tanggal berakhir pengumuman harus hari ini atau setelahnya.',
         ];
     }
 

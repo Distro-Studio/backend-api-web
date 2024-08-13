@@ -14,72 +14,50 @@ class Penilaian extends Model
     protected $guarded = ['id'];
 
     /**
-     * Get the user_dinilai that owns the Penilaian
+     * Get the status_karyawans that owns the Penilaian
      *
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function user_dinilais(): BelongsTo
+    public function status_karyawans(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'user_dinilai', 'id');
+        return $this->belongsTo(StatusKaryawan::class, 'status_karyawan_id', 'id');
     }
 
     /**
-     * Get the user_penilai that owns the Penilaian
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
-     */
-    public function user_penilais(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'user_penilai', 'id');
-    }
-
-    /**
-     * Get the unit_kerja_dinilai that owns the Penilaian
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
-     */
-    public function unit_kerja_dinilais(): BelongsTo
-    {
-        return $this->belongsTo(UnitKerja::class, 'unit_kerja_dinilai', 'id');
-    }
-
-    /**
-     * Get the unit_kerja_penilai that owns the Penilaian
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
-     */
-    public function unit_kerja_penilais(): BelongsTo
-    {
-        return $this->belongsTo(UnitKerja::class, 'unit_kerja_penilai', 'id');
-    }
-
-    /**
-     * Get the jabatan_dinilai that owns the Penilaian
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
-     */
-    public function jabatan_dinilais(): BelongsTo
-    {
-        return $this->belongsTo(Jabatan::class, 'jabatan_dinilai', 'id');
-    }
-
-    /**
-     * Get the jabatan_penilai that owns the Penilaian
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
-     */
-    public function jabatan_penilais(): BelongsTo
-    {
-        return $this->belongsTo(Jabatan::class, 'jabatan_penilai', 'id');
-    }
-
-    /**
-     * Get all of the jawabans for the Penilaian
+     * Get all of the pertanyaans for the Penilaian
      *
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function jawabans(): HasMany
+    public function pertanyaans(): HasMany
     {
-        return $this->hasMany(Jawaban::class, 'penilaian_id', 'id');
+        return $this->hasMany(Pertanyaan::class, 'penilaian_id', 'id');
+    }
+
+    // Method untuk menghitung total pertanyaan
+    public function getTotalPertanyaanAttribute()
+    {
+        return $this->pertanyaans()->count();
+    }
+
+    public function jawabans()
+    {
+        return $this->hasManyThrough(Jawaban::class, Pertanyaan::class, 'penilaian_id', 'pertanyaan_id');
+    }
+
+    // Relasi untuk mengakses karyawan yang dinilai
+    public function karyawanDinilai()
+    {
+        return $this->hasOneThrough(User::class, DataKaryawan::class, 'status_karyawan_id', 'id', 'status_karyawan_id', 'user_id');
+    }
+
+    // Method untuk menghitung rata-rata jawaban berdasarkan status karyawan
+    public function getRataRataAttribute()
+    {
+        $average = $this->jawabans()
+            ->whereHas('pertanyaans.penilaians.status_karyawans', function ($query) {
+                $query->where('id', $this->status_karyawan_id);
+            })
+            ->avg('jawaban');
+        return round($average);
     }
 }

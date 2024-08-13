@@ -134,21 +134,13 @@ class User extends Authenticatable
     }
 
     /**
-     * Get all of the user_dinilai for the User
+     * Get all of the jawabans for the User
      *
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
-     */    public function user_dinilai(): HasMany
+     */
+    public function jawabans(): HasMany
     {
-        return $this->hasMany(Penilaian::class, 'user_dinilai', 'id');
-    }
-
-    /**
-     * Get all of the user_penilai for the User
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
-     */    public function user_penilai(): HasMany
-    {
-        return $this->hasMany(Penilaian::class, 'user_penilai', 'id');
+        return $this->hasMany(Jawaban::class, 'user_id', 'id');
     }
 
     /**

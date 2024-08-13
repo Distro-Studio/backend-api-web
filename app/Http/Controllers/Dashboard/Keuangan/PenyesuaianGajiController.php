@@ -100,12 +100,12 @@ class PenyesuaianGajiController extends Controller
         if (isset($filters['tgl_masuk'])) {
             $tglMasuk = $filters['tgl_masuk'];
             if (is_array($tglMasuk)) {
-                $convertedDates = array_map([RandomHelper::class, 'convertToDateString'], $tglMasuk);
+                $convertedDates = array_map([RandomHelper::class, 'convertSpecialDateFormat'], $tglMasuk);
                 $PenyesuaianGaji->whereHas('penggajians.data_karyawans', function ($query) use ($convertedDates) {
                     $query->whereIn('tgl_masuk', $convertedDates);
                 });
             } else {
-                $convertedDate = RandomHelper::convertToDateString($tglMasuk);
+                $convertedDate = RandomHelper::convertSpecialDateFormat($tglMasuk);
                 $PenyesuaianGaji->whereHas('penggajians.data_karyawans', function ($query) use ($convertedDate) {
                     $query->where('tgl_masuk', $convertedDate);
                 });
@@ -275,7 +275,7 @@ class PenyesuaianGajiController extends Controller
                 ]);
 
                 // Cek apakah bulan mulai adalah bulan saat ini
-                $bulanMulai = Carbon::parse(RandomHelper::convertToDateString($data['bulan_mulai']));
+                $bulanMulai = Carbon::parse(RandomHelper::convertSpecialDateFormat($data['bulan_mulai']));
                 if ($bulanMulai->month == $currentMonth && $bulanMulai->year == $currentYear) {
                     // Kurangi atau tambah take home pay sesuai dengan kategori
                     if ($kategori == $kategori_penambah) {
@@ -316,15 +316,17 @@ class PenyesuaianGajiController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
-        try {
-            return Excel::download(new PenyesuaianGajiExport(), 'keuangan-penyesuaian-gaji.xls');
-        } catch (\Exception $e) {
-            return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya terjadi error. Message: ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
-        } catch (\Error $e) {
-            return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya terjadi error. Message: ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
+        $dataCuti = PenyesuaianGaji::all();
+        if ($dataCuti->isEmpty()) {
+            // Kembalikan respons JSON ketika tabel kosong
+            return response()->json(new WithoutDataResource(Response::HTTP_OK, 'Tidak ada data penyesuaian gaji karyawan yang tersedia untuk diekspor.'), Response::HTTP_OK);
         }
 
-        return response()->json(new WithoutDataResource(Response::HTTP_OK, 'Data presensi karyawan berhasil di download.'), Response::HTTP_OK);
+        try {
+            return Excel::download(new PenyesuaianGajiExport(), 'penyesuaian-gaji-karyawan.xls');
+        } catch (\Throwable $e) {
+            return response()->json(new WithoutDataResource(Response::HTTP_INTERNAL_SERVER_ERROR, 'Maaf sepertinya terjadi error. Message: ' . $e->getMessage()), Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
     }
 
     // Penyesuaian Gaji
@@ -358,7 +360,7 @@ class PenyesuaianGajiController extends Controller
             $currentMonth = Carbon::now()->month;
             $currentYear = Carbon::now()->year;
             // $bulanMulai = Carbon::parse($request->bulan_mulai);
-            $bulanMulai = Carbon::parse(RandomHelper::convertToDateString($request->bulan_mulai));
+            $bulanMulai = Carbon::parse(RandomHelper::convertSpecialDateFormat($request->bulan_mulai));
 
             if ($bulanMulai->month == $currentMonth && $bulanMulai->year == $currentYear) {
                 // Kurangi take home pay dengan besaran penyesuaian yang baru dibuat
@@ -418,7 +420,7 @@ class PenyesuaianGajiController extends Controller
             // Cek apakah bulan mulai adalah bulan saat ini
             $currentMonth = Carbon::now()->month;
             $currentYear = Carbon::now()->year;
-            $bulanMulai = Carbon::parse(RandomHelper::convertToDateString($request->bulan_mulai));
+            $bulanMulai = Carbon::parse(RandomHelper::convertSpecialDateFormat($request->bulan_mulai));
 
             if ($bulanMulai->month == $currentMonth && $bulanMulai->year == $currentYear) {
                 // Kurangi take home pay dengan besaran penyesuaian yang baru dibuat

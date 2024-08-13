@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Spatie\Permission\Models\Role;
 
 class Pertanyaan extends Model
 {
@@ -14,12 +15,22 @@ class Pertanyaan extends Model
     protected $guarded = ['id'];
 
     /**
-     * Get the jabatans that owns the Pertanyaan
+     * Get the penilaians that owns the Pertanyaan
      *
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function jabatans(): BelongsTo
+    public function penilaians(): BelongsTo
     {
-        return $this->belongsTo(Jabatan::class, 'jabatan_id', 'id');
+        return $this->belongsTo(Penilaian::class, 'penilaian_id', 'id');
+    }
+
+    /**
+     * Get the roles that owns the Pertanyaan
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function roles(): BelongsTo
+    {
+        return $this->belongsTo(Role::class, 'role_id');
     }
 }

@@ -95,7 +95,6 @@ class DatabaseSeeder extends Seeder
       KelompokGajiSeeder::class,
       KompetensiSeeder::class,
       UnitKerjaSeeder::class,
-      PertanyaanSeeder::class,
 
       /* ==== Pengaturan Finance ==== */
       KategoriTERSeeder::class,
@@ -133,6 +132,7 @@ class DatabaseSeeder extends Seeder
       DiklatSeeder::class,
       PelaporanSeeder::class,
       PenilaianSeeder::class,
+      PertanyaanSeeder::class,
       JawabanSeeder::class,
 
       PengumumanSeeder::class,

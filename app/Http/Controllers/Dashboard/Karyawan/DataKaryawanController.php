@@ -328,8 +328,8 @@ class DataKaryawanController extends Controller
     // Format data jadwal
     $user_schedule_array = [];
     foreach ($user->jadwals as $schedule) {
-      $tglMulai = RandomHelper::convertToDateString($schedule->tgl_mulai);
-      $tglSelesai = RandomHelper::convertToDateString($schedule->tgl_selesai);
+      $tglMulai = RandomHelper::convertSpecialDateFormat($schedule->tgl_mulai);
+      $tglSelesai = RandomHelper::convertSpecialDateFormat($schedule->tgl_selesai);
 
       $current_date = Carbon::parse($tglMulai);
       while ($current_date->lte(Carbon::parse($tglSelesai))) {
@@ -433,8 +433,8 @@ class DataKaryawanController extends Controller
   //   });
 
   //   // Menghitung masa kerja dengan helper
-  //   $tglMasuk = RandomHelper::convertToDateString($karyawan->tgl_masuk);
-  //   $tglKeluar = $user->tgl_keluar ? RandomHelper::convertToDateString($karyawan->tgl_keluar) : null;
+  //   $tglMasuk = RandomHelper::convertSpecialDateFormat($karyawan->tgl_masuk);
+  //   $tglKeluar = $user->tgl_keluar ? RandomHelper::convertSpecialDateFormat($karyawan->tgl_keluar) : null;
   //   $masaKerja = $this->calculateTrackRecordMasaKerja($tglMasuk, $tglKeluar);
 
   //   return response()->json([
@@ -556,8 +556,8 @@ class DataKaryawanController extends Controller
     $allFormattedData = $formattedRekamJejak->merge($formattedDataPerubahan);
 
     // Menghitung masa kerja dengan helper
-    $tglMasuk = RandomHelper::convertToDateString($karyawan->tgl_masuk);
-    $tglKeluar = $user->tgl_keluar ? RandomHelper::convertToDateString($karyawan->tgl_keluar) : null;
+    $tglMasuk = RandomHelper::convertSpecialDateFormat($karyawan->tgl_masuk);
+    $tglKeluar = $user->tgl_keluar ? RandomHelper::convertSpecialDateFormat($karyawan->tgl_keluar) : null;
     $masaKerja = $this->calculateTrackRecordMasaKerja($tglMasuk, $tglKeluar);
 
     return response()->json([
@@ -989,11 +989,11 @@ class DataKaryawanController extends Controller
       $tglMasuk = $filters['tgl_masuk'];
       if (is_array($tglMasuk)) {
         foreach ($tglMasuk as &$tgl) {
-          $tgl = RandomHelper::convertToDateString($tgl);
+          $tgl = RandomHelper::convertSpecialDateFormat($tgl);
         }
         $karyawan->whereIn('tgl_masuk', $tglMasuk);
       } else {
-        $tglMasuk = RandomHelper::convertToDateString($tglMasuk);
+        $tglMasuk = RandomHelper::convertSpecialDateFormat($tglMasuk);
         $karyawan->where('tgl_masuk', $tglMasuk);
       }
     }
@@ -1078,7 +1078,11 @@ class DataKaryawanController extends Controller
     }
 
     if ($dataKaryawan->isEmpty()) {
-      return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data karyawan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+      return response()->json([
+        'status' => Response::HTTP_OK,
+        'message' => 'Data karyawan tidak ditemukan.',
+        'data' => []
+      ], Response::HTTP_OK);
     }
 
     $formattedData = $dataKaryawan->map(function ($karyawan) {
@@ -1888,15 +1892,17 @@ class DataKaryawanController extends Controller
       return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
     }
 
-    try {
-      return Excel::download(new KaryawanExport($request->all()), 'karyawan-data.xls');
-    } catch (\Exception $e) {
-      return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya terjadi error. Message: ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
-    } catch (\Error $e) {
-      return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya terjadi error. Message: ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
+    $dataCuti = DataKaryawan::all();
+    if ($dataCuti->isEmpty()) {
+      // Kembalikan respons JSON ketika tabel kosong
+      return response()->json(new WithoutDataResource(Response::HTTP_OK, 'Tidak ada data karyawan yang tersedia untuk diekspor.'), Response::HTTP_OK);
     }
 
-    return response()->json(new WithoutDataResource(Response::HTTP_OK, 'Data karyawan berhasil di download.'), Response::HTTP_OK);
+    try {
+      return Excel::download(new KaryawanExport($request->all()), 'karyawan-data.xls');
+    } catch (\Throwable $e) {
+      return response()->json(new WithoutDataResource(Response::HTTP_INTERNAL_SERVER_ERROR, 'Maaf sepertinya terjadi error. Message: ' . $e->getMessage()), Response::HTTP_INTERNAL_SERVER_ERROR);
+    }
   }
 
   public function importKaryawan(ImportKaryawanRequest $request)
