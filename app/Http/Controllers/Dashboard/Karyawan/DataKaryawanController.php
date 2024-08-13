@@ -1078,11 +1078,7 @@ class DataKaryawanController extends Controller
     }
 
     if ($dataKaryawan->isEmpty()) {
-      return response()->json([
-        'status' => Response::HTTP_OK,
-        'message' => 'Data karyawan tidak ditemukan.',
-        'data' => []
-      ], Response::HTTP_OK);
+      return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data karyawan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
     }
 
     $formattedData = $dataKaryawan->map(function ($karyawan) {
@@ -1397,7 +1393,11 @@ class DataKaryawanController extends Controller
     $karyawan = DataKaryawan::where('email', '!=', 'super_admin@admin.rski')->find($data_karyawan_id);
 
     if (!$karyawan) {
-      return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data karyawan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+      return response()->json([
+        'status' => Response::HTTP_OK,
+        'message' => 'Data karyawan tidak ditemukan.',
+        'data' => []
+      ], Response::HTTP_OK);
     }
 
     $role = $karyawan->users->roles->first();
@@ -1634,7 +1634,11 @@ class DataKaryawanController extends Controller
     $karyawan = DataKaryawan::where('email', '!=', 'super_admin@admin.rski')->find($data_karyawan_id);
 
     if (!$karyawan) {
-      return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data karyawan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+      return response()->json([
+        'status' => Response::HTTP_OK,
+        'message' => 'Data karyawan tidak ditemukan.',
+        'data' => []
+      ], Response::HTTP_OK);
     }
 
     $role = $karyawan->users->roles->first();
