@@ -22,7 +22,7 @@ class StorePenilaianKaryawanRequest extends FormRequest
         return [
             'user_dinilai' => 'required|integer|exists:users,id',
             // 'user_penilai' => 'required|integer|exists:users,id',
-            'jenis_penilaian_id' => 'required|integer|exists:jenis_penilaian,id',
+            'jenis_penilaian_id' => 'required|integer|exists:jenis_penilaians,id',
             'pertanyaan_jawaban' => 'required|string',
             'total_pertanyaan' => 'required|numeric',
             'rata_rata' => 'required|numeric',

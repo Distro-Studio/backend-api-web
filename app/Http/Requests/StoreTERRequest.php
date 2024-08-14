@@ -26,7 +26,7 @@ class StoreTERRequest extends FormRequest
     {
         return [
             'kategori_ter_id' => 'required|integer|exists:kategori_ters,id',
-            'ptkp_id' => 'required|integer|exists:ptkps,id',
+            // 'ptkp_id' => 'required|integer|exists:ptkps,id',
             'from_ter' => 'required|numeric',
             'to_ter' => 'required|numeric',
             'percentage' => 'required|numeric',

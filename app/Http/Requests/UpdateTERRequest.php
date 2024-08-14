@@ -26,7 +26,7 @@ class UpdateTERRequest extends FormRequest
     {
         return [
             'kategori_ter_id' => 'required',
-            'ptkp_id' => 'required',
+            // 'ptkp_id' => 'required',
             'from_ter' => 'required|numeric',
             'to_ter' => 'required|numeric',
             'percentage' => 'required|numeric',

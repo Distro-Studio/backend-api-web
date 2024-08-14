@@ -344,6 +344,8 @@ class PenggajianController extends Controller
                 'reward' => $penggajian->reward,
                 'take_home_pay' => $penggajian->take_home_pay,
                 'status_penggajian' => $penggajian->status_gajis,
+                'created_at' => $penggajian->created_at,
+                'updated_at' => $penggajian->updated_at
             ];
         });
 
