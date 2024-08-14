@@ -9,13 +9,8 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Collection;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Gate;
-use Maatwebsite\Excel\Facades\Excel;
 use App\Http\Requests\StoreCutiRequest;
 use App\Http\Requests\UpdateCutiRequest;
-use Illuminate\Support\Facades\Validator;
-use App\Http\Requests\Excel_Import\ImportCutiRequest;
-use App\Exports\Pengaturan\Managemen_Waktu\CutiExport;
-use App\Imports\Pengaturan\Managemen_Waktu\CutiImport;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
 
 class CutiController extends Controller

@@ -4,8 +4,10 @@ namespace App\Http\Controllers\Dashboard\Keuangan;
 
 use Carbon\Carbon;
 use App\Models\DetailGaji;
+use App\Models\Notifikasi;
 use App\Models\Penggajian;
 use Illuminate\Http\Request;
+use App\Helpers\RandomHelper;
 use Illuminate\Http\Response;
 use App\Models\PenyesuaianGaji;
 use Illuminate\Support\Facades\DB;
@@ -13,9 +15,8 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Gate;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\Keuangan\PenyesuaianGajiExport;
-use App\Helpers\RandomHelper;
-use App\Http\Requests\StorePenyesuaianGajiCustomRequest;
 use App\Http\Requests\StorePenyesuaianGajiRequest;
+use App\Http\Requests\StorePenyesuaianGajiCustomRequest;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
 use App\Http\Resources\Dashboard\Keuangan\PenyesuaianGajiResource;
 
@@ -294,6 +295,9 @@ class PenyesuaianGajiController extends Controller
                     ]);
                 }
 
+                // Kirim notifikasi kepada karyawan yang terkait
+                $this->createNotifikasiPenyesuaianGaji($penggajian, $penyesuaianGaji);
+
                 $responses[] = $penyesuaianGaji;
             }
 
@@ -449,5 +453,26 @@ class PenyesuaianGajiController extends Controller
             DB::rollBack();
             return response()->json(new WithoutDataResource(Response::HTTP_INTERNAL_SERVER_ERROR, 'Terjadi kesalahan saat menyimpan penyesuaian gaji: ' . $e->getMessage()), Response::HTTP_INTERNAL_SERVER_ERROR);
         }
+    }
+
+    private function createNotifikasiPenyesuaianGaji($penggajian, $penyesuaianGaji)
+    {
+        // Dapatkan user yang terkait dengan penggajian
+        $user = $penggajian->data_karyawans->users;
+
+        // Siapkan pesan notifikasi
+        if ($penyesuaianGaji->kategori_gaji_id == 1) {
+            $message = "Penyesuaian gaji untuk {$penyesuaianGaji->nama_detail} telah dilakukan, Silahkan lakukan pengecekkan kembali dan pastikan gaji telah sesuai.";
+        } else {
+            $message = "Penyesuaian gaji untuk {$penyesuaianGaji->nama_detail} telah dilakukan, Silahkan lakukan pengecekkan kembali dan pastikan gaji telah sesuai.";
+        }
+
+        // Buat notifikasi untuk user yang terkait
+        Notifikasi::create([
+            'kategori_notifikasi_id' => 9,
+            'user_id' => $user->id,
+            'message' => $message,
+            'is_read' => false,
+        ]);
     }
 }

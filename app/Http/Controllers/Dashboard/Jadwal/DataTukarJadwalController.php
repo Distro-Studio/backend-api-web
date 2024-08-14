@@ -5,14 +5,15 @@ namespace App\Http\Controllers\Dashboard\Jadwal;
 use Carbon\Carbon;
 use App\Models\User;
 use App\Models\Jadwal;
+use App\Models\Notifikasi;
 use App\Models\TukarJadwal;
 use Illuminate\Http\Request;
+use App\Helpers\RandomHelper;
 use Illuminate\Http\Response;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Gate;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\Jadwal\TukarJadwalExport;
-use App\Helpers\RandomHelper;
 use App\Http\Requests\StoreTukarJadwalRequest;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
 
@@ -482,6 +483,9 @@ class DataTukarJadwalController extends Controller
                 'kategori_penukaran_id' => 1, // Tukar Shift
             ]);
             $tukarJadwal->save();
+
+            // Buat dan simpan notifikasi
+            $this->createNotifikasiTukarJadwal($userPengajuan, $userDitukar, $jadwalPengajuan, $jadwalDitukar);
         } else if (is_null($jadwalPengajuan->shift_id) && is_null($jadwalDitukar->shift_id)) {
             // Tukar libur dengan libur
 
@@ -523,6 +527,9 @@ class DataTukarJadwalController extends Controller
                 'kategori_penukaran_id' => 2, // Tukar Libur
             ]);
             $tukarJadwal->save();
+
+            // Buat dan simpan notifikasi
+            $this->createNotifikasiTukarJadwal($userPengajuan, $userDitukar, $jadwalPengajuan, $jadwalDitukar);
         } else {
             return response()->json(['message' => 'Tidak bisa menukar shift dengan libur atau sebaliknya.'], Response::HTTP_BAD_REQUEST);
         }
@@ -756,5 +763,28 @@ class DataTukarJadwalController extends Controller
         }
 
         return $user_schedule_array;
+    }
+
+    private function createNotifikasiTukarJadwal($userPengajuan, $userDitukar, $jadwalPengajuan, $jadwalDitukar)
+    {
+        $konversiNotif_tgl_mulai = Carbon::parse($jadwalPengajuan->tgl_mulai)->locale('id')->isoFormat('D MMMM YYYY');
+        $message = "Jadwal Anda berhasil ditukar dengan karyawan {$userDitukar->nama} pada tanggal {$konversiNotif_tgl_mulai}.";
+        // Buat notifikasi untuk user_pengajuan
+        Notifikasi::create([
+            'kategori_notifikasi_id' => 2, // Sesuaikan dengan kategori notifikasi yang sesuai
+            'user_id' => $userPengajuan->id, // Penerima notifikasi
+            'message' => $message,
+            'is_read' => false,
+        ]);
+        
+        $konversiNotif_tgl_mulai_ajuan = Carbon::parse($jadwalDitukar->tgl_mulai)->locale('id')->isoFormat('D MMMM YYYY');
+        $messageDitukar = "Jadwal Anda berhasil ditukar dengan karyawan {$userPengajuan->nama} pada tanggal {$konversiNotif_tgl_mulai_ajuan}.";
+        // Buat notifikasi untuk user_ditukar
+        Notifikasi::create([
+            'kategori_notifikasi_id' => 2, // Sesuaikan dengan kategori notifikasi yang sesuai
+            'user_id' => $userDitukar->id, // Penerima notifikasi
+            'message' => $messageDitukar,
+            'is_read' => false,
+        ]);
     }
 }

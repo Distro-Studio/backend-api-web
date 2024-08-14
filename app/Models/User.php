@@ -134,24 +134,34 @@ class User extends Authenticatable
     }
 
     /**
+     * Get all of the verifikator_1_userberkas for the User
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function verifikator_1_userberkas(): HasMany
+    {
+        return $this->hasMany(Berkas::class, 'verifikator_1', 'id');
+    }
+
+    /**
      * Get all of the verifikator_1 for the User
      *
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function verifikator_1_riwayatgajis(): HasMany
-    {
-        return $this->hasMany(RiwayatPenggajian::class, 'verifikator_1', 'id');
-    }
+    // public function verifikator_1_riwayatgajis(): HasMany
+    // {
+    //     return $this->hasMany(RiwayatPenggajian::class, 'verifikator_1', 'id');
+    // }
 
     /**
      * Get all of the verifikator_2 for the User
      *
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function verifikator_2_riwayatgajis(): HasMany
-    {
-        return $this->hasMany(RiwayatPenggajian::class, 'verifikator_2', 'id');
-    }
+    // public function verifikator_2_riwayatgajis(): HasMany
+    // {
+    //     return $this->hasMany(RiwayatPenggajian::class, 'verifikator_2', 'id');
+    // }
 
     /**
      * Get all of the notifikasis for the User

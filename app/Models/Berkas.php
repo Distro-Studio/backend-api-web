@@ -52,4 +52,34 @@ class Berkas extends Model
     {
         return $this->belongsTo(KategoriBerkas::class, 'kategori_berkas_id', 'id');
     }
+
+    /**
+     * Get the status_berkas that owns the Berkas
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function status_berkas(): BelongsTo
+    {
+        return $this->belongsTo(StatusBerkas::class, 'status_berkas_id', 'id');
+    }
+
+    /**
+     * Get the verifikator_1 that owns the Berkas
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function verifikator_1_berkas(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'verifikator_1', 'id');
+    }
+
+    /**
+     * Get all of the perubahan_berkas for the Berkas
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function perubahan_berkas(): HasMany
+    {
+        return $this->hasMany(PerubahanBerkas::class, 'berkas_id', 'id');
+    }
 }

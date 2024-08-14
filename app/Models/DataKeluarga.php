@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
@@ -20,5 +21,15 @@ class DataKeluarga extends Model
     public function data_karyawans(): BelongsTo
     {
         return $this->belongsTo(DataKaryawan::class, 'data_karyawan_id', 'id');
+    }
+
+    /**
+     * Get all of the perubahan_keluargas for the DataKeluarga
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function perubahan_keluargas(): HasMany
+    {
+        return $this->hasMany(PerubahanKeluarga::class, 'data_keluarga_id', 'id');
     }
 }

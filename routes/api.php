@@ -109,7 +109,10 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::get('/detail-karyawan-jadwal/{data_karyawan_id}', [DataKaryawanController::class, 'getDataJadwal']);
             Route::get('/detail-karyawan-rekam-jejak/{data_karyawan_id}', [DataKaryawanController::class, 'getDataRekamJejak']);
             Route::get('/detail-karyawan-keluarga/{data_karyawan_id}', [DataKaryawanController::class, 'getDataKeluarga']);
+
             Route::get('/detail-karyawan-dokumen/{data_karyawan_id}', [DataKaryawanController::class, 'getDataDokumen']);
+            Route::post('/detail-karyawan-dokumen/{berkasId}/verifikasi', [DataKaryawanController::class, 'verifikasiBerkas']);
+
             Route::get('/detail-karyawan-cuti/{data_karyawan_id}', [DataKaryawanController::class, 'getDataCuti']);
             Route::get('/detail-karyawan-tukar-jadwal/{data_karyawan_id}', [DataKaryawanController::class, 'getDataTukarJadwal']);
             Route::get('/detail-karyawan-lembur/{data_karyawan_id}', [DataKaryawanController::class, 'getDataLembur']);
@@ -139,7 +142,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::get('/calculated', [DataPresensiController::class, 'calculatedPresensi']);
         });
 
-        // TODO: Jadwal bug limit != 10
+        // TODO: Jadwal bug limit != 10 || error semua data, karena tanggal parse ke indo
         Route::group(['prefix' => '/jadwal-karyawan'], function () {
             // ! Jadwal ===========>
             Route::post('/get-data-jadwal', [DataJadwalController::class, 'index']);
@@ -163,6 +166,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::apiResource('/lembur', DataLemburController::class);
 
             // ! Cuti ===========>
+            Route::post('/cuti/{cutiId}/verifikasi', [DataCutiController::class, 'verifikasiCuti']);
             Route::post('/get-cuti', [DataCutiController::class, 'index']);
             Route::get('/cuti/export', [DataCutiController::class, 'exportJadwalCuti']);
             Route::apiResource('/cuti', DataCutiController::class);
@@ -195,8 +199,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::apiResource('/run-thr', THRPenggajianController::class);
         });
 
-        // TODO: PENILAIAN LOM FIX
-        // ! Diklat verifikasi
+        // TODO: PENILAIAN ERROR CREATE
         Route::group(['prefix' => '/perusahaan'], function () {
             // ! Diklat ===========>
             Route::post('/get-data-diklat', [DiklatController::class, 'index']);
@@ -213,7 +216,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::post('/get-data-jenis-penilaian', [JenisPenilaianController::class, 'index']);
             Route::get('/jenis-penilaian/export', [JenisPenilaianController::class, 'exportJenisPenilaian']);
             Route::apiResource('/jenis-penilaian', JenisPenilaianController::class);
-            
+
             // ! Penilaian ===========>
             Route::get('/get-user-dinilai', [PenilaianController::class, 'getUserDinilai']);
             Route::get('/get-user-penilai', [PenilaianController::class, 'getUserPenilai']);

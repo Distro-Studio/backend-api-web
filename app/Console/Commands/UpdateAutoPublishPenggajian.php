@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use Carbon\Carbon;
+use App\Models\Notifikasi;
 use App\Models\Penggajian;
 use Illuminate\Console\Command;
 use App\Models\RiwayatPenggajian;
@@ -68,6 +69,12 @@ class UpdateAutoPublishPenggajian extends Command
 
                         DB::commit();
                         Log::info("Riwayat penggajian ID {$riwayatPenggajian->id} berhasil dipublikasikan otomatis.");
+
+                        // Kirim notifikasi ke user terkait
+                        $penggajians = Penggajian::where('riwayat_penggajian_id', $riwayatPenggajian->id)->get();
+                        foreach ($penggajians as $penggajian) {
+                            $this->createNotifikasiPenggajian($penggajian, $currentDate->locale('id')->isoFormat('MMMM Y'));
+                        }
                     } catch (\Exception $e) {
                         DB::rollBack();
                         Log::error("Gagal publikasi otomatis riwayat penggajian ID {$riwayatPenggajian->id}, Pesan Error: " . $e->getMessage());
@@ -77,5 +84,23 @@ class UpdateAutoPublishPenggajian extends Command
         }
 
         $this->info('Penggajian berhasil dipublikasikan secara otomatis.');
+    }
+
+    private function createNotifikasiPenggajian($penggajian, $periode)
+    {
+        // Pastikan penggajian memiliki relasi yang valid ke data_karyawans
+        if ($penggajian->data_karyawans && $penggajian->data_karyawans->user) {
+            $user = $penggajian->data_karyawans->user;
+
+            $message = "Penggajian untuk periode {$periode} telah dipublikasikan. Silakan cek slip gaji Anda.";
+
+            // Buat notifikasi untuk karyawan yang bersangkutan
+            Notifikasi::create([
+                'kategori_notifikasi_id' => 5, // Sesuaikan dengan kategori notifikasi yang sesuai
+                'user_id' => $user->id, // Penerima notifikasi
+                'message' => $message,
+                'is_read' => false,
+            ]);
+        }
     }
 }

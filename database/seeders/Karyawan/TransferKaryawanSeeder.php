@@ -13,6 +13,7 @@ use App\Models\KategoriTrackRecord;
 use Illuminate\Database\Seeder;
 use App\Models\TransferKaryawan;
 use App\Models\KategoriTransferKaryawan;
+use App\Models\StatusBerkas;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 
 class TransferKaryawanSeeder extends Seeder
@@ -28,6 +29,7 @@ class TransferKaryawanSeeder extends Seeder
         $kategori_transfer_ids = KategoriTransferKaryawan::pluck('id')->all();
         $kategori_record_ids = KategoriTrackRecord::pluck('id')->all();
         $kategoriBerkas = KategoriBerkas::where('label', 'System')->first();
+        $statusBerkas = StatusBerkas::where('label', 'Menunggu')->first();
 
         for ($i = 0; $i < 50; $i++) {
             if (count($user_ids) <= $i) {
@@ -72,6 +74,7 @@ class TransferKaryawanSeeder extends Seeder
                 'user_id' => $user_id,
                 'nama' => 'Berkas Transfer - ' . User::find($user_id)->nama,
                 'kategori_berkas_id' => $kategoriBerkas->id,
+                'status_berkas_id' => $statusBerkas->id,
                 'path' => $dokumenPath,
                 'tgl_upload' => now(),
                 'nama_file' => 'dokumen_' . $user_id,

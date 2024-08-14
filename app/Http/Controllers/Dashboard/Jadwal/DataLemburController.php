@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers\Dashboard\Jadwal;
 
+use Carbon\Carbon;
 use App\Models\Lembur;
+use App\Models\Notifikasi;
 use Illuminate\Http\Request;
 use App\Helpers\RandomHelper;
 use Illuminate\Http\Response;
@@ -254,6 +256,9 @@ class DataLemburController extends Controller
         $dataLembur = Lembur::create($data);
         $successMessage = "Lembur karyawan '{$dataLembur->users->nama}' berhasil ditambahkan.";
 
+        // Buat dan simpan notifikasi
+        $this->createNotifikasiLembur($dataLembur);
+
         return response()->json(new LemburJadwalResource(Response::HTTP_OK, $successMessage, $dataLembur), Response::HTTP_OK);
     }
 
@@ -307,5 +312,23 @@ class DataLemburController extends Controller
         } catch (\Throwable $e) {
             return response()->json(new WithoutDataResource(Response::HTTP_INTERNAL_SERVER_ERROR, 'Maaf sepertinya terjadi error. Message: ' . $e->getMessage()), Response::HTTP_INTERNAL_SERVER_ERROR);
         }
+    }
+
+    private function createNotifikasiLembur($dataLembur)
+    {
+        $timeString = RandomHelper::convertToTimeString($dataLembur->durasi);
+        $durasi = RandomHelper::convertTimeStringToSeconds($timeString);
+        $durasi_jam = RandomHelper::convertToHoursMinutes($durasi);
+
+        $konversiTgl = Carbon::parse(RandomHelper::convertToDateString($dataLembur->tgl_pengajuan))->locale('id')->isoFormat('D MMMM YYYY');
+        $message = "{$dataLembur->users->nama}, Anda mendapatkan pengajuan lembur pada tanggal {$konversiTgl} dengan durasi {$durasi_jam}.";
+
+        // Buat notifikasi untuk user yang melakukan pengajuan lembur
+        Notifikasi::create([
+            'kategori_notifikasi_id' => 3, // Sesuaikan dengan kategori notifikasi yang sesuai
+            'user_id' => $dataLembur->user_id, // Penerima notifikasi
+            'message' => $message,
+            'is_read' => false,
+        ]);
     }
 }

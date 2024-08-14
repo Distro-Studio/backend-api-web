@@ -7,6 +7,7 @@ use App\Helpers\RandomHelper;
 use Illuminate\Http\Response;
 use App\Models\RiwayatPerubahan;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
 
@@ -241,54 +242,101 @@ class DataRiwayatPerubahanController extends Controller
         ], Response::HTTP_OK);
     }
 
-    public function verifikasi_perubahan(Request $request, $id)
+    // public function verifikasi_perubahan(Request $request, $id)
+    // {
+    //     if (!Gate::allows('verifikasi verifikator1')) {
+    //         return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+    //     }
+
+    //     $riwayat = RiwayatPerubahan::find($id);
+
+    //     if (!$riwayat) {
+    //         return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Riwayat perubahan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+    //     }
+
+    //     $status = $request->input('status');
+    //     $alasan = $request->input('alasan', null);
+
+    //     // Validasi input status
+    //     if (!in_array($status, [1, 2, 3])) {
+    //         return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Status tidak valid. Harus berupa 1 (menunggu verifikasi), 2 (terverifikasi), atau 3 (ditolak).'), Response::HTTP_BAD_REQUEST);
+    //     }
+
+    //     if ($riwayat->status_perubahan_id == 3) {
+    //         return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Status sudah ditolak dan tidak bisa diupdate lagi.'), Response::HTTP_BAD_REQUEST);
+    //     }
+
+    //     if ($riwayat->status_perubahan_id == 2 && $status != 3) {
+    //         return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Status yang telah diverifikasi hanya bisa diupdate ke status ditolak.'), Response::HTTP_BAD_REQUEST);
+    //     }
+
+    //     if ($riwayat->status_perubahan_id == 1 || ($riwayat->status_perubahan_id == 2 && $status == 3)) {
+    //         $riwayat->status_perubahan_id = $status;
+    //         $riwayat->verifikator_1 = auth()->user()->id; // Set verifikator_1 dengan user yang sedang login
+
+    //         if ($status == 3 && $alasan) {
+    //             $riwayat->alasan = $alasan; // Simpan alasan penolakan jika ada
+    //         }
+
+    //         $riwayat->save();
+
+    //         return response()->json([
+    //             'status' => Response::HTTP_OK,
+    //             'message' => "Status riwayat perubahan berhasil diperbarui menjadi '{$riwayat->status_perubahans->label}'.",
+    //             'data' => $riwayat
+    //         ], Response::HTTP_OK);
+    //     }
+
+    //     return response()->json([
+    //         'status' => Response::HTTP_BAD_REQUEST,
+    //         'message' => 'Perubahan status tidak valid. Status saat ini: ' . $riwayat->status_perubahans->label
+    //     ], Response::HTTP_BAD_REQUEST);
+    // }
+
+    public function verifikasiPerubahan(Request $request, $id)
     {
         if (!Gate::allows('verifikasi verifikator1')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
+        // Cari riwayat perubahan berdasarkan ID
         $riwayat = RiwayatPerubahan::find($id);
 
         if (!$riwayat) {
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Riwayat perubahan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
         }
 
-        $status = $request->input('status');
-        $alasan = $request->input('alasan', null);
+        $status_perubahan_id = $riwayat->status_perubahan_id;
 
-        // Validasi input status
-        if (!in_array($status, [1, 2, 3])) {
-            return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Status tidak valid. Harus berupa 1 (menunggu verifikasi), 2 (terverifikasi), atau 3 (ditolak).'), Response::HTTP_BAD_REQUEST);
-        }
+        // Logika verifikasi disetujui
+        if ($request->has('verifikasi_disetujui') && $request->verifikasi_disetujui == 1) {
+            // Jika status_perubahan_id = 1 (menunggu) atau 3 (ditolak sebelumnya)
+            if ($status_perubahan_id == 1 || $status_perubahan_id == 3) {
+                $riwayat->status_perubahan_id = 2; // Update status ke diverifikasi
+                $riwayat->verifikator_1 = Auth::id(); // Set verifikator tahap 1
+                $riwayat->alasan = null; // Reset alasan penolakan
+                $riwayat->save();
 
-        if ($riwayat->status_perubahan_id == 3) {
-            return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Status sudah ditolak dan tidak bisa diupdate lagi.'), Response::HTTP_BAD_REQUEST);
-        }
-
-        if ($riwayat->status_perubahan_id == 2 && $status != 3) {
-            return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Status yang telah diverifikasi hanya bisa diupdate ke status ditolak.'), Response::HTTP_BAD_REQUEST);
-        }
-
-        if ($riwayat->status_perubahan_id == 1 || ($riwayat->status_perubahan_id == 2 && $status == 3)) {
-            $riwayat->status_perubahan_id = $status;
-            $riwayat->verifikator_1 = auth()->user()->id; // Set verifikator_1 dengan user yang sedang login
-
-            if ($status == 3 && $alasan) {
-                $riwayat->alasan = $alasan; // Simpan alasan penolakan jika ada
+                return response()->json(new WithoutDataResource(Response::HTTP_OK, "Verifikasi untuk riwayat perubahan '{$riwayat->kolom}' telah disetujui."), Response::HTTP_OK);
+            } else {
+                return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Riwayat perubahan '{$riwayat->kolom}' tidak dalam status untuk disetujui."), Response::HTTP_BAD_REQUEST);
             }
-
-            $riwayat->save();
-
-            return response()->json([
-                'status' => Response::HTTP_OK,
-                'message' => "Status riwayat perubahan berhasil diperbarui menjadi '{$riwayat->status_perubahans->label}'.",
-                'data' => $riwayat
-            ], Response::HTTP_OK);
         }
+        // Logika verifikasi ditolak
+        elseif ($request->has('verifikasi_ditolak') && $request->verifikasi_ditolak == 1) {
+            // Jika status_perubahan_id = 1 (menunggu)
+            if ($status_perubahan_id == 1) {
+                $riwayat->status_perubahan_id = 3; // Update status ke ditolak
+                $riwayat->verifikator_1 = Auth::id(); // Set verifikator tahap 1
+                $riwayat->alasan = 'Verifikasi ditolak karena: ' . $request->input('alasan', null);
+                $riwayat->save();
 
-        return response()->json([
-            'status' => Response::HTTP_BAD_REQUEST,
-            'message' => 'Perubahan status tidak valid. Status saat ini: ' . $riwayat->status_perubahans->label
-        ], Response::HTTP_BAD_REQUEST);
+                return response()->json(new WithoutDataResource(Response::HTTP_OK, "Verifikasi untuk riwayat perubahan '{$riwayat->kolom}' telah ditolak."), Response::HTTP_OK);
+            } else {
+                return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Riwayat perubahan '{$riwayat->kolom}' tidak dalam status untuk ditolak."), Response::HTTP_BAD_REQUEST);
+            }
+        } else {
+            return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Aksi tidak valid.'), Response::HTTP_BAD_REQUEST);
+        }
     }
 }

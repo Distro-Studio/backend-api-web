@@ -7,9 +7,10 @@ use App\Models\User;
 use App\Models\Berkas;
 use App\Models\Diklat;
 use Illuminate\Support\Str;
+use App\Models\StatusBerkas;
+use App\Models\StatusDiklat;
 use App\Models\KategoriBerkas;
 use App\Models\KategoriDiklat;
-use App\Models\StatusDiklat;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
@@ -23,6 +24,7 @@ class DiklatSeeder extends Seeder
     {
         $kategoriDiklatIds = KategoriDiklat::pluck('id')->all();
         $kategoriBerkas = KategoriBerkas::where('label', 'System')->first();
+        $statusBerkas = StatusBerkas::where('label', 'Menunggu')->first();
         $user_ids = User::where('nama', '!=', 'Super Admin')->pluck('id')->all();
 
         for ($i = 1; $i <= 25; $i++) {
@@ -66,6 +68,7 @@ class DiklatSeeder extends Seeder
                 'file_id' => (string) Str::uuid(),
                 'nama' => 'Berkas Diklat - ' . User::find($user_id)->nama,
                 'kategori_berkas_id' => $kategoriBerkas->id,
+                'status_berkas_id' => $statusBerkas->id,
                 'path' => $gambarUrl,
                 'tgl_upload' => now(),
                 'nama_file' => 'dokumen_' . $user_id,

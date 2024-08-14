@@ -2,13 +2,12 @@
 
 namespace App\Http\Controllers\Dashboard\Keuangan;
 
-use App\Exports\Keuangan\LaporanPenggajian\LaporanGajiBankExport;
-use App\Exports\Keuangan\LaporanPenggajian\RekapGajiPenerimaanExport;
-use App\Exports\Keuangan\LaporanPenggajian\RekapGajiPotonganExport;
 use Carbon\Carbon;
+use App\Models\Notifikasi;
 use App\Models\Penggajian;
 use App\Models\DataKaryawan;
 use Illuminate\Http\Request;
+use App\Helpers\RandomHelper;
 use Illuminate\Http\Response;
 use App\Models\RiwayatPenggajian;
 use Illuminate\Support\Facades\DB;
@@ -16,8 +15,10 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Gate;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Jobs\Penggajian\CreateGajiJob;
-use App\Helpers\RandomHelper;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
+use App\Exports\Keuangan\LaporanPenggajian\LaporanGajiBankExport;
+use App\Exports\Keuangan\LaporanPenggajian\RekapGajiPotonganExport;
+use App\Exports\Keuangan\LaporanPenggajian\RekapGajiPenerimaanExport;
 
 class PenggajianController extends Controller
 {
@@ -80,45 +81,6 @@ class PenggajianController extends Controller
         foreach ($penggajians as $penggajian) {
             $riwayatPenggajian = $penggajian->riwayat_penggajians;
             $tgl_penggajian = Carbon::parse(RandomHelper::convertToDateString($penggajian->tgl_penggajian));
-            // Cek apakah tgl_penggajian sudah terlewat dari tgl_mulai
-            // if ($tgl_penggajian->lessThan($tgl_mulai)) {
-            //     if ($penggajian->status_gaji_id == 2) {
-            //         $updatedPenggajians[] = [
-            //             'penggajian_id' => $penggajian->id,
-            //             'updated_at' => $penggajian->updated_at
-            //         ];
-            //     } else {
-            //         $penggajian->status_gaji_id = 2;
-            //         $penggajian->save();
-            //         $updatedPenggajians[] = [
-            //             'penggajian_id' => $penggajian->id,
-            //             'updated_at' => $penggajian->updated_at
-            //         ];
-            //         if ($riwayatPenggajian->status_gaji_id != 2) {
-            //             $riwayatPenggajian->status_gaji_id = 2;
-            //             $riwayatPenggajian->save();
-            //             $riwayatPenggajians[] = [
-            //                 'riwayat_penggajian_id' => $riwayatPenggajian->id,
-            //                 'updated_at' => $riwayatPenggajian->updated_at
-            //             ];
-            //         }
-            //     }
-            // } else {
-            //     $penggajian->status_gaji_id = 2;
-            //     $penggajian->save();
-            //     $updatedPenggajians[] = [
-            //         'penggajian_id' => $penggajian->id,
-            //         'updated_at' => $penggajian->updated_at
-            //     ];
-            //     if ($riwayatPenggajian->status_gaji_id != 2) {
-            //         $riwayatPenggajian->status_gaji_id = 2;
-            //         $riwayatPenggajian->save();
-            //         $riwayatPenggajians[] = [
-            //             'riwayat_penggajian_id' => $riwayatPenggajian->id,
-            //             'updated_at' => $riwayatPenggajian->updated_at
-            //         ];
-            //     }
-            // }
 
             // ini yg baru
             // Validasi agar publikasi dilakukan hanya dalam rentang tgl_penggajian sampai tgl_mulai
@@ -139,6 +101,9 @@ class PenggajianController extends Controller
                             'updated_at' => $riwayatPenggajian->updated_at
                         ];
                     }
+
+                    // Buat dan simpan notifikasi untuk setiap penggajian yang dipublikasikan
+                    $this->createNotifikasiPenggajian($penggajian, $periode);
                 }
             } else {
                 return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Publikasi penggajian hanya dapat dilakukan dari tanggal '{$tgl_penggajian->format('Y-m-d')}' hingga tanggal '{$tgl_mulai->format('Y-m-d')}'."), Response::HTTP_BAD_REQUEST);
@@ -497,5 +462,22 @@ class PenggajianController extends Controller
         }
 
         return response()->json(new WithoutDataResource(Response::HTTP_OK, 'Data laporan penggajian setoran bank berhasil di download.'), Response::HTTP_OK);
+    }
+
+    private function createNotifikasiPenggajian($penggajian, $periode)
+    {
+        if ($penggajian->data_karyawans && $penggajian->data_karyawans->users) {
+            $user = $penggajian->data_karyawans->users;
+
+            $message = "Penggajian untuk periode {$periode} telah dipublikasikan. Silakan cek slip gaji Anda.";
+
+            // Buat notifikasi untuk karyawan yang bersangkutan
+            Notifikasi::create([
+                'kategori_notifikasi_id' => 5, // Sesuaikan dengan kategori notifikasi yang sesuai
+                'user_id' => $user->id, // Penerima notifikasi
+                'message' => $message,
+                'is_read' => false,
+            ]);
+        }
     }
 }

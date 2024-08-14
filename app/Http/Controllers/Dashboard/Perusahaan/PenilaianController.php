@@ -6,6 +6,7 @@ use Carbon\Carbon;
 use App\Models\User;
 use App\Models\Jawaban;
 use App\Models\Penilaian;
+use App\Models\Notifikasi;
 use App\Models\Pertanyaan;
 use Illuminate\Http\Request;
 use App\Helpers\RandomHelper;
@@ -316,10 +317,27 @@ class PenilaianController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, "Tidak ada pertanyaan untuk jenis penilaian '{$jenisPenilaian->nama}'."), Response::HTTP_NOT_FOUND);
         }
 
+        // Ambil user_dinilai dan validasi keberadaannya
+        $userDinilai = User::find($data['user_dinilai']);
+        if (!$userDinilai) {
+            return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Karyawan dinilai tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+        }
+
         // c. Cek apakah tgl_selesai dari jenis penilaian sudah terlewat
+        $tglMulai = Carbon::parse($userDinilai->data_karyawans->tgl_masuk);
+        $statusKaryawanId = $userDinilai->data_karyawans->status_karyawan_id;
         $currentDate = Carbon::now();
-        if (Carbon::parse($jenisPenilaian->tgl_selesai)->isAfter($currentDate)) {
-            return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Penilaian belum dapat dilakukan karena tanggal selesai yang ditentukan pada jenis penilaian belum terlewat.'), Response::HTTP_BAD_REQUEST);
+
+        if ($statusKaryawanId == 3) {
+            // Periode 3 bulan
+            if ($tglMulai->diffInMonths($currentDate) < 3) {
+                return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Penilaian belum dapat dilakukan karena periode 3 bulan belum tercapai.'), Response::HTTP_BAD_REQUEST);
+            }
+        } elseif (in_array($statusKaryawanId, [1, 2])) {
+            // Periode 1 tahun
+            if ($tglMulai->diffInYears($currentDate) < 1) {
+                return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Penilaian belum dapat dilakukan karena periode 1 tahun belum tercapai.'), Response::HTTP_BAD_REQUEST);
+            }
         }
 
         // Ambil user_dinilai dan user_penilai
@@ -329,7 +347,8 @@ class PenilaianController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Karyawan dinilai tidak ditemukan.'), Response::HTTP_NOT_FOUND);
         }
 
-        $userPenilai = auth()->user();
+        // Konversi pertanyaan_jawaban ke format JSON jika belum
+        $userPenilai = auth()->user()->id;
 
         // Konversi pertanyaan_jawaban ke format JSON jika belum
         $pertanyaanJawaban = json_encode($data['pertanyaan_jawaban']);
@@ -337,12 +356,15 @@ class PenilaianController extends Controller
         // Simpan penilaian
         $penilaian = Penilaian::create([
             'user_dinilai' => $userDinilai->id,
-            'user_penilai' => $userPenilai->id,
-            'jenis_penilaian_id' => $data['jenis_penilaian_id'],
+            'user_penilai' => $userPenilai,
+            'jenis_penilaian_id' => $jenisPenilaianId,
             'pertanyaan_jawaban' => $pertanyaanJawaban,
-            'total_pertanyaan' => $data['pertanyaan_jawaban'],
-            'rata_rata' => $data['pertanyaan_jawaban'],
+            'total_pertanyaan' => ($data['pertanyaan_jawaban']),
+            'rata_rata' => ($data['pertanyaan_jawaban']),
         ]);
+
+        // Kirim notifikasi kepada user yang dinilai
+        $this->createNotifikasiPenilaian($penilaian);
 
         // Response dengan data penilaian yang baru saja disimpan
         return response()->json([
@@ -402,6 +424,23 @@ class PenilaianController extends Controller
         } catch (\Throwable $e) {
             return response()->json(new WithoutDataResource(Response::HTTP_INTERNAL_SERVER_ERROR, 'Maaf sepertinya terjadi error. Message: ' . $e->getMessage()), Response::HTTP_INTERNAL_SERVER_ERROR);
         }
+    }
+
+    private function createNotifikasiPenilaian($penilaian)
+    {
+        // Dapatkan user yang dinilai
+        $userDinilai = $penilaian->user_dinilais;
+
+        // Siapkan pesan notifikasi
+        $message = "Penilaian untuk jenis {$penilaian->jenis_penilaians->nama} telah selesai dilakukan. Silakan cek detail penilaian Anda.";
+
+        // Buat notifikasi untuk user yang dinilai
+        Notifikasi::create([
+            'kategori_notifikasi_id' => 7,
+            'user_id' => $userDinilai->id,
+            'message' => $message,
+            'is_read' => false,
+        ]);
     }
 
     // ini v2

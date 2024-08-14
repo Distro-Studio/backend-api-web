@@ -4,8 +4,10 @@ namespace App\Http\Controllers\Dashboard\Perusahaan;
 
 use Exception;
 use Carbon\Carbon;
+use App\Models\User;
 use App\Models\Berkas;
 use App\Models\Diklat;
+use App\Models\Notifikasi;
 use Illuminate\Http\Request;
 use App\Helpers\RandomHelper;
 use Illuminate\Http\Response;
@@ -188,6 +190,9 @@ class DiklatController extends Controller
                 'lokasi' => $data['lokasi'],
             ]);
 
+            // Buat dan simpan notifikasi untuk semua karyawan
+            $this->createNotifikasiDiklat($diklat);
+
             DB::commit();
 
             return response()->json([
@@ -304,6 +309,26 @@ class DiklatController extends Controller
             }
         } else {
             return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Aksi tidak valid.'), Response::HTTP_BAD_REQUEST);
+        }
+    }
+
+    private function createNotifikasiDiklat($diklat)
+    {
+        $konversiNotif_jam_mulai = Carbon::parse(RandomHelper::convertToTimeString($diklat->jam_mulai))->format('H:i:s');
+        $konversiNotif_tgl_mulai = Carbon::parse(RandomHelper::convertToDateString($diklat->tgl_mulai))->locale('id')->isoFormat('D MMMM YYYY');
+        $message = "Diklat baru berjudul {$diklat->nama} akan dilaksanakan pada tanggal {$konversiNotif_tgl_mulai} di lokasi {$diklat->lokasi} pada jam {$konversiNotif_jam_mulai}.";
+
+        // Ambil semua karyawan
+        $allUsers = User::where('nama', '!=', 'Super Admin')->get();
+
+        // Buat notifikasi untuk setiap karyawan
+        foreach ($allUsers as $user) {
+            Notifikasi::create([
+                'kategori_notifikasi_id' => 4, // Sesuaikan dengan kategori notifikasi yang sesuai
+                'user_id' => $user->id, // Penerima notifikasi
+                'message' => $message,
+                'is_read' => false,
+            ]);
         }
     }
 }

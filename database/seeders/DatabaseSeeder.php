@@ -19,6 +19,7 @@ use Database\Seeders\Constant\Kategori\KategoriTrackRecordSeeder;
 use Database\Seeders\Constant\Kategori\KategoriTransferKaryawanSeeder;
 use Database\Seeders\Constant\Kategori\KategoriTukarJadwalSeeder;
 use Database\Seeders\Constant\Status\StatusAktifUserSeeder;
+use Database\Seeders\Constant\Status\StatusBerkasSeeder;
 use Database\Seeders\Constant\Status\StatusCutiSeeder;
 use Database\Seeders\Constant\Status\StatusDiklatSeeder;
 use Database\Seeders\Constant\Status\StatusGajiSeeder;
@@ -81,6 +82,7 @@ class DatabaseSeeder extends Seeder
       KategoriPotonganSeeder::class,
       KategoriPendidikanSeeder::class,
       KategoriDiklatSeeder::class,
+      StatusBerkasSeeder::class,
       StatusRiwayatPerubahanSeeder::class,
       StatusDiklatSeeder::class,
       StatusCutiSeeder::class,

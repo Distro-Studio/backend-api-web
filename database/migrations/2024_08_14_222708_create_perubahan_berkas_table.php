@@ -11,20 +11,17 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('berkas', function (Blueprint $table) {
+        Schema::create('perubahan_berkas', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained('users');
+            $table->foreignId('riwayat_perubahan_id')->constrained('riwayat_perubahans');
+            $table->foreignId('berkas_id')->constrained('berkas');
             $table->string('file_id');
             $table->string('nama');
-            $table->foreignId('kategori_berkas_id')->constrained('kategori_berkas'); // (pribadi,umum,system,lain-lain)
-            $table->foreignId('status_berkas_id')->constrained('status_berkas'); // 1 = menunggu, 2 = diverifikasi, 3 = ditolak
             $table->string('path');
             $table->dateTime('tgl_upload');
             $table->string('nama_file');
             $table->string('ext')->nullable();
             $table->string('size')->nullable();
-            $table->foreignId('verifikator_1')->nullable()->constrained('users');
-            $table->text('alasan')->nullable();
             $table->timestamps();
         });
     }
@@ -34,6 +31,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('berkas');
+        Schema::dropIfExists('perubahan_berkas');
     }
 };

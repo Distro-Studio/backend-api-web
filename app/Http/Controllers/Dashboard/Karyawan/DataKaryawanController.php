@@ -14,6 +14,7 @@ use App\Models\Presensi;
 use App\Models\Penilaian;
 use App\Models\UnitKerja;
 use App\Models\Kompetensi;
+use App\Models\Notifikasi;
 use App\Models\TrackRecord;
 use App\Models\TukarJadwal;
 use App\Models\DataKaryawan;
@@ -633,6 +634,7 @@ class DataKaryawanController extends Controller
     ], Response::HTTP_OK);
   }
 
+  // berkas section
   public function getDataDokumen($data_karyawan_id)
   {
     if (!Gate::allows('view dataKaryawan')) {
@@ -692,6 +694,59 @@ class DataKaryawanController extends Controller
         'data_dokumen' => $formattedData,
       ],
     ], Response::HTTP_OK);
+  }
+
+  public function verifikasiBerkas(Request $request, $berkasId)
+  {
+    if (!Gate::allows('verifikasi verifikator1')) {
+      return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+    }
+
+    // Cari berkas berdasarkan ID
+    $berkas = Berkas::find($berkasId);
+
+    if (!$berkas) {
+      return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data berkas tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+    }
+
+    $status_berkas_id = $berkas->status_berkas_id;
+
+    // Logika verifikasi disetujui tahap 1
+    if ($request->has('verifikasi_disetujui') && $request->verifikasi_disetujui == 1) {
+      // Jika status_berkas_id = 1 (default) atau 3 (ditolak sebelumnya)
+      if ($status_berkas_id == 1 || $status_berkas_id == 3) {
+        $berkas->status_berkas_id = 2; // Update status ke disetujui
+        $berkas->verifikator_1 = Auth::id(); // Set verifikator
+        $berkas->alasan = null; // Reset alasan jika sebelumnya ditolak
+        $berkas->save();
+
+        // Kirim notifikasi bahwa berkas telah diverifikasi
+        $this->createNotifikasiBerkas($berkas, 'disetujui');
+
+        return response()->json(new WithoutDataResource(Response::HTTP_OK, "Verifikasi berkas '{$berkas->nama}' telah disetujui."), Response::HTTP_OK);
+      } else {
+        return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Berkas '{$berkas->nama}' tidak dalam status untuk disetujui."), Response::HTTP_BAD_REQUEST);
+      }
+    }
+    // Logika verifikasi ditolak
+    elseif ($request->has('verifikasi_ditolak') && $request->verifikasi_ditolak == 1) {
+      // Jika status_berkas_id = 1 (default)
+      if ($status_berkas_id == 1) {
+        $berkas->status_berkas_id = 3; // Update status ke ditolak
+        $berkas->verifikator_1 = Auth::id(); // Set verifikator
+        $berkas->alasan = 'Verifikasi ditolak karena: ' . $request->input('alasan', null); // Tambahkan alasan penolakan
+        $berkas->save();
+
+        // Kirim notifikasi bahwa berkas telah ditolak
+        $this->createNotifikasiBerkas($berkas, 'ditolak');
+
+        return response()->json(new WithoutDataResource(Response::HTTP_OK, "Verifikasi berkas '{$berkas->nama}' telah ditolak."), Response::HTTP_OK);
+      } else {
+        return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Berkas '{$berkas->nama}' tidak dalam status untuk ditolak."), Response::HTTP_BAD_REQUEST);
+      }
+    } else {
+      return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Aksi tidak valid.'), Response::HTTP_BAD_REQUEST);
+    }
   }
 
   public function getDataCuti($data_karyawan_id)
@@ -2084,5 +2139,26 @@ class DataKaryawanController extends Controller
       }
     }
     return null;
+  }
+
+  private function createNotifikasiBerkas($berkas, $status)
+  {
+    // Dapatkan user terkait dengan berkas
+    $user = $berkas->users;
+
+    // Siapkan pesan notifikasi berdasarkan status
+    if ($status == 'disetujui') {
+      $message = "Berkas {$berkas->nama} Anda telah diverifikasi dan disetujui.";
+    } elseif ($status == 'ditolak') {
+      $message = "Berkas {$berkas->nama} Anda telah ditolak. Alasan: {$berkas->alasan}.";
+    }
+
+    // Buat notifikasi untuk user yang bersangkutan
+    Notifikasi::create([
+      'kategori_notifikasi_id' => 6, // Sesuaikan dengan kategori notifikasi yang sesuai
+      'user_id' => $user->id, // Penerima notifikasi
+      'message' => $message,
+      'is_read' => false,
+    ]);
   }
 }

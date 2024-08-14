@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Models\Berkas;
 use App\Models\Pelaporan;
 use Illuminate\Support\Str;
+use App\Models\StatusBerkas;
 use App\Models\KategoriBerkas;
 use Illuminate\Database\Seeder;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
@@ -20,6 +21,7 @@ class PelaporanSeeder extends Seeder
     {
         $userIds = User::pluck('id')->all();
         $kategoriBerkas = KategoriBerkas::where('label', 'System')->first();
+        $statusBerkas = StatusBerkas::where('label', 'Menunggu')->first();
         $basePath = '/path/to/uploads'; // Ubah sesuai dengan path yang sesuai untuk upload_foto
 
         for ($i = 1; $i <= 20; $i++) {
@@ -53,6 +55,7 @@ class PelaporanSeeder extends Seeder
                 'file_id' => $fileId,
                 'nama' => 'Upload Foto Pelaporan ' . $i,
                 'kategori_berkas_id' => $kategoriBerkas->id,
+                'status_berkas_id' => $statusBerkas->id,
                 'path' => $filePath,
                 'tgl_upload' => now(),
                 'nama_file' => 'pelaporan_' . $i . '.jpg',

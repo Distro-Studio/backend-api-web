@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
@@ -40,5 +41,35 @@ class RiwayatPerubahan extends Model
     public function verifikator_1_users(): BelongsTo
     {
         return $this->belongsTo(User::class, 'verifikator_1', 'id');
+    }
+
+    /**
+     * Get all of the perubahan_keluargas for the RiwayatPerubahan
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function perubahan_keluargas(): HasMany
+    {
+        return $this->hasMany(PerubahanKeluarga::class, 'riwayat_perubahan_id', 'id');
+    }
+
+    /**
+     * Get all of the perubahan_personals for the RiwayatPerubahan
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function perubahan_personals(): HasMany
+    {
+        return $this->hasMany(PerubahanPersonal::class, 'riwayat_perubahan_id', 'id');
+    }
+
+    /**
+     * Get all of the perubahan_berkas for the RiwayatPerubahan
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function perubahan_berkas(): HasMany
+    {
+        return $this->hasMany(PerubahanBerkas::class, 'riwayat_perubahan_id', 'id');
     }
 }
