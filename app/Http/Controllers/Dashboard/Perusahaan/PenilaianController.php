@@ -89,10 +89,9 @@ class PenilaianController extends Controller
 
         $filters = $request->all();
 
-        // Filter
         if (isset($filters['unit_kerja'])) {
             $namaUnitKerja = $filters['unit_kerja'];
-            $penilaian->whereHas('status_karyawans.data_karyawans.unit_kerjas', function ($query) use ($namaUnitKerja) {
+            $penilaian->whereHas('user_dinilais.data_karyawans.unit_kerjas', function ($query) use ($namaUnitKerja) {
                 if (is_array($namaUnitKerja)) {
                     $query->whereIn('id', $namaUnitKerja);
                 } else {
@@ -103,7 +102,7 @@ class PenilaianController extends Controller
 
         if (isset($filters['jabatan'])) {
             $namaJabatan = $filters['jabatan'];
-            $penilaian->whereHas('status_karyawans.data_karyawans.jabatans', function ($query) use ($namaJabatan) {
+            $penilaian->whereHas('user_dinilais.data_karyawans.jabatans', function ($query) use ($namaJabatan) {
                 if (is_array($namaJabatan)) {
                     $query->whereIn('id', $namaJabatan);
                 } else {
@@ -114,7 +113,7 @@ class PenilaianController extends Controller
 
         if (isset($filters['status_karyawan'])) {
             $statusKaryawan = $filters['status_karyawan'];
-            $penilaian->whereHas('status_karyawans', function ($query) use ($statusKaryawan) {
+            $penilaian->whereHas('user_dinilais.data_karyawans.status_karyawans', function ($query) use ($statusKaryawan) {
                 if (is_array($statusKaryawan)) {
                     $query->whereIn('id', $statusKaryawan);
                 } else {
@@ -126,7 +125,7 @@ class PenilaianController extends Controller
         if (isset($filters['masa_kerja'])) {
             $masaKerja = $filters['masa_kerja'];
             if (is_array($masaKerja)) {
-                $penilaian->whereHas('status_karyawans.data_karyawans', function ($query) use ($masaKerja) {
+                $penilaian->whereHas('user_dinilais.data_karyawans', function ($query) use ($masaKerja) {
                     foreach ($masaKerja as $masa) {
                         $bulan = $masa * 12;
                         $query->orWhereRaw('TIMESTAMPDIFF(MONTH, tgl_masuk, COALESCE(tgl_keluar, NOW())) <= ?', [$bulan]);
@@ -134,7 +133,7 @@ class PenilaianController extends Controller
                 });
             } else {
                 $bulan = $masaKerja * 12;
-                $penilaian->whereHas('status_karyawans.data_karyawans', function ($query) use ($bulan) {
+                $penilaian->whereHas('user_dinilais.data_karyawans', function ($query) use ($bulan) {
                     $query->whereRaw('TIMESTAMPDIFF(MONTH, tgl_masuk, COALESCE(tgl_keluar, NOW())) <= ?', [$bulan]);
                 });
             }
@@ -142,7 +141,7 @@ class PenilaianController extends Controller
 
         if (isset($filters['status_aktif'])) {
             $statusAktif = $filters['status_aktif'];
-            $penilaian->whereHas('status_karyawans.data_karyawans.users', function ($query) use ($statusAktif) {
+            $penilaian->whereHas('users', function ($query) use ($statusAktif) {
                 if (is_array($statusAktif)) {
                     $query->whereIn('status_aktif', $statusAktif);
                 } else {
@@ -155,12 +154,12 @@ class PenilaianController extends Controller
             $tglMasuk = $filters['tgl_masuk'];
             if (is_array($tglMasuk)) {
                 $convertedDates = array_map([RandomHelper::class, 'convertToDateString'], $tglMasuk);
-                $penilaian->whereHas('status_karyawans.data_karyawans', function ($query) use ($convertedDates) {
+                $penilaian->whereHas('user_dinilais.data_karyawans', function ($query) use ($convertedDates) {
                     $query->whereIn('tgl_masuk', $convertedDates);
                 });
             } else {
                 $convertedDate = RandomHelper::convertToDateString($tglMasuk);
-                $penilaian->whereHas('status_karyawans.data_karyawans', function ($query) use ($convertedDate) {
+                $penilaian->whereHas('user_dinilais.data_karyawans', function ($query) use ($convertedDate) {
                     $query->where('tgl_masuk', $convertedDate);
                 });
             }
@@ -168,7 +167,7 @@ class PenilaianController extends Controller
 
         if (isset($filters['agama'])) {
             $namaAgama = $filters['agama'];
-            $penilaian->whereHas('status_karyawans.data_karyawans.kategori_agamas', function ($query) use ($namaAgama) {
+            $penilaian->whereHas('user_dinilais.data_karyawans.kategori_agamas', function ($query) use ($namaAgama) {
                 if (is_array($namaAgama)) {
                     $query->whereIn('id', $namaAgama);
                 } else {
@@ -180,7 +179,7 @@ class PenilaianController extends Controller
         if (isset($filters['jenis_kelamin'])) {
             $jenisKelamin = $filters['jenis_kelamin'];
             if (is_array($jenisKelamin)) {
-                $penilaian->whereHas('status_karyawans.data_karyawans', function ($query) use ($jenisKelamin) {
+                $penilaian->whereHas('user_dinilais.data_karyawans', function ($query) use ($jenisKelamin) {
                     $query->where(function ($query) use ($jenisKelamin) {
                         foreach ($jenisKelamin as $jk) {
                             $query->orWhere('jenis_kelamin', $jk);
@@ -188,7 +187,7 @@ class PenilaianController extends Controller
                     });
                 });
             } else {
-                $penilaian->whereHas('status_karyawans.data_karyawans', function ($query) use ($jenisKelamin) {
+                $penilaian->whereHas('user_dinilais.data_karyawans', function ($query) use ($jenisKelamin) {
                     $query->where('jenis_kelamin', $jenisKelamin);
                 });
             }
@@ -196,7 +195,7 @@ class PenilaianController extends Controller
 
         if (isset($filters['pendidikan_terakhir'])) {
             $namaPendidikan = $filters['pendidikan_terakhir'];
-            $penilaian->whereHas('status_karyawans.data_karyawans.kategori_pendidikans', function ($query) use ($namaPendidikan) {
+            $penilaian->whereHas('user_dinilais.data_karyawans.kategori_pendidikans', function ($query) use ($namaPendidikan) {
                 if (is_array($namaPendidikan)) {
                     $query->whereIn('id', $namaPendidikan);
                 } else {
@@ -208,7 +207,7 @@ class PenilaianController extends Controller
         if (isset($filters['jenis_karyawan'])) {
             $jenisKaryawan = $filters['jenis_karyawan'];
             if (is_array($jenisKaryawan)) {
-                $penilaian->whereHas('status_karyawans.data_karyawans.unit_kerjas', function ($query) use ($jenisKaryawan) {
+                $penilaian->whereHas('user_dinilais.data_karyawans.unit_kerjas', function ($query) use ($jenisKaryawan) {
                     $query->where(function ($query) use ($jenisKaryawan) {
                         foreach ($jenisKaryawan as $jk) {
                             $query->orWhere('jenis_karyawan', $jk);
@@ -216,19 +215,30 @@ class PenilaianController extends Controller
                     });
                 });
             } else {
-                $penilaian->whereHas('status_karyawans.data_karyawans.unit_kerjas', function ($query) use ($jenisKaryawan) {
+                $penilaian->whereHas('user_dinilais.data_karyawans.unit_kerjas', function ($query) use ($jenisKaryawan) {
                     $query->where('jenis_karyawan', $jenisKaryawan);
                 });
             }
+        }
+
+        if (isset($filters['kategori_transfer'])) {
+            $namaTransferKategori = $filters['kategori_transfer'];
+            $penilaian->whereHas('user_dinilais.tranfer_karyawans.kategori_transfer_karyawans', function ($query) use ($namaTransferKategori) {
+                if (is_array($namaTransferKategori)) {
+                    $query->whereIn('id', $namaTransferKategori);
+                } else {
+                    $query->where('id', '=', $namaTransferKategori);
+                }
+            });
         }
 
         // Search
         if (isset($filters['search'])) {
             $searchTerm = '%' . $filters['search'] . '%';
             $penilaian->where(function ($query) use ($searchTerm) {
-                $query->whereHas('status_karyawans.data_karyawans.users', function ($query) use ($searchTerm) {
+                $query->whereHas('user_dinilais', function ($query) use ($searchTerm) {
                     $query->where('nama', 'like', $searchTerm);
-                })->orWhereHas('status_karyawans.data_karyawans.data_karyawans', function ($query) use ($searchTerm) {
+                })->orWhereHas('user_dinilais.data_karyawans', function ($query) use ($searchTerm) {
                     $query->where('nik', 'like', $searchTerm);
                 });
             });
@@ -328,10 +338,10 @@ class PenilaianController extends Controller
         $penilaian = Penilaian::create([
             'user_dinilai' => $userDinilai->id,
             'user_penilai' => $userPenilai->id,
-            'jenis_penilaian_id' => $jenisPenilaianId,
+            'jenis_penilaian_id' => $data['jenis_penilaian_id'],
             'pertanyaan_jawaban' => $pertanyaanJawaban,
-            'total_pertanyaan' => ($data['pertanyaan_jawaban']),
-            'rata_rata' => ($data['pertanyaan_jawaban']),
+            'total_pertanyaan' => $data['pertanyaan_jawaban'],
+            'rata_rata' => $data['pertanyaan_jawaban'],
         ]);
 
         // Response dengan data penilaian yang baru saja disimpan

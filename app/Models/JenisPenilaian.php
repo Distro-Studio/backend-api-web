@@ -14,6 +14,8 @@ class JenisPenilaian extends Model
 
     protected $guarded = ['id'];
 
+    protected $table = 'jenis_penilaians';
+
     /**
      * Get the status_karyawans that owns the JenisPenilaian
      *
