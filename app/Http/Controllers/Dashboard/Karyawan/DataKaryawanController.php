@@ -11,6 +11,7 @@ use App\Models\Berkas;
 use App\Models\Lembur;
 use App\Models\Jabatan;
 use App\Models\Presensi;
+use App\Models\Penilaian;
 use App\Models\UnitKerja;
 use App\Models\Kompetensi;
 use App\Models\TrackRecord;
@@ -25,10 +26,13 @@ use Illuminate\Http\Response;
 use App\Models\StatusKaryawan;
 use App\Models\RiwayatPerubahan;
 use App\Models\TransferKaryawan;
+use App\Mail\SendAccoundUsersMail;
 use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Models\Role;
+use Illuminate\Support\Facades\Log;
 use App\Helpers\StorageServerHelper;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
@@ -328,8 +332,8 @@ class DataKaryawanController extends Controller
     // Format data jadwal
     $user_schedule_array = [];
     foreach ($user->jadwals as $schedule) {
-      $tglMulai = RandomHelper::convertSpecialDateFormat($schedule->tgl_mulai);
-      $tglSelesai = RandomHelper::convertSpecialDateFormat($schedule->tgl_selesai);
+      $tglMulai = RandomHelper::convertToDateString($schedule->tgl_mulai);
+      $tglSelesai = RandomHelper::convertToDateString($schedule->tgl_selesai);
 
       $current_date = Carbon::parse($tglMulai);
       while ($current_date->lte(Carbon::parse($tglSelesai))) {
@@ -433,8 +437,8 @@ class DataKaryawanController extends Controller
   //   });
 
   //   // Menghitung masa kerja dengan helper
-  //   $tglMasuk = RandomHelper::convertSpecialDateFormat($karyawan->tgl_masuk);
-  //   $tglKeluar = $user->tgl_keluar ? RandomHelper::convertSpecialDateFormat($karyawan->tgl_keluar) : null;
+  //   $tglMasuk = RandomHelper::convertToDateString($karyawan->tgl_masuk);
+  //   $tglKeluar = $user->tgl_keluar ? RandomHelper::convertToDateString($karyawan->tgl_keluar) : null;
   //   $masaKerja = $this->calculateTrackRecordMasaKerja($tglMasuk, $tglKeluar);
 
   //   return response()->json([
@@ -556,8 +560,8 @@ class DataKaryawanController extends Controller
     $allFormattedData = $formattedRekamJejak->merge($formattedDataPerubahan);
 
     // Menghitung masa kerja dengan helper
-    $tglMasuk = RandomHelper::convertSpecialDateFormat($karyawan->tgl_masuk);
-    $tglKeluar = $user->tgl_keluar ? RandomHelper::convertSpecialDateFormat($karyawan->tgl_keluar) : null;
+    $tglMasuk = RandomHelper::convertToDateString($karyawan->tgl_masuk);
+    $tglKeluar = $user->tgl_keluar ? RandomHelper::convertToDateString($karyawan->tgl_keluar) : null;
     $masaKerja = $this->calculateTrackRecordMasaKerja($tglMasuk, $tglKeluar);
 
     return response()->json([
@@ -909,6 +913,57 @@ class DataKaryawanController extends Controller
     if (!Gate::allows('view dataKaryawan')) {
       return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
     }
+
+    // Ambil data user yang dinilai berdasarkan data_karyawan_id
+    $userDinilai = User::whereHas('data_karyawans', function ($query) use ($data_karyawan_id) {
+      $query->where('id', $data_karyawan_id);
+    })->with('data_karyawans.jabatans')->first();
+
+    if (!$userDinilai) {
+      return response()->json([
+        'status' => Response::HTTP_OK,
+        'message' => 'Data penilaian karyawan tidak ditemukan.',
+        'data' => []
+      ], Response::HTTP_OK);
+    }
+
+    // Ambil penilaian terkait berdasarkan user_dinilai
+    $penilaian = Penilaian::with(['user_penilais', 'jenis_penilaians'])
+      ->where('user_dinilai', $userDinilai->id)
+      ->get();
+
+    if ($penilaian->isEmpty()) {
+      return response()->json(['message' => 'Penilaian tidak ditemukan untuk user ini.'], 404);
+    }
+
+    // Format list penilaian
+    $listPenilaian = $penilaian->map(function ($penilaian) {
+      return [
+        'id' => $penilaian->id,
+        'jenis_penilaian' => $penilaian->jenis_penilaians,
+        'user_penilai' => $penilaian->user_penilais,
+        'pertanyaan_jawaban' => json_decode($penilaian->pertanyaan_jawaban, true),
+        'total_pertanyaan' => $penilaian->total_pertanyaan,
+        'rata_rata' => $penilaian->rata_rata,
+        'created_at' => $penilaian->created_at,
+        'updated_at' => $penilaian->updated_at,
+      ];
+    });
+
+    // Format Data Utama
+    $formattedData = [
+      'id' => $userDinilai->data_karyawan_id,
+      'user' => $userDinilai,
+      'jabatan' => $userDinilai->data_karyawans->jabatans,
+      'list_penilaian' => $listPenilaian,
+    ];
+
+    // Response dengan data detail penilaian
+    return response()->json([
+      'status' => Response::HTTP_OK,
+      'message' => 'Detail penilaian berhasil ditampilkan.',
+      'data' => $formattedData
+    ], Response::HTTP_OK);
   }
 
   public function index(Request $request)
@@ -989,11 +1044,11 @@ class DataKaryawanController extends Controller
       $tglMasuk = $filters['tgl_masuk'];
       if (is_array($tglMasuk)) {
         foreach ($tglMasuk as &$tgl) {
-          $tgl = RandomHelper::convertSpecialDateFormat($tgl);
+          $tgl = RandomHelper::convertToDateString($tgl);
         }
         $karyawan->whereIn('tgl_masuk', $tglMasuk);
       } else {
-        $tglMasuk = RandomHelper::convertSpecialDateFormat($tglMasuk);
+        $tglMasuk = RandomHelper::convertToDateString($tglMasuk);
         $karyawan->where('tgl_masuk', $tglMasuk);
       }
     }
@@ -1489,7 +1544,7 @@ class DataKaryawanController extends Controller
       'gelar_depan' => $karyawan->gelar_depan,
       'no_hp' => $karyawan->no_hp,
       'no_bpjsksh' => $karyawan->no_bpjsksh,
-      'no_bpjs_kesehatan' => $karyawan->no_bpjsktk,
+      'no_bpjsktk' => $karyawan->no_bpjsktk,
       'tgl_diangkat' => $karyawan->tgl_diangkat,
       'masa_kerja' => $karyawan->masa_kerja,
       'npwp' => $karyawan->npwp,
@@ -1926,13 +1981,13 @@ class DataKaryawanController extends Controller
     return response()->json(new WithoutDataResource(Response::HTTP_OK, 'Data karyawan berhasil di import kedalam table.'), Response::HTTP_OK);
   }
 
-  public function toggleStatusUser($id)
+  public function toggleStatusUser($data_karyawan_id)
   {
-    if (!Gate::allows('edit dataKaryawan')) {
+    if (!Gate::allows('verifikasi verifikator1') || !Gate::allows('edit dataKaryawan')) {
       return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
     }
 
-    $karyawan = DataKaryawan::where('email', '!=', 'super_admin@admin.rski')->find($id);
+    $karyawan = DataKaryawan::where('email', '!=', 'super_admin@admin.rski')->find($data_karyawan_id);
 
     if (!$karyawan) {
       return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data karyawan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
@@ -1940,12 +1995,55 @@ class DataKaryawanController extends Controller
 
     $user = $karyawan->users;
 
-    if ($user->status_aktif === 2) {
+    if ($user->status_aktif === 1) {
+      // Verifikasi data karyawan
+      $fieldsToCheck = [
+        'tempat_lahir',
+        'tgl_lahir',
+        'no_hp',
+        'jenis_kelamin',
+        'nik_ktp',
+        'no_kk',
+        'kategori_agama_id',
+        'kategori_darah_id',
+        'tinggi_badan',
+        'alamat',
+        'tahun_lulus',
+        'no_ijazah',
+        'no_str',
+        'masa_berlaku_str',
+        'no_sip',
+        'masa_berlaku_sip',
+        'no_bpjsksh',
+        'no_bpjsktk'
+      ];
+
+      $nullFields = [];
+      foreach ($fieldsToCheck as $field) {
+        if (is_null($karyawan->$field)) {
+          $nullFields[] = $field;
+        }
+      }
+
+      if (!empty($nullFields)) {
+        // Log data yang belum terisi
+        Log::warning("Data karyawan ID {$karyawan->id} memiliki field yang belum terisi: " . implode(', ', $nullFields));
+        // Reset data jika ada yang null
+        return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Data karyawan '{$karyawan->users->nama}' belum lengkap, pastikan semua data telah diisi."), Response::HTTP_BAD_REQUEST);
+      }
+
+      // Jika semua data valid, update status_aktif menjadi 2
+      $user->status_aktif = 2;
+      $karyawan->verifikator_1 = Auth::id(); // Masukkan auth user_id ke dalam verifikator_1
+      $karyawan->data_completion_step = 1;
+      $karyawan->save(); // Simpan perubahan pada data_karyawans
+      $message = "Karyawan '{$karyawan->users->nama}' berhasil diaktifkan.";
+    } elseif ($user->status_aktif === 2) {
       $user->status_aktif = 3;
       $message = "Karyawan '{$karyawan->users->nama}' berhasil dinonaktifkan.";
     } elseif ($user->status_aktif === 3) {
       $user->status_aktif = 2;
-      $message = "Karyawan '{$karyawan->users->nama}' berhasil diaktifkan.";
+      $message = "Karyawan '{$karyawan->users->nama}' berhasil diaktifkan kembali.";
     } else {
       return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, "Karyawan '{$karyawan->users->nama}' belum melengkapi data karyawan."), Response::HTTP_NOT_ACCEPTABLE);
     }

@@ -102,12 +102,12 @@ class DataJadwalController extends Controller
         if (isset($filters['tgl_masuk'])) {
             $tglMasuk = $filters['tgl_masuk'];
             if (is_array($tglMasuk)) {
-                $convertedDates = array_map([RandomHelper::class, 'convertSpecialDateFormat'], $tglMasuk);
+                $convertedDates = array_map([RandomHelper::class, 'convertToDateString'], $tglMasuk);
                 $jadwal->whereHas('users.data_karyawans', function ($query) use ($convertedDates) {
                     $query->whereIn('tgl_masuk', $convertedDates);
                 });
             } else {
-                $convertedDate = RandomHelper::convertSpecialDateFormat($tglMasuk);
+                $convertedDate = RandomHelper::convertToDateString($tglMasuk);
                 $jadwal->whereHas('users.data_karyawans', function ($query) use ($convertedDate) {
                     $query->where('tgl_masuk', $convertedDate);
                 });
@@ -183,8 +183,8 @@ class DataJadwalController extends Controller
         }
 
         if ($request->has('tgl_mulai') && $request->has('tgl_selesai')) {
-            $start_dateConvert = RandomHelper::convertSpecialDateFormat($request->input('tgl_mulai'));
-            $end_dateConvert = RandomHelper::convertSpecialDateFormat($request->input('tgl_selesai'));
+            $start_dateConvert = RandomHelper::convertToDateString($request->input('tgl_mulai'));
+            $end_dateConvert = RandomHelper::convertToDateString($request->input('tgl_selesai'));
             $start_date = Carbon::parse($start_dateConvert);
             $end_date = Carbon::parse($end_dateConvert);
 
@@ -314,7 +314,7 @@ class DataJadwalController extends Controller
     //     $jadwals = [];
 
     //     // Konversi tanggal dari string menggunakan helper
-    //     $tanggalMulai = Carbon::parse(RandomHelper::convertSpecialDateFormat($data['tgl_mulai']));
+    //     $tanggalMulai = Carbon::parse(RandomHelper::convertToDateString($data['tgl_mulai']));
     //     $today = Carbon::today();
 
     //     // Validasi tanggal mulai
@@ -398,8 +398,8 @@ class DataJadwalController extends Controller
         $jadwals = [];
 
         // Konversi tanggal dari string menggunakan helper
-        $tanggalMulai = Carbon::parse(RandomHelper::convertSpecialDateFormat($data['tgl_mulai']));
-        $tanggalSelesai = Carbon::parse(RandomHelper::convertSpecialDateFormat($data['tgl_selesai']));
+        $tanggalMulai = Carbon::parse(RandomHelper::convertToDateString($data['tgl_mulai']));
+        $tanggalSelesai = Carbon::parse(RandomHelper::convertToDateString($data['tgl_selesai']));
         $today = Carbon::today();
 
         // Validasi tanggal mulai
@@ -486,7 +486,7 @@ class DataJadwalController extends Controller
 
         $data = $request->validated();
         $shiftId = $data['shift_id'] ?? null;
-        $tanggalMulai = Carbon::parse(RandomHelper::convertSpecialDateFormat($data['tgl_mulai']));
+        $tanggalMulai = Carbon::parse(RandomHelper::convertToDateString($data['tgl_mulai']));
         $today = Carbon::now()->format('Y-m-d');
 
         // Validasi tanggal mulai
@@ -554,8 +554,8 @@ class DataJadwalController extends Controller
 
         $user_schedule_array = [];
         foreach ($user->jadwals as $schedule) {
-            $tglMulai = RandomHelper::convertSpecialDateFormat($schedule->tgl_mulai);
-            $tglSelesai = RandomHelper::convertSpecialDateFormat($schedule->tgl_selesai);
+            $tglMulai = RandomHelper::convertToDateString($schedule->tgl_mulai);
+            $tglSelesai = RandomHelper::convertToDateString($schedule->tgl_selesai);
 
             $current_date = Carbon::parse($tglMulai);
             while ($current_date->lte(Carbon::parse($tglSelesai))) {
@@ -603,7 +603,7 @@ class DataJadwalController extends Controller
 
         $data = $request->validated();
         $shiftId = $data['shift_id'] ?? null;
-        $tanggalMulai = Carbon::parse(RandomHelper::convertSpecialDateFormat($data['tgl_mulai']))->format('Y-m-d');
+        $tanggalMulai = Carbon::parse(RandomHelper::convertToDateString($data['tgl_mulai']))->format('Y-m-d');
         $today = Carbon::today()->format('Y-m-d');
 
         if ($tanggalMulai == $today) {

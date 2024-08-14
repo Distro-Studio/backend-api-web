@@ -15,6 +15,7 @@ use App\Exports\Pengaturan\Finance\TER21Export;
 use App\Imports\Pengaturan\Finance\TER21Import;
 use App\Http\Requests\Excel_Import\ImportTER21Request;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
+use App\Models\KategoriTer;
 
 class TER21Controller extends Controller
 {
@@ -32,6 +33,20 @@ class TER21Controller extends Controller
             'data' => $dataTer
         ], Response::HTTP_OK);
     }
+
+    public function getAllKategoriTER()
+    {
+        if (!Gate::allows('view ter21')) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
+
+        $kategori_ter = KategoriTer::all();
+        return response()->json([
+            'status' => Response::HTTP_OK,
+            'message' => 'Retrieving all kategori Ter PPH21 for dropdown',
+            'data' => $kategori_ter
+        ], Response::HTTP_OK);
+    }
     /* ============================= For Dropdown ============================= */
 
     public function index(Request $request)
@@ -41,27 +56,6 @@ class TER21Controller extends Controller
         }
 
         $ter = Ter::withTrashed()->orderBy('created_at', 'desc');
-
-        // Filter
-        // if ($request->has('delete_data')) {
-        //     $softDeleteFilters = $request->delete_data;
-        //     $ter->when(in_array('dihapus', $softDeleteFilters) && !in_array('belum_dihapus', $softDeleteFilters), function ($query) {
-        //         return $query->onlyTrashed();
-        //     })->when(!in_array('dihapus', $softDeleteFilters) && in_array('belum_dihapus', $softDeleteFilters), function ($query) {
-        //         return $query->withoutTrashed();
-        //     });
-        // }
-
-        // Search
-        // if ($request->has('search')) {
-        //     $ter = $ter->where(function ($query) use ($request) {
-        //         $searchTerm = '%' . $request->search . '%';
-
-        //         $query->whereHas('kategori_ters', function ($query) use ($searchTerm) {
-        //             $query->where('nama_kategori_ter', 'like', $searchTerm);
-        //         });
-        //     });
-        // }
 
         $dataTer = $ter->get();
         if ($dataTer->isEmpty()) {
@@ -149,13 +143,13 @@ class TER21Controller extends Controller
         ], Response::HTTP_OK);
     }
 
-    public function destroy(Ter $ter_pph_21)
+    public function destroy(Ter $pph_21)
     {
-        if (!Gate::allows('delete ter21', $ter_pph_21)) {
+        if (!Gate::allows('delete ter21', $pph_21)) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
-        $ter_pph_21->delete();
+        $pph_21->delete();
 
         $successMessage = 'Data TER berhasil dihapus.';
         return response()->json(new WithoutDataResource(Response::HTTP_OK, $successMessage), Response::HTTP_OK);
@@ -182,16 +176,16 @@ class TER21Controller extends Controller
 
     protected function formatData(Collection $collection)
     {
-        return $collection->transform(function ($ter21) {
+        return $collection->transform(function ($ter_21) {
             return [
-                'id' => $ter21->id,
-                'kategori_ter_id' => $ter21->kategori_ters,
-                'from_ter' => $ter21->from_ter,
-                'to_ter' => $ter21->to_ter,
-                'percentage' => $ter21->percentage_ter,
-                'deleted_at' => $ter21->deleted_at,
-                'created_at' => $ter21->created_at,
-                'updated_at' => $ter21->updated_at
+                'id' => $ter_21->id,
+                'kategori_ter_id' => $ter_21->kategori_ters,
+                'from_ter' => $ter_21->from_ter,
+                'to_ter' => $ter_21->to_ter,
+                'percentage' => $ter_21->percentage,
+                'deleted_at' => $ter_21->deleted_at,
+                'created_at' => $ter_21->created_at,
+                'updated_at' => $ter_21->updated_at
             ];
         });
     }

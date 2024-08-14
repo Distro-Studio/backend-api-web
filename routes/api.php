@@ -31,6 +31,7 @@ use App\Http\Controllers\Dashboard\Pengaturan\ManagemenWaktu\LokasiKantorControl
 use App\Http\Controllers\Dashboard\Pengaturan\ManagemenWaktu\ShiftController;
 use App\Http\Controllers\Dashboard\PengumumanController;
 use App\Http\Controllers\Dashboard\Perusahaan\DiklatController;
+use App\Http\Controllers\Dashboard\Perusahaan\JenisPenilaianController;
 use App\Http\Controllers\Dashboard\Perusahaan\PelaporanController;
 use App\Http\Controllers\Dashboard\Perusahaan\PenilaianController;
 use App\Http\Controllers\Dashboard\Presensi\DataPresensiController;
@@ -64,6 +65,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/get-lokasi-kantor', [DataPresensiController::class, 'getLokasiKantor']);
     Route::get('/get-list-premi', [DataKaryawanController::class, 'getAllDataPremi']);
     Route::get('/get-list-pph21', [TER21Controller::class, 'getAllTer']);
+    Route::get('/get-list-kategori-ter', [TER21Controller::class, 'getAllKategoriTER']);
     Route::get('/get-list-tipecuti', [CutiController::class, 'getAllTipeCuti']);
     Route::get('/get-list-harilibur', [HariLiburController::class, 'getAllHariLibur']);
     Route::get('/get-list-shift', [ShiftController::class, 'getAllShift']);
@@ -88,10 +90,6 @@ Route::middleware(['auth:sanctum'])->group(function () {
         // TODO: aktifkan send email di create & transfer karyawan
         // TODO: ganti email di create & transfer karyawan
 
-        // TODO: 1. ketika create karyawan, status_aktif tetap false --done--
-        // TODO: 2. setelah data_completion_step berubah menjadi true maka lakukan persetujuan dengan update status_aktif menjadi true
-        // TODO: 3. ketika persetujuan ditolak, ubah data_completion_step dan status_aktif menjadi false
-
         // ! Ubah export berdasarkan filter
         // ! Buat fitur detail karyawan
         // ! Schema & data time tanggal full string aja
@@ -103,7 +101,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::post('/get-data-karyawan', [DataKaryawanController::class, 'index']);
             Route::post('/export', [DataKaryawanController::class, 'exportKaryawan']);
             Route::post('/import', [DataKaryawanController::class, 'importKaryawan']);
-            Route::post('/{id}/status-karyawan', [DataKaryawanController::class, 'toggleStatusUser']);
+            Route::post('/{data_karyawan_id}/status-karyawan', [DataKaryawanController::class, 'toggleStatusUser']);
             Route::get('/detail-karyawan-user/{user_id}', [DataKaryawanController::class, 'showByUserId']);
             Route::get('/detail-karyawan/{data_karyawan_id}', [DataKaryawanController::class, 'showByDataKaryawanId']);
 
@@ -141,6 +139,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::get('/calculated', [DataPresensiController::class, 'calculatedPresensi']);
         });
 
+        // TODO: Jadwal bug limit != 10
         Route::group(['prefix' => '/jadwal-karyawan'], function () {
             // ! Jadwal ===========>
             Route::post('/get-data-jadwal', [DataJadwalController::class, 'index']);
@@ -203,15 +202,25 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::post('/get-data-diklat', [DiklatController::class, 'index']);
             Route::post('/diklat', [DiklatController::class, 'store']);
             Route::get('/diklat/export', [DiklatController::class, 'exportDiklat']);
+            Route::post('/diklat/{diklatId}/verifikasi-step-1', [DiklatController::class, 'verifikasiTahap1']);
+            Route::post('/diklat/{diklatId}/verifikasi-step-2', [DiklatController::class, 'verifikasiTahap2']);
 
             // ! Pelaporan ===========>
             Route::post('/get-data-pelaporan', [PelaporanController::class, 'index']);
             Route::get('/pelaporan/export', [PelaporanController::class, 'exportPelaporan']);
 
+            // ! Jenis Penilaian ===========>
+            Route::post('/get-data-jenis-penilaian', [JenisPenilaianController::class, 'index']);
+            Route::get('/jenis-penilaian/export', [JenisPenilaianController::class, 'exportJenisPenilaian']);
+            Route::apiResource('/jenis-penilaian', JenisPenilaianController::class);
+            
             // ! Penilaian ===========>
+            Route::get('/get-user-dinilai', [PenilaianController::class, 'getUserDinilai']);
+            Route::get('/get-user-penilai', [PenilaianController::class, 'getUserPenilai']);
+            Route::post('/get-user-belum-dinilai', [PenilaianController::class, 'getKaryawanBelumDinilai']);
             Route::post('/get-data-penilaian', [PenilaianController::class, 'index']);
             Route::get('/penilaian/export', [PenilaianController::class, 'exportPenilaian']);
-            Route::get('/penilaian/{id}', [PenilaianController::class, 'show']);
+            Route::apiResource('/penilaian', PenilaianController::class);
         });
 
         Route::group(['prefix' => '/pengaturan'], function () {

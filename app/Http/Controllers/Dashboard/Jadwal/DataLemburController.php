@@ -97,12 +97,12 @@ class DataLemburController extends Controller
         if (isset($filters['tgl_masuk'])) {
             $tglMasuk = $filters['tgl_masuk'];
             if (is_array($tglMasuk)) {
-                $convertedDates = array_map([RandomHelper::class, 'convertSpecialDateFormat'], $tglMasuk);
+                $convertedDates = array_map([RandomHelper::class, 'convertToDateString'], $tglMasuk);
                 $lembur->whereHas('users.data_karyawans', function ($query) use ($convertedDates) {
                     $query->whereIn('tgl_masuk', $convertedDates);
                 });
             } else {
-                $convertedDate = RandomHelper::convertSpecialDateFormat($tglMasuk);
+                $convertedDate = RandomHelper::convertToDateString($tglMasuk);
                 $lembur->whereHas('users.data_karyawans', function ($query) use ($convertedDate) {
                     $query->where('tgl_masuk', $convertedDate);
                 });
@@ -296,8 +296,8 @@ class DataLemburController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
-        $dataCuti = Lembur::all(); // Sesuaikan dengan model atau query Anda
-        if ($dataCuti->isEmpty()) {
+        $dataLembur = Lembur::all(); // Sesuaikan dengan model atau query Anda
+        if ($dataLembur->isEmpty()) {
             // Kembalikan respons JSON ketika tabel kosong
             return response()->json(new WithoutDataResource(Response::HTTP_OK, 'Tidak ada data lembur karyawan yang tersedia untuk diekspor.'), Response::HTTP_OK);
         }

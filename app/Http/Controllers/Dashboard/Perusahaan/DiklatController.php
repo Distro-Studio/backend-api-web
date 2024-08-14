@@ -222,4 +222,88 @@ class DiklatController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_INTERNAL_SERVER_ERROR, 'Maaf sepertinya terjadi error. Message: ' . $e->getMessage()), Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
+
+    public function verifikasiTahap1(Request $request, $diklatId)
+    {
+        if (!Gate::allows('verifikasi verifikator1')) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
+
+        // Cari diklat berdasarkan ID
+        $diklat = Diklat::find($diklatId);
+
+        if (!$diklat) {
+            return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Diklat tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+        }
+
+        $status_diklat_id = $diklat->status_diklat_id;
+
+        if ($request->has('verifikasi_pertama_disetujui') && $request->verifikasi_pertama_disetujui == 1) {
+            // Jika status_diklat_id = 1 atau 3 (setelah ditolak), maka bisa disetujui
+            if ($status_diklat_id == 1 || $status_diklat_id == 3 || $status_diklat_id == 5) {
+                $diklat->status_diklat_id = 2; // Update status ke tahap 1 disetujui
+                $diklat->verifikator_1 = Auth::id(); // Set verifikator tahap 1
+                $diklat->alasan = null;
+                $diklat->save();
+                return response()->json(new WithoutDataResource(Response::HTTP_OK, "Verifikasi tahap 1 untuk Diklat '{$diklat->nama}' telah disetujui."), Response::HTTP_OK);
+            } else {
+                return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Diklat '{$diklat->nama}' tidak dalam status untuk disetujui pada tahap 1."), Response::HTTP_BAD_REQUEST);
+            }
+        } elseif ($request->has('verifikasi_pertama_ditolak') && $request->verifikasi_pertama_ditolak == 1) {
+            // Jika status_diklat_id = 1, maka bisa ditolak
+            if ($status_diklat_id == 1) {
+                $diklat->status_diklat_id = 3; // Update status ke tahap 1 ditolak
+                $diklat->verifikator_1 = Auth::id(); // Set verifikator tahap 1
+                $diklat->alasan = 'Verifikasi tahap 1 ditolak karena: ' . $request->input('alasan', null);
+                $diklat->save();
+                return response()->json(new WithoutDataResource(Response::HTTP_OK, "Verifikasi tahap 1 untuk Diklat '{$diklat->nama}' telah ditolak."), Response::HTTP_OK);
+            } else {
+                return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Diklat '{$diklat->nama}' tidak dalam status untuk ditolak pada tahap 1."), Response::HTTP_BAD_REQUEST);
+            }
+        } else {
+            return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Aksi tidak valid.'), Response::HTTP_BAD_REQUEST);
+        }
+    }
+
+    public function verifikasiTahap2(Request $request, $diklatId)
+    {
+        if (!Gate::allows('verifikasi verifikator2')) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
+
+        // Cari diklat berdasarkan ID
+        $diklat = Diklat::find($diklatId);
+
+        if (!$diklat) {
+            return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Diklat tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+        }
+
+        $status_diklat_id = $diklat->status_diklat_id;
+
+        if ($request->has('verifikasi_kedua_disetujui') && $request->verifikasi_kedua_disetujui == 1) {
+            // Jika status_diklat_id = 2, maka bisa disetujui
+            if ($status_diklat_id == 2) {
+                $diklat->status_diklat_id = 4; // Update status ke tahap 2 disetujui
+                $diklat->verifikator_2 = Auth::id(); // Set verifikator tahap 2
+                $diklat->alasan = null;
+                $diklat->save();
+                return response()->json(new WithoutDataResource(Response::HTTP_OK, "Verifikasi tahap 2 untuk Diklat '{$diklat->nama}' telah disetujui."), Response::HTTP_OK);
+            } else {
+                return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Diklat '{$diklat->nama}' tidak dalam status untuk disetujui pada tahap 2."), Response::HTTP_BAD_REQUEST);
+            }
+        } elseif ($request->has('verifikasi_kedua_ditolak') && $request->verifikasi_kedua_ditolak == 1) {
+            // Jika status_diklat_id = 2, maka bisa ditolak
+            if ($status_diklat_id == 2) {
+                $diklat->status_diklat_id = 5; // Update status ke tahap 2 ditolak
+                $diklat->verifikator_2 = Auth::id(); // Set verifikator tahap 2
+                $diklat->alasan = 'Verifikasi tahap 2 ditolak karena: ' . $request->input('alasan', null);
+                $diklat->save();
+                return response()->json(new WithoutDataResource(Response::HTTP_OK, "Verifikasi tahap 2 untuk Diklat '{$diklat->nama}' telah ditolak."), Response::HTTP_OK);
+            } else {
+                return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Diklat '{$diklat->nama}' tidak dalam status untuk ditolak pada tahap 2."), Response::HTTP_BAD_REQUEST);
+            }
+        } else {
+            return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Aksi tidak valid.'), Response::HTTP_BAD_REQUEST);
+        }
+    }
 }

@@ -13,13 +13,13 @@ class Jawaban extends Model
     protected $guarded = ['id'];
 
     /**
-     * Get the users that owns the Jawaban
+     * Get the user_penilais that owns the Jawaban
      *
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function users(): BelongsTo
+    public function user_penilais(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'user_id', 'id');
+        return $this->belongsTo(User::class, 'user_penilai', 'id');
     }
 
     /**

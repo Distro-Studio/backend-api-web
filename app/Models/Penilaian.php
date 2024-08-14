@@ -14,50 +14,32 @@ class Penilaian extends Model
     protected $guarded = ['id'];
 
     /**
-     * Get the status_karyawans that owns the Penilaian
+     * Get the jenis_penilaians that owns the Penilaian
      *
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function status_karyawans(): BelongsTo
+    public function jenis_penilaians(): BelongsTo
     {
-        return $this->belongsTo(StatusKaryawan::class, 'status_karyawan_id', 'id');
+        return $this->belongsTo(JenisPenilaian::class, 'jenis_penilaian_id', 'id');
     }
 
     /**
-     * Get all of the pertanyaans for the Penilaian
+     * Get the user_dinilais that owns the Jawaban
      *
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function pertanyaans(): HasMany
+    public function user_dinilais(): BelongsTo
     {
-        return $this->hasMany(Pertanyaan::class, 'penilaian_id', 'id');
+        return $this->belongsTo(User::class, 'user_dinilai', 'id');
     }
 
-    // Method untuk menghitung total pertanyaan
-    public function getTotalPertanyaanAttribute()
+    /**
+     * Get the user_penilais that owns the Jawaban
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function user_penilais(): BelongsTo
     {
-        return $this->pertanyaans()->count();
-    }
-
-    public function jawabans()
-    {
-        return $this->hasManyThrough(Jawaban::class, Pertanyaan::class, 'penilaian_id', 'pertanyaan_id');
-    }
-
-    // Relasi untuk mengakses karyawan yang dinilai
-    public function karyawanDinilai()
-    {
-        return $this->hasOneThrough(User::class, DataKaryawan::class, 'status_karyawan_id', 'id', 'status_karyawan_id', 'user_id');
-    }
-
-    // Method untuk menghitung rata-rata jawaban berdasarkan status karyawan
-    public function getRataRataAttribute()
-    {
-        $average = $this->jawabans()
-            ->whereHas('pertanyaans.penilaians.status_karyawans', function ($query) {
-                $query->where('id', $this->status_karyawan_id);
-            })
-            ->avg('jawaban');
-        return round($average);
+        return $this->belongsTo(User::class, 'user_penilai', 'id');
     }
 }

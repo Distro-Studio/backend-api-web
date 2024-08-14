@@ -18,21 +18,26 @@ class PenilaianExport implements FromCollection, WithHeadings, WithMapping
 
     public function collection()
     {
-        return Penilaian::with(['user_dinilais', 'user_penilais', 'unit_kerja_dinilais', 'unit_kerja_penilais', 'jabatan_dinilais', 'jabatan_penilais'])->get();
+        return Penilaian::with([
+            'user_dinilais.data_karyawans.jabatans',
+            'user_penilais.data_karyawans.jabatans',
+            'jenis_penilaians'
+        ])->get();
     }
 
     public function headings(): array
     {
         return [
             'no',
-            'periode',
+            'jenis_penilaian',
             'karyawan_dinilai',
             'unit_kerja_karyawan_dinilai',
             'jabatan_karyawan_dinilai',
-            'rata_rata_karyawan_dinilai',
             'karyawan_penilai',
             'unit_kerja_karyawan_penilai',
             'jabatan_karyawan_penilai',
+            'rata_rata',
+            'total_pertanyaan',
             'created_at'
         ];
     }
@@ -43,14 +48,15 @@ class PenilaianExport implements FromCollection, WithHeadings, WithMapping
 
         return [
             self::$number,
-            Carbon::parse($penilaian->created_at)->locale('id')->isoFormat('MMMM Y'),
+            optional($penilaian->jenis_penilaians)->nama,
             $penilaian->user_dinilais->nama,
-            $penilaian->unit_kerja_dinilais->nama_unit,
-            $penilaian->jabatan_dinilais->nama_jabatan,
-            $penilaian->rata_rata,
+            optional($penilaian->user_dinilais->data_karyawans->unit_kerjas)->nama_unit,
+            optional($penilaian->user_dinilais->data_karyawans->jabatans)->nama_jabatan,
             $penilaian->user_penilais->nama,
-            $penilaian->unit_kerja_penilais->nama_unit,
-            $penilaian->jabatan_penilais->nama_jabatan,
+            optional($penilaian->user_penilais->data_karyawans->unit_kerjas)->nama_unit,
+            optional($penilaian->user_penilais->data_karyawans->jabatans)->nama_jabatan,
+            $penilaian->rata_rata,
+            $penilaian->total_pertanyaan,
             Carbon::parse($penilaian->created_at)->format('d-m-Y H:i:s')
         ];
     }

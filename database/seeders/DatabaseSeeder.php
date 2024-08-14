@@ -49,6 +49,7 @@ use Database\Seeders\Pengaturan_Managemen_Waktu\HariLiburSeeder;
 use Database\Seeders\Pengaturan_Managemen_Waktu\LokasiKantorSeeder;
 use Database\Seeders\Pengaturan_Managemen_Waktu\TipeCutiSeeder;
 use Database\Seeders\Perusahaan\DiklatSeeder;
+use Database\Seeders\Perusahaan\JenisPenilaianSeeder;
 use Database\Seeders\Perusahaan\PelaporanSeeder;
 use Database\Seeders\Perusahaan\PenilaianSeeder;
 
@@ -131,9 +132,9 @@ class DatabaseSeeder extends Seeder
       /* ==== Perusahaan ==== */
       DiklatSeeder::class,
       PelaporanSeeder::class,
-      PenilaianSeeder::class,
+      JenisPenilaianSeeder::class,
       PertanyaanSeeder::class,
-      JawabanSeeder::class,
+      PenilaianSeeder::class,
 
       PengumumanSeeder::class,
       NotifikasiSeeder::class,

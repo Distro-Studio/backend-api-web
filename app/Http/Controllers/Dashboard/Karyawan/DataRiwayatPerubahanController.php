@@ -89,12 +89,12 @@ class DataRiwayatPerubahanController extends Controller
         if (isset($filters['tgl_masuk'])) {
             $tglMasuk = $filters['tgl_masuk'];
             if (is_array($tglMasuk)) {
-                $convertedDates = array_map([RandomHelper::class, 'convertSpecialDateFormat'], $tglMasuk);
+                $convertedDates = array_map([RandomHelper::class, 'convertToDateString'], $tglMasuk);
                 $data_perubahan->whereHas('data_karyawans', function ($query) use ($convertedDates) {
                     $query->whereIn('tgl_masuk', $convertedDates);
                 });
             } else {
-                $convertedDate = RandomHelper::convertSpecialDateFormat($tglMasuk);
+                $convertedDate = RandomHelper::convertToDateString($tglMasuk);
                 $data_perubahan->whereHas('data_karyawans', function ($query) use ($convertedDate) {
                     $query->where('tgl_masuk', $convertedDate);
                 });

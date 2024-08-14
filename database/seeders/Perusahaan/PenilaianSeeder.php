@@ -2,48 +2,59 @@
 
 namespace Database\Seeders\Perusahaan;
 
+use Carbon\Carbon;
 use App\Models\Penilaian;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 
 class PenilaianSeeder extends Seeder
 {
     public function run()
     {
-        $penilaians = [
+        $data = [
             [
-                'tgl_mulai' => '2024-01-01',
-                'tgl_selesai' => '2024-03-31',
-                'status_karyawan_id' => 3, // Asumsi: 1 untuk karyawan magang
-                'lama_bekerja' => 90, // 3 bulan = 90 hari (asumsi setiap bulan memiliki 30 hari)
-                'total_pertanyaan' => 10,
-                'rata_rata' => null, // Nilai rata-rata akan dihitung setelah penilaian selesai
-                'created_at' => now(),
-                'updated_at' => now(),
+                'user_dinilai' => 1, // contoh ID user yang dinilai, sesuaikan dengan data yang ada di tabel users
+                'user_penilai' => 2, // contoh ID user yang menilai, sesuaikan dengan data yang ada di tabel users
+                'jenis_penilaian_id' => 1, // contoh ID jenis penilaian, sesuaikan dengan data yang ada di tabel jenis_penilaians
+                'pertanyaan_jawaban' => json_encode([
+                    ['pertanyaan' => 'Bagaimana kinerja harian?', 'jawaban' => 4],
+                    ['pertanyaan' => 'Apakah karyawan berinisiatif?', 'jawaban' => 5],
+                ]),
+                'total_pertanyaan' => 2, // jumlah pertanyaan yang dijawab
+                'rata_rata' => 3, // contoh rata-rata nilai jawaban
+                'created_at' => Carbon::now(),
+                'updated_at' => Carbon::now(),
             ],
             [
-                'tgl_mulai' => '2024-01-01',
-                'tgl_selesai' => '2024-12-31',
-                'status_karyawan_id' => 2, // Asumsi: 2 untuk karyawan kontrak
-                'lama_bekerja' => 365, // 1 tahun = 365 hari
-                'total_pertanyaan' => 15,
-                'rata_rata' => null,
-                'created_at' => now(),
-                'updated_at' => now(),
+                'user_dinilai' => 3, // contoh ID user yang dinilai
+                'user_penilai' => 4, // contoh ID user yang menilai
+                'jenis_penilaian_id' => 2, // contoh ID jenis penilaian
+                'pertanyaan_jawaban' => json_encode([
+                    ['pertanyaan' => 'Bagaimana sikap kerja?', 'jawaban' => 3],
+                    ['pertanyaan' => 'Apakah karyawan bekerja sama dengan tim?', 'jawaban' => 4],
+                ]),
+                'total_pertanyaan' => 2, // jumlah pertanyaan yang dijawab
+                'rata_rata' => 5, // contoh rata-rata nilai jawaban
+                'created_at' => Carbon::now(),
+                'updated_at' => Carbon::now(),
             ],
             [
-                'tgl_mulai' => '2024-01-01',
-                'tgl_selesai' => '2024-12-31',
-                'status_karyawan_id' => 1, // Asumsi: 3 untuk karyawan tetap
-                'lama_bekerja' => 730, // 2 tahun = 730 hari (untuk contoh karyawan tetap yang telah bekerja lebih dari 1 tahun)
-                'total_pertanyaan' => 20,
-                'rata_rata' => null,
-                'created_at' => now(),
-                'updated_at' => now(),
+                'user_dinilai' => 5, // contoh ID user yang dinilai
+                'user_penilai' => 6, // contoh ID user yang menilai
+                'jenis_penilaian_id' => 3, // contoh ID jenis penilaian
+                'pertanyaan_jawaban' => json_encode([
+                    ['pertanyaan' => 'Bagaimana kehadiran kerja?', 'jawaban' => 5],
+                    ['pertanyaan' => 'Apakah karyawan menyelesaikan tugas tepat waktu?', 'jawaban' => 4],
+                ]),
+                'total_pertanyaan' => 2, // jumlah pertanyaan yang dijawab
+                'rata_rata' => 4, // contoh rata-rata nilai jawaban
+                'created_at' => Carbon::now(),
+                'updated_at' => Carbon::now(),
             ],
         ];
 
-        // Masukkan data ke dalam tabel `penilaians`
-        Penilaian::insert($penilaians);
+        // Masukkan data ke tabel penilaians
+        DB::table('penilaians')->insert($data);
     }
 }

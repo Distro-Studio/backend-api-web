@@ -21,7 +21,8 @@ class PengumumanController extends Controller
         }
 
         $today = Carbon::today();
-        $cutoffDate = $today->copy()->subDays(2)->format('Y-m-d');
+        // $cutoffDate = $today->copy()->subDays(1)->format('Y-m-d');
+        $cutoffDate = $today->format('Y-m-d');
 
         // Delete announcements that ended more than 2 days ago
         Pengumuman::where('tgl_berakhir', '<', $cutoffDate)->delete();

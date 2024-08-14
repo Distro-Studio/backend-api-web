@@ -23,11 +23,11 @@ class StatusKaryawan extends Model
     }
 
     /**
-     * Get all of the penilaians for the StatusKaryawan
+     * Get all of the jenis_penilaians for the StatusKaryawan
      *
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function penilaians(): HasMany
+    public function jenis_penilaians(): HasMany
     {
         return $this->hasMany(Penilaian::class, 'status_karyawan_id', 'id');
     }

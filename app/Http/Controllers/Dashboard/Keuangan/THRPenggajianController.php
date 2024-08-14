@@ -99,7 +99,7 @@ class THRPenggajianController extends Controller
 
         $data_karyawan_ids = DataKaryawan::where('email', '!=', 'super_admin@admin.rski')->pluck('id')->toArray();
         // $tglRunTHR = Carbon::parse($request->input('tgl_run_thr'));
-        $tglRunTHR = Carbon::parse(RandomHelper::convertSpecialDateFormat($request->input('tgl_run_thr')));
+        $tglRunTHR = Carbon::parse(RandomHelper::convertToDateString($request->input('tgl_run_thr')));
         $currentYear = Carbon::now()->year;
         $currentMonth = Carbon::now()->month;
         $currentDate = Carbon::now()->timezone('Asia/Jakarta');

@@ -32,8 +32,8 @@ class DashboardController extends Controller
         $jadwalLibur = Jadwal::where('shift_id', 0)->get();
 
         $countLibur = $jadwalLibur->filter(function ($jadwal) use ($today) {
-            $tglMulai = Carbon::parse(RandomHelper::convertSpecialDateFormat($jadwal->tgl_mulai))->format('Y-m-d');
-            $tglSelesai = Carbon::parse(RandomHelper::convertSpecialDateFormat($jadwal->tgl_selesai))->format('Y-m-d');
+            $tglMulai = Carbon::parse(RandomHelper::convertToDateString($jadwal->tgl_mulai))->format('Y-m-d');
+            $tglSelesai = Carbon::parse(RandomHelper::convertToDateString($jadwal->tgl_selesai))->format('Y-m-d');
             return $tglMulai <= $today && $tglSelesai >= $today;
         })->count();
 

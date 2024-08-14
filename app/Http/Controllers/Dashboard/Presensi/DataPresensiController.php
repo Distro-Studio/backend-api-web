@@ -79,8 +79,8 @@ class DataPresensiController extends Controller
         $jadwalLibur = Jadwal::where('shift_id', 0)->get();
 
         $countLibur = $jadwalLibur->filter(function ($jadwal) use ($today) {
-            $tglMulai = Carbon::parse(RandomHelper::convertSpecialDateFormat($jadwal->tgl_mulai))->format('Y-m-d');
-            $tglSelesai = Carbon::parse(RandomHelper::convertSpecialDateFormat($jadwal->tgl_selesai))->format('Y-m-d');
+            $tglMulai = Carbon::parse(RandomHelper::convertToDateString($jadwal->tgl_mulai))->format('Y-m-d');
+            $tglSelesai = Carbon::parse(RandomHelper::convertToDateString($jadwal->tgl_selesai))->format('Y-m-d');
             return $tglMulai <= $today && $tglSelesai >= $today;
         })->count();
 
@@ -119,7 +119,7 @@ class DataPresensiController extends Controller
 
         // Filter
         if ($request->has('tanggal')) {
-            $tanggal = RandomHelper::convertSpecialDateFormat($request->tanggal);
+            $tanggal = RandomHelper::convertToDateString($request->tanggal);
             $presensi->whereDate('jam_masuk', $tanggal);
         } else {
             return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Pilih tanggal terlebih dahulu untuk menampilkan presensi.'), Response::HTTP_BAD_REQUEST);
@@ -190,12 +190,12 @@ class DataPresensiController extends Controller
         if (isset($filters['tgl_masuk'])) {
             $tglMasuk = $filters['tgl_masuk'];
             if (is_array($tglMasuk)) {
-                $convertedDates = array_map([RandomHelper::class, 'convertSpecialDateFormat'], $tglMasuk);
+                $convertedDates = array_map([RandomHelper::class, 'convertToDateString'], $tglMasuk);
                 $presensi->whereHas('users.data_karyawans', function ($query) use ($convertedDates) {
                     $query->whereIn('tgl_masuk', $convertedDates);
                 });
             } else {
-                $convertedDate = RandomHelper::convertSpecialDateFormat($tglMasuk);
+                $convertedDate = RandomHelper::convertToDateString($tglMasuk);
                 $presensi->whereHas('users.data_karyawans', function ($query) use ($convertedDate) {
                     $query->where('tgl_masuk', $convertedDate);
                 });

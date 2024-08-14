@@ -6,51 +6,40 @@ use Carbon\Carbon;
 use App\Models\Jabatan;
 use App\Models\Pertanyaan;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 
 class PertanyaanSeeder extends Seeder
 {
     public function run()
     {
+        // Dapatkan data jenis penilaian yang ada di tabel jenis_penilaians
+        $jenisPenilaianIds = DB::table('jenis_penilaians')->pluck('id')->toArray();
+
+        // Daftar pertanyaan yang akan dimasukkan
         $pertanyaans = [
-            [
-                'role_id' => 4,
-                'penilaian_id' => 1, // Pastikan penilaian_id ini sesuai dengan yang ada di tabel `penilaians`
-                'pertanyaan' => 'Seberapa sering Anda memenuhi target kerja yang ditetapkan?',
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-            [
-                'role_id' => 4,
-                'penilaian_id' => 1,
-                'pertanyaan' => 'Seberapa baik Anda beradaptasi dengan perubahan di tempat kerja?',
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-            [
-                'role_id' => 4,
-                'penilaian_id' => 2, // Contoh untuk penilaian lain
-                'pertanyaan' => 'Seberapa efektif Anda dalam berkomunikasi dengan rekan kerja?',
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-            [
-                'role_id' => 2,
-                'penilaian_id' => 2,
-                'pertanyaan' => 'Bagaimana Anda menilai kemampuan Anda dalam bekerja secara tim?',
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-            [
-                'role_id' => 2,
-                'penilaian_id' => 3, // Contoh untuk penilaian lain
-                'pertanyaan' => 'Seberapa puas Anda dengan lingkungan kerja yang disediakan oleh perusahaan?',
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
+            'Bagaimana kualitas kerja karyawan ini?',
+            'Seberapa baik karyawan ini dalam bekerja sama dengan tim?',
+            'Apakah karyawan ini menunjukkan inisiatif dalam pekerjaannya?',
+            'Seberapa baik karyawan ini dalam menyelesaikan tugas tepat waktu?',
+            'Bagaimana karyawan ini menangani tekanan kerja?',
+            'Apakah karyawan ini menunjukkan kemampuan komunikasi yang baik?',
+            'Seberapa baik karyawan ini dalam mengikuti instruksi dan prosedur?',
+            'Bagaimana karyawan ini beradaptasi dengan perubahan di tempat kerja?',
+            'Apakah karyawan ini menunjukkan sikap yang positif di tempat kerja?',
+            'Seberapa baik karyawan ini dalam belajar hal-hal baru?'
         ];
 
-        // Masukkan data ke dalam tabel `pertanyaans`
-        Pertanyaan::insert($pertanyaans);
+        // Iterasi untuk memasukkan pertanyaan ke dalam tabel pertanyaans
+        foreach ($jenisPenilaianIds as $jenisPenilaianId) {
+            foreach ($pertanyaans as $pertanyaan) {
+                DB::table('pertanyaans')->insert([
+                    'pertanyaan' => $pertanyaan,
+                    'jenis_penilaian_id' => $jenisPenilaianId,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
+        }
     }
 }

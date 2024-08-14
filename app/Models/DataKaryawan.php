@@ -206,4 +206,14 @@ class DataKaryawan extends Model
     {
         return $this->hasMany(RiwayatPerubahan::class, 'data_karyawan_id', 'id');
     }
+
+    /**
+     * Get the verifikator_1_statusaktifs that owns the DataKaryawan
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function verifikator_1_statusaktifs(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'verifikator_1', 'id');
+    }
 }

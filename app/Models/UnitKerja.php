@@ -21,4 +21,14 @@ class UnitKerja extends Model
     {
         return $this->hasMany(DataKaryawan::class, 'unit_kerja_id', 'id');
     }
+
+    /**
+     * Get all of the jenis_penilaians for the UnitKerja
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function jenis_penilaians(): HasMany
+    {
+        return $this->hasMany(JenisPenilaian::class, 'unit_kerja_id', 'id');
+    }
 }

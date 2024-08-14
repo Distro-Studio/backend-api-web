@@ -22,7 +22,6 @@ class DiklatSeeder extends Seeder
     public function run(): void
     {
         $kategoriDiklatIds = KategoriDiklat::pluck('id')->all();
-        $statusDiklatIds = StatusDiklat::pluck('id')->all();
         $kategoriBerkas = KategoriBerkas::where('label', 'System')->first();
         $user_ids = User::where('nama', '!=', 'Super Admin')->pluck('id')->all();
 
@@ -51,7 +50,7 @@ class DiklatSeeder extends Seeder
                 'gambar' => $gambarUrl,
                 'nama' => 'Diklat ' . $i,
                 'kategori_diklat_id' => $kategoriDiklatIds[array_rand($kategoriDiklatIds)],
-                'status_diklat_id' => $statusDiklatIds[array_rand($statusDiklatIds)],
+                'status_diklat_id' => 1,
                 'deskripsi' => 'Deskripsi Diklat ' . $i,
                 'kuota' => rand(10, 50),
                 'tgl_mulai' => $startDate->format('Y-m-d'),
@@ -61,7 +60,6 @@ class DiklatSeeder extends Seeder
                 'durasi' => $duration,
                 'lokasi' => 'Lokasi ' . $i,
             ]);
-
 
             Berkas::create([
                 'user_id' => $user_id,

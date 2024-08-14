@@ -2,22 +2,79 @@
 
 namespace App\Http\Controllers\Dashboard\Perusahaan;
 
+use Carbon\Carbon;
 use App\Models\User;
+use App\Models\Jawaban;
 use App\Models\Penilaian;
+use App\Models\Pertanyaan;
 use Illuminate\Http\Request;
 use App\Helpers\RandomHelper;
 use Illuminate\Http\Response;
-use Illuminate\Support\Facades\DB;
+use App\Models\JenisPenilaian;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Gate;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\Perusahaan\PenilaianExport;
+use App\Http\Requests\StorePenilaianKaryawanRequest;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
-use Carbon\Carbon;
 
 class PenilaianController extends Controller
 {
-    // TODO: plan => klik run penilaian untuk mengetahui rata" 
+    public function getUserDinilai(Request $request)
+    {
+        if (!Gate::allows('view penilaianKaryawan')) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
+
+        $jenisPenilaian = JenisPenilaian::find($request->input('jenis_penilaian_id'));
+        if (!$jenisPenilaian) {
+            return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Jenis penilaian tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+        }
+
+        $jabatanDinilaiId = $jenisPenilaian->jabatan_dinilai;
+        $statusKaryawanId = $jenisPenilaian->status_karyawan_id;
+
+        // Ambil user yang sesuai dengan jabatan_dinilai, status_karyawan, dan belum pernah dinilai pada periode ini
+        $usersDinilai = User::whereHas('data_karyawans', function ($query) use ($jabatanDinilaiId, $statusKaryawanId) {
+            $query->where('jabatan_id', $jabatanDinilaiId)
+                ->where('status_karyawan_id', $statusKaryawanId);
+        })->whereDoesntHave('user_penilaian_dinilais', function ($query) use ($jenisPenilaian, $statusKaryawanId) {
+            $query->where('jenis_penilaian_id', $jenisPenilaian->id)
+                ->where(function ($query) use ($statusKaryawanId) {
+                    if ($statusKaryawanId == 3) {
+                        // Periode 3 bulan sekali untuk status_karyawan_id = 3
+                        $query->where('created_at', '>=', now()->subMonths(3));
+                    } else {
+                        // Periode 1 tahun sekali untuk status_karyawan_id = 1 & 2
+                        $query->where('created_at', '>=', now()->subYear());
+                    }
+                })
+                ->whereColumn('user_dinilai', 'users.id');
+        })->where('nama', '!=', 'Super Admin')->get();
+
+        return response()->json([
+            'status' => Response::HTTP_OK,
+            'message' => 'Daftar karyawan yang belum dinilai berhasil ditampilkan.',
+            'data' => $usersDinilai,
+        ], Response::HTTP_OK);
+    }
+
+    public function getUserPenilai()
+    {
+        if (!Gate::allows('view penilaianKaryawan')) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
+
+        // Ambil user yang sedang login sebagai user penilai
+        $userPenilai = auth()->user();
+
+        return response()->json([
+            'status' => Response::HTTP_OK,
+            'message' => 'Karyawan penilai berhasil diambil.',
+            'data' => $userPenilai,
+        ], Response::HTTP_OK);
+    }
+
     public function index(Request $request)
     {
         if (!Gate::allows('view penilaianKaryawan')) {
@@ -97,12 +154,12 @@ class PenilaianController extends Controller
         if (isset($filters['tgl_masuk'])) {
             $tglMasuk = $filters['tgl_masuk'];
             if (is_array($tglMasuk)) {
-                $convertedDates = array_map([RandomHelper::class, 'convertSpecialDateFormat'], $tglMasuk);
+                $convertedDates = array_map([RandomHelper::class, 'convertToDateString'], $tglMasuk);
                 $penilaian->whereHas('status_karyawans.data_karyawans', function ($query) use ($convertedDates) {
                     $query->whereIn('tgl_masuk', $convertedDates);
                 });
             } else {
-                $convertedDate = RandomHelper::convertSpecialDateFormat($tglMasuk);
+                $convertedDate = RandomHelper::convertToDateString($tglMasuk);
                 $penilaian->whereHas('status_karyawans.data_karyawans', function ($query) use ($convertedDate) {
                     $query->where('tgl_masuk', $convertedDate);
                 });
@@ -208,11 +265,10 @@ class PenilaianController extends Controller
         $formatData = $dataPenilaian->map(function ($penilaian) {
             return [
                 'id' => $penilaian->id,
-                'periode' => $penilaian->tgl_mulai,
-                'tgl_mulai' => $penilaian->tgl_mulai,
-                'tgl_selesai' => $penilaian->tgl_selesai,
-                'status_karyawan' => $penilaian->status_karyawans,
-                'lama_bekerja' => $penilaian->lama_bekerja,
+                'user_dinilai' => $penilaian->user_dinilais,
+                'user_penilai' => $penilaian->user_penilais,
+                'jenis_penilaian' => $penilaian->jenis_penilaians,
+                'pertanyaan_jawaban' => json_decode($penilaian->pertanyaan_jawaban, true),
                 'total_pertanyaan' => $penilaian->total_pertanyaan,
                 'rata_rata' => $penilaian->rata_rata,
                 'created_at' => $penilaian->created_at,
@@ -228,43 +284,94 @@ class PenilaianController extends Controller
         ], Response::HTTP_OK);
     }
 
-    public function show($id)
+    public function store(StorePenilaianKaryawanRequest $request)
+    {
+        if (!Gate::allows('create penilaianKaryawan')) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
+
+        $data = $request->validated();
+
+        $jenisPenilaianId = $data['jenis_penilaian_id'];
+
+        // a. Cek apakah jenis penilaian tersedia
+        $jenisPenilaian = JenisPenilaian::find($jenisPenilaianId);
+        if (!$jenisPenilaian) {
+            return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Jenis penilaian tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+        }
+
+        // b. Cek apakah pertanyaan untuk jenis penilaian sudah ada
+        $pertanyaans = Pertanyaan::where('jenis_penilaian_id', $jenisPenilaianId)->get();
+        if ($pertanyaans->isEmpty()) {
+            return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, "Tidak ada pertanyaan untuk jenis penilaian '{$jenisPenilaian->nama}'."), Response::HTTP_NOT_FOUND);
+        }
+
+        // c. Cek apakah tgl_selesai dari jenis penilaian sudah terlewat
+        $currentDate = Carbon::now();
+        if (Carbon::parse($jenisPenilaian->tgl_selesai)->isAfter($currentDate)) {
+            return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Penilaian belum dapat dilakukan karena tanggal selesai yang ditentukan pada jenis penilaian belum terlewat.'), Response::HTTP_BAD_REQUEST);
+        }
+
+        // Ambil user_dinilai dan user_penilai
+        // $userPenilai = User::find($data['user_penilai']);
+        $userDinilai = User::find($data['user_dinilai']);
+        if (!$userDinilai) {
+            return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Karyawan dinilai tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+        }
+
+        $userPenilai = auth()->user();
+
+        // Konversi pertanyaan_jawaban ke format JSON jika belum
+        $pertanyaanJawaban = json_encode($data['pertanyaan_jawaban']);
+
+        // Simpan penilaian
+        $penilaian = Penilaian::create([
+            'user_dinilai' => $userDinilai->id,
+            'user_penilai' => $userPenilai->id,
+            'jenis_penilaian_id' => $jenisPenilaianId,
+            'pertanyaan_jawaban' => $pertanyaanJawaban,
+            'total_pertanyaan' => ($data['pertanyaan_jawaban']),
+            'rata_rata' => ($data['pertanyaan_jawaban']),
+        ]);
+
+        // Response dengan data penilaian yang baru saja disimpan
+        return response()->json([
+            'status' => Response::HTTP_CREATED,
+            'message' => "Penilaian '{$jenisPenilaian->nama}' berhasil disimpan pada karyawan '{$userDinilai->nama}'.",
+            'data' => $penilaian,
+        ], Response::HTTP_CREATED);
+    }
+
+    public function getKaryawanBelumDinilai(Request $request)
     {
         if (!Gate::allows('view penilaianKaryawan')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
-        // Ambil penilaian berdasarkan ID
-        $penilaian = Penilaian::with(['pertanyaans'])->find($id);
-        if (!$penilaian) {
-            return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data penilaian tidak ditemukan.'), Response::HTTP_NOT_FOUND);
-        }
+        // Ambil semua filter dari request body
+        $filters = $request->all();
+        // Query untuk mengambil users yang belum memiliki penilaian
+        $karyawanBelumDinilaiQuery = User::whereDoesntHave('user_penilaian_dinilais')
+            ->whereHas('data_karyawans', function ($query) use ($filters) {
+                if (isset($filters['status_karyawan'])) {
+                    $statusKaryawan = $filters['status_karyawan'];
+                    if (is_array($statusKaryawan)) {
+                        $query->whereIn('status_karyawan_id', $statusKaryawan);
+                    } else {
+                        $query->where('status_karyawan_id', $statusKaryawan);
+                    }
+                }
+            });
 
-        // Format data pertanyaan
-        $formattedPertanyaans = $penilaian->pertanyaans->map(function ($pertanyaan) {
-            return [
-                'id' => $pertanyaan->id,
-                'role' => $pertanyaan->roles,
-                'pertanyaan' => $pertanyaan->pertanyaan,
-                'created_at' => $pertanyaan->created_at,
-                'updated_at' => $pertanyaan->updated_at,
-            ];
-        });
+        // Ambil hasil query
+        $karyawanBelumDinilai = $karyawanBelumDinilaiQuery->get();
 
-        $tglMulai = RandomHelper::convertSpecialDateFormat($penilaian->tgl_mulai);
-        $tglSelesai = RandomHelper::convertSpecialDateFormat($penilaian->tgl_selesai);
-        $periode = Carbon::parse($tglMulai)->diffInDays(Carbon::parse($tglSelesai));
 
-        // Response dengan data detail penilaian
+        // Return data karyawan yang belum dinilai
         return response()->json([
             'status' => Response::HTTP_OK,
-            'message' => 'Detail penilaian berhasil ditampilkan.',
-            'data' => [
-                'id' => $penilaian->id,
-                'periode' => $periode,
-                'rata_rata' => $penilaian->rata_rata,
-                'pertanyaan' => $formattedPertanyaans
-            ]
+            'message' => 'Daftar karyawan yang belum dinilai berhasil diambil.',
+            'data' => $karyawanBelumDinilai,
         ], Response::HTTP_OK);
     }
 
@@ -286,4 +393,82 @@ class PenilaianController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_INTERNAL_SERVER_ERROR, 'Maaf sepertinya terjadi error. Message: ' . $e->getMessage()), Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
+
+    // ini v2
+    // public function store(Request $request)
+    // {
+    //     if (!Gate::allows('create penilaianKaryawan')) {
+    //         return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+    //     }
+
+    //     $jenisPenilaianId = $request->input('jenis_penilaian_id');
+
+    //     // a. Cek apakah jenis penilaian tersedia
+    //     $jenisPenilaian = JenisPenilaian::find($jenisPenilaianId);
+    //     if (!$jenisPenilaian) {
+    //         return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Jenis penilaian tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+    //     }
+
+    //     // b. Cek apakah pertanyaan untuk jenis penilaian sudah ada
+    //     $pertanyaans = Pertanyaan::where('jenis_penilaian_id', $jenisPenilaianId)->get();
+    //     if ($pertanyaans->isEmpty()) {
+    //         return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, "Tidak ada pertanyaan untuk jenis penilaian '{$jenisPenilaian->nama}'."), Response::HTTP_NOT_FOUND);
+    //     }
+
+    //     // c. Cek apakah ada jawaban untuk pertanyaan yang terkait dengan jenis penilaian ini
+    //     $jawabanAda = Jawaban::whereIn('pertanyaan_id', $pertanyaans->pluck('id'))->exists();
+
+    //     if (!$jawabanAda) {
+    //         return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Tidak ada jawaban untuk pertanyaan dengan jenis penilaian '{$jenisPenilaian->nama}'."), Response::HTTP_BAD_REQUEST);
+    //     }
+
+    //     // c. Cek apakah tgl_selesai dari jenis penilaian sudah terlewat
+    //     $currentDate = Carbon::now();
+    //     if (Carbon::parse($jenisPenilaian->tgl_selesai)->isAfter($currentDate)) {
+    //         return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Penilaian belum dapat dilakukan karena tanggal selesai yang ditentukan pada jenis penilaian belum terlewat.'), Response::HTTP_BAD_REQUEST);
+    //     }
+
+    //     // d. Cek apakah penilaian sudah dilakukan untuk periode ini
+    //     $penilaian = Penilaian::where('jenis_penilaian_id', $jenisPenilaianId)
+    //         ->where('periode', $jenisPenilaian->tgl_mulai)
+    //         ->first();
+
+    //     if ($penilaian) {
+    //         return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Penilaian '{$jenisPenilaian->nama}' untuk periode ini sudah dilakukan."), Response::HTTP_BAD_REQUEST);
+    //         return response()->json(['message' => 'Penilaian untuk periode ini sudah dilakukan.'], 400);
+    //     }
+
+    //     // e. Loop melalui semua karyawan berdasarkan status_karyawan_id dan lakukan validasi
+    //     $users = User::whereHas('data_karyawans', function ($query) use ($jenisPenilaian) {
+    //         $query->where('status_karyawan_id', $jenisPenilaian->status_karyawan_id);
+    //     })->get();
+
+    //     foreach ($users as $user) {
+    //         $tglMasuk = Carbon::parse($user->data_karyawans->tgl_masuk);
+    //         $interval = $jenisPenilaian->status_karyawan_id == 3 ? 3 : 12; // 3 bulan untuk status 3, 12 bulan untuk status 1 dan 2
+
+    //         // Validasi apakah karyawan ini sudah mencapai interval yang dibutuhkan
+    //         if ($currentDate->diffInMonths($tglMasuk) >= $interval) {
+    //             // Lakukan perhitungan rata-rata untuk karyawan ini
+    //             $rataRata = $this->calculateRataRata($jenisPenilaianId, $user->id);;
+
+    //             // Simpan hasil penilaian untuk karyawan ini
+    //             $newPenilaian = Penilaian::create([
+    //                 'periode' => $jenisPenilaian->tgl_selesai,
+    //                 'jenis_penilaian_id' => $jenisPenilaianId,
+    //                 'total_pertanyaan' => $pertanyaans->count(),
+    //                 'rata_rata' => $rataRata,
+    //                 'user_dinilai' => $user->id, // Jika Anda ingin menyimpan penilaian per user
+    //             ]);
+
+    //             // Logika tambahan jika Anda perlu melakukan sesuatu setelah menyimpan penilaian
+    //         }
+    //     }
+
+    //     return response()->json([
+    //         'status' => Response::HTTP_OK,
+    //         'message' => "Penilaian berhasil dijalankan untuk semua karyawan '{$jenisPenilaian->status_karyawans->label}' yang memenuhi syarat.",
+    //         // 'data' => $newPenilaian ?? 'Tidak ada penilaian yang dijalankan', // Jika tidak ada penilaian yang dilakukan
+    //     ], Response::HTTP_OK);
+    // }
 }

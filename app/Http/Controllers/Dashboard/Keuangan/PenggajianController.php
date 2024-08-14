@@ -79,7 +79,7 @@ class PenggajianController extends Controller
 
         foreach ($penggajians as $penggajian) {
             $riwayatPenggajian = $penggajian->riwayat_penggajians;
-            $tgl_penggajian = Carbon::parse(RandomHelper::convertSpecialDateFormat($penggajian->tgl_penggajian));
+            $tgl_penggajian = Carbon::parse(RandomHelper::convertToDateString($penggajian->tgl_penggajian));
             // Cek apakah tgl_penggajian sudah terlewat dari tgl_mulai
             // if ($tgl_penggajian->lessThan($tgl_mulai)) {
             //     if ($penggajian->status_gaji_id == 2) {

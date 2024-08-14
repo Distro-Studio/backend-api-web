@@ -29,7 +29,7 @@ class UpdateTERRequest extends FormRequest
             'ptkp_id' => 'required',
             'from_ter' => 'required|numeric',
             'to_ter' => 'required|numeric',
-            'percentage_ter' => 'required|numeric',
+            'percentage' => 'required|numeric',
         ];
     }
 
@@ -42,8 +42,8 @@ class UpdateTERRequest extends FormRequest
             'from_ter.numeric' => 'Batas awal penghasilan tidak diperbolehkan mengandung huruf.',
             'to_ter.required' => 'Batas akhir penghasilan tidak diperbolehkan kosong.',
             'to_ter.numeric' => 'Batas akhir penghasilan tidak diperbolehkan mengandung huruf.',
-            'percentage_ter.required' => 'Persentase TER tidak diperbolehkan kosong.',
-            'percentage_ter.numeric' => 'Persentase TER tidak diperbolehkan mengandung huruf.',
+            'percentage.required' => 'Persentase TER tidak diperbolehkan kosong.',
+            'percentage.numeric' => 'Persentase TER tidak diperbolehkan mengandung huruf.',
         ];
     }
 

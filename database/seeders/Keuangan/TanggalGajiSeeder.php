@@ -15,7 +15,7 @@ class TanggalGajiSeeder extends Seeder
     public function run(): void
     {
         DB::table('jadwal_penggajians')->insert([
-            'tgl_mulai' => Carbon::now()->format('d'),
+            'tgl_mulai' => 26,
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),
         ]);

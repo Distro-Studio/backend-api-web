@@ -15,22 +15,12 @@ class Pertanyaan extends Model
     protected $guarded = ['id'];
 
     /**
-     * Get the penilaians that owns the Pertanyaan
+     * Get the jenis_penilaians that owns the Pertanyaan
      *
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function penilaians(): BelongsTo
+    public function jenis_penilaians(): BelongsTo
     {
-        return $this->belongsTo(Penilaian::class, 'penilaian_id', 'id');
-    }
-
-    /**
-     * Get the roles that owns the Pertanyaan
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
-     */
-    public function roles(): BelongsTo
-    {
-        return $this->belongsTo(Role::class, 'role_id');
+        return $this->belongsTo(JenisPenilaian::class, 'jenis_penilaian_id', 'id');
     }
 }

@@ -98,16 +98,16 @@ class RandomHelper
 	}
 
 	// ini untuk -> 28/8/2024
-	public static function convertSpecialDateFormat($dateString)
-	{
-		try {
-			// Konversi string tanggal ke objek Carbon menggunakan format khusus 'd/m/Y'
-			$carbonDate = Carbon::createFromFormat('d/m/Y', $dateString);
+	// public static function convertSpecialDateFormat($dateString)
+	// {
+	// 	try {
+	// 		// Konversi string tanggal ke objek Carbon menggunakan format khusus 'd/m/Y'
+	// 		$carbonDate = Carbon::createFromFormat('d/m/Y', $dateString);
 
-			// Mengembalikan format tanggal yang diinginkan, misalnya Y-m-d atau format lainnya
-			return $carbonDate->toDateString(); // Atau gunakan format lain sesuai kebutuhan Anda
-		} catch (\Exception $e) {
-			return null; // Atau tangani pengecualian sesuai kebutuhan Anda
-		}
-	}
+	// 		// Mengembalikan format tanggal yang diinginkan, misalnya Y-m-d atau format lainnya
+	// 		return $carbonDate->toDateString(); // Atau gunakan format lain sesuai kebutuhan Anda
+	// 	} catch (\Exception $e) {
+	// 		return null; // Atau tangani pengecualian sesuai kebutuhan Anda
+	// 	}
+	// }
 }

@@ -37,10 +37,10 @@ class DataTukarJadwalController extends Controller
         }
 
         // Ambil range tanggal untuk jadwal
-        // $start_date = $jadwal->min('tgl_mulai');
-        // $end_date = $jadwal->max('tgl_selesai');
-        $start_date = Carbon::parse(RandomHelper::convertSpecialDateFormat($jadwal->min('tgl_mulai')));
-        $end_date = Carbon::parse(RandomHelper::convertSpecialDateFormat($jadwal->max('tgl_selesai')));
+        $start_date = $jadwal->min('tgl_mulai');
+        $end_date = $jadwal->max('tgl_selesai');
+        // $start_date = Carbon::parse(RandomHelper::convertToDateString($jadwal->min('tgl_mulai')));
+        // $end_date = Carbon::parse(RandomHelper::convertToDateString($jadwal->max('tgl_selesai')));
         $date_range = $this->generateDateRange($start_date, $end_date);
 
         $user_schedule_array = $this->formatSchedules($jadwal, $date_range);
@@ -107,8 +107,8 @@ class DataTukarJadwalController extends Controller
         $unitKerjaId = $jadwal->users->data_karyawans->unit_kerjas->id;
 
         // Gunakan helper untuk memastikan tanggal dikonversi dari format d/m/Y
-        $tglMulai = Carbon::parse(RandomHelper::convertSpecialDateFormat($jadwal->tgl_mulai))->format('d-m-Y');
-        $tglSelesai = Carbon::parse(RandomHelper::convertSpecialDateFormat($jadwal->tgl_selesai))->format('d-m-Y');
+        $tglMulai = Carbon::parse($jadwal->tgl_mulai)->format('Y-m-d');
+        $tglSelesai = Carbon::parse($jadwal->tgl_selesai)->format('Y-m-d');
 
         $users = User::whereHas('jadwals', function ($query) use ($jadwal, $tglMulai, $tglSelesai) {
             $query->where('shift_id', '!=', $jadwal->shift_id)
@@ -131,7 +131,6 @@ class DataTukarJadwalController extends Controller
         })->where('id', '!=', $jadwal->user_id)
             ->where('nama', '!=', 'Super Admin')
             ->get();
-        // dd($users);
 
         if ($users->isEmpty()) {
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Karyawan ditukar tidak ditemukan.'), Response::HTTP_NOT_FOUND);
@@ -163,8 +162,8 @@ class DataTukarJadwalController extends Controller
         }
 
         // Ambil range tanggal untuk jadwal
-        $start_date = Carbon::parse(RandomHelper::convertSpecialDateFormat($jadwal->min('tgl_mulai')));
-        $end_date = Carbon::parse(RandomHelper::convertSpecialDateFormat($jadwal->max('tgl_selesai')));
+        $start_date = Carbon::parse(RandomHelper::convertToDateString($jadwal->min('tgl_mulai')));
+        $end_date = Carbon::parse(RandomHelper::convertToDateString($jadwal->max('tgl_selesai')));
         $date_range = $this->generateDateRange($start_date, $end_date);
 
         $user_schedule_array = $this->formatSchedules($jadwal, $date_range);
@@ -256,12 +255,12 @@ class DataTukarJadwalController extends Controller
         if (isset($filters['tgl_masuk'])) {
             $tglMasuk = $filters['tgl_masuk'];
             if (is_array($tglMasuk)) {
-                $convertedDates = array_map([RandomHelper::class, 'convertSpecialDateFormat'], $tglMasuk);
+                $convertedDates = array_map([RandomHelper::class, 'convertToDateString'], $tglMasuk);
                 $tukarJadwal->whereHas('user_pengajuans.data_karyawans', function ($query) use ($convertedDates) {
                     $query->whereIn('tgl_masuk', $convertedDates);
                 });
             } else {
-                $convertedDate = RandomHelper::convertSpecialDateFormat($tglMasuk);
+                $convertedDate = RandomHelper::convertToDateString($tglMasuk);
                 $tukarJadwal->whereHas('user_pengajuans.data_karyawans', function ($query) use ($convertedDate) {
                     $query->where('tgl_masuk', $convertedDate);
                 });
@@ -450,8 +449,8 @@ class DataTukarJadwalController extends Controller
         $jadwalDitukar = Jadwal::findOrFail($data['jadwal_ditukar']);
 
         // Konversi tanggal dari string untuk validasi
-        $tglMulaiPengajuan = RandomHelper::convertSpecialDateFormat($jadwalPengajuan->tgl_mulai);
-        $tglMulaiDitukar = RandomHelper::convertSpecialDateFormat($jadwalDitukar->tgl_mulai);
+        $tglMulaiPengajuan = RandomHelper::convertToDateString($jadwalPengajuan->tgl_mulai);
+        $tglMulaiDitukar = RandomHelper::convertToDateString($jadwalDitukar->tgl_mulai);
 
         // Verifikasi unit kerja
         if ($userPengajuan->data_karyawans->unit_kerjas->id !== $userDitukar->data_karyawans->unit_kerjas->id) {
@@ -674,8 +673,8 @@ class DataTukarJadwalController extends Controller
     //     // Iterasi melalui jadwal dan rentang tanggal, menyimpan semua jadwal yang sesuai
     //     foreach ($jadwal as $schedule) {
     //         // Pastikan tanggal dalam format Y-m-d menggunakan helper sebelum parsing dengan Carbon
-    //         $tgl_mulai_formatted = Carbon::parse(RandomHelper::convertSpecialDateFormat($schedule->tgl_mulai));
-    //         $tgl_selesai_formatted = Carbon::parse(RandomHelper::convertSpecialDateFormat($schedule->tgl_selesai));
+    //         $tgl_mulai_formatted = Carbon::parse(RandomHelper::convertToDateString($schedule->tgl_mulai));
+    //         $tgl_selesai_formatted = Carbon::parse(RandomHelper::convertToDateString($schedule->tgl_selesai));
 
     //         $current_date = $tgl_mulai_formatted->copy();
     //         while ($current_date->lte($tgl_selesai_formatted)) {
@@ -714,8 +713,8 @@ class DataTukarJadwalController extends Controller
         $user_schedules_by_date = [];
         // Iterasi melalui jadwal dan rentang tanggal, menyimpan semua jadwal yang sesuai
         foreach ($jadwal as $schedule) {
-            $tgl_mulai_formatted = Carbon::parse(RandomHelper::convertSpecialDateFormat($schedule->tgl_mulai));
-            $tgl_selesai_formatted = Carbon::parse(RandomHelper::convertSpecialDateFormat($schedule->tgl_selesai));
+            $tgl_mulai_formatted = Carbon::parse(RandomHelper::convertToDateString($schedule->tgl_mulai));
+            $tgl_selesai_formatted = Carbon::parse(RandomHelper::convertToDateString($schedule->tgl_selesai));
 
             $current_date = $tgl_mulai_formatted->copy();
 

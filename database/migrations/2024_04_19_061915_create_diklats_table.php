@@ -25,6 +25,9 @@ return new class extends Migration
             $table->string('jam_selesai');
             $table->integer('durasi');
             $table->string('lokasi');
+            $table->foreignId('verifikator_1')->nullable()->constrained('users');
+            $table->foreignId('verifikator_2')->nullable()->constrained('users');
+            $table->text('alasan')->nullable();
             $table->timestamps();
         });
     }

@@ -98,12 +98,12 @@ class DataCutiController extends Controller
         if (isset($filters['tgl_masuk'])) {
             $tglMasuk = $filters['tgl_masuk'];
             if (is_array($tglMasuk)) {
-                $convertedDates = array_map([RandomHelper::class, 'convertSpecialDateFormat'], $tglMasuk);
+                $convertedDates = array_map([RandomHelper::class, 'convertToDateString'], $tglMasuk);
                 $cuti->whereHas('users.data_karyawans', function ($query) use ($convertedDates) {
                     $query->whereIn('tgl_masuk', $convertedDates);
                 });
             } else {
-                $convertedDate = RandomHelper::convertSpecialDateFormat($tglMasuk);
+                $convertedDate = RandomHelper::convertToDateString($tglMasuk);
                 $cuti->whereHas('users.data_karyawans', function ($query) use ($convertedDate) {
                     $query->where('tgl_masuk', $convertedDate);
                 });
@@ -276,8 +276,8 @@ class DataCutiController extends Controller
         $data = $request->validated();
 
         // Mengonversi tanggal dari request menggunakan helper hanya untuk perhitungan durasi
-        $tglFrom = RandomHelper::convertSpecialDateFormat($data['tgl_from']);
-        $tglTo = RandomHelper::convertSpecialDateFormat($data['tgl_to']);
+        $tglFrom = RandomHelper::convertToDateString($data['tgl_from']);
+        $tglTo = RandomHelper::convertToDateString($data['tgl_to']);
         // dd($tglFrom, $tglTo);
 
         // Menghitung durasi cuti dalam hari
@@ -376,8 +376,8 @@ class DataCutiController extends Controller
         }
 
         // Mengonversi tanggal dari request menggunakan helper hanya untuk perhitungan durasi
-        $tglFrom = RandomHelper::convertSpecialDateFormat($data['tgl_from']);
-        $tglTo = RandomHelper::convertSpecialDateFormat($data['tgl_to']);
+        $tglFrom = RandomHelper::convertToDateString($data['tgl_from']);
+        $tglTo = RandomHelper::convertToDateString($data['tgl_to']);
 
         // Menghitung durasi cuti dalam hari
         $durasi = Carbon::parse($tglFrom)->diffInDays(Carbon::parse($tglTo)) + 1;

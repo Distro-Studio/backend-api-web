@@ -55,7 +55,7 @@ class PertanyaanController extends Controller
         $data = $request->validated();
 
         $pertanyaan = Pertanyaan::create($data);
-        $successMessage = "Data pertanyaan untuk role '{$pertanyaan->roles->name}' berstatus '{$pertanyaan->penilaians->status_karyawans->label}' berhasil dibuat.";
+        $successMessage = "Data pertanyaan untuk jenis penilaian '{$pertanyaan->jenis_penilaians->nama}' berhasil dibuat.";
         $formattedData = $this->formatData(collect([$pertanyaan]))->first();
 
         return response()->json([
@@ -75,7 +75,7 @@ class PertanyaanController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data pertanyaan kuesioner tidak ditemukan.'), Response::HTTP_NOT_FOUND);
         }
 
-        $successMessage = "Data pertanyaan untuk role '{$pertanyaan->roles->name}' berstatus '{$pertanyaan->penilaians->status_karyawans->label}' berhasil ditampilkan.";
+        $successMessage = "Data pertanyaan untuk jenis penilaian '{$pertanyaan->jenis_penilaians->nama}' berhasil ditampilkan.";
         $formattedData = $this->formatData(collect([$pertanyaan]))->first();
 
         return response()->json([
@@ -103,7 +103,7 @@ class PertanyaanController extends Controller
 
         $pertanyaan->update($data);
         $updatedPertanyaan = $pertanyaan->fresh();
-        $successMessage = "Data pertanyaan untuk role '{$updatedPertanyaan->roles->name}' berstatus '{$updatedPertanyaan->penilaians->status_karyawans->label}' berhasil diperbarui.";
+        $successMessage = "Data pertanyaan untuk jenis penilaian '{$updatedPertanyaan->jenis_penilaians->nama}' berhasil diperbarui.";
         $formattedData = $this->formatData(collect([$pertanyaan]))->first();
 
         return response()->json([
@@ -121,7 +121,7 @@ class PertanyaanController extends Controller
 
         $pertanyaan->delete();
 
-        $successMessage = "Data pertanyaan untuk role '{$pertanyaan->roles->name}' berstatus '{$pertanyaan->penilaians->status_karyawans->label}' berhasil dihapus.";
+        $successMessage = "Data pertanyaan untuk jenis penilaian '{$pertanyaan->jenis_penilaians->nama}' berhasil dihapus.";
         return response()->json(new WithoutDataResource(Response::HTTP_OK, $successMessage), Response::HTTP_OK);
     }
 
@@ -136,7 +136,7 @@ class PertanyaanController extends Controller
         $pertanyaan->restore();
 
         if (is_null($pertanyaan->deleted_at)) {
-            $successMessage = "Data pertanyaan untuk role '{$pertanyaan->roles->name}' berstatus '{$pertanyaan->penilaians->status_karyawans->label}' berhasil dipulihkan.";
+            $successMessage = "Data pertanyaan untuk jenis penilaian '{$pertanyaan->jenis_penilaians->nama}' berhasil dipulihkan.";
             return response()->json(new WithoutDataResource(Response::HTTP_OK, $successMessage), Response::HTTP_OK);
         } else {
             $successMessage = 'Restore data tidak dapat diproses, Silahkan hubungi admin untuk dilakukan pengecekan ulang.';
@@ -149,14 +149,7 @@ class PertanyaanController extends Controller
         return $collection->transform(function ($pertanyaan) {
             return [
                 'id' => $pertanyaan->id,
-                'peruntukan_role' => $pertanyaan->roles,
-                'penilaian' => [
-                    'id' => $pertanyaan->penilaians->id,
-                    'status_karyawan' => $pertanyaan->penilaians->status_karyawans,
-                    'tgl_mulai' => $pertanyaan->penilaians->tgl_mulai,
-                    'tgl_selesai' => $pertanyaan->penilaians->tgl_selesai,
-                    'lama_bekerja' => $pertanyaan->penilaians->lama_bekerja
-                ],
+                'jenis_penilaian' => $pertanyaan->jenis_penilaians,
                 'pertanyaan' => $pertanyaan->pertanyaan,
                 'deleted_at' => $pertanyaan->deleted_at,
                 'created_at' => $pertanyaan->created_at,

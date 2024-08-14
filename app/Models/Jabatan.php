@@ -37,9 +37,9 @@ class Jabatan extends Model
      *
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function jabatan_dinilai(): HasMany
+    public function jabatan_penilaian_dinilais(): HasMany
     {
-        return $this->hasMany(Penilaian::class, 'jabatan_dinilai', 'id');
+        return $this->hasMany(JenisPenilaian::class, 'jabatan_dinilai', 'id');
     }
 
     /**
@@ -47,8 +47,8 @@ class Jabatan extends Model
      *
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function jabatan_penilai(): HasMany
+    public function jabatan_penilaian_penilais(): HasMany
     {
-        return $this->hasMany(Penilaian::class, 'jabatan_penilai', 'id');
+        return $this->hasMany(JenisPenilaian::class, 'jabatan_penilai', 'id');
     }
 }

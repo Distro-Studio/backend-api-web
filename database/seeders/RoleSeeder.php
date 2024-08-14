@@ -48,7 +48,7 @@ class RoleSeeder extends Seeder
         $roleSuperAdmin->givePermissionTo([
             'create diklat', 'view diklat', 'export diklat',
             'view pelaporanKaryawan', 'export pelaporanKaryawan',
-            'view penilaianKaryawan', 'export penilaianKaryawan',
+            'create penilaianKaryawan', 'view penilaianKaryawan', 'edit penilaianKaryawan', 'export penilaianKaryawan',
 
             'create penggajianKaryawan', 'edit penggajianKaryawan', 'view penggajianKaryawan', 'delete penggajianKaryawan', 'import penggajianKaryawan', 'export penggajianKaryawan',
             'create thrKaryawan', 'view thrKaryawan', 'export thrKaryawan',
