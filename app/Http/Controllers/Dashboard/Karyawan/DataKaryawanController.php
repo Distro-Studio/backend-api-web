@@ -988,7 +988,10 @@ class DataKaryawanController extends Controller
       ->get();
 
     if ($penilaian->isEmpty()) {
-      return response()->json(['message' => 'Penilaian tidak ditemukan untuk user ini.'], 404);
+      return response()->json([
+        'status' => Response::HTTP_OK,
+        'message' => 'Penilaian tidak ditemukan untuk user ini.'
+      ], 404);
     }
 
     // Format list penilaian
@@ -2006,8 +2009,8 @@ class DataKaryawanController extends Controller
       return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
     }
 
-    $dataCuti = DataKaryawan::all();
-    if ($dataCuti->isEmpty()) {
+    $dataKaryawan = DataKaryawan::all();
+    if ($dataKaryawan->isEmpty()) {
       // Kembalikan respons JSON ketika tabel kosong
       return response()->json(new WithoutDataResource(Response::HTTP_OK, 'Tidak ada data karyawan yang tersedia untuk diekspor.'), Response::HTTP_OK);
     }
@@ -2110,19 +2113,11 @@ class DataKaryawanController extends Controller
 
   public function downloadKaryawanTemplate()
   {
-    if (!Gate::allows('export presensiKaryawan')) {
-      return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
-    }
-
     try {
       return Excel::download(new TemplateKaryawanExport, 'template_import_karyawan.xls');
-    } catch (\Exception $e) {
-      return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya terjadi error. Message: ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
-    } catch (\Error $e) {
-      return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya terjadi error. Message: ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
+    } catch (\Throwable $e) {
+      return response()->json(new WithoutDataResource(Response::HTTP_INTERNAL_SERVER_ERROR, 'Maaf sepertinya terjadi error. Message: ' . $e->getMessage()), Response::HTTP_INTERNAL_SERVER_ERROR);
     }
-
-    return response()->json(new WithoutDataResource(Response::HTTP_OK, 'Template import presensi karyawan berhasil di download.'), Response::HTTP_OK);
   }
 
   private function calculateTrackRecordMasaKerja($tglMasuk, $tglKeluar)

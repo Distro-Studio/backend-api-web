@@ -128,7 +128,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
             // ! Riwayat Perubahan Karyawan ===========>
             Route::post('/riwayat-perubahan/get-riwayat-perubahan-karyawan', [DataRiwayatPerubahanController::class, 'index']);
-            Route::post('/riwayat-perubahan/verifikasi-data/{id}', [DataRiwayatPerubahanController::class, 'verifikasi_perubahan']);
+            Route::post('/riwayat-perubahan/verifikasi-data/{id}', [DataRiwayatPerubahanController::class, 'verifikasiPerubahan']);
         });
 
         Route::group(['prefix' => '/presensi'], function () {
@@ -147,6 +147,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
             // ! Jadwal ===========>
             Route::post('/get-data-jadwal', [DataJadwalController::class, 'index']);
             Route::post('/create-shift/{userId}', [DataJadwalController::class, 'createShiftByDate']);
+            Route::get('/download-template-jadwal', [DataJadwalController::class, 'downloadJadwalTemplate']);
             Route::get('/export', [DataJadwalController::class, 'exportJadwalKaryawan']);
             Route::post('/import', [DataJadwalController::class, 'importJadwalKaryawan']);
             Route::apiResource('/data-jadwal', DataJadwalController::class);

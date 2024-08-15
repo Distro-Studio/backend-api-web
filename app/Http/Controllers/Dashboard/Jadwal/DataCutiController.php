@@ -278,8 +278,8 @@ class DataCutiController extends Controller
         $data = $request->validated();
 
         // Mengonversi tanggal dari request menggunakan helper hanya untuk perhitungan durasi
-        $tglFrom = RandomHelper::convertToDateString($data['tgl_from']);
-        $tglTo = RandomHelper::convertToDateString($data['tgl_to']);
+        $tglFrom = Carbon::createFromFormat('d-m-Y', $data['tgl_from'])->format('Y-m-d');
+        $tglTo = Carbon::createFromFormat('d-m-Y', $data['tgl_to'])->format('Y-m-d');
         // dd($tglFrom, $tglTo);
 
         // Menghitung durasi cuti dalam hari
@@ -389,11 +389,11 @@ class DataCutiController extends Controller
         }
 
         // Mengonversi tanggal dari request menggunakan helper hanya untuk perhitungan durasi
-        $tglFrom = RandomHelper::convertToDateString($data['tgl_from']);
-        $tglTo = RandomHelper::convertToDateString($data['tgl_to']);
+        $tglFrom = Carbon::createFromFormat('d-m-Y', $data['tgl_from'])->format('Y-m-d');
+        $tglTo = Carbon::createFromFormat('d-m-Y', $data['tgl_to'])->format('Y-m-d');
 
         // Menghitung durasi cuti dalam hari
-        $durasi = Carbon::parse($tglFrom)->diffInDays(Carbon::parse($tglTo)) + 1;
+        $durasi = Carbon::parse($tglFrom)->diffInDays(Carbon::parse($tglTo));
 
         // Validasi durasi cuti terhadap kuota tipe cuti
         $tipeCuti = TipeCuti::find($data['tipe_cuti_id']);
@@ -421,6 +421,7 @@ class DataCutiController extends Controller
 
         // Menambahkan durasi ke data sebelum memperbarui
         $data['durasi'] = $durasi;
+        $data['status_cuti_id'] = 2;
 
         $dataCuti->update($data);
 

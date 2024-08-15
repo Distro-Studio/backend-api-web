@@ -13,6 +13,8 @@ class Jadwal extends Model
 
     protected $guarded = ['id'];
 
+    protected $table = 'jadwals';
+
     /**
      * Get all of the presensi for the Jadwal
      *

@@ -26,8 +26,8 @@ class JadwalImport implements ToModel, WithHeadingRow, WithValidation
     {
         return [
             'nama' => 'required|exists:users,nama',
-            'tanggal_mulai' => 'required|date',
-            'tanggal_selesai' => 'date',
+            'tanggal_mulai' => 'required|string',
+            'tanggal_selesai' => 'string',
             'shift' => 'required|exists:shifts,nama'
         ];
     }
@@ -38,8 +38,8 @@ class JadwalImport implements ToModel, WithHeadingRow, WithValidation
             'nama.required' => 'Silahkan masukkan nama karyawan terlebih dahulu.',
             'nama.exists' => 'Nama karyawan tersebut tidak valid.',
             'tanggal_mulai.required' => 'Tanggal mulai jadwal karyawan tidak diperbolehkan kosong.',
-            'tanggal_mulai.date' => 'Tanggal mulai jadwal karyawan wajib berisi tanggal.',
-            'tanggal_selesai.date' => 'Tanggal selesai jadwal karyawan wajib berisi tanggal.',
+            'tanggal_mulai.string' => 'Tanggal mulai jadwal karyawan wajib berisi tanggal.',
+            'tanggal_selesai.string' => 'Tanggal selesai jadwal karyawan wajib berisi tanggal.',
             'shift.required' => 'Silahkan masukkan shift jadwal karyawan terlebih dahulu.',
             'shift.exists' => 'Shift jadwal karyawan tersebut tidak valid.',
         ];

@@ -101,7 +101,7 @@ class RandomHelper
 	public static function convertSpecialDateFormat($dateString)
 	{
 		try {
-			$carbonDate = Carbon::createFromFormat('d/m/Y', $dateString)->format('Y-m-d');
+			$carbonDate = Carbon::createFromFormat('d-m-Y', $dateString)->format('Y-m-d');
 
 			return $carbonDate;
 		} catch (\Exception $e) {

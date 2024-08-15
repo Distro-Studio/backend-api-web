@@ -30,7 +30,7 @@ class UpdateCutiJadwalRequest extends FormRequest
             'tgl_from' => 'required|string',
             'tgl_to' => 'required|string',
             'catatan' => 'nullable|string',
-            'status_cuti_id' => 'required|integer|exists:status_cutis,id',
+            // 'status_cuti_id' => 'required|integer|exists:status_cutis,id',
         ];
     }
 

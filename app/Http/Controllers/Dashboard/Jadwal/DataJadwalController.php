@@ -183,10 +183,8 @@ class DataJadwalController extends Controller
         }
 
         if ($request->has('tgl_mulai') && $request->has('tgl_selesai')) {
-            $start_dateConvert = RandomHelper::convertToDateString($request->input('tgl_mulai'));
-            $end_dateConvert = RandomHelper::convertToDateString($request->input('tgl_selesai'));
-            $start_date = Carbon::parse($start_dateConvert);
-            $end_date = Carbon::parse($end_dateConvert);
+            $start_date = Carbon::createFromFormat('d-m-Y', $request->input('tgl_mulai'));
+            $end_date = Carbon::createFromFormat('d-m-Y', $request->input('tgl_selesai'));
 
             if ($end_date->diffInDays($start_date) > 28) {
                 return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Rentang tanggal yang diberikan tidak boleh melebihi 28 hari dari tanggal mulai.'), Response::HTTP_BAD_REQUEST);
@@ -253,7 +251,7 @@ class DataJadwalController extends Controller
         }
 
         // Jika jadwal tidak kosong, lanjutkan proses seperti biasa
-        $groupedSchedules = collect($dataJadwal->items())->groupBy('user_id');
+        $groupedSchedules = $limit == 0 ? $dataJadwal->groupBy('user_id') :  collect($dataJadwal->items())->groupBy('user_id');
 
         $result = [];
         foreach ($groupedSchedules as $user_id => $user_schedules) {
@@ -261,8 +259,14 @@ class DataJadwalController extends Controller
             $user_schedule_array = array_fill_keys($date_range, null);
 
             foreach ($user_schedules as $schedule) {
-                $current_date = Carbon::parse($schedule->tgl_mulai);
-                while ($current_date->lte(Carbon::parse($schedule->tgl_selesai))) {
+                try {
+                    $current_date = Carbon::createFromFormat('Y-m-d', $schedule->tgl_mulai);
+                    $end_date_for_schedule = Carbon::createFromFormat('Y-m-d', $schedule->tgl_selesai);
+                } catch (\Exception $e) {
+                    continue; // Skip this schedule if there's an issue with the date format
+                }
+
+                while ($current_date->lte($end_date_for_schedule)) {
                     $date = $current_date->format('Y-m-d');
                     if (in_array($date, $date_range)) {
                         $user_schedule_array[$date] = [
@@ -398,8 +402,8 @@ class DataJadwalController extends Controller
         $jadwals = [];
 
         // Konversi tanggal dari string menggunakan helper
-        $tanggalMulai = Carbon::parse(RandomHelper::convertToDateString($data['tgl_mulai']));
-        $tanggalSelesai = Carbon::parse(RandomHelper::convertToDateString($data['tgl_selesai']));
+        $tanggalMulai = Carbon::createFromFormat('d-m-Y', $data['tgl_mulai']);
+        $tanggalSelesai = Carbon::createFromFormat('d-m-Y', $data['tgl_selesai']);
         $today = Carbon::today();
 
         // Validasi tanggal mulai
@@ -456,8 +460,8 @@ class DataJadwalController extends Controller
                     // Create the new schedule
                     $jadwalArray = [
                         'user_id' => $userId,
-                        'tgl_mulai' => $currentTanggalMulai->toDateString(),
-                        'tgl_selesai' => $tglSelesai->toDateString(),
+                        'tgl_mulai' => $currentTanggalMulai->format('Y-m-d'),
+                        'tgl_selesai' => $tglSelesai->format('Y-m-d'),
                         'shift_id' => $data['shift_id'],
                     ];
 
@@ -486,7 +490,7 @@ class DataJadwalController extends Controller
 
         $data = $request->validated();
         $shiftId = $data['shift_id'] ?? null;
-        $tanggalMulai = Carbon::parse(RandomHelper::convertToDateString($data['tgl_mulai']));
+        $tanggalMulai = Carbon::createFromFormat('d-m-Y', $data['tgl_mulai']);
         $today = Carbon::now()->format('Y-m-d');
 
         // Validasi tanggal mulai
@@ -520,8 +524,8 @@ class DataJadwalController extends Controller
 
             if ($shiftId != 0) {
                 $shift = Shift::findOrFail($shiftId);
-                $jamFrom = Carbon::parse(RandomHelper::convertToTimeString($shift->jam_from));
-                $jamTo = Carbon::parse(RandomHelper::convertToTimeString($shift->jam_to));
+                $jamFrom = Carbon::parse($shift->jam_from);
+                $jamTo = Carbon::parse($shift->jam_to);
                 if ($jamTo->lessThan($jamFrom)) {
                     $tglSelesai->addDay();
                 }
@@ -554,17 +558,18 @@ class DataJadwalController extends Controller
 
         $user_schedule_array = [];
         foreach ($user->jadwals as $schedule) {
-            $tglMulai = RandomHelper::convertToDateString($schedule->tgl_mulai);
-            $tglSelesai = RandomHelper::convertToDateString($schedule->tgl_selesai);
+            $tglMulai = Carbon::createFromFormat('Y-m-d', $schedule->tgl_mulai)->format('d-m-Y');
+            $tglSelesai = Carbon::createFromFormat('Y-m-d', $schedule->tgl_selesai)->format('d-m-Y');
 
-            $current_date = Carbon::parse($tglMulai);
+            $current_date = Carbon::createFromFormat('d-m-Y', $tglMulai);
+            $end_date = Carbon::createFromFormat('d-m-Y', $tglSelesai);
             while ($current_date->lte(Carbon::parse($tglSelesai))) {
                 // $date = $current_date->format('Y-m-d');
                 $user_schedule_array[] = [
                     'id' => $schedule->id,
                     // 'tanggal' => $date,
-                    'tgl_mulai' => $schedule->tgl_mulai,
-                    'tgl_selesai' => $schedule->tgl_selesai,
+                    'tgl_mulai' => $tglMulai,
+                    'tgl_selesai' => $tglSelesai,
                     'shift' => $schedule->shifts,
                     'updated_at' => $schedule->updated_at
                 ];
@@ -603,7 +608,7 @@ class DataJadwalController extends Controller
 
         $data = $request->validated();
         $shiftId = $data['shift_id'] ?? null;
-        $tanggalMulai = Carbon::parse(RandomHelper::convertToDateString($data['tgl_mulai']))->format('Y-m-d');
+        $tanggalMulai = Carbon::createFromFormat('d-m-Y', $data['tgl_mulai'])->format('Y-m-d');
         $today = Carbon::today()->format('Y-m-d');
 
         if ($tanggalMulai == $today) {
@@ -643,7 +648,7 @@ class DataJadwalController extends Controller
                 //     }
                 // }
 
-                $tglSelesai = Carbon::parse($tanggalMulai); // Default to the same day
+                $tglSelesai = Carbon::parse($tanggalMulai)->format('Y-m-d'); // Default to the same day
 
                 if ($shiftId != 0) { // Skip validation if shift_id is 0
                     $shift = Shift::findOrFail($shiftId);
@@ -651,7 +656,7 @@ class DataJadwalController extends Controller
                     $jamTo = Carbon::parse(RandomHelper::convertToTimeString($shift->jam_to));
 
                     if ($jamTo->lessThanOrEqualTo($jamFrom)) {
-                        $tglSelesai->addDay();
+                        $tglSelesai = Carbon::parse($tanggalMulai)->format('Y-m-d');
                     }
                 }
 

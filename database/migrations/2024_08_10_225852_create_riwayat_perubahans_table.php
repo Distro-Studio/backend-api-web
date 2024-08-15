@@ -14,9 +14,11 @@ return new class extends Migration
         Schema::create('riwayat_perubahans', function (Blueprint $table) {
             $table->id();
             $table->foreignId('data_karyawan_id')->constrained('data_karyawans');
+            $table->enum('jenis_perubahan', ['Keluarga', 'Berkas', 'Personal']);
             $table->string('kolom');
             $table->string('original_data');
             $table->string('updated_data');
+            $table->text('original_ext')->nullable();
             $table->foreignId('status_perubahan_id')->constrained('status_perubahans'); // 1 = menunggu 2 = diverifikasi 3 = ditolak
             $table->foreignId('verifikator_1')->nullable()->constrained('users');
             $table->text('alasan')->nullable();
