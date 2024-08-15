@@ -28,6 +28,7 @@ use App\Http\Controllers\Dashboard\Pengaturan\Karyawan\UnitKerjaController;
 use App\Http\Controllers\Dashboard\Pengaturan\ManagemenWaktu\CutiController;
 use App\Http\Controllers\Dashboard\Pengaturan\ManagemenWaktu\HariLiburController;
 use App\Http\Controllers\Dashboard\Pengaturan\ManagemenWaktu\LokasiKantorController;
+use App\Http\Controllers\Dashboard\Pengaturan\ManagemenWaktu\NonShiftController;
 use App\Http\Controllers\Dashboard\Pengaturan\ManagemenWaktu\ShiftController;
 use App\Http\Controllers\Dashboard\PengumumanController;
 use App\Http\Controllers\Dashboard\Perusahaan\DiklatController;
@@ -69,6 +70,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/get-list-tipecuti', [CutiController::class, 'getAllTipeCuti']);
     Route::get('/get-list-harilibur', [HariLiburController::class, 'getAllHariLibur']);
     Route::get('/get-list-shift', [ShiftController::class, 'getAllShift']);
+    Route::get('/get-list-non-shift', [NonShiftController::class, 'getAllNonShift']);
     Route::get('/get-list-tipe-cuti', [CutiController::class, 'getAllTipeCuti']);
     Route::get('/get-list-pertanyaan', [PertanyaanController::class, 'getAllPertanyaan']);
 
@@ -90,12 +92,9 @@ Route::middleware(['auth:sanctum'])->group(function () {
         // TODO: aktifkan send email di create & transfer karyawan
         // TODO: ganti email di create & transfer karyawan
 
-        // ! Ubah export berdasarkan filter
-        // ! Buat fitur detail karyawan
-        // ! Schema & data time tanggal full string aja
+        // ! Rombak semua datetime format ke carbon
 
         // TODO: Ubah string acak untuk nama berkas server 'nama_file'
-        // TODO: Untuk verifikasi data karyawan, klik verif -> update ke data yang diverif
         Route::group(['prefix' => '/karyawan'], function () {
             // ! Data Karyawan ===========>
             Route::post('/get-data-karyawan', [DataKaryawanController::class, 'index']);
@@ -142,7 +141,6 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::get('/calculated', [DataPresensiController::class, 'calculatedPresensi']);
         });
 
-        // TODO: Jadwal bug limit != 10 || error semua data, karena tanggal parse ke indo
         Route::group(['prefix' => '/jadwal-karyawan'], function () {
             // ! Jadwal ===========>
             Route::post('/get-data-jadwal', [DataJadwalController::class, 'index']);
@@ -286,6 +284,10 @@ Route::middleware(['auth:sanctum'])->group(function () {
             // ! Shift ===========>
             Route::post('/shift/restore/{id}', [ShiftController::class, 'restore']);
             Route::apiResource('/shift', ShiftController::class);
+
+            // ! Non-Shift ===========>
+            // Route::post('/non-shift/restore/{id}', [NonShiftController::class, 'restore']);
+            Route::apiResource('/non-shift', NonShiftController::class);
 
             // ! Hari Libur ===========>
             Route::get('/hari-libur/nasional', [HariLiburController::class, 'getNasionalHariLibur']);

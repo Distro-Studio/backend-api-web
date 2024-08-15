@@ -8,17 +8,12 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Collection;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Gate;
-use Maatwebsite\Excel\Facades\Excel;
 use App\Http\Requests\StoreShiftRequest;
 use App\Http\Requests\UpdateShiftRequest;
-use App\Http\Requests\Excel_Import\ImportShiftRequest;
-use App\Exports\Pengaturan\Managemen_Waktu\ShiftExport;
-use App\Imports\Pengaturan\Managemen_Waktu\ShiftImport;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
 
 class ShiftController extends Controller
 {
-    /* ============================= For Dropdown ============================= */
     public function getAllShift()
     {
         if (!Gate::allows('view shift')) {
@@ -32,7 +27,6 @@ class ShiftController extends Controller
             'data' => $shift
         ], Response::HTTP_OK);
     }
-    /* ============================= For Dropdown ============================= */
 
     public function index(Request $request)
     {
@@ -41,25 +35,6 @@ class ShiftController extends Controller
         }
 
         $shift = Shift::withTrashed()->orderBy('created_at', 'desc');
-
-        // Filter
-        // if ($request->has('delete_data')) {
-        //     $softDeleteFilters = $request->delete_data;
-        //     $shift->when(in_array('dihapus', $softDeleteFilters) && !in_array('belum_dihapus', $softDeleteFilters), function ($query) {
-        //         return $query->onlyTrashed();
-        //     })->when(!in_array('dihapus', $softDeleteFilters) && in_array('belum_dihapus', $softDeleteFilters), function ($query) {
-        //         return $query->withoutTrashed();
-        //     });
-        // }
-
-        // Search
-        // if ($request->has('search')) {
-        //     $shift = $shift->where(function ($query) use ($request) {
-        //         $searchTerm = '%' . $request->search . '%';
-
-        //         $query->orWhere('nama', 'like', $searchTerm);
-        //     });
-        // }
 
         $dataShift = $shift->get();
         if ($dataShift->isEmpty()) {

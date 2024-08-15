@@ -46,8 +46,8 @@ class JadwalSeeder extends Seeder
                 }
 
                 // Format tanggal sesuai dengan format d/m/Y
-                $tglMulaiFormatted = $currentDate->format('d-m-Y');
-                $tglSelesaiFormatted = $tglSelesai->format('d-m-Y');
+                $tglMulaiFormatted = $currentDate->format('Y-m-d');
+                $tglSelesaiFormatted = $tglSelesai->format('Y-m-d');;
 
                 // Simpan jadwal
                 $jadwal = new Jadwal([

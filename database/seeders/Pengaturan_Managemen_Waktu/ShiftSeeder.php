@@ -16,20 +16,20 @@ class ShiftSeeder extends Seeder
   {
     Shift::create([
       'nama' => 'Pagi',
-      'jam_from' => '2024-08-07T07:00:12.000000Z',
-      'jam_to' => '2024-08-07T16:00:12.000000Z'
+      'jam_from' => '06:00:00',
+      'jam_to' => '16:00:00'
     ]);
 
     Shift::create([
       'nama' => 'Sore',
-      'jam_from' => '2024-08-07T16:00:12.000000Z',
-      'jam_to' => '2024-08-07T11:00:12.000000Z'
+      'jam_from' => '16:00:00',
+      'jam_to' => '23:00:00'
     ]);
 
     Shift::create([
       'nama' => 'Malam',
-      'jam_from' => '2024-08-07T11:00:12.000000Z',
-      'jam_to' => '2024-08-08T07:00:12.000000Z'
+      'jam_from' => '23:00:00',
+      'jam_to' => '06:00:00'
     ]);
   }
 }
