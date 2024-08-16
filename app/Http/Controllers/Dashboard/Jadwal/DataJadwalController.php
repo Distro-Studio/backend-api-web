@@ -308,6 +308,387 @@ class DataJadwalController extends Controller
         ], Response::HTTP_OK);
     }
 
+    // refactor gpt
+    // public function index(Request $request)
+    // {
+    //     if (!Gate::allows('view jadwalKaryawan')) {
+    //         return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+    //     }
+
+    //     // Per page
+    //     $limit = (int) $request->input('limit', 10); // Default per page is 10
+
+    //     // Base query
+    //     $jadwal = Jadwal::query();
+
+    //     // Ambil semua filter dari request body
+    //     $filters = $request->all();
+
+    //     // Helper function to apply filter by ID
+    //     $applyFilterById = function ($relation, $column, $value) use ($jadwal) {
+    //         if (is_array($value)) {
+    //             $jadwal->whereHas($relation, function ($query) use ($column, $value) {
+    //                 $query->whereIn($column, $value);
+    //             });
+    //         } else {
+    //             $jadwal->whereHas($relation, function ($query) use ($column, $value) {
+    //                 $query->where($column, $value);
+    //             });
+    //         }
+    //     };
+
+    //     // Apply filters
+    //     $filtersMap = [
+    //         'unit_kerja' => ['relation' => 'users.data_karyawans.unit_kerjas', 'column' => 'id'],
+    //         'jabatan' => ['relation' => 'users.data_karyawans.jabatans', 'column' => 'id'],
+    //         'status_karyawan' => ['relation' => 'users.data_karyawans.status_karyawans', 'column' => 'id'],
+    //         'status_aktif' => ['relation' => 'users', 'column' => 'status_aktif'],
+    //         'agama' => ['relation' => 'users.data_karyawans.kategori_agamas', 'column' => 'id'],
+    //         'pendidikan_terakhir' => ['relation' => 'users.data_karyawans.kategori_pendidikans', 'column' => 'id'],
+    //         'jenis_karyawan' => ['relation' => 'users.data_karyawans', 'column' => 'jenis_karyawan']
+    //     ];
+
+    //     foreach ($filtersMap as $filterKey => $config) {
+    //         if (isset($filters[$filterKey])) {
+    //             $applyFilterById($config['relation'], $config['column'], $filters[$filterKey]);
+    //         }
+    //     }
+
+    //     // Filter masa kerja
+    //     if (isset($filters['masa_kerja'])) {
+    //         $masaKerja = (int) $filters['masa_kerja'] * 12;
+    //         $jadwal->whereHas('users.data_karyawans', function ($query) use ($masaKerja) {
+    //             $query->whereRaw('TIMESTAMPDIFF(MONTH, tgl_masuk, COALESCE(tgl_keluar, NOW())) <= ?', [$masaKerja]);
+    //         });
+    //     }
+
+    //     // Filter tgl_masuk
+    //     if (isset($filters['tgl_masuk'])) {
+    //         $convertedDate = RandomHelper::convertToDateString($filters['tgl_masuk']);
+    //         $jadwal->whereHas('users.data_karyawans', function ($query) use ($convertedDate) {
+    //             $query->where('tgl_masuk', $convertedDate);
+    //         });
+    //     }
+
+    //     // Filter jenis_kelamin
+    //     if (isset($filters['jenis_kelamin'])) {
+    //         $jenisKelamin = (array) $filters['jenis_kelamin'];
+    //         $jadwal->whereHas('users.data_karyawans', function ($query) use ($jenisKelamin) {
+    //             $query->whereIn('jenis_kelamin', $jenisKelamin);
+    //         });
+    //     }
+
+    //     // Search
+    //     if (isset($filters['search'])) {
+    //         $searchTerm = '%' . $filters['search'] . '%';
+    //         $jadwal->where(function ($query) use ($searchTerm) {
+    //             $query->whereHas('users', function ($query) use ($searchTerm) {
+    //                 $query->where('nama', 'like', $searchTerm);
+    //             })->orWhereHas('users.data_karyawans', function ($query) use ($searchTerm) {
+    //                 $query->where('nik', 'like', $searchTerm);
+    //             });
+    //         });
+    //     }
+
+    //     // Tanggal filter
+    //     if ($request->has('tgl_mulai') && $request->has('tgl_selesai')) {
+    //         $start_date = Carbon::createFromFormat('d-m-Y', $request->input('tgl_mulai'));
+    //         $end_date = Carbon::createFromFormat('d-m-Y', $request->input('tgl_selesai'));
+
+    //         if ($end_date->diffInDays($start_date) > 28) {
+    //             return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Rentang tanggal yang diberikan tidak boleh melebihi 28 hari dari tanggal mulai.'), Response::HTTP_BAD_REQUEST);
+    //         }
+
+    //         $date_range = $this->generateDateRange($start_date, $end_date);
+    //     } else {
+    //         return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Tanggal jadwal mulai dan selesai tidak boleh kosong.'), Response::HTTP_BAD_REQUEST);
+    //     }
+
+    //     // Paginate
+    //     $dataJadwal = $limit == 0 ? $jadwal->get() : $jadwal->paginate($limit);
+
+    //     if ($dataJadwal->isEmpty()) {
+    //         $users = User::limit($limit)->where('nama', '!=', 'Super Admin')->get();
+    //         $result = $users->map(function ($user) use ($date_range) {
+    //             return [
+    //                 'user' => [
+    //                     'id' => $user->id,
+    //                     'nama' => $user->nama,
+    //                     'email_verified_at' => $user->email_verified_at,
+    //                     'data_karyawan_id' => $user->data_karyawan_id,
+    //                     'foto_profil' => $user->foto_profil,
+    //                     'data_completion_step' => $user->data_completion_step,
+    //                     'status_aktif' => $user->status_aktif,
+    //                     'created_at' => $user->created_at,
+    //                     'updated_at' => $user->updated_at
+    //                 ],
+    //                 'unit_kerja' => optional($user->data_karyawans)->unit_kerjas,
+    //                 'list_jadwal' => array_fill_keys($date_range, null),
+    //             ];
+    //         });
+    //         return response()->json([
+    //             'status' => Response::HTTP_OK,
+    //             'message' => 'Data jadwal karyawan kosong, menampilkan data user tanpa jadwal.',
+    //             'data' => $result,
+    //         ], Response::HTTP_OK);
+    //     }
+
+    //     // Group schedules by user
+    //     $groupedSchedules = $limit == 0 ? $dataJadwal->groupBy('user_id') : collect($dataJadwal->items())->groupBy('user_id');
+
+    //     $result = [];
+    //     foreach ($groupedSchedules as $user_id => $user_schedules) {
+    //         $user = $user_schedules->first()->users;
+    //         $user_schedule_array = array_fill_keys($date_range, null);
+
+    //         foreach ($user_schedules as $schedule) {
+    //             $current_date = Carbon::createFromFormat('Y-m-d', $schedule->tgl_mulai);
+    //             $end_date_for_schedule = Carbon::createFromFormat('Y-m-d', $schedule->tgl_selesai);
+
+    //             while ($current_date->lte($end_date_for_schedule)) {
+    //                 $date = $current_date->format('Y-m-d');
+    //                 if (in_array($date, $date_range)) {
+    //                     $user_schedule_array[$date] = [
+    //                         'id' => $schedule->id,
+    //                         'tgl_mulai' => $schedule->tgl_mulai,
+    //                         'tgl_selesai' => $schedule->tgl_selesai,
+    //                         'shift' => $schedule->shifts,
+    //                         'updated_at' => $schedule->updated_at
+    //                     ];
+    //                 }
+    //                 $current_date->addDay();
+    //             }
+    //         }
+
+    //         $result[] = [
+    //             'user' => [
+    //                 'id' => $user->id,
+    //                 'nama' => $user->nama,
+    //                 'email_verified_at' => $user->email_verified_at,
+    //                 'data_karyawan_id' => $user->data_karyawan_id,
+    //                 'foto_profil' => $user->foto_profil,
+    //                 'data_completion_step' => $user->data_completion_step,
+    //                 'status_aktif' => $user->status_aktif,
+    //                 'created_at' => $user->created_at,
+    //                 'updated_at' => $user->updated_at
+    //             ],
+    //             'unit_kerja' => optional($user->data_karyawans)->unit_kerjas,
+    //             'list_jadwal' => array_values($user_schedule_array),
+    //         ];
+    //     }
+
+    //     return response()->json([
+    //         'status' => Response::HTTP_OK,
+    //         'message' => 'Data jadwal karyawan berhasil ditampilkan.',
+    //         'data' => $result,
+    //         'pagination' => $limit > 0 ? [
+    //             'links' => [
+    //                 'first' => $dataJadwal->url(1),
+    //                 'last' => $dataJadwal->url($dataJadwal->lastPage()),
+    //                 'prev' => $dataJadwal->previousPageUrl(),
+    //                 'next' => $dataJadwal->nextPageUrl(),
+    //             ],
+    //             'meta' => [
+    //                 'current_page' => $dataJadwal->currentPage(),
+    //                 'last_page' => $dataJadwal->lastPage(),
+    //                 'per_page' => $dataJadwal->perPage(),
+    //                 'total' => $dataJadwal->total(),
+    //             ]
+    //         ] : null
+    //     ], Response::HTTP_OK);
+    // }
+
+    // public function index(Request $request)
+    // {
+    //     if (!Gate::allows('view jadwalKaryawan')) {
+    //         return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+    //     }
+
+    //     // Per page
+    //     $limit = $request->input('limit', 10); // Default per page is 10
+
+    //     $jadwal = Jadwal::query();
+
+    //     // Ambil semua filter dari request body
+    //     $filters = $request->all();
+
+    //     // Filter
+    //     if (isset($filters['nama_unit'])) {
+    //         $namaUnitKerja = $filters['nama_unit'];
+    //         $jadwal->whereHas('users.data_karyawans.unit_kerjas', function ($query) use ($namaUnitKerja) {
+    //             if (is_array($namaUnitKerja)) {
+    //                 $query->whereIn('id', $namaUnitKerja);
+    //             } else {
+    //                 $query->where('id', '=', $namaUnitKerja);
+    //             }
+    //         });
+    //     }
+
+    //     if (isset($filters['status_karyawan'])) {
+    //         $statusKaryawan = $filters['status_karyawan'];
+    //         $jadwal->whereHas('users.data_karyawans.status_karyawans', function ($query) use ($statusKaryawan) {
+    //             if (is_array($statusKaryawan)) {
+    //                 $query->whereIn('id', $statusKaryawan);
+    //             } else {
+    //                 $query->where('id', '=', $statusKaryawan);
+    //             }
+    //         });
+    //     }
+
+    //     if (isset($filters['masa_kerja'])) {
+    //         $masaKerja = $filters['masa_kerja'];
+    //         if (is_array($masaKerja)) {
+    //             $jadwal->whereHas('users.data_karyawans', function ($query) use ($masaKerja) {
+    //                 foreach ($masaKerja as $masa) {
+    //                     $query->orWhereRaw('TIMESTAMPDIFF(YEAR, tgl_masuk, COALESCE(tgl_keluar, NOW())) = ?', [$masa]);
+    //                 }
+    //             });
+    //         } else {
+    //             $jadwal->whereHas('users.data_karyawans', function ($query) use ($masaKerja) {
+    //                 $query->whereRaw('TIMESTAMPDIFF(YEAR, tgl_masuk, COALESCE(tgl_keluar, NOW())) = ?', [$masaKerja]);
+    //             });
+    //         }
+    //     }
+
+    //     if (isset($filters['status_aktif'])) {
+    //         $statusAktif = $filters['status_aktif'];
+    //         $jadwal->whereHas('users', function ($query) use ($statusAktif) {
+    //             if (is_array($statusAktif)) {
+    //                 $query->whereIn('status_aktif', $statusAktif);
+    //             } else {
+    //                 $query->where('status_aktif', '=', $statusAktif);
+    //             }
+    //         });
+    //     }
+
+    //     if (isset($filters['tgl_masuk'])) {
+    //         $tglMasuk = $filters['tgl_masuk'];
+    //         if (is_array($tglMasuk)) {
+    //             $convertedDates = array_map([RandomHelper::class, 'convertToDateString'], $tglMasuk);
+    //             $jadwal->whereHas('users.data_karyawans', function ($query) use ($convertedDates) {
+    //                 $query->whereIn('tgl_masuk', $convertedDates);
+    //             });
+    //         } else {
+    //             $convertedDate = RandomHelper::convertToDateString($tglMasuk);
+    //             $jadwal->whereHas('users.data_karyawans', function ($query) use ($convertedDate) {
+    //                 $query->where('tgl_masuk', $convertedDate);
+    //             });
+    //         }
+    //     }
+
+    //     // Search
+    //     if (isset($filters['search'])) {
+    //         $searchTerm = '%' . $filters['search'] . '%';
+    //         $jadwal->where(function ($query) use ($searchTerm) {
+    //             $query->whereHas('users', function ($query) use ($searchTerm) {
+    //                 $query->where('nama', 'like', $searchTerm);
+    //             })->orWhereHas('users.data_karyawans', function ($query) use ($searchTerm) {
+    //                 $query->where('nik', 'like', $searchTerm);
+    //             });
+    //         });
+    //     }
+
+    //     if ($request->has('tgl_mulai') && $request->has('tgl_selesai')) {
+    //         $start_date = Carbon::parse($request->input('tgl_mulai'));
+    //         $end_date = Carbon::parse($request->input('tgl_selesai'));
+
+    //         if ($end_date->diffInDays($start_date) > 28) {
+    //             return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Rentang tanggal yang diberikan tidak boleh melebihi 28 hari dari tanggal mulai.'), Response::HTTP_BAD_REQUEST);
+    //         }
+
+    //         $date_range = $this->generateDateRange($start_date, $end_date);
+    //     } else {
+    //         return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Tanggal jadwal mulai dan selesai tidak boleh kosong.'), Response::HTTP_BAD_REQUEST);
+    //     }
+
+    //     // Ambil semua data jadwal terlebih dahulu
+    //     $allSchedules = Jadwal::with(['users', 'shifts'])->get()->groupBy('user_id');
+
+    //     // Paginate
+    //     if ($limit == 0) {
+    //         $dataJadwal = $jadwal->get();
+    //         $paginationData = null;
+    //     } else {
+    //         // Pastikan limit adalah integer
+    //         $limit = is_numeric($limit) ? (int)$limit : 10;
+    //         $dataJadwal = $jadwal->paginate($limit);
+
+    //         $paginationData = [
+    //             'links' => [
+    //                 'first' => $dataJadwal->url(1),
+    //                 'last' => $dataJadwal->url($dataJadwal->lastPage()),
+    //                 'prev' => $dataJadwal->previousPageUrl(),
+    //                 'next' => $dataJadwal->nextPageUrl(),
+    //             ],
+    //             'meta' => [
+    //                 'current_page' => $dataJadwal->currentPage(),
+    //                 'last_page' => $dataJadwal->lastPage(),
+    //                 'per_page' => $dataJadwal->perPage(),
+    //                 'total' => $dataJadwal->total(),
+    //             ]
+    //         ];
+    //     }
+
+    //     if ($dataJadwal->isEmpty()) {
+    //         return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data jadwal karyawan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+    //     }
+
+    //     // Format data untuk output
+    //     if ($limit == 0) {
+    //         $groupedSchedules = $dataJadwal->groupBy('user_id');
+    //     } else {
+    //         $groupedSchedules = collect($dataJadwal->items())->groupBy('user_id');
+    //     }
+    //     $result = [];
+    //     foreach ($groupedSchedules as $user_id => $user_schedules) {
+    //         $user = $user_schedules->first()->users;
+    //         $user_schedule_array = array_fill_keys($date_range, null);
+
+    //         if (isset($allSchedules[$user_id])) {
+    //             foreach ($allSchedules[$user_id] as $schedule) {
+    //                 $current_date = Carbon::parse($schedule->tgl_mulai);
+    //                 while ($current_date->lte(Carbon::parse($schedule->tgl_selesai))) {
+    //                     $date = $current_date->format('Y-m-d');
+    //                     if (in_array($date, $date_range)) {
+    //                         $user_schedule_array[$date] = [
+    //                             'id' => $schedule->shifts->id,
+    //                             'tanggal' => $date,
+    //                             'nama_shift' => $schedule->shifts->nama,
+    //                             'jam_from' => $schedule->shifts->jam_from,
+    //                             'jam_to' => $schedule->shifts->jam_to,
+    //                         ];
+    //                     }
+    //                     $current_date->addDay();
+    //                 }
+    //             }
+    //         }
+
+    //         $result[] = [
+    //             'id' => $schedule->id,
+    //             'user' => [
+    //                 'id' => $user->id,
+    //                 'nama' => $user->nama,
+    //                 'email_verified_at' => $user->email_verified_at,
+    //                 'data_karyawan_id' => $user->data_karyawan_id,
+    //                 'foto_profil' => $user->foto_profil,
+    //                 'data_completion_step' => $user->data_completion_step,
+    //                 'status_aktif' => $user->status_aktif,
+    //                 'created_at' => $user->created_at,
+    //                 'updated_at' => $user->updated_at
+    //             ],
+    //             'unit_kerja' => optional($user->data_karyawans)->unit_kerjas,
+    //             'list_jadwal' => array_values($user_schedule_array),
+    //         ];
+    //     }
+
+    //     return response()->json([
+    //         'status' => Response::HTTP_OK,
+    //         'message' => 'Data jadwal karyawan berhasil ditampilkan.',
+    //         'data' => $result,
+    //         'pagination' => $paginationData
+    //     ], Response::HTTP_OK);
+    // }
+
     // new updates -> validasi dari jam shift
     // public function store(StoreJadwalKaryawanRequest $request)
     // {

@@ -242,11 +242,7 @@ class DataKaryawanController extends Controller
       ->first();
 
     if (!$presensiHariIni) {
-      return response()->json([
-        'status' => Response::HTTP_OK,
-        'message' => 'Data presensi karyawan tidak ditemukan.',
-        'data' => []
-      ], Response::HTTP_OK);
+      return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data presensi karyawan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
     }
 
     $fotoMasukBerkas = Berkas::where('id', $presensiHariIni->foto_masuk)->first();
@@ -541,11 +537,7 @@ class DataKaryawanController extends Controller
       ->get();
 
     if ($rekamJejakList->isEmpty() && $dataPerubahanList->isEmpty()) {
-      return response()->json([
-        'status' => Response::HTTP_OK,
-        'message' => 'Data rekam jejak karyawan tidak ditemukan.',
-        'data' => []
-      ], Response::HTTP_OK);
+      return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data rekam jejak karyawan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
     }
 
     // Format data rekam jejak kategori 2 dan 3
@@ -653,11 +645,7 @@ class DataKaryawanController extends Controller
       ->get();
 
     if ($keluarga->isEmpty()) {
-      return response()->json([
-        'status' => Response::HTTP_OK,
-        'message' => 'Data keluarga karyawan tidak ditemukan.',
-        'data' => []
-      ], Response::HTTP_OK);
+      return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data keluarga karyawan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
     }
 
     // Ambil data karyawan dan user dari data keluarga
@@ -713,11 +701,7 @@ class DataKaryawanController extends Controller
     })->get();
 
     if ($berkas->isEmpty()) {
-      return response()->json([
-        'status' => Response::HTTP_OK,
-        'message' => 'Data dokumen karyawan tidak ditemukan.',
-        'data' => []
-      ], Response::HTTP_OK);
+      return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data dokumen karyawan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
     }
 
     // Ambil data user dari berkas yang pertama
@@ -834,11 +818,7 @@ class DataKaryawanController extends Controller
     // Ambil semua data cuti yang dimiliki karyawan tersebut
     $dataCuti = Cuti::where('user_id', $karyawan->users->id)->get();
     if ($dataCuti->isEmpty()) {
-      return response()->json([
-        'status' => Response::HTTP_OK,
-        'message' => 'Data cuti karyawan tidak ditemukan.',
-        'data' => []
-      ], Response::HTTP_OK);
+      return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data cuti karyawan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
     }
 
     // Format list cuti
@@ -902,11 +882,7 @@ class DataKaryawanController extends Controller
       ->get();
 
     if ($tukarJadwal->isEmpty()) {
-      return response()->json([
-        'status' => Response::HTTP_OK,
-        'message' => 'Data tukar jadwal karyawan tidak ditemukan.',
-        'data' => []
-      ], Response::HTTP_OK);
+      return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data tukar jadwal karyawan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
     }
 
     // Format data tukar jadwal
@@ -992,11 +968,7 @@ class DataKaryawanController extends Controller
     })->get();
 
     if ($dataLembur->isEmpty()) {
-      return response()->json([
-        'status' => Response::HTTP_OK,
-        'message' => 'Data lembur karyawan tidak ditemukan.',
-        'data' => []
-      ], Response::HTTP_OK);
+      return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data lembur karyawan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
     }
 
     // Format data lembur
@@ -1057,11 +1029,7 @@ class DataKaryawanController extends Controller
     })->with('data_karyawans.jabatans')->first();
 
     if (!$userDinilai) {
-      return response()->json([
-        'status' => Response::HTTP_OK,
-        'message' => 'Data penilaian karyawan tidak ditemukan.',
-        'data' => []
-      ], Response::HTTP_OK);
+      return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data penilaian karyawan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
     }
 
     // Ambil penilaian terkait berdasarkan user_dinilai

@@ -120,12 +120,12 @@ class DatabaseSeeder extends Seeder
 
       // /* ==== Jadwals ==== */
       // JadwalSeeder::class,
-      LemburSeeder::class,
-      CutiJadwalSeeder::class,
-      TukarJadwalSeeder::class,
+      // LemburSeeder::class,
+      // CutiJadwalSeeder::class,
+      // TukarJadwalSeeder::class,
 
       // /* ==== Presensi ==== */
-      PresensiSeeder::class,
+      // PresensiSeeder::class,
 
       // /* ==== Keuangan ==== */
       // TanggalGajiSeeder::class,

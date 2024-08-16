@@ -433,7 +433,7 @@ class DataPresensiController extends Controller
 
         return response()->json([
             'status' => Response::HTTP_OK,
-            'message' => "Detail data presensi karyawan '{$presensi->users->nama}' berhasil ditampilkan.",
+            'message' => "Detail list presensi karyawan '{$presensi->users->nama}' berhasil ditampilkan.",
             'data' => $formattedData,
             'pagination' => $paginationData
         ], Response::HTTP_OK);
