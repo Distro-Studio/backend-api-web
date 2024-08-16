@@ -27,6 +27,7 @@ class JadwalPenggajianController extends Controller
         $jadwalGajiDetail = [
             'id' => $jadwalGaji->id,
             'tgl_mulai' => $jadwalGaji->tgl_mulai,
+            'update_at' => $jadwalGaji->updated_at
         ];
 
         return response()->json([

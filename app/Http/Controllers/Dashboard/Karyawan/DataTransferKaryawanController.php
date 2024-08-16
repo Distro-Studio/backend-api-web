@@ -313,7 +313,6 @@ class DataTransferKaryawanController extends Controller
                 $data['jabatan_asal'] = $user->data_karyawans->jabatans->id ?? $data['jabatan_asal'];
                 $data['kelompok_gaji_asal'] = $user->data_karyawans->kelompok_gajis->id ?? $data['kelompok_gaji_asal'];
                 $data['role_asal'] = $user->roles->first()->id ?? $data['role_asal'];
-                // dd($data['role_asal']);
 
                 if (is_null($data['unit_kerja_asal']) || is_null($data['jabatan_asal'])) {
                     throw new Exception('Unit kerja atau jabatan asal tidak ditemukan untuk pengguna ini.');

@@ -2,9 +2,7 @@
 
 namespace App\Http\Controllers\Dashboard\Pengaturan\ManagemenWaktu;
 
-use App\Models\Cuti;
 use App\Models\TipeCuti;
-use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Collection;
 use App\Http\Controllers\Controller;
@@ -31,7 +29,7 @@ class CutiController extends Controller
     }
     /* ============================= For Dropdown ============================= */
 
-    public function index(Request $request)
+    public function index()
     {
         if (!Gate::allows('view cuti')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
