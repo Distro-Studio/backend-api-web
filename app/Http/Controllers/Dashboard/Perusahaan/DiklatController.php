@@ -47,6 +47,17 @@ class DiklatController extends Controller
             }
         }
 
+        if (isset($filters['status_diklat'])) {
+            $statusDiklat = $filters['status_diklat'];
+            $diklat->whereHas('status_diklats', function ($query) use ($statusDiklat) {
+                if (is_array($statusDiklat)) {
+                    $query->whereIn('id', $statusDiklat);
+                } else {
+                    $query->where('id', '=', $statusDiklat);
+                }
+            });
+        }
+
         // Search
         if ($request->has('search')) {
             $searchTerm = '%' . $request->input('search') . '%';

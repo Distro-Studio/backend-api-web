@@ -30,7 +30,7 @@ class TipeCutiSeeder extends Seeder
             ],
             [
                 'nama' => 'Cuti Sakit',
-                'kuota' => 0, // Kuota tidak terbatas atau khusus
+                'kuota' => 30,
                 'is_need_requirement' => true,
                 'keterangan' => 'Cuti membutuhkan surat dokter',
                 'cuti_administratif' => false

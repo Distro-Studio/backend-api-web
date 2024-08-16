@@ -340,33 +340,23 @@ class PenilaianController extends Controller
             }
         }
 
-        // Ambil user_dinilai dan user_penilai
-        // $userPenilai = User::find($data['user_penilai']);
         $userDinilai = User::find($data['user_dinilai']);
         if (!$userDinilai) {
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Karyawan dinilai tidak ditemukan.'), Response::HTTP_NOT_FOUND);
         }
 
-        // Konversi pertanyaan_jawaban ke format JSON jika belum
-        $userPenilai = auth()->user()->id;
-
-        // Konversi pertanyaan_jawaban ke format JSON jika belum
-        $pertanyaanJawaban = json_encode($data['pertanyaan_jawaban']);
-
-        // Simpan penilaian
         $penilaian = Penilaian::create([
             'user_dinilai' => $userDinilai->id,
-            'user_penilai' => $userPenilai,
-            'jenis_penilaian_id' => $jenisPenilaianId,
-            'pertanyaan_jawaban' => $pertanyaanJawaban,
-            'total_pertanyaan' => ($data['pertanyaan_jawaban']),
-            'rata_rata' => ($data['pertanyaan_jawaban']),
+            'user_penilai' => auth()->user()->id,
+            'jenis_penilaian_id' => $data['jenis_penilaian_id'],
+            'pertanyaan_jawaban' => json_encode($data['pertanyaan_jawaban']),
+            'total_pertanyaan' => $data['total_pertanyaan'],
+            'rata_rata' => $data['rata_rata'],
         ]);
 
         // Kirim notifikasi kepada user yang dinilai
         $this->createNotifikasiPenilaian($penilaian);
 
-        // Response dengan data penilaian yang baru saja disimpan
         return response()->json([
             'status' => Response::HTTP_CREATED,
             'message' => "Penilaian '{$jenisPenilaian->nama}' berhasil disimpan pada karyawan '{$userDinilai->nama}'.",
@@ -432,7 +422,7 @@ class PenilaianController extends Controller
         $userDinilai = $penilaian->user_dinilais;
 
         // Siapkan pesan notifikasi
-        $message = "Penilaian untuk jenis {$penilaian->jenis_penilaians->nama} telah selesai dilakukan. Silakan cek detail penilaian Anda.";
+        $message = "Anda memiliki penilaian {$penilaian->jenis_penilaians->nama}, Silakan cek detail penilaian Anda.";
 
         // Buat notifikasi untuk user yang dinilai
         Notifikasi::create([

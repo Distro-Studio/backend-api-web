@@ -60,15 +60,18 @@ class PengumumanController extends Controller
         }
 
         try {
+            // Konversi tgl_berakhir ke format Y-m-d
+            $tanggalBerakhir = Carbon::parse($request->tgl_berakhir)->format('Y-m-d');
+
             $pengumuman = Pengumuman::create([
                 'judul' => $request->judul,
                 'konten' => $request->konten,
-                'tgl_berakhir' => $request->tgl_berakhir,
+                'tgl_berakhir' => $tanggalBerakhir,
             ]);
 
             return response()->json([
                 'status' => Response::HTTP_OK,
-                'message' => "Pengumuman berhasil '{$pengumuman->judul}' dibuat.",
+                'message' => "Pengumuman '{$pengumuman->judul}' berhasil dibuat.",
                 'data' => $pengumuman
             ], Response::HTTP_OK);
         } catch (\Exception $e) {

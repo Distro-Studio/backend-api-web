@@ -205,7 +205,7 @@ class PenggajianController extends Controller
         $awalBulan = Carbon::now()->startOfMonth();
 
         if (Carbon::now()->lessThan($awalBulan) || Carbon::now()->greaterThan($tgl_mulai)) {
-            return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Tanggal penggajian hanya dapat dilakukan mulai tanggal 1 hingga tanggal '{$tgl_mulai->format('Y-m-d')}'."), Response::HTTP_BAD_REQUEST);
+            return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Tanggal penggajian hanya dapat dilakukan mulai tanggal 1 hingga tanggal '{$tgl_mulai->format('d-m-Y')}'."), Response::HTTP_BAD_REQUEST);
         }
 
         // Validasi untuk memastikan penggajian belum dilakukan pada periode ini
@@ -217,6 +217,15 @@ class PenggajianController extends Controller
         if ($existingRiwayat) {
             return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Penggajian sudah dilakukan pada {$existingRiwayat->created_at}."), Response::HTTP_BAD_REQUEST);
         }
+
+        // Cek apakah THR sudah ada untuk bulan dan tahun ini
+        $thrExists = DB::table('run_thrs')
+            ->whereMonth('tgl_run_thr', $currentMonth)
+            ->whereYear('tgl_run_thr', $currentYear)
+            ->exists();
+
+        // Tentukan nilai jenis_riwayat
+        $jenisRiwayat = $thrExists ? 0 : 1; // 0 = thr, 1 = tanpa_thr
 
         // Ambil nilai status dari tabel status_gajis
         $statusBelumDipublikasi = DB::table('status_gajis')->where('label', 'Belum Dipublikasi')->value('id');
@@ -234,6 +243,7 @@ class PenggajianController extends Controller
                 'periode' => $periode,
                 'karyawan_verifikasi' => $verifikasiKaryawan,
                 'status_gaji_id' => $status_riwayat_gaji,
+                'jenis_riwayat' => $jenisRiwayat,
             ]);
 
             // Dispatch the job to handle the calculation in the background

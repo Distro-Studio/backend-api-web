@@ -40,8 +40,8 @@ class DataTukarJadwalController extends Controller
         // Ambil range tanggal untuk jadwal
         $start_date = $jadwal->min('tgl_mulai');
         $end_date = $jadwal->max('tgl_selesai');
-        // $start_date = Carbon::parse(RandomHelper::convertToDateString($jadwal->min('tgl_mulai')));
-        // $end_date = Carbon::parse(RandomHelper::convertToDateString($jadwal->max('tgl_selesai')));
+        // $start_date = Carbon::parse($jadwal->min('tgl_mulai'))->format('Y-m-d');
+        // $end_date = Carbon::parse($jadwal->max('tgl_selesai'))->format('Y-m-d');
         $date_range = $this->generateDateRange($start_date, $end_date);
 
         $user_schedule_array = $this->formatSchedules($jadwal, $date_range);
@@ -108,8 +108,11 @@ class DataTukarJadwalController extends Controller
         $unitKerjaId = $jadwal->users->data_karyawans->unit_kerjas->id;
 
         // Gunakan helper untuk memastikan tanggal dikonversi dari format d/m/Y
-        $tglMulai = Carbon::parse($jadwal->tgl_mulai)->format('Y-m-d');
-        $tglSelesai = Carbon::parse($jadwal->tgl_selesai)->format('Y-m-d');
+        // $tglMulai = Carbon::parse($jadwal->tgl_mulai)->format('Y-m-d');
+        // $tglSelesai = Carbon::parse($jadwal->tgl_selesai)->format('Y-m-d');
+
+        $tglMulai = $jadwal->tgl_mulai;
+        $tglSelesai = $jadwal->tgl_selesai;
 
         $users = User::whereHas('jadwals', function ($query) use ($jadwal, $tglMulai, $tglSelesai) {
             $query->where('shift_id', '!=', $jadwal->shift_id)
@@ -163,8 +166,11 @@ class DataTukarJadwalController extends Controller
         }
 
         // Ambil range tanggal untuk jadwal
-        $start_date = Carbon::parse(RandomHelper::convertToDateString($jadwal->min('tgl_mulai')));
-        $end_date = Carbon::parse(RandomHelper::convertToDateString($jadwal->max('tgl_selesai')));
+        // $start_date = Carbon::parse(RandomHelper::convertToDateString($jadwal->min('tgl_mulai')));
+        // $end_date = Carbon::parse(RandomHelper::convertToDateString($jadwal->max('tgl_selesai')));
+        // $date_range = $this->generateDateRange($start_date, $end_date);
+        $start_date = $jadwal->min('tgl_mulai');
+        $end_date = $jadwal->max('tgl_selesai');
         $date_range = $this->generateDateRange($start_date, $end_date);
 
         $user_schedule_array = $this->formatSchedules($jadwal, $date_range);
@@ -776,7 +782,7 @@ class DataTukarJadwalController extends Controller
             'message' => $message,
             'is_read' => false,
         ]);
-        
+
         $konversiNotif_tgl_mulai_ajuan = Carbon::parse($jadwalDitukar->tgl_mulai)->locale('id')->isoFormat('D MMMM YYYY');
         $messageDitukar = "Jadwal Anda berhasil ditukar dengan karyawan {$userPengajuan->nama} pada tanggal {$konversiNotif_tgl_mulai_ajuan}.";
         // Buat notifikasi untuk user_ditukar

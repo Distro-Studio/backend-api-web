@@ -5,9 +5,11 @@ namespace App\Http\Controllers\Dashboard\Jadwal;
 use Carbon\Carbon;
 use App\Models\Cuti;
 use App\Models\TipeCuti;
+use App\Models\Notifikasi;
 use Illuminate\Http\Request;
 use App\Helpers\RandomHelper;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
@@ -17,7 +19,6 @@ use App\Http\Requests\StoreCutiJadwalRequest;
 use App\Http\Requests\UpdateCutiJadwalRequest;
 use App\Http\Resources\Dashboard\Jadwal\CutiJadwalResource;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
-use App\Models\Notifikasi;
 
 class DataCutiController extends Controller
 {
@@ -277,32 +278,47 @@ class DataCutiController extends Controller
 
         $data = $request->validated();
 
+        // Mengambil informasi tipe cuti berdasarkan tipe_cuti_id
+        $tipeCuti = TipeCuti::find($data['tipe_cuti_id']);
+        if (!$tipeCuti) {
+            return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Tipe cuti tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+        }
+
         // Mengonversi tanggal dari request menggunakan helper hanya untuk perhitungan durasi
         $tglFrom = Carbon::createFromFormat('d-m-Y', $data['tgl_from'])->format('Y-m-d');
         $tglTo = Carbon::createFromFormat('d-m-Y', $data['tgl_to'])->format('Y-m-d');
         // dd($tglFrom, $tglTo);
 
         // Menghitung durasi cuti dalam hari
-        $durasi = Carbon::parse($tglFrom)->diffInDays($tglTo);
+        $durasi = Carbon::parse($tglFrom)->diffInDays($tglTo) + 1;
         // dd($durasi);
 
         // Validasi durasi cuti terhadap kuota tipe cuti
-        $tipeCuti = TipeCuti::find($data['tipe_cuti_id']);
-        if (!$tipeCuti) {
-            return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Tipe cuti tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+        if ($durasi > $tipeCuti->kuota) {
+            $message = "Durasi cuti ({$durasi} hari) melebihi kuota yang diizinkan untuk tipe cuti '{$tipeCuti->nama}'. Kuota maksimal: {$tipeCuti->kuota} hari.";
+            return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, $message), Response::HTTP_BAD_REQUEST);
         }
 
-        // Cek apakah pengguna sudah mengambil cuti dengan tipe yang sama dalam tahun berjalan
+        // Ambil semua data cuti dengan tipe_cuti_id dan user_id yang sama pada tahun berjalan
         $currentYear = Carbon::now()->year;
-        $cutiTakenThisYear = Cuti::where('user_id', $data['user_id'])
+        $cutiRecords = Cuti::where('user_id', $data['user_id'])
             ->where('tipe_cuti_id', $data['tipe_cuti_id'])
-            ->whereYear('tgl_from', $currentYear)
-            ->sum('durasi');
+            ->where(function ($query) use ($currentYear) {
+                $query->whereYear(DB::raw("STR_TO_DATE(tgl_from, '%d-%m-%Y')"), $currentYear);
+            })
+            ->get();
 
-        // Jika tipe cuti memiliki kuota (kuota > 0) dan durasi melebihi kuota
-        $sisaCuti = $tipeCuti->kuota - $cutiTakenThisYear;
-        if ($tipeCuti->kuota > 0 && $durasi > $sisaCuti) {
-            $message = "Durasi cuti ({$durasi} hari) melebihi sisa kuota yang diizinkan untuk tipe cuti '{$tipeCuti->nama}'. Sisa kuota cuti tahun ini: {$sisaCuti} hari.";
+        // Hitung total durasi cuti yang sudah diambil
+        $totalDurasiDiambil = $cutiRecords->sum('durasi');
+        // dd($totalDurasiDiambil);
+
+        // Tambahkan durasi baru ke total durasi yang sudah diambil
+        $totalDurasi = $totalDurasiDiambil + $durasi;
+
+        // Validasi total durasi terhadap kuota
+        if ($totalDurasi > $tipeCuti->kuota) {
+            $sisaCuti = $tipeCuti->kuota - $totalDurasiDiambil;
+            $message = "Durasi cuti melebihi kuota yang diizinkan untuk tipe cuti '{$tipeCuti->nama}'. Sisa kuota cuti tahun ini: {$sisaCuti} hari. Total durasi yang diajukan: {$totalDurasi} hari.";
             return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, $message), Response::HTTP_BAD_REQUEST);
         }
 

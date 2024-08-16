@@ -2,15 +2,12 @@
 
 namespace App\Http\Controllers\Dashboard\Pengaturan\Finance;
 
-use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use App\Models\JadwalPenggajian;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Gate;
-use function PHPUnit\Framework\isEmpty;
 
 use App\Http\Requests\StoreJadwalPenggajianRequest;
-use App\Http\Requests\UpdateJadwalPenggajianRequest;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
 
 class JadwalPenggajianController extends Controller

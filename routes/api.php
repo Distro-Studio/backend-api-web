@@ -55,6 +55,8 @@ Route::post('/login', [LoginController::class, 'login']);
 Route::middleware(['auth:sanctum'])->group(function () {
     // ! Global Request ===========>
     Route::get('/get-list-user', [DataKaryawanController::class, 'getAllDataUser']);
+    Route::get('/get-list-user-shift', [DataKaryawanController::class, 'getAllDataUserShift']);
+    Route::get('/get-list-user-non-shift', [DataKaryawanController::class, 'getAllDataUserNonShift']);
     Route::get('/get-list-unit-kerja', [DataKaryawanController::class, 'getAllDataUnitKerja']);
     Route::get('/get-list-jabatan', [DataKaryawanController::class, 'getAllDataJabatan']);
     Route::get('/get-list-status-karyawan', [DataKaryawanController::class, 'getAllDataStatusKaryawan']);
@@ -73,11 +75,11 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/get-list-non-shift', [NonShiftController::class, 'getAllNonShift']);
     Route::get('/get-list-tipe-cuti', [CutiController::class, 'getAllTipeCuti']);
     Route::get('/get-list-pertanyaan', [PertanyaanController::class, 'getAllPertanyaan']);
-
+    
     Route::group(['prefix' => 'rski/dashboard'], function () {
         Route::get('/logout', [LoginController::class, 'logout'])->middleware('web');
         Route::get('/user-info', [LoginController::class, 'getInfoUserLogin']);
-
+        
         Route::get('/calculated-header', [DashboardController::class, 'calculatedHeader']);
         Route::get('/calculated-jenis-kelamin', [DashboardController::class, 'calculatedKelamin']);
         Route::get('/calculated-jabatan', [DashboardController::class, 'calculatedJabatan']);
@@ -88,7 +90,10 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('/notifikasi', [InboxController::class, 'index']);
         Route::get('/notifikasi/{id}', [InboxController::class, 'show']);
         Route::delete('/notifikasi/delete-read-notifikasi', [InboxController::class, 'destroyRead']);
-
+        Route::get('/download-template-jadwal', [DataJadwalController::class, 'downloadJadwalTemplate']);
+        Route::get('/download-template-karyawan', [DataKaryawanController::class, 'downloadKaryawanTemplate']);
+        Route::get('/download-template-presensi', [DataPresensiController::class, 'downloadPresensiTemplate']);
+        
         // TODO: aktifkan send email di create & transfer karyawan
         // TODO: ganti email di create & transfer karyawan
 
@@ -103,7 +108,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::post('/{data_karyawan_id}/status-karyawan', [DataKaryawanController::class, 'toggleStatusUser']);
             Route::get('/detail-karyawan-user/{user_id}', [DataKaryawanController::class, 'showByUserId']);
             Route::get('/detail-karyawan/{data_karyawan_id}', [DataKaryawanController::class, 'showByDataKaryawanId']);
-
+            
             Route::get('/detail-karyawan-presensi/{data_karyawan_id}', [DataKaryawanController::class, 'getDataPresensi']);
             Route::get('/detail-karyawan-jadwal/{data_karyawan_id}', [DataKaryawanController::class, 'getDataJadwal']);
             Route::get('/detail-karyawan-rekam-jejak/{data_karyawan_id}', [DataKaryawanController::class, 'getDataRekamJejak']);
@@ -117,7 +122,6 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::get('/detail-karyawan-lembur/{data_karyawan_id}', [DataKaryawanController::class, 'getDataLembur']);
             Route::get('/detail-karyawan-feedback-penilaian/{data_karyawan_id}', [DataKaryawanController::class, 'getDataFeedbackPenilaian']);
 
-            Route::get('/download-template-karyawan', [DataKaryawanController::class, 'downloadKaryawanTemplate']);
             Route::apiResource('/data-karyawan', DataKaryawanController::class);
 
             // ! Transfer Karyawan ===========>
@@ -135,7 +139,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::post('/get-data-presensi', [DataPresensiController::class, 'index']);
             Route::post('/export', [DataPresensiController::class, 'exportPresensi']);
             Route::post('/import', [DataPresensiController::class, 'importPresensi']);
-            Route::get('/download-template-presensi', [DataPresensiController::class, 'downloadPresensiTemplate']);
+            Route::get('/data-presensi/{id}', [DataPresensiController::class, 'detail_list']);
+            Route::get('/data-presensi/{id}/detail', [DataPresensiController::class, 'detail_data_v2']);
             Route::apiResource('/data-presensi', DataPresensiController::class);
 
             Route::get('/calculated', [DataPresensiController::class, 'calculatedPresensi']);
@@ -145,7 +150,6 @@ Route::middleware(['auth:sanctum'])->group(function () {
             // ! Jadwal ===========>
             Route::post('/get-data-jadwal', [DataJadwalController::class, 'index']);
             Route::post('/create-shift/{userId}', [DataJadwalController::class, 'createShiftByDate']);
-            Route::get('/download-template-jadwal', [DataJadwalController::class, 'downloadJadwalTemplate']);
             Route::get('/export', [DataJadwalController::class, 'exportJadwalKaryawan']);
             Route::post('/import', [DataJadwalController::class, 'importJadwalKaryawan']);
             Route::apiResource('/data-jadwal', DataJadwalController::class);

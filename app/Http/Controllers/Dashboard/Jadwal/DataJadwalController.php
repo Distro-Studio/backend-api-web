@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use App\Exports\Jadwal\JadwalExport;
+use App\Exports\TemplateJadwalExport;
 use App\Helpers\RandomHelper;
 use App\Http\Controllers\Controller;
 use App\Imports\Jadwal\JadwalImport;
@@ -399,11 +400,11 @@ class DataJadwalController extends Controller
         }
 
         $data = $request->validated();
-        $jadwals = [];
 
-        // Konversi tanggal dari string menggunakan helper
+        $jadwals = [];
         $tanggalMulai = Carbon::createFromFormat('d-m-Y', $data['tgl_mulai']);
-        $tanggalSelesai = Carbon::createFromFormat('d-m-Y', $data['tgl_selesai']);
+        $tanggalSelesai = $data['tgl_selesai'] ? Carbon::createFromFormat('d-m-Y', $data['tgl_selesai']) : $tanggalMulai;
+
         $today = Carbon::today();
 
         // Validasi tanggal mulai
@@ -648,7 +649,7 @@ class DataJadwalController extends Controller
                 //     }
                 // }
 
-                $tglSelesai = Carbon::parse($tanggalMulai)->format('Y-m-d'); // Default to the same day
+                $tglSelesai = Carbon::parse($tanggalMulai); // Default to the same day as Carbon object
 
                 if ($shiftId != 0) { // Skip validation if shift_id is 0
                     $shift = Shift::findOrFail($shiftId);
@@ -656,13 +657,13 @@ class DataJadwalController extends Controller
                     $jamTo = Carbon::parse(RandomHelper::convertToTimeString($shift->jam_to));
 
                     if ($jamTo->lessThanOrEqualTo($jamFrom)) {
-                        $tglSelesai = Carbon::parse($tanggalMulai)->format('Y-m-d');
+                        $tglSelesai->addDay();
                     }
                 }
 
-                // Update existing schedule
+                // Format tglSelesai to 'Y-m-d' before saving it to the database
                 $existingShift->shift_id = $shiftId;
-                $existingShift->tgl_selesai = $tglSelesai;
+                $existingShift->tgl_selesai = $tglSelesai->format('Y-m-d');
                 $existingShift->save();
 
                 DB::commit();
@@ -721,5 +722,14 @@ class DataJadwalController extends Controller
             $dates[] = $date->format('Y-m-d');
         }
         return $dates;
+    }
+
+    public function downloadJadwalTemplate()
+    {
+        try {
+            return Excel::download(new TemplateJadwalExport(), 'template_jadwal_import.xls');
+        } catch (\Throwable $e) {
+            return response()->json(new WithoutDataResource(Response::HTTP_INTERNAL_SERVER_ERROR, 'Maaf sepertinya terjadi error. Message: ' . $e->getMessage()), Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
     }
 }

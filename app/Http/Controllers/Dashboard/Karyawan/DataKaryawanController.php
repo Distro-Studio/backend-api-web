@@ -51,6 +51,38 @@ use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
 
 class DataKaryawanController extends Controller
 {
+  public function getAllDataUserNonShift()
+  {
+    if (!Gate::allows('view dataKaryawan')) {
+      return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+    }
+
+    $userShift = User::whereHas('data_karyawans.unit_kerjas', function ($query) {
+      $query->where('jenis_karyawan', 0); // 0 = non shift
+    })->where('nama', '!=', 'Super Admin')->get();
+    return response()->json([
+      'status' => Response::HTTP_OK,
+      'message' => 'Retrieving all user shift for dropdown',
+      'data' => $userShift
+    ], Response::HTTP_OK);
+  }
+
+  public function getAllDataUserShift()
+  {
+    if (!Gate::allows('view dataKaryawan')) {
+      return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+    }
+
+    $userShift = User::whereHas('data_karyawans.unit_kerjas', function ($query) {
+      $query->where('jenis_karyawan', 1); // 1 = shift
+    })->where('nama', '!=', 'Super Admin')->get();
+    return response()->json([
+      'status' => Response::HTTP_OK,
+      'message' => 'Retrieving all user shift for dropdown',
+      'data' => $userShift
+    ], Response::HTTP_OK);
+  }
+
   public function getAllDataUser()
   {
     if (!Gate::allows('view dataKaryawan')) {
@@ -192,7 +224,7 @@ class DataKaryawanController extends Controller
   }
 
   // detail karyawan dashboard
-  public function getDataPresensi($data_karyawan_id)
+  public function getDataPresensi($data_karyawan_id) // ini detail lv 1
   {
     if (!Gate::allows('view dataKaryawan')) {
       return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
@@ -210,31 +242,11 @@ class DataKaryawanController extends Controller
       ->first();
 
     if (!$presensiHariIni) {
-      return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data presensi tidak ditemukan untuk hari ini.'), Response::HTTP_NOT_FOUND);
-    }
-
-    // Ambil semua presensi bulan ini dari karyawan yang sama
-    $presensiBulanIni = Presensi::where('data_karyawan_id', $data_karyawan_id)
-      ->whereYear('jam_masuk', Carbon::now()->year)
-      ->whereMonth('jam_masuk', Carbon::now()->month)
-      ->orderBy('jam_masuk')
-      ->get();
-
-    // Memformat aktivitas presensi
-    $aktivitasPresensi = [];
-    foreach ($presensiBulanIni as $presensi) {
-      if ($presensi->jam_masuk) {
-        $aktivitasPresensi[] = [
-          'presensi' => 'Masuk',
-          'tanggal' => $presensi->jam_masuk
-        ];
-      }
-      if ($presensi->jam_keluar) {
-        $aktivitasPresensi[] = [
-          'presensi' => 'Keluar',
-          'tanggal' => $presensi->jam_keluar
-        ];
-      }
+      return response()->json([
+        'status' => Response::HTTP_OK,
+        'message' => 'Data presensi karyawan tidak ditemukan.',
+        'data' => []
+      ], Response::HTTP_OK);
     }
 
     $fotoMasukBerkas = Berkas::where('id', $presensiHariIni->foto_masuk)->first();
@@ -251,60 +263,105 @@ class DataKaryawanController extends Controller
     // Ambil data lokasi kantor
     $lokasiKantor = LokasiKantor::find(1);
 
-    $formattedData = [
-      'id' => $presensiHariIni->id,
-      'user' => $presensiHariIni->users,
-      'unit_kerja' => $presensiHariIni->data_karyawans->unit_kerjas,
-      'jadwal' => [
-        'id' => $presensiHariIni->jadwals->id,
-        'tgl_mulai' => $presensiHariIni->jadwals->tgl_mulai,
-        'tgl_selesai' => $presensiHariIni->jadwals->tgl_selesai,
-        'shift' => $presensiHariIni->jadwals->shifts,
-      ],
-      'jam_masuk' => $presensiHariIni->jam_masuk,
-      'jam_keluar' => $presensiHariIni->jam_keluar,
-      'durasi' => $presensiHariIni->durasi,
-      'lokasi_kantor' => [
-        'id' => $lokasiKantor->id,
-        'alamat' => $lokasiKantor->alamat,
-        'lat' => $lokasiKantor->lat,
-        'long' => $lokasiKantor->long,
-        'radius' => $lokasiKantor->radius,
-      ],
-      'lat_masuk' => $presensiHariIni->lat,
-      'long_masuk' => $presensiHariIni->long,
-      'lat_keluar' => $presensiHariIni->latkeluar,
-      'long_keluar' => $presensiHariIni->longkeluar,
-      'foto_masuk' => [
-        'id' => $fotoMasukBerkas->id,
-        'user_id' => $fotoMasukBerkas->user_id,
-        'file_id' => $fotoMasukBerkas->file_id,
-        'nama' => $fotoMasukBerkas->nama,
-        'nama_file' => $fotoMasukBerkas->nama_file,
-        'path' => $fotoMasukUrl,
-        'ext' => $fotoMasukBerkas->ext,
-        'size' => $fotoMasukBerkas->size,
-      ],
-      'foto_keluar' => [
-        'id' => $fotoKeluarBerkas->id,
-        'user_id' => $fotoKeluarBerkas->user_id,
-        'file_id' => $fotoKeluarBerkas->file_id,
-        'nama' => $fotoKeluarBerkas->nama,
-        'nama_file' => $fotoKeluarBerkas->nama_file,
-        'path' => $fotoKeluarUrl,
-        'ext' => $fotoKeluarBerkas->ext,
-        'size' => $fotoKeluarBerkas->size,
-      ],
-      'kategori_presensi' => $presensiHariIni->kategori_presensis,
-      'aktivitas_presensi' => $aktivitasPresensi,
-      'created_at' => $presensiHariIni->created_at,
-      'updated_at' => $presensiHariIni->updated_at
-    ];
+    // Ambil semua presensi bulan ini dari karyawan yang sama
+    $presensiBulanIni = Presensi::where('data_karyawan_id', $data_karyawan_id)
+      ->whereYear('jam_masuk', Carbon::now()->year)
+      ->whereMonth('jam_masuk', Carbon::now()->month)
+      ->orderBy('jam_masuk')
+      ->get();
+
+    // Memformat aktivitas presensi
+    $aktivitasPresensi = [];
+    foreach ($presensiBulanIni as $presensi) {
+      if ($presensi->jam_masuk) {
+        $aktivitasPresensi[] = [
+          'presensi' => 'Masuk',
+          'tanggal' => $presensi->jam_masuk,
+          'lat_masuk' => $presensiHariIni->lat,
+          'long_masuk' => $presensiHariIni->long,
+          'foto_masuk' => [
+            'id' => $fotoMasukBerkas->id,
+            'user_id' => $fotoMasukBerkas->user_id,
+            'file_id' => $fotoMasukBerkas->file_id,
+            'nama' => $fotoMasukBerkas->nama,
+            'nama_file' => $fotoMasukBerkas->nama_file,
+            'path' => $fotoMasukUrl,
+            'ext' => $fotoMasukBerkas->ext,
+            'size' => $fotoMasukBerkas->size,
+          ],
+        ];
+      }
+      if ($presensi->jam_keluar) {
+        $aktivitasPresensi[] = [
+          'presensi' => 'Keluar',
+          'tanggal' => $presensi->jam_keluar,
+          'lat_keluar' => $presensiHariIni->latkeluar,
+          'long_keluar' => $presensiHariIni->longkeluar,
+          'foto_keluar' => [
+            'id' => $fotoKeluarBerkas->id,
+            'user_id' => $fotoKeluarBerkas->user_id,
+            'file_id' => $fotoKeluarBerkas->file_id,
+            'nama' => $fotoKeluarBerkas->nama,
+            'nama_file' => $fotoKeluarBerkas->nama_file,
+            'path' => $fotoKeluarUrl,
+            'ext' => $fotoKeluarBerkas->ext,
+            'size' => $fotoKeluarBerkas->size,
+          ],
+        ];
+      }
+    }
 
     return response()->json([
       'status' => Response::HTTP_OK,
       'message' => "Detail data presensi karyawan '{$presensiHariIni->users->nama}' berhasil ditampilkan.",
-      'data' => $formattedData,
+      'data' => [
+        'id' => $presensiHariIni->id,
+        'user' => $presensiHariIni->users,
+        'unit_kerja' => $presensiHariIni->data_karyawans->unit_kerjas,
+        'data_presensi' => [
+          'jadwal' => [
+            'id' => $presensiHariIni->jadwals->id,
+            'tgl_mulai' => $presensiHariIni->jadwals->tgl_mulai,
+            'tgl_selesai' => $presensiHariIni->jadwals->tgl_selesai,
+            'shift' => $presensiHariIni->jadwals->shifts,
+          ],
+          'jam_masuk' => $presensiHariIni->jam_masuk,
+          'jam_keluar' => $presensiHariIni->jam_keluar,
+          'durasi' => $presensiHariIni->durasi,
+          'lokasi_kantor' => [
+            'id' => $lokasiKantor->id,
+            'alamat' => $lokasiKantor->alamat,
+            'lat' => $lokasiKantor->lat,
+            'long' => $lokasiKantor->long,
+            'radius' => $lokasiKantor->radius,
+          ],
+          'lat_masuk' => $presensiHariIni->lat,
+          'long_masuk' => $presensiHariIni->long,
+          'lat_keluar' => $presensiHariIni->latkeluar,
+          'long_keluar' => $presensiHariIni->longkeluar,
+          'foto_masuk' => [
+            'id' => $fotoMasukBerkas->id,
+            'user_id' => $fotoMasukBerkas->user_id,
+            'file_id' => $fotoMasukBerkas->file_id,
+            'nama' => $fotoMasukBerkas->nama,
+            'nama_file' => $fotoMasukBerkas->nama_file,
+            'path' => $fotoMasukUrl,
+            'ext' => $fotoMasukBerkas->ext,
+            'size' => $fotoMasukBerkas->size,
+          ],
+          'foto_keluar' => [
+            'id' => $fotoKeluarBerkas->id,
+            'user_id' => $fotoKeluarBerkas->user_id,
+            'file_id' => $fotoKeluarBerkas->file_id,
+            'nama' => $fotoKeluarBerkas->nama,
+            'nama_file' => $fotoKeluarBerkas->nama_file,
+            'path' => $fotoKeluarUrl,
+            'ext' => $fotoKeluarBerkas->ext,
+            'size' => $fotoKeluarBerkas->size,
+          ],
+        ],
+        'list_presensi' => $aktivitasPresensi
+      ],
     ], Response::HTTP_OK);
   }
 
@@ -333,17 +390,18 @@ class DataKaryawanController extends Controller
     // Format data jadwal
     $user_schedule_array = [];
     foreach ($user->jadwals as $schedule) {
-      $tglMulai = RandomHelper::convertToDateString($schedule->tgl_mulai);
-      $tglSelesai = RandomHelper::convertToDateString($schedule->tgl_selesai);
+      $tglMulai = Carbon::createFromFormat('Y-m-d', $schedule->tgl_mulai)->format('d-m-Y');
+      $tglSelesai = Carbon::createFromFormat('Y-m-d', $schedule->tgl_selesai)->format('d-m-Y');
 
-      $current_date = Carbon::parse($tglMulai);
+      $current_date = Carbon::createFromFormat('d-m-Y', $tglMulai);
+      $end_date = Carbon::createFromFormat('d-m-Y', $tglSelesai);
       while ($current_date->lte(Carbon::parse($tglSelesai))) {
         // $date = $current_date->format('Y-m-d');
         $user_schedule_array[] = [
           'id' => $schedule->id,
           // 'tanggal' => $date,
-          'tgl_mulai' => $schedule->tgl_mulai,
-          'tgl_selesai' => $schedule->tgl_selesai,
+          'tgl_mulai' => $tglMulai,
+          'tgl_selesai' => $tglSelesai,
           'shift' => $schedule->shifts,
           'updated_at' => $schedule->updated_at
         ];
@@ -483,7 +541,11 @@ class DataKaryawanController extends Controller
       ->get();
 
     if ($rekamJejakList->isEmpty() && $dataPerubahanList->isEmpty()) {
-      return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data rekam jejak karyawan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+      return response()->json([
+        'status' => Response::HTTP_OK,
+        'message' => 'Data rekam jejak karyawan tidak ditemukan.',
+        'data' => []
+      ], Response::HTTP_OK);
     }
 
     // Format data rekam jejak kategori 2 dan 3
@@ -591,7 +653,11 @@ class DataKaryawanController extends Controller
       ->get();
 
     if ($keluarga->isEmpty()) {
-      return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data keluarga tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+      return response()->json([
+        'status' => Response::HTTP_OK,
+        'message' => 'Data keluarga karyawan tidak ditemukan.',
+        'data' => []
+      ], Response::HTTP_OK);
     }
 
     // Ambil data karyawan dan user dari data keluarga
@@ -614,7 +680,7 @@ class DataKaryawanController extends Controller
 
     return response()->json([
       'status' => Response::HTTP_OK,
-      'message' => "Detail keluarga karyawan {$user->nama} berhasil ditampilkan.",
+      'message' => "Detail keluarga karyawan '{$user->nama}' berhasil ditampilkan.",
       'data' => [
         'id' => $dataKaryawan->id,
         'user' => [
@@ -647,7 +713,11 @@ class DataKaryawanController extends Controller
     })->get();
 
     if ($berkas->isEmpty()) {
-      return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data dokumen tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+      return response()->json([
+        'status' => Response::HTTP_OK,
+        'message' => 'Data dokumen karyawan tidak ditemukan.',
+        'data' => []
+      ], Response::HTTP_OK);
     }
 
     // Ambil data user dari berkas yang pertama
@@ -764,7 +834,11 @@ class DataKaryawanController extends Controller
     // Ambil semua data cuti yang dimiliki karyawan tersebut
     $dataCuti = Cuti::where('user_id', $karyawan->users->id)->get();
     if ($dataCuti->isEmpty()) {
-      return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data cuti karyawan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+      return response()->json([
+        'status' => Response::HTTP_OK,
+        'message' => 'Data cuti karyawan tidak ditemukan.',
+        'data' => []
+      ], Response::HTTP_OK);
     }
 
     // Format list cuti
@@ -828,7 +902,11 @@ class DataKaryawanController extends Controller
       ->get();
 
     if ($tukarJadwal->isEmpty()) {
-      return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data tukar jadwal tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+      return response()->json([
+        'status' => Response::HTTP_OK,
+        'message' => 'Data tukar jadwal karyawan tidak ditemukan.',
+        'data' => []
+      ], Response::HTTP_OK);
     }
 
     // Format data tukar jadwal
@@ -914,7 +992,11 @@ class DataKaryawanController extends Controller
     })->get();
 
     if ($dataLembur->isEmpty()) {
-      return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data lembur karyawan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+      return response()->json([
+        'status' => Response::HTTP_OK,
+        'message' => 'Data lembur karyawan tidak ditemukan.',
+        'data' => []
+      ], Response::HTTP_OK);
     }
 
     // Format data lembur

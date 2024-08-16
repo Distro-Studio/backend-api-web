@@ -24,25 +24,25 @@ class RiwayatPenggajian extends Model
         return $this->hasMany(Penggajian::class, 'riwayat_penggajian_id', 'id');
     }
 
-    /**
-     * Get the verifikator_1 that owns the RiwayatPenggajian
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
-     */
-    public function verifikator_1(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'verifikator_1', 'id');
-    }
+    // /**
+    //  * Get the verifikator_1 that owns the RiwayatPenggajian
+    //  *
+    //  * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+    //  */
+    // public function verifikator_1(): BelongsTo
+    // {
+    //     return $this->belongsTo(User::class, 'verifikator_1', 'id');
+    // }
 
-    /**
-     * Get the verifikator_2 that owns the RiwayatPenggajian
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
-     */
-    public function verifikator_2(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'verifikator_2', 'id');
-    }
+    // /**
+    //  * Get the verifikator_2 that owns the RiwayatPenggajian
+    //  *
+    //  * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+    //  */
+    // public function verifikator_2(): BelongsTo
+    // {
+    //     return $this->belongsTo(User::class, 'verifikator_2', 'id');
+    // }
 
     /**
      * Get the status_gajis that owns the RiwayatPenggajian

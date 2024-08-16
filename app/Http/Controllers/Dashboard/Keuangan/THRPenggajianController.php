@@ -28,12 +28,14 @@ class THRPenggajianController extends Controller
         // Tentukan limit default
         $limit = $request->input('limit', 10); // Default 10 jika tidak ada atau kosong
 
-        $riwayatPenggajian = RiwayatPenggajian::query()
-            ->whereHas('penggajians.detail_gajis', function ($query) {
-                $query->where('kategori_gaji_id', 2)
-                    ->where('nama_detail', 'THR')
-                    ->whereNotNull('besaran');
-            })->orderBy('created_at', 'desc');
+        // $riwayatPenggajian = RiwayatPenggajian::query()
+        //     ->whereHas('penggajians.detail_gajis', function ($query) {
+        //         $query->where('kategori_gaji_id', 2)
+        //             ->where('nama_detail', 'THR')
+        //             ->whereNotNull('besaran');
+        //     })->orderBy('created_at', 'desc');
+
+        $riwayatPenggajian = RiwayatPenggajian::query()->where('jenis_riwayat', 0)->orderBy('created_at', 'desc');
 
         // Filter periode tahun jika ada
         if ($request->has('periode_tahun')) {
