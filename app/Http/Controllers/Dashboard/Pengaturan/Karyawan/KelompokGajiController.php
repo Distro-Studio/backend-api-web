@@ -8,15 +8,9 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Collection;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Gate;
-use Maatwebsite\Excel\Facades\Excel;
-use Illuminate\Support\Facades\Validator;
 use App\Http\Requests\StoreKelompokGajiRequest;
 use App\Http\Requests\UpdateKelompokGajiRequest;
-use App\Exports\Pengaturan\Karyawan\KelompokGajiExport;
-use App\Imports\Pengaturan\Karyawan\KelompokGajiImport;
-use App\Http\Requests\Excel_Import\ImportKelompokGajiRequest;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
-use App\Http\Resources\Dashboard\Pengaturan_Karyawan\KelompokGajiResource;
 
 class KelompokGajiController extends Controller
 {
@@ -27,22 +21,6 @@ class KelompokGajiController extends Controller
         }
 
         $kelompok_gaji = KelompokGaji::withTrashed()->orderBy('created_at', 'desc');
-
-        // Filter
-        // if ($request->has('delete_data')) {
-        //     $softDeleteFilters = $request->delete_data;
-        //     $kelompok_gaji->when(in_array('dihapus', $softDeleteFilters) && !in_array('belum_dihapus', $softDeleteFilters), function ($query) {
-        //         return $query->onlyTrashed();
-        //     })->when(!in_array('dihapus', $softDeleteFilters) && in_array('belum_dihapus', $softDeleteFilters), function ($query) {
-        //         return $query->withoutTrashed();
-        //     });
-        // }
-
-        // Search
-        // if ($request->has('search')) {
-        //     $searchTerm = '%' . $request->search . '%';
-        //     $kelompok_gaji->where('nama_kelompok', 'like', $searchTerm);
-        // }
 
         $dataKelompokGaji = $kelompok_gaji->get();
 

@@ -8,13 +8,8 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Collection;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Gate;
-use Maatwebsite\Excel\Facades\Excel;
-use Illuminate\Support\Facades\Validator;
 use App\Http\Requests\StoreKompetensiRequest;
 use App\Http\Requests\UpdateKompetensiRequest;
-use App\Exports\Pengaturan\Karyawan\KompetensiExport;
-use App\Imports\Pengaturan\Karyawan\KompetensiImport;
-use App\Http\Requests\Excel_Import\ImportKompetensiRequest;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
 
 class KompetensiController extends Controller
@@ -25,27 +20,6 @@ class KompetensiController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
         $kompetensi = Kompetensi::withTrashed()->orderBy('created_at', 'desc');
-
-        // Filter
-        // if ($request->has('delete_data')) {
-        //     $softDeleteFilters = $request->delete_data;
-        //     $kompetensi->when(in_array('dihapus', $softDeleteFilters) && !in_array('belum_dihapus', $softDeleteFilters), function ($query) {
-        //         return $query->onlyTrashed();
-        //     })->when(!in_array('dihapus', $softDeleteFilters) && in_array('belum_dihapus', $softDeleteFilters), function ($query) {
-        //         return $query->withoutTrashed();
-        //     });
-        // }
-
-        // Search
-        // if ($request->has('search')) {
-        //     $kompetensi = $kompetensi->where(function ($query) use ($request) {
-        //         $searchTerm = '%' . $request->search . '%';
-
-        //         $query->orWhere('nama_kompetensi', 'like', $searchTerm)
-        //             ->orWhere('jenis_kompetensi', 'like', $searchTerm);
-        //     });
-        // }
-
         $dataKompetensi = $kompetensi->get();
 
         if ($dataKompetensi->isEmpty()) {

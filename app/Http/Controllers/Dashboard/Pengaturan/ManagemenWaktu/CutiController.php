@@ -39,25 +39,6 @@ class CutiController extends Controller
 
         $cuti = TipeCuti::withTrashed()->orderBy('created_at', 'desc');
 
-        // Filter
-        // if ($request->has('delete_data')) {
-        //     $softDeleteFilters = $request->delete_data;
-        //     $cuti->when(in_array('dihapus', $softDeleteFilters) && !in_array('belum_dihapus', $softDeleteFilters), function ($query) {
-        //         return $query->onlyTrashed();
-        //     })->when(!in_array('dihapus', $softDeleteFilters) && in_array('belum_dihapus', $softDeleteFilters), function ($query) {
-        //         return $query->withoutTrashed();
-        //     });
-        // }
-
-        // Search
-        // if ($request->has('search')) {
-        //     $cuti = $cuti->where(function ($query) use ($request) {
-        //         $searchTerm = '%' . $request->search . '%';
-
-        //         $query->orWhere('nama', 'like', $searchTerm);
-        //     });
-        // }
-
         $dataTipeCuti = $cuti->get();
         if ($dataTipeCuti->isEmpty()) {
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data cuti tidak ditemukan.'), Response::HTTP_NOT_FOUND);

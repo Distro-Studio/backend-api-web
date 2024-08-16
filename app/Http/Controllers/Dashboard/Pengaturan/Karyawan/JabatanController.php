@@ -8,12 +8,8 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Collection;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Gate;
-use Maatwebsite\Excel\Facades\Excel;
 use App\Http\Requests\StoreJabatanRequest;
 use App\Http\Requests\UpdateJabatanRequest;
-use App\Exports\Pengaturan\Karyawan\JabatanExport;
-use App\Imports\Pengaturan\Karyawan\JabatanImport;
-use App\Http\Requests\Excel_Import\ImportJabatanRequest;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
 
 class JabatanController extends Controller
@@ -25,25 +21,6 @@ class JabatanController extends Controller
         }
 
         $jabatan = Jabatan::withTrashed()->orderBy('created_at', 'desc');
-
-        // Filter
-        // if ($request->has('delete_data')) {
-        //     $softDeleteFilters = $request->delete_data;
-        //     $jabatan->when(in_array('dihapus', $softDeleteFilters) && !in_array('belum_dihapus', $softDeleteFilters), function ($query) {
-        //         return $query->onlyTrashed();
-        //     })->when(!in_array('dihapus', $softDeleteFilters) && in_array('belum_dihapus', $softDeleteFilters), function ($query) {
-        //         return $query->withoutTrashed();
-        //     });
-        // }
-
-        // Search
-        // if ($request->has('search')) {
-        //     $jabatan = $jabatan->where(function ($query) use ($request) {
-        //         $searchTerm = '%' . $request->search . '%';
-
-        //         $query->orWhere('nama_jabatan', 'like', $searchTerm);
-        //     });
-        // }
 
         $dataJabatan = $jabatan->get();
         if ($dataJabatan->isEmpty()) {

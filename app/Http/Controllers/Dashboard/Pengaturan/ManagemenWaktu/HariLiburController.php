@@ -4,19 +4,13 @@ namespace App\Http\Controllers\Dashboard\Pengaturan\ManagemenWaktu;
 
 use Carbon\Carbon;
 use App\Models\HariLibur;
-use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Collection;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Http;
-use Maatwebsite\Excel\Facades\Excel;
-use Illuminate\Support\Facades\Validator;
 use App\Http\Requests\StoreHariLiburRequest;
 use App\Http\Requests\UpdateHariLiburRequest;
-use App\Http\Requests\Excel_Import\ImportHariLiburRequest;
-use App\Exports\Pengaturan\Managemen_Waktu\HariLiburExport;
-use App\Imports\Pengaturan\Managemen_Waktu\HariLiburImport;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
 
 class HariLiburController extends Controller
@@ -37,7 +31,7 @@ class HariLiburController extends Controller
     }
     /* ============================= For Dropdown ============================= */
 
-    public function index(Request $request)
+    public function index()
     {
         if (!Gate::allows('view hariLibur')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
@@ -47,24 +41,6 @@ class HariLiburController extends Controller
         HariLibur::where('tanggal', '<', Carbon::today())->delete();
 
         $hari_libur = HariLibur::withTrashed()->orderBy('created_at', 'desc');
-
-        // Filter
-        // if ($request->has('delete_data')) {
-        //     $softDeleteFilters = $request->delete_data;
-        //     $hari_libur->when(in_array('dihapus', $softDeleteFilters) && !in_array('belum_dihapus', $softDeleteFilters), function ($query) {
-        //         return $query->onlyTrashed();
-        //     })->when(!in_array('dihapus', $softDeleteFilters) && in_array('belum_dihapus', $softDeleteFilters), function ($query) {
-        //         return $query->withoutTrashed();
-        //     });
-        // }
-
-        // Search
-        // if ($request->has('search')) {
-        //     $hari_libur = $hari_libur->where(function ($query) use ($request) {
-        //         $searchTerm = '%' . $request->search . '%';
-        //         $query->orWhere('nama', 'like', $searchTerm);
-        //     });
-        // }
 
         $dataHariLibur = $hari_libur->get();
         if ($dataHariLibur->isEmpty()) {
@@ -88,7 +64,12 @@ class HariLiburController extends Controller
 
         $data = $request->validated();
 
-        $hari_libur = HariLibur::create($data);
+        $data['tanggal'] = Carbon::createFromFormat('d-m-Y', $data['tanggal'])->format('Y-m-d');
+
+        $hari_libur = new HariLibur();
+        $hari_libur->nama = $data['nama'];
+        $hari_libur->tanggal = $data['tanggal'];
+        $hari_libur->save();
         $successMessage = "Data hari libur '{$hari_libur->nama}' berhasil dibuat.";
         $formattedData = $this->formatData(collect([$hari_libur]))->first();
 
@@ -133,6 +114,10 @@ class HariLiburController extends Controller
         $existingDataValidation = HariLibur::where('nama', $data['nama'])->where('id', '!=', $id)->first();
         if ($existingDataValidation) {
             return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Nama hari libur tersebut sudah pernah dibuat.'), Response::HTTP_BAD_REQUEST);
+        }
+
+        if (isset($data['tanggal'])) {
+            $data['tanggal'] = Carbon::createFromFormat('d-m-Y', $data['tanggal'])->format('Y-m-d');
         }
 
         $hari_libur->update($data);
