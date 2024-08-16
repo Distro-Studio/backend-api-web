@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Models\Berkas;
 use App\Models\Diklat;
 use App\Models\Notifikasi;
+use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use App\Helpers\RandomHelper;
 use Illuminate\Http\Response;
@@ -156,7 +157,8 @@ class DiklatController extends Controller
                 $file = $request->file('dokumen');
 
                 // Upload file using helper
-                $dataupload = StorageServerHelper::uploadToServer($request, 'Check in berkas - ' . $authUser->nama);
+                $random_filename = Str::random(20);
+                $dataupload = StorageServerHelper::uploadToServer($request, $random_filename);
                 $gambarUrl = $dataupload['path'];
 
                 $kategoriBerkas = KategoriBerkas::where('label', 'System')->first();
@@ -168,8 +170,9 @@ class DiklatController extends Controller
                 $berkas = Berkas::create([
                     'user_id' => $authUser->id,
                     'file_id' => $dataupload['id_file']['id'],
-                    'nama' => 'Berkas Diklat - ' . $authUser->nama,
+                    'nama' => $random_filename,
                     'kategori_berkas_id' => $kategoriBerkas->id,
+                    'status_berkas_id' => 2,
                     'path' => $dataupload['path'],
                     'tgl_upload' => now(),
                     'nama_file' => $dataupload['nama_file'],

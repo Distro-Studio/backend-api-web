@@ -19,6 +19,10 @@ return new class extends Migration
             $table->foreignId('unit_kerja_tujuan')->nullable()->constrained('unit_kerjas');
             $table->foreignId('jabatan_asal')->constrained('jabatans');
             $table->foreignId('jabatan_tujuan')->nullable()->constrained('jabatans');
+            $table->foreignId('kelompok_gaji_asal')->constrained('kelompok_gajis');
+            $table->foreignId('kelompok_gaji_tujuan')->nullable()->constrained('kelompok_gajis');
+            $table->foreignId('role_asal');
+            $table->foreignId('role_tujuan')->nullable();
             $table->foreignId('kategori_transfer_id')->constrained('kategori_transfer_karyawans');
             $table->text('alasan');
             $table->string('dokumen');

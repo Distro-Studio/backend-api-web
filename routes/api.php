@@ -97,9 +97,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         // TODO: aktifkan send email di create & transfer karyawan
         // TODO: ganti email di create & transfer karyawan
 
-        // ! Rombak semua datetime format ke carbon
-
-        // TODO: Ubah string acak untuk nama berkas server 'nama_file'
+        // ! Rombak semua datetime format ke carbon => cek dulu, jika aman tidak usah | tapi untuk next project store semua ke format y-m-d
         Route::group(['prefix' => '/karyawan'], function () {
             // ! Data Karyawan ===========>
             Route::post('/get-data-karyawan', [DataKaryawanController::class, 'index']);
@@ -202,7 +200,6 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::apiResource('/run-thr', THRPenggajianController::class);
         });
 
-        // TODO: PENILAIAN ERROR CREATE
         Route::group(['prefix' => '/perusahaan'], function () {
             // ! Diklat ===========>
             Route::post('/get-data-diklat', [DiklatController::class, 'index']);

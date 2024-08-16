@@ -13,8 +13,10 @@ use App\Models\KategoriTrackRecord;
 use Illuminate\Database\Seeder;
 use App\Models\TransferKaryawan;
 use App\Models\KategoriTransferKaryawan;
+use App\Models\KelompokGaji;
 use App\Models\StatusBerkas;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use Spatie\Permission\Models\Role;
 
 class TransferKaryawanSeeder extends Seeder
 {
@@ -25,6 +27,8 @@ class TransferKaryawanSeeder extends Seeder
     {
         $unit_kerja_ids = UnitKerja::pluck('id')->all();
         $jabatan_ids = Jabatan::pluck('id')->all();
+        $role_ids = Role::pluck('id')->all();
+        $kelompok_gaji_ids = KelompokGaji::pluck('id')->all();
         $user_ids = User::where('nama', '!=', 'Super Admin')->pluck('id')->all();
         $kategori_transfer_ids = KategoriTransferKaryawan::pluck('id')->all();
         $kategori_record_ids = KategoriTrackRecord::pluck('id')->all();
@@ -53,6 +57,22 @@ class TransferKaryawanSeeder extends Seeder
                 $jabatan_tujuan = $jabatan_ids[array_rand($jabatan_ids)];
             }
 
+            $role_asal = $role_ids[array_rand($role_ids)];
+            $role_tujuan = $role_ids[array_rand($role_ids)];
+
+            // Ensure role_asal and role_tujuan are different
+            while ($role_tujuan == $role_asal) {
+                $role_tujuan = $role_ids[array_rand($role_ids)];
+            }
+
+            $kelompok_gaji_asal = $kelompok_gaji_ids[array_rand($kelompok_gaji_ids)];
+            $kelompok_gaji_tujuan = $kelompok_gaji_ids[array_rand($kelompok_gaji_ids)];
+
+            // Ensure kelompok_gaji_asal and kelompok_gaji_tujuan are different
+            while ($kelompok_gaji_tujuan == $kelompok_gaji_asal) {
+                $kelompok_gaji_tujuan = $kelompok_gaji_ids[array_rand($kelompok_gaji_ids)];
+            }
+
             $kategori_transfer_id = $kategori_transfer_ids[array_rand($kategori_transfer_ids)];
             $kategori_records_id = $kategori_record_ids[array_rand($kategori_record_ids)];
             $dokumenPath = '/berkas/karyawan/karyawan-transfer/dokumen_' . $user_id;
@@ -64,6 +84,10 @@ class TransferKaryawanSeeder extends Seeder
                 'unit_kerja_tujuan' => $unit_kerja_tujuan,
                 'jabatan_asal' => $jabatan_asal,
                 'jabatan_tujuan' => $jabatan_tujuan,
+                'kelompok_gaji_asal' => $kelompok_gaji_asal,
+                'kelompok_gaji_tujuan' => $kelompok_gaji_tujuan,
+                'role_asal' => $role_asal,
+                'role_tujuan' => $role_tujuan,
                 'kategori_transfer_id' => $kategori_transfer_id,
                 'alasan' => 'Lorem ipsum dolor, sit amet consectetur adipisicing elit. Quos rerum unde, culpa corporis impedit id sequi in tenetur laboriosam odit provident vel temporibus fugiat excepturi ex eum at? Rem, totam!',
                 'dokumen' => $dokumenPath,

@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Spatie\Permission\Models\Role;
 
 class TransferKaryawan extends Model
 {
@@ -59,6 +60,46 @@ class TransferKaryawan extends Model
     public function jabatan_tujuans(): BelongsTo
     {
         return $this->belongsTo(Jabatan::class, 'jabatan_tujuan', 'id');
+    }
+
+    /**
+     * Get the kelompok_gaji_asals that owns the TransferKaryawan
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function kelompok_gaji_asals(): BelongsTo
+    {
+        return $this->belongsTo(KelompokGaji::class, 'kelompok_gaji_asal', 'id');
+    }
+
+    /**
+     * Get the kelompok_gaji_tujuans that owns the TransferKaryawan
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function kelompok_gaji_tujuans(): BelongsTo
+    {
+        return $this->belongsTo(KelompokGaji::class, 'kelompok_gaji_tujuan', 'id');
+    }
+
+    /**
+     * Get the role_asal that owns the TransferKaryawan
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function role_asals(): BelongsTo
+    {
+        return $this->belongsTo(Role::class, 'role_asal', 'id');
+    }
+
+    /**
+     * Get the role_tujuan that owns the TransferKaryawan
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function role_tujuans(): BelongsTo
+    {
+        return $this->belongsTo(Role::class, 'role_tujuan', 'id');
     }
 
     /**

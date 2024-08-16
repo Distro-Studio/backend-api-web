@@ -601,6 +601,7 @@ class DataJadwalController extends Controller
         ], Response::HTTP_OK);
     }
 
+    // ? optional || jika tgl selesai lebih 1 hari dari tgl mulai dan shift id 3, maka tidak bisa update shift di tanggal selesai
     public function update(StoreJadwalShiftKaryawanRequest $request, $userId)
     {
         if (!Gate::allows('edit jadwalKaryawan')) {

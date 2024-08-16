@@ -6,7 +6,9 @@ use Exception;
 use App\Models\User;
 use App\Models\Berkas;
 use App\Models\TrackRecord;
+use Illuminate\Support\Str;
 use Illuminate\Http\Request;
+use App\Helpers\RandomHelper;
 use Illuminate\Http\Response;
 use App\Models\KategoriBerkas;
 use App\Models\TransferKaryawan;
@@ -17,7 +19,6 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Gate;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\Karyawan\TransferExport;
-use App\Helpers\RandomHelper;
 use App\Models\KategoriTransferKaryawan;
 use App\Jobs\EmailNotification\TransferEmailJob;
 use App\Http\Requests\StoreTransferKaryawanRequest;
@@ -240,7 +241,7 @@ class DataTransferKaryawanController extends Controller
         $formattedData = $dataTransfer->map(function ($transfer) {
             $user = $transfer->users;
             $data_karyawan = $user->data_karyawans;
-            $role = $user->roles->first();
+            // $role = $user->roles->first();
             return [
                 'id' => $transfer->id,
                 'user' => [
@@ -254,13 +255,13 @@ class DataTransferKaryawanController extends Controller
                     'created_at' => $user->created_at,
                     'updated_at' => $user->updated_at
                 ],
-                'role' => [
-                    'id' => $role->id,
-                    'name' => $role->name,
-                    'deskripsi' => $role->deskripsi,
-                    'created_at' => $role->created_at,
-                    'updated_at' => $role->updated_at
-                ], // role_id
+                // 'role' => [
+                //     'id' => $role->id,
+                //     'name' => $role->name,
+                //     'deskripsi' => $role->deskripsi,
+                //     'created_at' => $role->created_at,
+                //     'updated_at' => $role->updated_at
+                // ], // role_id
                 'nik' => $data_karyawan->nik,
                 'kategori_transfer' => $transfer->kategori_transfer_karyawans,
                 'tgl_pengajuan' => $transfer->created_at,
@@ -269,6 +270,10 @@ class DataTransferKaryawanController extends Controller
                 'unit_kerja_tujuan' => $transfer->unit_kerja_tujuans,
                 'jabatan_asal' => $transfer->jabatan_asals,
                 'jabatan_tujuan' => $transfer->jabatan_tujuans,
+                'kelompok_gaji_asal' => $transfer->kelompok_gaji_asals,
+                'kelompok_gaji_tujuan' => $transfer->kelompok_gaji_tujuans,
+                'role_asal' => $transfer->role_asals,
+                'role_tujuan' => $transfer->role_tujuans,
                 'alasan' => $transfer->alasan,
                 'dokumen' => $transfer->dokumen,
                 'created_at' => $transfer->created_at,
@@ -305,6 +310,9 @@ class DataTransferKaryawanController extends Controller
                 // Ambil unit kerja dan jabatan asal dari user yang dipilih
                 $data['unit_kerja_asal'] = $user->data_karyawans->unit_kerjas->id;
                 $data['jabatan_asal'] = $user->data_karyawans->jabatans->id;
+                $data['kelompok_gaji_asal'] = $user->data_karyawans->kelompok_gajis->id;
+                $data['role_asal'] = $user->roles->first()->id;
+                // dd($data['role_asal']);
 
                 if (is_null($data['unit_kerja_asal']) || is_null($data['jabatan_asal'])) {
                     throw new Exception('Unit kerja atau jabatan asal tidak ditemukan untuk pengguna ini.');
@@ -314,7 +322,8 @@ class DataTransferKaryawanController extends Controller
                 StorageServerHelper::login();
 
                 $file = $request->file('dokumen');
-                $dataupload = StorageServerHelper::uploadToServer($request, 'Check in berkas - ' . $user->nama);
+                $random_filename = Str::random(20);
+                $dataupload = StorageServerHelper::uploadToServer($request, $random_filename);
                 $data['dokumen'] = $dataupload['path'];
 
                 // Fetch kategori_berkas for 'System'
@@ -327,8 +336,9 @@ class DataTransferKaryawanController extends Controller
                 $berkas = Berkas::create([
                     'user_id' => $data['user_id'],
                     'file_id' => $dataupload['id_file']['id'],
-                    'nama' => 'Berkas Transfer - ' . $user->nama,
+                    'nama' => $random_filename,
                     'kategori_berkas_id' => $kategoriBerkas->id,
+                    'status_berkas_id' => 2,
                     'path' => $dataupload['path'],
                     'tgl_upload' => now(),
                     'nama_file' => $dataupload['nama_file'],
@@ -383,7 +393,7 @@ class DataTransferKaryawanController extends Controller
 
             DB::commit();
 
-            return response()->json(new TransferKaryawanResource(Response::HTTP_OK, "Berhasil melakukan transfer karyawan {$users->nama}.", $transfer), Response::HTTP_OK);
+            return response()->json(new TransferKaryawanResource(Response::HTTP_OK, "Berhasil melakukan transfer karyawan '{$users->nama}'.", $transfer), Response::HTTP_OK);
         } catch (Exception $e) {
             DB::rollBack();
             return response()->json(new WithoutDataResource(Response::HTTP_INTERNAL_SERVER_ERROR, 'Error: ' . $e->getMessage()), Response::HTTP_BAD_REQUEST);

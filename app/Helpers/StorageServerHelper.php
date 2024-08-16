@@ -2,6 +2,7 @@
 
 namespace App\Helpers;
 
+use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Http;
@@ -78,10 +79,13 @@ class StorageServerHelper
 		self::login();
 		$file = $request->file('dokumen');
 
+		// $random_filename = Str::random(20);
+
 		$responseupload = Http::withHeaders([
 			'Authorization' => 'Bearer ' . self::$token,
 		])->asMultipart()->post('http://127.0.0.1:8001/api/upload', [
 			'filename' => $filename,
+			// 'filename' => $random_filename,
 			'file' => fopen($file->getRealPath(), 'r'),
 			'kategori' => 'Umum'
 		]);
