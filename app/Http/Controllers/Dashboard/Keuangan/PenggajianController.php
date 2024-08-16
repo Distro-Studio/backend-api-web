@@ -195,7 +195,7 @@ class PenggajianController extends Controller
             ->orderBy('tgl_mulai', 'desc')
             ->first();
         if (!$jadwalPenggajian) {
-            return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Tidak ada jadwal penggajian yang tersedia.'), Response::HTTP_BAD_REQUEST);
+            return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Tidak ada tanggal penggajian yang tersedia.'), Response::HTTP_BAD_REQUEST);
         }
 
         // Konversi integer ke format tanggal tgl_mulai

@@ -141,7 +141,7 @@ class THRPenggajianController extends Controller
                 ->first();
 
             if (!$jadwalPenggajian) {
-                return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Tidak ada jadwal penggajian yang tersedia.'), Response::HTTP_BAD_REQUEST);
+                return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Tidak ada tanggal penggajian yang tersedia.'), Response::HTTP_BAD_REQUEST);
             }
 
             // Konversi integer ke format tanggal tgl_mulai (ambil hanya tanggalnya)

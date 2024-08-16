@@ -773,7 +773,7 @@ class DataJadwalController extends Controller
     //     }
     // }
 
-    // update fix the issue with jadwal create tgl_mulai
+    // TODO: Tambahkan validasi pada create ini, user id yang dipilih sesuai dengan unit kerja yang melakukan create
     public function store(StoreJadwalKaryawanRequest $request)
     {
         if (!Gate::allows('create jadwalKaryawan')) {
