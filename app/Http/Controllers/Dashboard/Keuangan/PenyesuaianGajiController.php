@@ -257,6 +257,11 @@ class PenyesuaianGajiController extends Controller
                     return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data penggajian terkait tidak ditemukan.'), Response::HTTP_NOT_FOUND);
                 }
 
+                // Validasi berdasarkan status_gaji_id
+                if ($penggajian->status_gaji_id == 2) { // Status 2 berarti penggajian sudah dipublikasikan
+                    return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Penyesuaian gaji tidak dapat dilakukan karena penggajian sudah dipublikasikan.'), Response::HTTP_NOT_ACCEPTABLE);
+                }
+
                 // Tentukan kategori penyesuaian
                 if ($data['kategori_gaji'] == 1) {
                     $kategori = $kategori_penambah;
