@@ -2143,7 +2143,7 @@ class DataKaryawanController extends Controller
       // Jika semua data valid, update status_aktif menjadi 2
       $user->status_aktif = 2;
       $karyawan->verifikator_1 = Auth::id(); // Masukkan auth user_id ke dalam verifikator_1
-      $karyawan->data_completion_step = 1;
+      $user->data_completion_step = 1;
       $karyawan->save(); // Simpan perubahan pada data_karyawans
       $message = "Karyawan '{$karyawan->users->nama}' berhasil diaktifkan.";
     } elseif ($user->status_aktif === 2) {
