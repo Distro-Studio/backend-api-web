@@ -40,6 +40,9 @@ class TransferEmailJob implements ShouldQueue
             $this->details['unit_kerja_tujuans'],
             $this->details['jabatan_asals'],
             $this->details['jabatan_tujuans'],
+            $this->details['kelompok_gaji_asals'],
+            $this->details['kelompok_gaji_tujuans'],
+            $this->details['role_tujuans'],
             $this->details['alasan'],
             $this->details['tgl_mulai']
         );

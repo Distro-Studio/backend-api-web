@@ -164,7 +164,7 @@
 													<table border="0" cellpadding="10" cellspacing="0" class="heading_block block-1" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt;" width="100%">
 														<tr>
 															<td class="pad">
-																<h1 style="margin: 0; color: #10a9a5; direction: ltr; font-family: Arial, Helvetica Neue, Helvetica, sans-serif; font-size: 27px; font-weight: 700; letter-spacing: normal; line-height: 120%; text-align: center; margin-top: 0; margin-bottom: 0; mso-line-height-alt: 32.4px;"><span class="tinyMce-placeholder">Informasi Pemindahan Unit Kerja dan Jabatan Karyawan.<br /></span></h1>
+																<h1 style="margin: 0; color: #10a9a5; direction: ltr; font-family: Arial, Helvetica Neue, Helvetica, sans-serif; font-size: 27px; font-weight: 700; letter-spacing: normal; line-height: 120%; text-align: center; margin-top: 0; margin-bottom: 0; mso-line-height-alt: 32.4px;"><span class="tinyMce-placeholder">Informasi Pemindahan Unit Kerja, Jabatan, Kelompok Gaji, dan Role Karyawan.<br /></span></h1>
 															</td>
 														</tr>
 													</table>
@@ -198,9 +198,10 @@
 															<td class="pad">
 																<div style="color:#201f42;direction:ltr;font-family:Arial, Helvetica Neue, Helvetica, sans-serif;font-size:17px;font-weight:400;letter-spacing:0px;line-height:180%;text-align:left;mso-line-height-alt:30.6px;">
 																	<p style="margin: 0; margin-bottom: 15px;">Salam sejahtera,</p>
-																	<p style="margin: 0; margin-bottom: 15px;">Kami ingin memberitahukan bahwa karyawan <strong>{{ $nama }}</strong> dengan email <strong>{{ $email }}</strong> akan dipindah tugaskan dari Unit Kerja <strong>{{ $unit_kerja_asals }}</strong> ke Unit Kerja <strong>{{ $unit_kerja_tujuans }}</strong> dengan jabatan awal <strong>{{ $jabatan_asals }}</strong> menjadi <strong>{{ $jabatan_tujuans }}</strong>. Perpindahan ini akan efektif dan dimulai pada <strong>{{ $tanggal_mulai }}</strong>.</p>
+																	<p style="margin: 0; margin-bottom: 15px;">Kami ingin menginformasikan bahwa karyawan <strong>{{ $nama }}</strong> dengan email <strong>{{ $email }}</strong> akan dipindah tugaskan dari <strong>{{ $unit_kerja_asals }}</strong> ke <strong>{{ $unit_kerja_tujuans }}</strong>.Jabatan karyawan tersebut akan berubah dari <strong>{{ $jabatan_asals }}</strong> menjadi <strong>{{ $jabatan_tujuans }}</strong>.  Kelompok gaji yang sebelumnya <strong>{{ $kelompok_gaji_asals }}</strong> akan berubah menjadi <strong>{{ $kelompok_gaji_tujuans }}</strong> dengan role <strong>{{ $role_tujuans }}</strong>.
+																	<p style="margin: 0; margin-bottom: 15px;">Perpindahan ini akan efektif dan dimulai pada <strong>{{ $tanggal_mulai }}</strong>.</p>
 																	<p style="margin: 0; margin-bottom: 15px;">Alasan perpindahan: <strong>{{ $alasan }}</strong>.</p>
-																	<p style="margin: 0; margin-bottom: 15px;">Jika Anda memiliki pertanyaan lebih lanjut, jangan ragu untuk menghubungi <span style="color: #000000;"><u><strong><a href="https://adminattendancedistro.netlify.app/karyawan/transfer-karyawan" rel="noopener" style="text-decoration: underline; color: #000000;" target="_blank"><u><strong>HRD Kami</strong></u></a></strong></u></span>.</p>
+																	<p style="margin: 0; margin-bottom: 15px;">Jika Anda memiliki pertanyaan lebih lanjut, jangan ragu untuk menghubungi <span style="color: #000000;"><u><strong><a href="https://adminattendancedistro.netlify.app/karyawan/transfer-karyawan" rel="noopener" style="text-decoration: underline; color: #000000;" target="_blank"><u><strong>Tim Personalia Kami</strong></u></a></strong></u></span>.</p>
 																	<p style="margin: 0; margin-bottom: 15px;">Terima kasih atas perhatian dan kerja sama Anda.</p>
 																	<p style="margin: 0; margin-bottom: 15px;"> </p>
 																	<p style="margin: 0; margin-bottom: 15px;">Hormat kami,</p>

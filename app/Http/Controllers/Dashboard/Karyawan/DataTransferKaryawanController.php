@@ -24,6 +24,7 @@ use App\Jobs\EmailNotification\TransferEmailJob;
 use App\Http\Requests\StoreTransferKaryawanRequest;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
 use App\Http\Resources\Dashboard\Karyawan\TransferKaryawanResource;
+use Carbon\Carbon;
 
 class DataTransferKaryawanController extends Controller
 {
@@ -302,16 +303,16 @@ class DataTransferKaryawanController extends Controller
         try {
             if ($request->hasFile('dokumen')) {
                 // Ambil data user dan relasinya
-                $user = User::with('data_karyawans.unit_kerjas', 'data_karyawans.jabatans')->find($data['user_id']);
+                $user = User::with('data_karyawans.unit_kerjas', 'data_karyawans.jabatans', 'data_karyawans.kelompok_gajis', 'roles')->find($data['user_id']);
                 if (!$user) {
                     throw new Exception('Pengguna tidak ditemukan.');
                 }
 
                 // Ambil unit kerja dan jabatan asal dari user yang dipilih
-                $data['unit_kerja_asal'] = $user->data_karyawans->unit_kerjas->id;
-                $data['jabatan_asal'] = $user->data_karyawans->jabatans->id;
-                $data['kelompok_gaji_asal'] = $user->data_karyawans->kelompok_gajis->id;
-                $data['role_asal'] = $user->roles->first()->id;
+                $data['unit_kerja_asal'] = $user->data_karyawans->unit_kerjas->id ?? $data['unit_kerja_asal'];
+                $data['jabatan_asal'] = $user->data_karyawans->jabatans->id ?? $data['jabatan_asal'];
+                $data['kelompok_gaji_asal'] = $user->data_karyawans->kelompok_gajis->id ?? $data['kelompok_gaji_asal'];
+                $data['role_asal'] = $user->roles->first()->id ?? $data['role_asal'];
                 // dd($data['role_asal']);
 
                 if (is_null($data['unit_kerja_asal']) || is_null($data['jabatan_asal'])) {
@@ -326,7 +327,6 @@ class DataTransferKaryawanController extends Controller
                 $dataupload = StorageServerHelper::uploadToServer($request, $random_filename);
                 $data['dokumen'] = $dataupload['path'];
 
-                // Fetch kategori_berkas for 'System'
                 $kategoriBerkas = KategoriBerkas::where('label', 'System')->first();
                 if (!$kategoriBerkas) {
                     throw new Exception('Kategori berkas tidak ditemukan.');
@@ -357,10 +357,20 @@ class DataTransferKaryawanController extends Controller
             $transfer = TransferKaryawan::create($data);
 
             $users = $transfer->users;
-            $unit_kerja_asals = $transfer->unit_kerja_asals->nama_unit;
-            $unit_kerja_tujuans = $transfer->unit_kerja_tujuans->nama_unit;
-            $jabatan_asals = $transfer->jabatan_asals->nama_jabatan;
-            $jabatan_tujuans = $transfer->jabatan_tujuans->nama_jabatan;
+            // $unit_kerja_asals = $transfer->unit_kerja_asals->nama_unit;
+            // $unit_kerja_tujuans = $transfer->unit_kerja_tujuans->nama_unit;
+            // $jabatan_asals = $transfer->jabatan_asals->nama_jabatan;
+            // $jabatan_tujuans = $transfer->jabatan_tujuans->nama_jabatan;
+            // $kelompok_gaji_asals = $transfer->kelompok_gaji_asals->nama_kelompok;
+            // $kelompok_gaji_tujuans = $transfer->kelompok_gaji_tujuans->nama_kelompok;
+            // $role_asal = $users->role_asals->name;
+            $unit_kerja_asals = $transfer->unit_kerja_asals->nama_unit ?? $user->data_karyawans->unit_kerjas->nama_unit;
+            $unit_kerja_tujuans = $transfer->unit_kerja_tujuans->nama_unit ?? $unit_kerja_asals;
+            $jabatan_asals = $transfer->jabatan_asals->nama_jabatan ?? $user->data_karyawans->jabatans->nama_jabatan;
+            $jabatan_tujuans = $transfer->jabatan_tujuans->nama_jabatan ?? $jabatan_asals;
+            $kelompok_gaji_asals = $transfer->kelompok_gaji_asals->nama_kelompok ?? $user->data_karyawans->kelompok_gajis->nama_kelompok;
+            $kelompok_gaji_tujuans = $transfer->kelompok_gaji_tujuans->nama_kelompok ?? $kelompok_gaji_asals;
+            $role_tujuans = $users->role_tujuans->name ?? $user->roles->first()->name;
             $alasan = $transfer->alasan;
             $tgl_mulai = $transfer->tgl_mulai;
 
@@ -380,6 +390,9 @@ class DataTransferKaryawanController extends Controller
                 'unit_kerja_tujuans' => $unit_kerja_tujuans,
                 'jabatan_asals' => $jabatan_asals,
                 'jabatan_tujuans' => $jabatan_tujuans,
+                'kelompok_gaji_asals' => $kelompok_gaji_asals,
+                'kelompok_gaji_tujuans' => $kelompok_gaji_tujuans,
+                'role_tujuans' => $role_tujuans,
                 'alasan' => $alasan,
                 'tgl_mulai' => RandomHelper::convertToDateTimeString($tgl_mulai),
             ];
