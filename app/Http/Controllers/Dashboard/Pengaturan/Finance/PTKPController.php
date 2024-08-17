@@ -96,7 +96,10 @@ class PTKPController extends Controller
         // Validasi unique
         $existingDataValidation = Ptkp::where('kode_ptkp', $data['kode_ptkp'])->where('id', '!=', $id)->first();
         if ($existingDataValidation) {
-            return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Kode PTKP tersebut sudah pernah dibuat.'), Response::HTTP_BAD_REQUEST);
+            return response()->json([
+                'status' => Response::HTTP_BAD_REQUEST,
+                'message' => "Kode PTKP '{$data['kode_ptkp']}' sudah ada.",
+            ], Response::HTTP_BAD_REQUEST);
         }
 
         $ptkp->update($data);

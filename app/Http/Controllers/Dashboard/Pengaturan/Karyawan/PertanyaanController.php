@@ -34,7 +34,9 @@ class PertanyaanController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
-        $pertanyaan = Pertanyaan::withTrashed()->orderBy('created_at', 'desc');
+        $pertanyaan = Pertanyaan::withTrashed()
+            ->with(['jenis_penilaians.status_karyawans', 'jenis_penilaians.jabatan_penilais', 'jenis_penilaians.jabatan_dinilais'])
+            ->orderBy('created_at', 'desc');
 
         $dataPertanyaan = $pertanyaan->get();
         $successMessage = "Data kuesioner berhasil ditampilkan.";

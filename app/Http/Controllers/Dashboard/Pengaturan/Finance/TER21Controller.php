@@ -8,12 +8,8 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Collection;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Gate;
-use Maatwebsite\Excel\Facades\Excel;
 use App\Http\Requests\StoreTERRequest;
 use App\Http\Requests\UpdateTERRequest;
-use App\Exports\Pengaturan\Finance\TER21Export;
-use App\Imports\Pengaturan\Finance\TER21Import;
-use App\Http\Requests\Excel_Import\ImportTER21Request;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
 use App\Models\KategoriTer;
 
@@ -127,10 +123,10 @@ class TER21Controller extends Controller
         $data = $request->validated();
 
         // Validasi unique pada relasi kategori_ter_id
-        $existingDataValidation = Ter::where('kategori_ter_id', $data['kategori_ter_id'])->where('id', '!=', $id)->first();
-        if ($existingDataValidation) {
-            return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Kategori TER dengan ID tersebut sudah ada.'), Response::HTTP_BAD_REQUEST);
-        }
+        // $existingDataValidation = Ter::where('kategori_ter_id', $data['kategori_ter_id'])->where('id', '!=', $id)->first();
+        // if ($existingDataValidation) {
+        //     return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Kategori TER dengan ID tersebut sudah ada.'), Response::HTTP_BAD_REQUEST);
+        // }
 
         $ter_pph_21->update($data);
         $successMessage = "Data TER PPH21 berhasil diubah.";
