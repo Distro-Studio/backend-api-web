@@ -17,7 +17,7 @@ class PermissionSeeder extends Seeder
             // Perusahaan
             'Diklat' => ['create diklat', 'view diklat', 'export diklat'],
             'Pelaporan Karyawan' => ['view pelaporanKaryawan', 'export pelaporanKaryawan'],
-            'Penilaian Karyawan' => ['create penilaianKaryawan', 'view penilaianKaryawan', 'edit penilaianKaryawan', 'export penilaianKaryawan'],
+            
 
             // Keuangan
             'Penggajian THR Karyawan' => ['create thrKaryawan', 'view thrKaryawan', 'export thrKaryawan'],
@@ -56,6 +56,7 @@ class PermissionSeeder extends Seeder
             'Pengaturan Hari Libur' => ['create hariLibur', 'edit hariLibur', 'delete hariLibur', 'view hariLibur', 'import hariLibur', 'export hariLibur'],
             'Pengaturan Cuti' => ['create cuti', 'edit cuti', 'delete cuti', 'view cuti', 'import cuti', 'export cuti'],
             'Pengaturan Lokasi Kantor' => ['edit lokasiKantor', 'view lokasiKantor'],
+            'Penilaian Karyawan' => ['create penilaianKaryawan', 'view penilaianKaryawan', 'edit penilaianKaryawan', 'delete penilaianKaryawan', 'export penilaianKaryawan'],
         ];
 
         foreach ($permissions as $group => $perms) {

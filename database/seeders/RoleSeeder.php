@@ -48,7 +48,6 @@ class RoleSeeder extends Seeder
         $roleSuperAdmin->givePermissionTo([
             'create diklat', 'view diklat', 'export diklat',
             'view pelaporanKaryawan', 'export pelaporanKaryawan',
-            'create penilaianKaryawan', 'view penilaianKaryawan', 'edit penilaianKaryawan', 'export penilaianKaryawan',
 
             'create penggajianKaryawan', 'edit penggajianKaryawan', 'view penggajianKaryawan', 'delete penggajianKaryawan', 'import penggajianKaryawan', 'export penggajianKaryawan',
             'create thrKaryawan', 'view thrKaryawan', 'export thrKaryawan',
@@ -83,7 +82,8 @@ class RoleSeeder extends Seeder
             'create shift', 'edit shift', 'delete shift', 'view shift', 'import shift', 'export shift',
             'create hariLibur', 'edit hariLibur', 'delete hariLibur', 'view hariLibur', 'import hariLibur', 'export hariLibur',
             'create cuti', 'edit cuti', 'delete cuti', 'view cuti', 'import cuti', 'export cuti',
-            'edit lokasiKantor', 'view lokasiKantor'
+            'edit lokasiKantor', 'view lokasiKantor',
+            'create penilaianKaryawan', 'view penilaianKaryawan', 'edit penilaianKaryawan', 'delete penilaianKaryawan', 'export penilaianKaryawan'
         ]);
     }
 }

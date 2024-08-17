@@ -37,6 +37,7 @@ use App\Http\Controllers\Dashboard\Perusahaan\PelaporanController;
 use App\Http\Controllers\Dashboard\Perusahaan\PenilaianController;
 use App\Http\Controllers\Dashboard\Presensi\DataPresensiController;
 use App\Http\Controllers\Publik\Auth\LoginController;
+use App\Models\JenisPenilaian;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -213,7 +214,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::get('/pelaporan/export', [PelaporanController::class, 'exportPelaporan']);
 
             // ! Jenis Penilaian ===========>
-            // Route::post('/get-data-jenis-penilaian', [JenisPenilaianController::class, 'index']);
+            Route::post('/jenis-penilaian/restore/{jenis_penilaian}', [JenisPenilaianController::class, 'restore']);
             Route::get('/jenis-penilaian/export', [JenisPenilaianController::class, 'exportJenisPenilaian']);
             Route::apiResource('/jenis-penilaian', JenisPenilaianController::class);
 

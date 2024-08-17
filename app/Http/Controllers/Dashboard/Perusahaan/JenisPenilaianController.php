@@ -88,6 +88,37 @@ class JenisPenilaianController extends Controller
         return response()->json(new JenisPenilaianResource(Response::HTTP_OK, $message, $jenis_penilaian), Response::HTTP_OK);
     }
 
+    public function destroy(JenisPenilaian $jenis_penilaian)
+    {
+        if (!Gate::allows('delete penilaianKaryawan', $jenis_penilaian)) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
+
+        $jenis_penilaian->delete();
+
+        $successMessage = "Data jenis penilaian '{$jenis_penilaian->nama}' berhasil dihapus.";
+        return response()->json(new WithoutDataResource(Response::HTTP_OK, $successMessage), Response::HTTP_OK);
+    }
+
+    public function restore($jenis_penilaian)
+    {
+        $jenis_penilaian = JenisPenilaian::withTrashed()->find($jenis_penilaian);
+
+        if (!Gate::allows('delete penilaianKaryawan', $jenis_penilaian)) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
+
+        $jenis_penilaian->restore();
+
+        if (is_null($jenis_penilaian->deleted_at)) {
+            $successMessage = "Data jenis penilaian '{$jenis_penilaian->nama}' berhasil dipulihkan.";
+            return response()->json(new WithoutDataResource(Response::HTTP_OK, $successMessage), Response::HTTP_OK);
+        } else {
+            $successMessage = 'Restore data tidak dapat diproses, Silahkan hubungi admin untuk dilakukan pengecekan ulang.';
+            return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, $successMessage), Response::HTTP_BAD_REQUEST);
+        }
+    }
+
     protected function formatData(Collection $collection)
     {
         return $collection->transform(function ($jenis_penilaian) {
