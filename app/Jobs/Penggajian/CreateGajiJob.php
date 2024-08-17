@@ -550,7 +550,48 @@ class CreateGajiJob implements ShouldQueue
         return $pph21;
     }
 
-    private function calculatedPenyesuaianPenambah($kategori_penambah, $penggajian_id, &$takeHomePay)
+    // private function calculatedPenyesuaianPenambah($kategori_penambah, $penggajian_id, &$takeHomePay)
+    // {
+    //     $details = [];
+
+    //     // Ambil data penyesuaian gaji penambah berdasarkan penggajian_id
+    //     $penyesuaianGajis = DB::table('penyesuaian_gajis')
+    //         ->where('penggajian_id', $penggajian_id)
+    //         ->where('kategori_gaji_id', $kategori_penambah)
+    //         ->get();
+
+    //     // Iterasi setiap penyesuaian gaji untuk validasi dan perhitungan
+    //     foreach ($penyesuaianGajis as $penyesuaianGaji) {
+    //         // $bulanMulai = $penyesuaianGaji->bulan_mulai ? Carbon::parse($penyesuaianGaji->bulan_mulai) : null;
+    //         // $bulanSelesai = $penyesuaianGaji->bulan_selesai ? Carbon::parse($penyesuaianGaji->bulan_selesai) : null;
+    //         $bulanMulai = $penyesuaianGaji->bulan_mulai ? Carbon::parse(RandomHelper::convertToDateString($penyesuaianGaji->bulan_mulai)) : null;
+    //         $bulanSelesai = $penyesuaianGaji->bulan_selesai ? Carbon::parse(RandomHelper::convertToDateString($penyesuaianGaji->bulan_selesai)) : null;
+    //         $currentDate = Carbon::now();
+
+    //         // Cek apakah saat ini berada pada rentang bulan mulai dan selesai atau jika null
+    //         if (
+    //             ($bulanMulai && $bulanSelesai && $currentDate->between($bulanMulai, $bulanSelesai)) ||
+    //             (!$bulanMulai && !$bulanSelesai) ||
+    //             ($bulanMulai && !$bulanSelesai && $currentDate->greaterThanOrEqualTo($bulanMulai)) ||
+    //             (!$bulanMulai && $bulanSelesai && $currentDate->lessThanOrEqualTo($bulanSelesai))
+    //         ) {
+    //             // Tambahkan take_home_pay dengan besaran penyesuaian gaji
+    //             $takeHomePay += $penyesuaianGaji->besaran;
+
+    //             // Tambahkan detail penyesuaian gaji ke array details
+    //             $details[] = [
+    //                 'penggajian_id' => $penggajian_id,
+    //                 'kategori_gaji_id' => $kategori_penambah,
+    //                 'nama_detail' => $penyesuaianGaji->nama_detail,
+    //                 'besaran' => $penyesuaianGaji->besaran
+    //             ];
+    //         }
+    //     }
+
+    //     return $details;
+    // }
+
+    private function calculatedPenyesuaianPenambah($kategori_penambah, $penggajian_id, &$penghasilanBruto)
     {
         $details = [];
 
@@ -576,7 +617,7 @@ class CreateGajiJob implements ShouldQueue
                 (!$bulanMulai && $bulanSelesai && $currentDate->lessThanOrEqualTo($bulanSelesai))
             ) {
                 // Tambahkan take_home_pay dengan besaran penyesuaian gaji
-                $takeHomePay += $penyesuaianGaji->besaran;
+                $penghasilanBruto += $penyesuaianGaji->besaran;
 
                 // Tambahkan detail penyesuaian gaji ke array details
                 $details[] = [
@@ -591,7 +632,48 @@ class CreateGajiJob implements ShouldQueue
         return $details;
     }
 
-    private function calculatedPenyesuaianPengurang($kategori_pengurang, $penggajian_id, &$takeHomePay)
+    // private function calculatedPenyesuaianPengurang($kategori_pengurang, $penggajian_id, &$takeHomePay)
+    // {
+    //     $details = [];
+
+    //     // Ambil data penyesuaian gaji pengurang berdasarkan penggajian_id
+    //     $penyesuaianGajis = DB::table('penyesuaian_gajis')
+    //         ->where('penggajian_id', $penggajian_id)
+    //         ->where('kategori_gaji_id', $kategori_pengurang)
+    //         ->get();
+
+    //     // Iterasi setiap penyesuaian gaji untuk validasi dan perhitungan
+    //     foreach ($penyesuaianGajis as $penyesuaianGaji) {
+    //         // $bulanMulai = $penyesuaianGaji->bulan_mulai ? Carbon::parse($penyesuaianGaji->bulan_mulai) : null;
+    //         // $bulanSelesai = $penyesuaianGaji->bulan_selesai ? Carbon::parse($penyesuaianGaji->bulan_selesai) : null;
+    //         $bulanMulai = $penyesuaianGaji->bulan_mulai ? Carbon::parse(RandomHelper::convertToDateString($penyesuaianGaji->bulan_mulai)) : null;
+    //         $bulanSelesai = $penyesuaianGaji->bulan_selesai ? Carbon::parse(RandomHelper::convertToDateString($penyesuaianGaji->bulan_selesai)) : null;
+    //         $currentDate = Carbon::now();
+
+    //         // Cek apakah saat ini berada pada rentang bulan mulai dan selesai atau jika null
+    //         if (
+    //             ($bulanMulai && $bulanSelesai && $currentDate->between($bulanMulai, $bulanSelesai)) ||
+    //             (!$bulanMulai && !$bulanSelesai) ||
+    //             ($bulanMulai && !$bulanSelesai && $currentDate->greaterThanOrEqualTo($bulanMulai)) ||
+    //             (!$bulanMulai && $bulanSelesai && $currentDate->lessThanOrEqualTo($bulanSelesai))
+    //         ) {
+    //             // Kurangi take_home_pay dengan besaran penyesuaian gaji
+    //             $takeHomePay -= $penyesuaianGaji->besaran;
+
+    //             // Tambahkan detail penyesuaian gaji ke array details
+    //             $details[] = [
+    //                 'penggajian_id' => $penggajian_id,
+    //                 'kategori_gaji_id' => $kategori_pengurang,
+    //                 'nama_detail' => $penyesuaianGaji->nama_detail,
+    //                 'besaran' => $penyesuaianGaji->besaran
+    //             ];
+    //         }
+    //     }
+
+    //     return $details;
+    // }
+
+    private function calculatedPenyesuaianPengurang($kategori_pengurang, $penggajian_id, &$penghasilanBruto)
     {
         $details = [];
 
@@ -617,7 +699,7 @@ class CreateGajiJob implements ShouldQueue
                 (!$bulanMulai && $bulanSelesai && $currentDate->lessThanOrEqualTo($bulanSelesai))
             ) {
                 // Kurangi take_home_pay dengan besaran penyesuaian gaji
-                $takeHomePay -= $penyesuaianGaji->besaran;
+                $penghasilanBruto -= $penyesuaianGaji->besaran;
 
                 // Tambahkan detail penyesuaian gaji ke array details
                 $details[] = [
