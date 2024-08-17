@@ -118,7 +118,7 @@ class DatabaseSeeder extends Seeder
       TransferKaryawanSeeder::class,
       RiwayatPerubahanSeeder::class,
 
-      // /* ==== Jadwals ==== */
+      // // /* ==== Jadwals ==== */
       // JadwalSeeder::class,
       // LemburSeeder::class,
       // CutiJadwalSeeder::class,
@@ -127,11 +127,11 @@ class DatabaseSeeder extends Seeder
       // /* ==== Presensi ==== */
       // PresensiSeeder::class,
 
-      // /* ==== Keuangan ==== */
-      // TanggalGajiSeeder::class,
-      // PenggajianSeeder::class,
-      // RiwayatPenggajianSeeder::class,
-      // THRPenggajianSeeder::class,
+      /* ==== Keuangan ==== */
+      TanggalGajiSeeder::class,
+      PenggajianSeeder::class,
+      RiwayatPenggajianSeeder::class,
+      THRPenggajianSeeder::class,
 
       /* ==== Perusahaan ==== */
       DiklatSeeder::class,

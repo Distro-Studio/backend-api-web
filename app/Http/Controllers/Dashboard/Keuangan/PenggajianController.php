@@ -187,7 +187,7 @@ class PenggajianController extends Controller
         }
 
         $data_karyawan_ids = DataKaryawan::where('email', '!=', 'super_admin@admin.rski')->pluck('id')->toArray();
-        $sertakan_bor = $request->has('sertakan_bor') && $request->sertakan_bor == 1;
+        $sertakan_bor = $request->has('bor') && $request->bor == 1;
 
         // Ambil jadwal penggajian dari tabel jadwal_penggajians
         $jadwalPenggajian = DB::table('jadwal_penggajians')

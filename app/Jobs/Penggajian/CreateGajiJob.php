@@ -49,6 +49,7 @@ class CreateGajiJob implements ShouldQueue
             ->whereMonth('tgl_run_thr', $currentMonth)
             ->whereYear('tgl_run_thr', $currentYear)
             ->exists();
+        Log::info("THR Exists: " . $thrExists);
 
         // Ambil semua data_karyawan_id dari tabel run_thrs untuk periode saat ini
         $thrKaryawanIds = [];
@@ -105,7 +106,7 @@ class CreateGajiJob implements ShouldQueue
             $penghasilanTHR = in_array($data_karyawan_id, $thrKaryawanIds) ? $this->calculatedTHR($dataKaryawan) : 0;
 
             // Hitung penghasilan THR, bruto, total tunjangan, dan total premi
-            $penghasilanTHR = $this->calculatedTHR($dataKaryawan);
+            // $penghasilanTHR = $this->calculatedTHR($dataKaryawan);
             $penghasilanBruto = $this->calculatedPenghasilanBruto($dataKaryawan, $totalReward, $penghasilanTHR);
             $totalTunjangan = $this->calculatedTotalTunjangan($dataKaryawan);
             $totalPremi = $this->calculatedPremi($data_karyawan_id, $penghasilanBruto, $dataKaryawan->gaji_pokok);
@@ -167,7 +168,7 @@ class CreateGajiJob implements ShouldQueue
             // calculatedPenyesuaianPenambah menambah take_home_pay
             $penyesuaianPenambahDetails = $this->calculatedPenyesuaianPenambah($kategori_penambah, $penggajian->id, $penggajianData['take_home_pay']);
             // calculatedPenyesuaianPengurang mengurangi take_home_pay
-            $penyesuaianPengurangDetails = $this->calculatedPenyesuaianPengurang($kategori_pengurang ,$penggajian->id, $penggajianData['take_home_pay']);
+            $penyesuaianPengurangDetails = $this->calculatedPenyesuaianPengurang($kategori_pengurang, $penggajian->id, $penggajianData['take_home_pay']);
 
             $penggajian->update(['take_home_pay' => $penggajianData['take_home_pay']]);
 
@@ -549,7 +550,7 @@ class CreateGajiJob implements ShouldQueue
         return $pph21;
     }
 
-    private function calculatedPenyesuaianPenambah($kategori_penambah ,$penggajian_id, &$takeHomePay)
+    private function calculatedPenyesuaianPenambah($kategori_penambah, $penggajian_id, &$takeHomePay)
     {
         $details = [];
 
@@ -590,7 +591,7 @@ class CreateGajiJob implements ShouldQueue
         return $details;
     }
 
-    private function calculatedPenyesuaianPengurang($kategori_pengurang ,$penggajian_id, &$takeHomePay)
+    private function calculatedPenyesuaianPengurang($kategori_pengurang, $penggajian_id, &$takeHomePay)
     {
         $details = [];
 
