@@ -25,7 +25,7 @@ class PengumumanController extends Controller
         $cutoffDate = $today->format('Y-m-d');
 
         // Delete announcements that ended more than 2 days ago
-        Pengumuman::where('tgl_berakhir', '<', $cutoffDate)->delete();
+        // Pengumuman::where('tgl_berakhir', '<', $cutoffDate)->delete();
 
         // Fetch announcements that have not yet ended
         $pengumuman = Pengumuman::where('tgl_berakhir', '>=', $today->format('Y-m-d'))->orderBy('created_at', 'desc')->get();

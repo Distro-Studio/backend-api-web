@@ -14,7 +14,7 @@ use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
 
 class JabatanController extends Controller
 {
-    public function index(Request $request)
+    public function index()
     {
         if (!Gate::allows('view jabatan')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
