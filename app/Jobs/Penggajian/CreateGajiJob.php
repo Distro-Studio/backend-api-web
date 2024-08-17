@@ -166,11 +166,11 @@ class CreateGajiJob implements ShouldQueue
             }
 
             // calculatedPenyesuaianPenambah menambah take_home_pay
-            $penyesuaianPenambahDetails = $this->calculatedPenyesuaianPenambah($kategori_penambah, $penggajian->id, $penggajianData['take_home_pay']);
+            $penyesuaianPenambahDetails = $this->calculatedPenyesuaianPenambah($kategori_penambah, $penggajian->id, $penggajianData['gaji_bruto']);
             // calculatedPenyesuaianPengurang mengurangi take_home_pay
-            $penyesuaianPengurangDetails = $this->calculatedPenyesuaianPengurang($kategori_pengurang, $penggajian->id, $penggajianData['take_home_pay']);
+            $penyesuaianPengurangDetails = $this->calculatedPenyesuaianPengurang($kategori_pengurang, $penggajian->id, $penggajianData['gaji_bruto']);
 
-            $penggajian->update(['take_home_pay' => $penggajianData['take_home_pay']]);
+            $penggajian->update(['gaji_bruto' => $penggajianData['gaji_bruto']]);
 
             $details = [
                 [
