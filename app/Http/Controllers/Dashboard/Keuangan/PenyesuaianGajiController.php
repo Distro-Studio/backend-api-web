@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Gate;
 use Maatwebsite\Excel\Facades\Excel;
+use App\Jobs\Penggajian\CreateGajiJob;
 use App\Exports\Keuangan\PenyesuaianGajiExport;
 use App\Http\Requests\StorePenyesuaianGajiRequest;
 use App\Http\Requests\StorePenyesuaianGajiCustomRequest;
@@ -399,6 +400,59 @@ class PenyesuaianGajiController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_INTERNAL_SERVER_ERROR, 'Terjadi kesalahan saat menyimpan penyesuaian gaji: ' . $e->getMessage()), Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
+
+    // new
+    // public function storePenyesuaianGajiPenambah(StorePenyesuaianGajiCustomRequest $request, $penggajian_id)
+    // {
+    //     if (!Gate::allows('create penggajianKaryawan')) {
+    //         return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+    //     }
+
+    //     $data = $request->validated();
+
+    //     // Cek apakah penggajian_id valid
+    //     $penggajian = Penggajian::find($penggajian_id);
+    //     if (!$penggajian) {
+    //         return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data penggajian tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+    //     }
+
+    //     DB::beginTransaction();
+    //     try {
+    //         // Simpan penyesuaian gaji
+    //         $penyesuaianGaji = PenyesuaianGaji::create([
+    //             'penggajian_id' => $penggajian_id,
+    //             'kategori_gaji_id' => 2,
+    //             'nama_detail' => $request->nama_detail,
+    //             'besaran' => $request->besaran,
+    //             'bulan_mulai' => $request->bulan_mulai,
+    //             'bulan_selesai' => $request->bulan_selesai,
+    //         ]);
+
+    //         // Cek apakah bulan mulai adalah bulan saat ini
+    //         $currentMonth = Carbon::now()->month;
+    //         $currentYear = Carbon::now()->year;
+    //         $bulanMulai = Carbon::parse(RandomHelper::convertToDateString($request->bulan_mulai));
+
+    //         if ($bulanMulai->month == $currentMonth && $bulanMulai->year == $currentYear) {
+    //             // Lempar besaran dan penggajian_id ke dalam job untuk perhitungan ulang
+    //             dispatch(new CreateGajiJob($request->besaran, $penggajian_id));
+    //             // CreateGajiJob::dispatch($request->besaran, $penggajian_id);
+    //         }
+
+    //         DB::commit();
+
+    //         $userName = $penggajian->data_karyawans->users->nama;
+
+    //         return response()->json([
+    //             'status' => Response::HTTP_OK,
+    //             'message' => "Penambahan penggajian '{$penyesuaianGaji->nama_detail}' berhasil dilakukan untuk karyawan '{$userName}'.",
+    //             'data' => $penyesuaianGaji
+    //         ], Response::HTTP_OK);
+    //     } catch (\Exception $e) {
+    //         DB::rollBack();
+    //         return response()->json(new WithoutDataResource(Response::HTTP_INTERNAL_SERVER_ERROR, 'Terjadi kesalahan saat menyimpan penyesuaian gaji: ' . $e->getMessage()), Response::HTTP_INTERNAL_SERVER_ERROR);
+    //     }
+    // }
 
     public function storePenyesuaianGajiPengurang(StorePenyesuaianGajiCustomRequest $request, $penggajian_id)
     {

@@ -512,7 +512,7 @@ class DataJadwalController extends Controller
     //     ], Response::HTTP_OK);
     // }
 
-    // ini tanggal shift dan non shift tidak dengan hari libur
+    //ini tanggal shift dan non shift tidak dengan hari libur
     // public function index(Request $request)
     // {
     //     if (!Gate::allows('view jadwalKaryawan')) {
@@ -760,6 +760,7 @@ class DataJadwalController extends Controller
 
         // Membuat query pengguna
         $usersQuery = User::where('nama', '!=', 'Super Admin');
+        // $usersQuery = User::where('nama', '!=', 'Super Admin')->where('status_aktif', 2);
 
         // Filter berdasarkan filter yang diberikan
         if (isset($filters['unit_kerja'])) {
@@ -944,6 +945,14 @@ class DataJadwalController extends Controller
             ];
         });
 
+        // Check if the result is empty
+        if ($result->isEmpty()) {
+            return response()->json([
+                'status' => Response::HTTP_NOT_FOUND,
+                'message' => 'Data jadwal karyawan tidak ditemukan.',
+            ], Response::HTTP_NOT_FOUND);
+        }
+
         return response()->json([
             'status' => Response::HTTP_OK,
             'message' => 'Data jadwal karyawan berhasil ditampilkan.',
@@ -951,7 +960,6 @@ class DataJadwalController extends Controller
             'pagination' => $paginationData
         ], Response::HTTP_OK);
     }
-
 
     // TODO: Tambahkan validasi pada create ini, user id yang dipilih sesuai dengan unit kerja yang melakukan create
     public function store(StoreJadwalKaryawanRequest $request)

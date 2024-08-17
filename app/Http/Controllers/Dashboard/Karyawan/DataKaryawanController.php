@@ -241,7 +241,10 @@ class DataKaryawanController extends Controller
       ->first();
 
     if (!$presensiHariIni) {
-      return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data presensi karyawan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+      return response()->json([
+        'status' => Response::HTTP_NOT_FOUND,
+        'message' => 'Data presensi karyawan tidak ditemukan.'
+      ], Response::HTTP_NOT_FOUND);
     }
 
     $fotoMasukBerkas = Berkas::where('id', $presensiHariIni->foto_masuk)->first();
@@ -372,14 +375,20 @@ class DataKaryawanController extends Controller
       ->find($data_karyawan_id);
 
     if (!$karyawan) {
-      return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data karyawan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+      return response()->json([
+        'status' => Response::HTTP_NOT_FOUND,
+        'message' => 'Data karyawan tidak ditemukan.'
+      ], Response::HTTP_NOT_FOUND);
     }
 
     // Ambil data user yang terkait dengan karyawan
     $user = $karyawan->users;
 
     if (!$user) {
-      return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'User tidak ditemukan untuk data karyawan ini.'), Response::HTTP_NOT_FOUND);
+      return response()->json([
+        'status' => Response::HTTP_NOT_FOUND,
+        'message' => 'User tidak ditemukan untuk data karyawan ini.'
+      ], Response::HTTP_NOT_FOUND);
     }
 
     // Format data jadwal
@@ -402,6 +411,13 @@ class DataKaryawanController extends Controller
         ];
         $current_date->addDay();
       }
+    }
+
+    if (empty($user_schedule_array)) {
+      return response()->json([
+        'status' => Response::HTTP_NOT_FOUND,
+        'message' => 'Jadwal karyawan tidak ditemukan.',
+      ], Response::HTTP_NOT_FOUND);
     }
 
     // Format respons
@@ -535,10 +551,6 @@ class DataKaryawanController extends Controller
       ->where('kategori_record_id', 1)
       ->get();
 
-    if ($rekamJejakList->isEmpty() && $dataPerubahanList->isEmpty()) {
-      return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data rekam jejak karyawan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
-    }
-
     // Format data rekam jejak kategori 2 dan 3
     $formattedRekamJejak = $rekamJejakList->map(function ($item) {
       $user = $item->users;
@@ -613,6 +625,13 @@ class DataKaryawanController extends Controller
     // Menggabungkan semua data yang diformat
     $allFormattedData = $formattedRekamJejak->merge($formattedDataPerubahan);
 
+    if ($allFormattedData->isEmpty()) {
+      return response()->json([
+        'status' => Response::HTTP_NOT_FOUND,
+        'message' => 'Data rekam jejak karyawan tidak ditemukan.',
+      ], Response::HTTP_NOT_FOUND);
+    }
+
     // Menghitung masa kerja dengan helper
     $tglMasuk = RandomHelper::convertToDateString($karyawan->tgl_masuk);
     $tglKeluar = $user->tgl_keluar ? RandomHelper::convertToDateString($karyawan->tgl_keluar) : null;
@@ -644,7 +663,10 @@ class DataKaryawanController extends Controller
       ->get();
 
     if ($keluarga->isEmpty()) {
-      return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data keluarga karyawan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+      return response()->json([
+        'status' => Response::HTTP_NOT_FOUND,
+        'message' => 'Data keluarga karyawan tidak ditemukan.'
+      ], Response::HTTP_NOT_FOUND);
     }
 
     // Ambil data karyawan dan user dari data keluarga
@@ -700,7 +722,10 @@ class DataKaryawanController extends Controller
     })->get();
 
     if ($berkas->isEmpty()) {
-      return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data dokumen karyawan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+      return response()->json([
+        'status' => Response::HTTP_NOT_FOUND,
+        'message' => 'Data dokumen karyawan tidak ditemukan.'
+      ], Response::HTTP_NOT_FOUND);
     }
 
     // Ambil data user dari berkas yang pertama
@@ -766,8 +791,8 @@ class DataKaryawanController extends Controller
 
     // Logika verifikasi disetujui tahap 1
     if ($request->has('verifikasi_disetujui') && $request->verifikasi_disetujui == 1) {
-      // Jika status_berkas_id = 1 (default) atau 3 (ditolak sebelumnya)
-      if ($status_berkas_id == 1 || $status_berkas_id == 3) {
+      // Jika status_berkas_id = 1 (default)
+      if ($status_berkas_id == 1) {
         $berkas->status_berkas_id = 2; // Update status ke disetujui
         $berkas->verifikator_1 = Auth::id(); // Set verifikator
         $berkas->alasan = null; // Reset alasan jika sebelumnya ditolak
@@ -782,22 +807,23 @@ class DataKaryawanController extends Controller
       }
     }
     // Logika verifikasi ditolak
-    elseif ($request->has('verifikasi_ditolak') && $request->verifikasi_ditolak == 1) {
-      // Jika status_berkas_id = 1 (default)
-      if ($status_berkas_id == 1) {
-        $berkas->status_berkas_id = 3; // Update status ke ditolak
-        $berkas->verifikator_1 = Auth::id(); // Set verifikator
-        $berkas->alasan = 'Verifikasi ditolak karena: ' . $request->input('alasan', null); // Tambahkan alasan penolakan
-        $berkas->save();
+    // elseif ($request->has('verifikasi_ditolak') && $request->verifikasi_ditolak == 1) {
+    //   // Jika status_berkas_id = 1 (default)
+    //   if ($status_berkas_id == 1) {
+    //     $berkas->status_berkas_id = 3; // Update status ke ditolak
+    //     $berkas->verifikator_1 = Auth::id(); // Set verifikator
+    //     $berkas->alasan = 'Verifikasi ditolak karena: ' . $request->input('alasan', null); // Tambahkan alasan penolakan
+    //     $berkas->save();
 
-        // Kirim notifikasi bahwa berkas telah ditolak
-        $this->createNotifikasiBerkas($berkas, 'ditolak');
+    //     // Kirim notifikasi bahwa berkas telah ditolak
+    //     $this->createNotifikasiBerkas($berkas, 'ditolak');
 
-        return response()->json(new WithoutDataResource(Response::HTTP_OK, "Verifikasi berkas '{$berkas->nama}' telah ditolak."), Response::HTTP_OK);
-      } else {
-        return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Berkas '{$berkas->nama}' tidak dalam status untuk ditolak."), Response::HTTP_BAD_REQUEST);
-      }
-    } else {
+    //     return response()->json(new WithoutDataResource(Response::HTTP_OK, "Verifikasi berkas '{$berkas->nama}' telah ditolak."), Response::HTTP_OK);
+    //   } else {
+    //     return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Berkas '{$berkas->nama}' tidak dalam status untuk ditolak."), Response::HTTP_BAD_REQUEST);
+    //   }
+    // } 
+    else {
       return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Aksi tidak valid.'), Response::HTTP_BAD_REQUEST);
     }
   }
@@ -816,8 +842,12 @@ class DataKaryawanController extends Controller
 
     // Ambil semua data cuti yang dimiliki karyawan tersebut
     $dataCuti = Cuti::where('user_id', $karyawan->users->id)->get();
+
     if ($dataCuti->isEmpty()) {
-      return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data cuti karyawan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+      return response()->json([
+        'status' => Response::HTTP_NOT_FOUND,
+        'message' => 'Data cuti karyawan tidak ditemukan.'
+      ], Response::HTTP_NOT_FOUND);
     }
 
     // Format list cuti
@@ -881,7 +911,10 @@ class DataKaryawanController extends Controller
       ->get();
 
     if ($tukarJadwal->isEmpty()) {
-      return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data tukar jadwal karyawan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+      return response()->json([
+        'status' => Response::HTTP_NOT_FOUND,
+        'message' => 'Data tukar jadwal karyawan tidak ditemukan.'
+      ], Response::HTTP_NOT_FOUND);
     }
 
     // Format data tukar jadwal
@@ -967,7 +1000,10 @@ class DataKaryawanController extends Controller
     })->get();
 
     if ($dataLembur->isEmpty()) {
-      return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data lembur karyawan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+      return response()->json([
+        'status' => Response::HTTP_NOT_FOUND,
+        'message' => 'Data lembur karyawan tidak ditemukan.'
+      ], Response::HTTP_NOT_FOUND);
     }
 
     // Format data lembur
@@ -1028,7 +1064,10 @@ class DataKaryawanController extends Controller
     })->with('data_karyawans.jabatans')->first();
 
     if (!$userDinilai) {
-      return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data penilaian karyawan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+      return response()->json([
+        'status' => Response::HTTP_NOT_FOUND,
+        'message' => 'Data karyawan tidak ditemukan.'
+      ], Response::HTTP_NOT_FOUND);
     }
 
     // Ambil penilaian terkait berdasarkan user_dinilai
@@ -1038,9 +1077,9 @@ class DataKaryawanController extends Controller
 
     if ($penilaian->isEmpty()) {
       return response()->json([
-        'status' => Response::HTTP_OK,
-        'message' => 'Penilaian tidak ditemukan untuk user ini.'
-      ], 404);
+        'status' => Response::HTTP_NOT_FOUND,
+        'message' => 'Data penilaian untuk karyawan ini tidak ditemukan.'
+      ], Response::HTTP_NOT_FOUND);
     }
 
     // Format list penilaian

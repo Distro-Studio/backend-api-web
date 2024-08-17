@@ -230,10 +230,9 @@ class DataCutiController extends Controller
 
         if ($dataCuti->isEmpty()) {
             return response()->json([
-                'status' => Response::HTTP_OK,
+                'status' => Response::HTTP_NOT_FOUND,
                 'message' => 'Data cuti karyawan tidak ditemukan.',
-                'data' => []
-            ], Response::HTTP_OK);
+            ], Response::HTTP_NOT_FOUND);
         }
 
         $formattedData = $dataCuti->map(function ($dataCuti) {

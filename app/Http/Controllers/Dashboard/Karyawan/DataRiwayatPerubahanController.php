@@ -547,7 +547,7 @@ class DataRiwayatPerubahanController extends Controller
         // Logika verifikasi disetujui
         if ($request->has('verifikasi_disetujui') && $request->verifikasi_disetujui == 1) {
             // Jika status_perubahan_id = 1 (menunggu) atau 3 (ditolak sebelumnya)
-            if ($status_perubahan_id == 1 || $status_perubahan_id == 3) {
+            if ($status_perubahan_id == 1) {
                 $riwayat->status_perubahan_id = 2; // Update status ke diverifikasi
                 $riwayat->verifikator_1 = Auth::id(); // Set verifikator tahap 1
                 $riwayat->alasan = null; // Reset alasan penolakan
