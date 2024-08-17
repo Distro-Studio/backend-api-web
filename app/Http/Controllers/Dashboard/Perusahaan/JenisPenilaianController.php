@@ -143,6 +143,7 @@ class JenisPenilaianController extends Controller
                 'status_karyawan' => $jenis_penilaian->status_karyawans,
                 'jabatan_penilai' => $jenis_penilaian->jabatan_penilais,
                 'jabatan_dinilai' => $jenis_penilaian->jabatan_dinilais,
+                'deleted_at' => $jenis_penilaian->deleted_at,
                 'created_at' => $jenis_penilaian->created_at,
                 'updated_at' => $jenis_penilaian->updated_at
             ];
