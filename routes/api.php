@@ -213,7 +213,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::get('/pelaporan/export', [PelaporanController::class, 'exportPelaporan']);
 
             // ! Jenis Penilaian ===========>
-            Route::post('/get-data-jenis-penilaian', [JenisPenilaianController::class, 'index']);
+            // Route::post('/get-data-jenis-penilaian', [JenisPenilaianController::class, 'index']);
             Route::get('/jenis-penilaian/export', [JenisPenilaianController::class, 'exportJenisPenilaian']);
             Route::apiResource('/jenis-penilaian', JenisPenilaianController::class);
 

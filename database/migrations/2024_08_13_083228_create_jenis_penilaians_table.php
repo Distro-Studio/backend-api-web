@@ -17,6 +17,7 @@ return new class extends Migration
             $table->foreignId('status_karyawan_id')->constrained('status_karyawans');
             $table->foreignId('jabatan_penilai')->constrained('jabatans');
             $table->foreignId('jabatan_dinilai')->constrained('jabatans');
+            $table->softDeletes();
             $table->timestamps();
         });
     }
