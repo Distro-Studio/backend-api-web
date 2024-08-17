@@ -283,7 +283,7 @@ class CreateGajiJob implements ShouldQueue
         }
         Log::info("Karyawan dengan masa kerja: $masaKerja dari {$tglMulaiKerja}, dengan thr $thr");
 
-        return round($thr, 0);
+        return $thr;
     }
 
     private function calculatedPremi($data_karyawan_id, $penghasilanBruto, $gajiPokok)
@@ -335,7 +335,7 @@ class CreateGajiJob implements ShouldQueue
             $totalPremi += $premiAmount;
         }
 
-        return round($totalPremi, 0);
+        return $totalPremi;
     }
 
     // buat itung detail gajis
@@ -376,7 +376,7 @@ class CreateGajiJob implements ShouldQueue
             Log::info("Calculated premi: {$premiAmount} premi ID: {$premi->id}");
         }
 
-        return round($premiAmount, 0);
+        return $premiAmount;
     }
 
     private function calculatedPPH21ForMonths($penghasilanBruto, $ptkp_id)
@@ -395,7 +395,7 @@ class CreateGajiJob implements ShouldQueue
             ->where('to_ter', '>=', $penghasilanBruto)
             ->first();
 
-        $pph21Bulanan = round(($ters->percentage / 100) * $penghasilanBruto, 0);
+        $pph21Bulanan = ($ters->percentage / 100) * $penghasilanBruto;
         return $pph21Bulanan;
     }
 
@@ -439,7 +439,7 @@ class CreateGajiJob implements ShouldQueue
             ->where('data_karyawan_id', $dataKaryawan->data_karyawan_id)
             ->whereBetween('tgl_penggajian', [Carbon::create($currentYear, 1, 1), Carbon::create($currentYear, 11, 30)])
             ->sum('pph_21');
-        $pph21Desember = round($pph21Tahunan - $pph21BulananTotal, 0);
+        $pph21Desember = $pph21Tahunan - $pph21BulananTotal;
         return $pph21Desember;
     }
 
