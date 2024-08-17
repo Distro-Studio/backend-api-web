@@ -76,10 +76,10 @@ class TER21Controller extends Controller
         $data = $request->validated();
 
         // Validasi unique pada relasi kategori_ter_id
-        $existingTer = Ter::where('kategori_ter_id', $data['kategori_ter_id'])->first();
-        if ($existingTer) {
-            return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Kategori TER dengan ID tersebut sudah ada.'), Response::HTTP_BAD_REQUEST);
-        }
+        // $existingTer = Ter::where('kategori_ter_id', $data['kategori_ter_id'])->first();
+        // if ($existingTer) {
+        //     return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Kategori TER dengan ID tersebut sudah ada.'), Response::HTTP_BAD_REQUEST);
+        // }
 
         $ter_pph_21 = Ter::create($data);
         $successMessage = "Data Ter PPH21 berhasil dibuat.";
