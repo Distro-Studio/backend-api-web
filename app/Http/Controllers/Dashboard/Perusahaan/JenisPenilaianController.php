@@ -94,12 +94,9 @@ class JenisPenilaianController extends Controller
             return [
                 'id' => $jenis_penilaian->id,
                 'nama' => $jenis_penilaian->nama,
-                'tgl_mulai' => $jenis_penilaian->tgl_mulai,
-                'tgl_selesai' => $jenis_penilaian->tgl_selesai,
                 'status_karyawan' => $jenis_penilaian->status_karyawans,
-                'role_penilai' => $jenis_penilaian->role_penilais,
-                'role_dinilai' => $jenis_penilaian->role_dinilais,
-                'unit_kerja' => $jenis_penilaian->unit_kerjas,
+                'jabatan_penilai' => $jenis_penilaian->jabatan_penilais,
+                'jabatan_dinilai' => $jenis_penilaian->jabatan_dinilais,
                 'created_at' => $jenis_penilaian->created_at,
                 'updated_at' => $jenis_penilaian->updated_at
             ];
