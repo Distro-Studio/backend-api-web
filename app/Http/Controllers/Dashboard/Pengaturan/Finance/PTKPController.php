@@ -145,6 +145,7 @@ class PTKPController extends Controller
         }
     }
 
+    // a
     protected function formatData(Collection $collection)
     {
         return $collection->transform(function ($ptkp) {
