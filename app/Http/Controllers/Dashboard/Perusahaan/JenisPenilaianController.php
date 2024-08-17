@@ -14,6 +14,21 @@ use App\Http\Resources\Dashboard\Penilaian\JenisPenilaianResource;
 
 class JenisPenilaianController extends Controller
 {
+    public function getAllPenilaian()
+    {
+        if (!Gate::allows('view penilaianKaryawan')) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
+
+        $jenis_penilaian = JenisPenilaian::withoutTrashed()->get();
+
+        return response()->json([
+            'status' => Response::HTTP_OK,
+            'message' => "Data jenis penilaian karyawan berhasil ditampilkan.",
+            'data' => $jenis_penilaian,
+        ], Response::HTTP_OK);
+    }
+
     public function index()
     {
         if (!Gate::allows('view penilaianKaryawan')) {
