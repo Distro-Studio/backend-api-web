@@ -4,13 +4,14 @@ namespace App\Helpers;
 
 use Carbon\Carbon;
 use App\Models\User;
+use Illuminate\Support\Str;
 
 class RandomHelper
 {
 	public static function generatePassword(int $length = 12): string
 	{
 		// Karakter yang akan digunakan untuk password
-		$chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#&()";
+		$chars = Str::random($length);
 
 		// Inisialisasi password kosong
 		$password = "";

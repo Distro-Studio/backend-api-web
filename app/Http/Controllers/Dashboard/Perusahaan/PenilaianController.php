@@ -268,7 +268,7 @@ class PenilaianController extends Controller
             ];
         }
 
-        if ($dataPenilaian->isEmpty()) {
+        if ($penilaian->isEmpty()) {
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data penilaian tidak ditemukan.'), Response::HTTP_NOT_FOUND);
         }
 
