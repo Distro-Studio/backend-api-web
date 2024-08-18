@@ -1401,6 +1401,7 @@ class DataKaryawanController extends Controller
         'no_rm' => $data['no_rm'],
         'no_manulife' => $data['no_manulife'],
         'tgl_masuk' => $data['tgl_masuk'],
+        'tgl_berakhir_pks' => $data['tgl_berakhir_pks'],
         'unit_kerja_id' => $data['unit_kerja_id'],
         'jabatan_id' => $data['jabatan_id'],
         'kompetensi_id' => $data['kompetensi_id'],
