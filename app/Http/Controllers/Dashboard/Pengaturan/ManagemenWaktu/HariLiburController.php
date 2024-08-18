@@ -80,14 +80,16 @@ class HariLiburController extends Controller
         ], Response::HTTP_OK);
     }
 
-    public function show(HariLibur $hari_libur)
+    public function show($id)
     {
-        if (!Gate::allows('view hariLibur', $hari_libur)) {
-            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
-        }
+        $hari_libur = HariLibur::withTrashed()->find($id);
 
         if (!$hari_libur) {
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data hari libur tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+        }
+
+        if (!Gate::allows('view hariLibur', $hari_libur)) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
         $successMessage = "Data hari libur '{$hari_libur->nama}' berhasil diubah.";
@@ -111,10 +113,10 @@ class HariLiburController extends Controller
         $data = $request->validated();
 
         // Validasi unique
-        $existingDataValidation = HariLibur::where('nama', $data['nama'])->where('id', '!=', $id)->first();
-        if ($existingDataValidation) {
-            return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Nama hari libur tersebut sudah pernah dibuat.'), Response::HTTP_BAD_REQUEST);
-        }
+        // $existingDataValidation = HariLibur::where('nama', $data['nama'])->where('id', '!=', $id)->first();
+        // if ($existingDataValidation) {
+        //     return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Nama hari libur tersebut sudah pernah dibuat.'), Response::HTTP_BAD_REQUEST);
+        // }
 
         if (isset($data['tanggal'])) {
             $data['tanggal'] = Carbon::createFromFormat('d-m-Y', $data['tanggal'])->format('Y-m-d');
@@ -132,17 +134,24 @@ class HariLiburController extends Controller
         ], Response::HTTP_OK);
     }
 
-    public function destroy(HariLibur $hari_libur)
+    public function destroy($id)
     {
+        $hari_libur = HariLibur::withTrashed()->find($id);
+
+        if (!$hari_libur) {
+            return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data hari libur tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+        }
+
         if (!Gate::allows('delete hariLibur', $hari_libur)) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
-        $hari_libur->delete();
+        $hari_libur->delete(); // Menggunakan forceDelete jika ingin menghapus permanen
 
-        $successMessage = "Data hari libur {$hari_libur->nama} berhasil dihapus.";
+        $successMessage = "Data hari libur '{$hari_libur->nama}' berhasil dihapus.";
         return response()->json(new WithoutDataResource(Response::HTTP_OK, $successMessage), Response::HTTP_OK);
     }
+
 
     public function restore($id)
     {

@@ -68,7 +68,7 @@ class NonShiftController extends Controller
         ], Response::HTTP_OK);
     }
 
-    public function editJadwalNonShift(UpdateNonShiftRequest $request)
+    public function edit(UpdateNonShiftRequest $request)
     {
         // Check if the user has the required permission
         if (!Gate::allows('edit shift')) {

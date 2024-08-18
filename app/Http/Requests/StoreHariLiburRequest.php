@@ -25,7 +25,7 @@ class StoreHariLiburRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'nama' => 'required|string|max:225|unique:hari_liburs,nama',
+            'nama' => 'required|string|max:225',
             'tanggal' => 'required|string',
         ];
     }
@@ -36,7 +36,6 @@ class StoreHariLiburRequest extends FormRequest
             'nama.required' => 'Nama hari libur tidak diperbolehkan kosong.',
             'nama.string' => 'Nama hari libur tidak diperbolehkan mengandung angka.',
             'nama.max' => 'Nama hari libur melebihi batas maksimum panjang karakter.',
-            'nama.unique' => 'Nama hali libur tersebut sudah pernah dibuat.',
             'tanggal.required' => 'Tanggal hari libur tidak diperbolehkan kosong.',
             'tanggal.string' => 'Tanggal hari libur tidak diperbolehkan mengandung selain angka dan huruf.',
         ];

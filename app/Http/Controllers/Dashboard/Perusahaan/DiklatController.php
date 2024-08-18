@@ -244,7 +244,7 @@ class DiklatController extends Controller
 
     public function verifikasiTahap1(Request $request, $diklatId)
     {
-        if (!Gate::allows('verifikasi verifikator1')) {
+        if (!Gate::allows('verifikasi1 diklat')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
@@ -286,7 +286,7 @@ class DiklatController extends Controller
 
     public function verifikasiTahap2(Request $request, $diklatId)
     {
-        if (!Gate::allows('verifikasi verifikator2')) {
+        if (!Gate::allows('verifikasi2 diklat')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 

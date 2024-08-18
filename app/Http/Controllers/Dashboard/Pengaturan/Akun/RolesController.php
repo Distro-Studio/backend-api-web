@@ -104,13 +104,26 @@ class RolesController extends Controller
         // Get all permissions
         $allPermissions = Permission::all();
 
-        // Map permissions with the role's permissions
         $rolePermissions = $allPermissions->map(function ($permission) use ($role) {
-            return [
-                'name' => $permission->name,
-                'group' => $permission->group,
-                'has_permission' => $role->hasPermissionTo($permission),
-            ];
+            if (!$permission) {
+                return [
+                    'name' => $permission->name,
+                    'group' => $permission->group,
+                    'has_permission' => null, // Permission tidak ada di DB
+                ];
+            } elseif ($role->hasPermissionTo($permission)) {
+                return [
+                    'name' => $permission->name,
+                    'group' => $permission->group,
+                    'has_permission' => true, // Permission ada di DB dan di-assign ke role
+                ];
+            } else {
+                return [
+                    'name' => $permission->name,
+                    'group' => $permission->group,
+                    'has_permission' => false, // Permission ada di DB tetapi tidak di-assign
+                ];
+            }
         });
 
         // Format the permissions for the response
@@ -235,10 +248,15 @@ class RolesController extends Controller
         $groupedPermissions = $permissions->groupBy('group')->map(function ($group, $groupName) use ($permissionTypes) {
             $permissionsArray = [];
             foreach ($permissionTypes as $type) {
-                $hasPermission = $group->contains(function ($item) use ($type) {
-                    return str_contains($item['name'], $type) && $item['has_permission'];
+                $permissionItem = $group->first(function ($item) use ($type) {
+                    return str_contains($item['name'], $type);
                 });
-                $permissionsArray[$type] = $hasPermission ? true : null;
+
+                if ($permissionItem) {
+                    $permissionsArray[$type] = $permissionItem['has_permission'];
+                } else {
+                    $permissionsArray[$type] = null; // Jika tidak ada permission di DB
+                }
             }
             return [
                 'name' => $groupName,

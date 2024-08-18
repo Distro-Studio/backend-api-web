@@ -8,16 +8,16 @@ use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 
 class PermissionSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
         $permissions = [
+            // Verifikasi
+            'Berkas' => ['verifikasi1 berkas'],
+            'Riwayat Perubahan' => ['verifikasi1 riwayatPerubahan'],
+
             // Perusahaan
-            'Diklat' => ['create diklat', 'view diklat', 'export diklat'],
+            'Diklat' => ['create diklat', 'view diklat', 'export diklat', 'verifikasi1 diklat', 'verifikasi2 diklat'],
             'Pelaporan Karyawan' => ['view pelaporanKaryawan', 'export pelaporanKaryawan'],
-            
 
             // Keuangan
             'Penggajian THR Karyawan' => ['create thrKaryawan', 'view thrKaryawan', 'export thrKaryawan'],

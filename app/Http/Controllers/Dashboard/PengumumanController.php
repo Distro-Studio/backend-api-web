@@ -21,11 +21,6 @@ class PengumumanController extends Controller
         }
 
         $today = Carbon::today();
-        // $cutoffDate = $today->copy()->subDays(1)->format('Y-m-d');
-        $cutoffDate = $today->format('Y-m-d');
-
-        // Delete announcements that ended more than 2 days ago
-        // Pengumuman::where('tgl_berakhir', '<', $cutoffDate)->delete();
 
         // Fetch announcements that have not yet ended
         $pengumuman = Pengumuman::where('tgl_berakhir', '>=', $today->format('Y-m-d'))->orderBy('created_at', 'desc')->get();
@@ -138,5 +133,17 @@ class PengumumanController extends Controller
             'message' => "Pengumuman '{$pengumuman->judul}' berhasil diperbarui.",
             'data' => $formattedData
         ], Response::HTTP_OK);
+    }
+
+    public function destroy(Pengumuman $pengumuman)
+    {
+        if (!Gate::allows('delete pengumuman', $pengumuman)) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
+
+        $pengumuman->delete();
+
+        $successMessage = "Data pengumuman '{$pengumuman->judul}' berhasil dihapus.";
+        return response()->json(new WithoutDataResource(Response::HTTP_OK, $successMessage), Response::HTTP_OK);
     }
 }

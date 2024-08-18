@@ -46,7 +46,11 @@ class RoleSeeder extends Seeder
         ]);
 
         $roleSuperAdmin->givePermissionTo([
-            'create diklat', 'view diklat', 'export diklat',
+            // verifikasi
+            'verifikasi1 berkas',
+            'verifikasi1 riwayatPerubahan',
+            
+            'create diklat', 'view diklat', 'export diklat', 'verifikasi1 diklat', 'verifikasi2 diklat',
             'view pelaporanKaryawan', 'export pelaporanKaryawan',
 
             'create penggajianKaryawan', 'edit penggajianKaryawan', 'view penggajianKaryawan', 'delete penggajianKaryawan', 'import penggajianKaryawan', 'export penggajianKaryawan',

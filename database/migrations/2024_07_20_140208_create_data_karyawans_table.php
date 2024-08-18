@@ -62,7 +62,7 @@ return new class extends Migration
             $table->foreignId('ptkp_id')->nullable()->constrained('ptkps');
             $table->string('tgl_berakhir_pks')->nullable();
             $table->integer('masa_diklat')->nullable();
-            $table->foreignId('verifikator_1')->nullable()->constrained('users');
+            // $table->foreignId('verifikator_1')->nullable()->constrained('users');
             $table->timestamps();
         });
     }

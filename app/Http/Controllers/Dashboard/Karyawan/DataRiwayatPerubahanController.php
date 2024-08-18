@@ -531,7 +531,7 @@ class DataRiwayatPerubahanController extends Controller
 
     public function verifikasiPerubahan(Request $request, $id)
     {
-        if (!Gate::allows('verifikasi verifikator1')) {
+        if (!Gate::allows('verifikasi1 riwayatPerubahan')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 

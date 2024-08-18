@@ -35,11 +35,11 @@ class PermissionsController extends Controller
 
         // Validate permission IDs (optional to validate empty array for removals)
         $validateIds = Validator::make($request->all(), [
-            'permission_ids' => 'required|array',
+            'permission_ids' => 'nullable|array',
             'permission_ids.*' => 'integer|exists:permissions,id'
         ],
         [
-            'permission_ids.required' => 'Permission tidak diperbolehkan kosong.',
+            // 'permission_ids.required' => 'Permission tidak diperbolehkan kosong.',
             'permission_ids.*.integer' => 'Permission harus berupa angka.',
             'permission_ids.*.exists' => 'Terdapat permission yang tidak valid.'
         ]

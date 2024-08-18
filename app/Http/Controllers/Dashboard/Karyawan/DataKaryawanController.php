@@ -776,7 +776,7 @@ class DataKaryawanController extends Controller
 
   public function verifikasiBerkas(Request $request, $berkasId)
   {
-    if (!Gate::allows('verifikasi verifikator1')) {
+    if (!Gate::allows('verifikasi1 berkas')) {
       return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
     }
 
@@ -2129,7 +2129,7 @@ class DataKaryawanController extends Controller
 
   public function toggleStatusUser($data_karyawan_id)
   {
-    if (!Gate::allows('verifikasi verifikator1') || !Gate::allows('edit dataKaryawan')) {
+    if (!Gate::allows('edit dataKaryawan')) {
       return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
     }
 

@@ -38,6 +38,7 @@ use App\Http\Controllers\Dashboard\Perusahaan\PenilaianController;
 use App\Http\Controllers\Dashboard\Presensi\DataPresensiController;
 use App\Http\Controllers\Publik\Auth\LoginController;
 use App\Models\JenisPenilaian;
+use App\Models\NonShift;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -288,10 +289,11 @@ Route::middleware(['auth:sanctum'])->group(function () {
             // ! Shift ===========>
             Route::post('/shift/restore/{id}', [ShiftController::class, 'restore']);
             Route::apiResource('/shift', ShiftController::class);
-
+            
             // ! Non-Shift ===========>
             // Route::post('/non-shift/restore/{id}', [NonShiftController::class, 'restore']);
-            Route::post('/non-shift', [NonShiftController::class, 'editJadwalNonShift']);
+            // Route::apiResource('/non-shift', NonShift::class);
+            Route::post('/non-shift/{non_shift}', [NonShiftController::class, 'editJadwalNonShift']);
             Route::get('/non-shift/{non_shift}', [NonShiftController::class, 'show']);
 
             // ! Hari Libur ===========>
