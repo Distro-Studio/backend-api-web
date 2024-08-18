@@ -268,10 +268,6 @@ class PenilaianController extends Controller
             ];
         }
 
-        if ($penilaian->isEmpty()) {
-            return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data penilaian tidak ditemukan.'), Response::HTTP_NOT_FOUND);
-        }
-
         // Format Data
         $formatData = $dataPenilaian->map(function ($penilaian) {
             return [
@@ -286,6 +282,10 @@ class PenilaianController extends Controller
                 'updated_at' => $penilaian->updated_at,
             ];
         });
+
+        if ($formatData->isEmpty()) {
+            return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data penilaian tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+        }
 
         return response()->json([
             'status' => Response::HTTP_OK,
