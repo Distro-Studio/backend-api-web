@@ -23,6 +23,8 @@ class TemplateKaryawanExport implements FromArray, WithHeadings
             'no_rm',
             'no_manulife',
             'tgl_masuk',
+            'tgl_berakhir_pks',
+            'nik',
             'unit_kerja',
             'jabatan',
             'kompetensi',
