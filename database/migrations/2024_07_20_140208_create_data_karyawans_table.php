@@ -15,8 +15,8 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained('users');
             $table->string('email')->unique()->nullable();
-            $table->integer('no_rm')->nullable();
-            $table->integer('no_manulife')->nullable();
+            $table->string('no_rm')->nullable();
+            $table->string('no_manulife')->nullable();
             $table->string('tgl_masuk')->nullable();
             $table->string('tgl_keluar')->nullable();
             $table->foreignId('unit_kerja_id')->nullable()->constrained('unit_kerjas');

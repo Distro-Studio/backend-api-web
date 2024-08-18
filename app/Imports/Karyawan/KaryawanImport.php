@@ -20,6 +20,7 @@ use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\Importable;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Maatwebsite\Excel\Concerns\WithValidation;
+use App\Jobs\EmailNotification\AccountEmailJob;
 
 class KaryawanImport implements ToModel, WithHeadingRow, WithValidation
 {
@@ -138,12 +139,14 @@ class KaryawanImport implements ToModel, WithHeadingRow, WithValidation
             // Create new user
             $userData = [
                 'nama' => $row['nama'],
+                'status_aktif' => 1,
                 'role_id' => $role->id,
                 'password' => Hash::make($password),
             ];
             $createUser = User::create($userData);
             $createUser->assignRole($role->name);
             Mail::to($row['email'])->send(new SendAccoundUsersMail($row['email'], $password, $row['nama']));
+            // AccountEmailJob::dispatch($row['email'], $password, $row['nama']);
 
             $user_id = $createUser->id;
         }
