@@ -5,6 +5,7 @@ namespace App\Imports\Jadwal;
 use App\Models\Jadwal;
 use App\Models\User;
 use App\Models\Shift;
+use Carbon\Carbon;
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\Importable;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
@@ -52,8 +53,8 @@ class JadwalImport implements ToModel, WithHeadingRow, WithValidation
 
         return new Jadwal([
             'user_id' => $users->id,
-            'tgl_mulai' => $row['tanggal_mulai'],
-            'tgl_selesai' => $row['tanggal_selesai'],
+            'tgl_mulai' => Carbon::createFromFormat('d-m-Y', $row['tanggal_mulai'])->format('Y-m-d'),
+            'tgl_selesai' => Carbon::createFromFormat('d-m-Y', $row['tanggal_selesai'])->format('Y-m-d'),
             'shift_id' => $shifts->id,
         ]);
     }

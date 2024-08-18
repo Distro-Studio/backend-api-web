@@ -6,7 +6,6 @@ use Maatwebsite\Excel\Concerns\FromArray;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithColumnFormatting;
-use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 
 class TemplateJadwalExport implements FromArray, WithHeadings, WithColumnFormatting
 {
@@ -21,8 +20,8 @@ class TemplateJadwalExport implements FromArray, WithHeadings, WithColumnFormatt
     {
         return [
             'nama',
-            'tgl_mulai',
-            'tgl_selesai',
+            'tanggal_mulai',
+            'tanggal_selesai',
             'shift'
         ];
     }
@@ -30,10 +29,10 @@ class TemplateJadwalExport implements FromArray, WithHeadings, WithColumnFormatt
     public function columnFormats(): array
     {
         return [
-            'B' => NumberFormat::FORMAT_TEXT,
-            'C' => NumberFormat::FORMAT_TEXT,
-            'D' => NumberFormat::FORMAT_TEXT,
-            'E' => NumberFormat::FORMAT_TEXT,
+            'A' => \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING,
+            'B' => \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING,
+            'C' => \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING,
+            'D' => \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING,
         ];
     }
 }
