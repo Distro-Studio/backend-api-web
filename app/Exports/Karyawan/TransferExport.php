@@ -43,9 +43,9 @@ class TransferExport implements FromCollection, WithHeadings, WithMapping
             $transfer->users->nama,
             Carbon::parse($transfer->created_at)->format('d-m-Y'),
             $transfer->unit_kerja_asals->nama_unit,
-            $transfer->unit_kerja_tujuans->nama_unit,
+            $transfer->unit_kerja_tujuans->nama_unit ?? 'N/A',
             $transfer->jabatan_asals->nama_jabatan,
-            $transfer->jabatan_tujuans->nama_jabatan,
+            $transfer->jabatan_tujuans->nama_jabatan ?? 'N/A',
             $transfer->kategori_transfer_karyawans->label,
             $transfer->alasan ?? 'N/A'
         ];

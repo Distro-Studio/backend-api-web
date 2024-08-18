@@ -27,6 +27,7 @@ use Illuminate\Http\Response;
 use App\Models\StatusKaryawan;
 use App\Models\RiwayatPerubahan;
 use App\Models\TransferKaryawan;
+use App\Mail\SendAccoundUsersMail;
 use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Models\Role;
 use Illuminate\Support\Facades\Log;
@@ -1987,6 +1988,7 @@ class DataKaryawanController extends Controller
       // Update email di data karyawan
       $karyawan->email = $newEmail;
       Mail::to($newEmail)->send(new SendAccountResetPassword($newEmail, $data['nama']));
+      // Mail::to($row['email'])->send(new SendAccoundUsersMail($data['email'], $password, $data['nama']));
     }
 
     // Update nama di tabel users
