@@ -69,7 +69,7 @@ class DatabaseSeeder extends Seeder
       RoleSeeder::class,
       AccountSeeder::class,
 
-      /* ==== Kategori & Status ==== */
+        /* ==== Kategori & Status ==== */
       KategoriActivityLogSeeder::class,
       KategoriAgamaSeeder::class,
       KategoriBerkasSeeder::class,
@@ -96,46 +96,46 @@ class DatabaseSeeder extends Seeder
       LokasiKantorSeeder::class,
       JadwalNonShiftSeeder::class,
 
-      /* ==== Pengaturan Karyawan ==== */
+        /* ==== Pengaturan Karyawan ==== */
       JabatanSeeder::class,
       KelompokGajiSeeder::class,
       KompetensiSeeder::class,
       UnitKerjaSeeder::class,
 
-      /* ==== Pengaturan Finance ==== */
+        /* ==== Pengaturan Finance ==== */
       KategoriTERSeeder::class,
       PTKPSeeder::class,
       PremiSeeder::class,
       TERSeeder::class,
 
-      /* ==== Pengaturan Managemen Waktu ==== */
+        /* ==== Pengaturan Managemen Waktu ==== */
       ShiftSeeder::class,
       NonShiftSeeder::class,
       HariLiburSeeder::class,
       TipeCutiSeeder::class,
 
-      /* ==== Karyawan ==== */
+        /* ==== Karyawan ==== */
       KaryawanSeeder::class,
       KeluargaKaryawanSeeder::class,
       TransferKaryawanSeeder::class,
       RiwayatPerubahanSeeder::class,
 
-      // // /* ==== Jadwals ==== */
-      // JadwalSeeder::class,
-      // LemburSeeder::class,
-      // CutiJadwalSeeder::class,
-      // TukarJadwalSeeder::class,
+        // // /* ==== Jadwals ==== */
+        // JadwalSeeder::class,
+        // LemburSeeder::class,
+        // CutiJadwalSeeder::class,
+        // TukarJadwalSeeder::class,
 
-      // /* ==== Presensi ==== */
-      // PresensiSeeder::class,
+        // /* ==== Presensi ==== */
+        // PresensiSeeder::class,
 
-      /* ==== Keuangan ==== */
+        /* ==== Keuangan ==== */
       TanggalGajiSeeder::class,
       PenggajianSeeder::class,
       RiwayatPenggajianSeeder::class,
       THRPenggajianSeeder::class,
 
-      /* ==== Perusahaan ==== */
+        /* ==== Perusahaan ==== */
       DiklatSeeder::class,
       PelaporanSeeder::class,
       JenisPenilaianSeeder::class,
