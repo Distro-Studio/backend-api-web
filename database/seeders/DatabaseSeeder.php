@@ -47,6 +47,7 @@ use Database\Seeders\Keuangan\TanggalGajiSeeder;
 use Database\Seeders\Keuangan\THRPenggajianSeeder;
 use Database\Seeders\Pengaturan_Managemen_Waktu\ShiftSeeder;
 use Database\Seeders\Pengaturan_Managemen_Waktu\HariLiburSeeder;
+use Database\Seeders\Pengaturan_Managemen_Waktu\JadwalNonShiftSeeder;
 use Database\Seeders\Pengaturan_Managemen_Waktu\LokasiKantorSeeder;
 use Database\Seeders\Pengaturan_Managemen_Waktu\NonShiftSeeder;
 use Database\Seeders\Pengaturan_Managemen_Waktu\TipeCutiSeeder;
@@ -93,6 +94,7 @@ class DatabaseSeeder extends Seeder
       StatusTukarJadwalSeeder::class,
 
       LokasiKantorSeeder::class,
+      JadwalNonShiftSeeder::class,
 
       /* ==== Pengaturan Karyawan ==== */
       JabatanSeeder::class,

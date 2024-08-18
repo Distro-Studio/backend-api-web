@@ -66,7 +66,7 @@ class RoleSeeder extends Seeder
             'create dataKaryawan', 'edit dataKaryawan', 'delete dataKaryawan', 'view dataKaryawan', 'import dataKaryawan', 'export dataKaryawan',
 
             'create role', 'edit role', 'delete role', 'view role', 'import role', 'export role',
-            'create permission', 'edit permission', 'delete permission',
+            'create permission', 'edit permission', 'delete permission', 'view permission',
 
             'create unitKerja', 'edit unitKerja', 'delete unitKerja', 'view unitKerja', 'import unitKerja', 'export unitKerja',
             'create jabatan', 'edit jabatan', 'delete jabatan', 'view jabatan', 'import jabatan', 'export jabatan',

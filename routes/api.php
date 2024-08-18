@@ -77,11 +77,11 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/get-list-tipe-cuti', [CutiController::class, 'getAllTipeCuti']);
     Route::get('/get-list-pertanyaan', [PertanyaanController::class, 'getAllPertanyaan']);
     Route::get('/get-list-jenis-penilaian', [JenisPenilaianController::class, 'getAllPenilaian']);
-    
+
     Route::group(['prefix' => 'rski/dashboard'], function () {
         Route::get('/logout', [LoginController::class, 'logout'])->middleware('web');
         Route::get('/user-info', [LoginController::class, 'getInfoUserLogin']);
-        
+
         Route::get('/calculated-header', [DashboardController::class, 'calculatedHeader']);
         Route::get('/calculated-jenis-kelamin', [DashboardController::class, 'calculatedKelamin']);
         Route::get('/calculated-jabatan', [DashboardController::class, 'calculatedJabatan']);
@@ -95,7 +95,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('/download-template-jadwal', [DataJadwalController::class, 'downloadJadwalTemplate']);
         Route::get('/download-template-karyawan', [DataKaryawanController::class, 'downloadKaryawanTemplate']);
         Route::get('/download-template-presensi', [DataPresensiController::class, 'downloadPresensiTemplate']);
-        
+
         // TODO: aktifkan send email di create & transfer karyawan
         // TODO: ganti email di create & transfer karyawan
 
@@ -108,7 +108,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::post('/{data_karyawan_id}/status-karyawan', [DataKaryawanController::class, 'toggleStatusUser']);
             Route::get('/detail-karyawan-user/{user_id}', [DataKaryawanController::class, 'showByUserId']);
             Route::get('/detail-karyawan/{data_karyawan_id}', [DataKaryawanController::class, 'showByDataKaryawanId']);
-            
+
             Route::get('/detail-karyawan-presensi/{data_karyawan_id}', [DataKaryawanController::class, 'getDataPresensi']);
             Route::get('/detail-karyawan-jadwal/{data_karyawan_id}', [DataKaryawanController::class, 'getDataJadwal']);
             Route::get('/detail-karyawan-rekam-jejak/{data_karyawan_id}', [DataKaryawanController::class, 'getDataRekamJejak']);
@@ -235,7 +235,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
             // ! Roles Permission ===========>
             Route::get('/get-permissions', [PermissionsController::class, 'getAllPermissions']);
-            Route::put('/permissions/{role}', [PermissionsController::class, 'updatePermissions']);
+            Route::post('/permissions/{role}', [PermissionsController::class, 'updatePermissions']);
+            Route::post('/permissions/remove/{role}', [PermissionsController::class, 'removeAllPermissions']);
 
             // ! Change Password ===========>
             Route::post('/users/change-passwords', [UserPasswordController::class, 'updatePassword']);
@@ -290,7 +291,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
             // ! Non-Shift ===========>
             // Route::post('/non-shift/restore/{id}', [NonShiftController::class, 'restore']);
-            Route::apiResource('/non-shift', NonShiftController::class);
+            Route::post('/non-shift', [NonShiftController::class, 'editJadwalNonShift']);
+            Route::get('/non-shift/{non_shift}', [NonShiftController::class, 'show']);
 
             // ! Hari Libur ===========>
             Route::get('/hari-libur/nasional', [HariLiburController::class, 'getNasionalHariLibur']);

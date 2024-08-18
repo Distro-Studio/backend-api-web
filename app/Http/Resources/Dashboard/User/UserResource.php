@@ -47,6 +47,7 @@ class UserResource extends JsonResource
                     'jabatan' => $data_karyawan->jabatans ?? null,
                     'kompetensi' => $data_karyawan->kompetensis ?? null,
                     'nik_ktp' => $data_karyawan->nik_ktp ?? null,
+                    'nik' => $data_karyawan->nik ?? null,
                     'status_karyawan' => $data_karyawan->status_karyawans ?? null,
                     'tempat_lahir' => $data_karyawan->tempat_lahir ?? null,
                     'tgl_lahir' => $data_karyawan->tgl_lahir ?? null,

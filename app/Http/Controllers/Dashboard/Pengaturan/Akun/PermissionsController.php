@@ -32,19 +32,39 @@ class PermissionsController extends Controller
         if (!Gate::allows('edit permission')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
-        
+
+        // Validate permission IDs (optional to validate empty array for removals)
         $validateIds = Validator::make($request->all(), [
-            'permission_ids' => 'required|array|min:1',
+            'permission_ids' => 'required|array',
             'permission_ids.*' => 'integer|exists:permissions,id'
-        ]);
+        ],
+        [
+            'permission_ids.required' => 'Permission tidak diperbolehkan kosong.',
+            'permission_ids.*.integer' => 'Permission harus berupa angka.',
+            'permission_ids.*.exists' => 'Terdapat permission yang tidak valid.'
+        ]
+        );
 
         if ($validateIds->fails()) {
             return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, $validateIds->errors()), Response::HTTP_BAD_REQUEST);
         }
 
-        $permissionIds = $request->input('permission_ids');
+        $permissionIds = $request->input('permission_ids', []);
+
+        // Sync permissions: This will add/remove permissions as necessary
         $role->permissions()->sync($permissionIds);
 
         return response()->json(new WithoutDataResource(Response::HTTP_OK, "Berhasil melakukan update permission pada role '{$role->name}'."));
+    }
+
+    public function removeAllPermissions(Role $role)
+    {
+        if (!Gate::allows('edit permission')) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
+
+        $role->permissions()->detach(); // Removes all permissions from the role
+
+        return response()->json(new WithoutDataResource(Response::HTTP_OK, "Semua permission pada role '{$role->name}' berhasil dihapus."));
     }
 }

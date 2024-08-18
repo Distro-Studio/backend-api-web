@@ -259,7 +259,7 @@ class DiklatController extends Controller
 
         if ($request->has('verifikasi_pertama_disetujui') && $request->verifikasi_pertama_disetujui == 1) {
             // Jika status_diklat_id = 1 atau 3 (setelah ditolak), maka bisa disetujui
-            if ($status_diklat_id == 1 || $status_diklat_id == 3 || $status_diklat_id == 5) {
+            if ($status_diklat_id == 1) {
                 $diklat->status_diklat_id = 2; // Update status ke tahap 1 disetujui
                 $diklat->verifikator_1 = Auth::id(); // Set verifikator tahap 1
                 $diklat->alasan = null;
