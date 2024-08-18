@@ -21,7 +21,6 @@ use App\Http\Requests\StorePenyesuaianGajiRequest;
 use App\Http\Requests\StorePenyesuaianGajiCustomRequest;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
 use App\Http\Resources\Dashboard\Keuangan\PenyesuaianGajiResource;
-use App\Jobs\Penggajian\CreateGajiJob;
 
 class PenyesuaianGajiController extends Controller
 {
@@ -381,7 +380,7 @@ class PenyesuaianGajiController extends Controller
                 // $pph = $this->calculatedPPH21ForMonths($penggajian->gaji_bruto, $penggajian->data_karyawans->ptkp_id);
                 $pph = CalculateHelper::calculatedPPH21ForMonths($penggajian->gaji_bruto, $penggajian->data_karyawans->ptkp_id);
                 $penggajian->pph_21 = $pph;
-                // $penggajian->save();
+                $penggajian->save();
 
                 $detail = DetailGaji::where('penggajian_id', $penggajian->id)->where('nama_detail', 'PPH21')->update(['besaran' => $pph]);
 
