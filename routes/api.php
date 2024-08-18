@@ -292,6 +292,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
             // ! Non-Shift ===========>
             // Route::post('/non-shift/restore/{id}', [NonShiftController::class, 'restore']);
             Route::post('/non-shift', [NonShiftController::class, 'editJadwalNonShift']);
+            Route::get('/non-shift/{non_shift}', [NonShiftController::class, 'show']);
 
             // ! Hari Libur ===========>
             Route::get('/hari-libur/nasional', [HariLiburController::class, 'getNasionalHariLibur']);
