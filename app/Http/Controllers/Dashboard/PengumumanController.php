@@ -23,7 +23,7 @@ class PengumumanController extends Controller
         $today = Carbon::today();
 
         // Fetch announcements that have not yet ended
-        $pengumuman = Pengumuman::where('tgl_berakhir', '>=', $today->format('Y-m-d'))->orderBy('created_at', 'desc')->get();
+        $pengumuman = Pengumuman::all();
 
         if ($pengumuman->isEmpty()) {
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data pengumuman tidak ditemukan.'), Response::HTTP_NOT_FOUND);
