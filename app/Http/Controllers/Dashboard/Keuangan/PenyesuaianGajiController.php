@@ -15,10 +15,12 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Gate;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\Keuangan\PenyesuaianGajiExport;
+use App\Helpers\CalculateHelper;
 use App\Http\Requests\StorePenyesuaianGajiRequest;
 use App\Http\Requests\StorePenyesuaianGajiCustomRequest;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
 use App\Http\Resources\Dashboard\Keuangan\PenyesuaianGajiResource;
+use App\Jobs\Penggajian\CreateGajiJob;
 
 class PenyesuaianGajiController extends Controller
 {
@@ -239,6 +241,7 @@ class PenyesuaianGajiController extends Controller
         }
 
         $data = $request->validated();
+        // dd($data);
 
         $kategori_penambah = DB::table('kategori_gajis')->where('label', 'Penambah')->value('id');
         $kategori_pengurang = DB::table('kategori_gajis')->where('label', 'Pengurang')->value('id');
@@ -285,9 +288,9 @@ class PenyesuaianGajiController extends Controller
                 if ($bulanMulai->month == $currentMonth && $bulanMulai->year == $currentYear) {
                     // Kurangi atau tambah take home pay sesuai dengan kategori
                     if ($kategori == $kategori_penambah) {
-                        $penggajian->take_home_pay += $data['besaran'];
+                        $penggajian->gaji_bruto += $data['besaran'];
                     } else {
-                        $penggajian->take_home_pay -= $data['besaran'];
+                        $penggajian->gaji_bruto -= $data['besaran'];
                     }
                     $penggajian->save();
 
@@ -373,8 +376,13 @@ class PenyesuaianGajiController extends Controller
 
             if ($bulanMulai->month == $currentMonth && $bulanMulai->year == $currentYear) {
                 // Kurangi take home pay dengan besaran penyesuaian yang baru dibuat
-                $penggajian->take_home_pay += $request->besaran;
-                $penggajian->save();
+                $penggajian->gaji_bruto += $request->besaran;
+                // $pph = $this->calculatedPPH21ForMonths($penggajian->gaji_bruto, $penggajian->data_karyawans->ptkp_id);
+                $pph = CalculateHelper::calculatedPPH21ForMonths($penggajian->gaji_bruto, $penggajian->data_karyawans->ptkp_id);
+                $penggajian->pph_21 = $pph;
+                // $penggajian->save();
+
+                $detail = DetailGaji::where('penggajian_id', $penggajian->id)->where('nama_detail', 'PPH21')->update(['besaran' => $pph]);
 
                 // Simpan detail gaji ke tabel detail_gajis
                 DetailGaji::create([
@@ -384,7 +392,6 @@ class PenyesuaianGajiController extends Controller
                     'besaran' => $penyesuaianGaji->besaran
                 ]);
             }
-
             DB::commit();
 
             $userName = $penggajian->data_karyawans->users->nama;
@@ -392,7 +399,9 @@ class PenyesuaianGajiController extends Controller
             return response()->json([
                 'status' => Response::HTTP_OK,
                 'message' => "Penambahan penggajian '{$penyesuaianGaji->nama_detail}' berhasil dilakukan untuk karyawan '{$userName}'.",
+                // 'message' => "Berhasil",
                 'data' => $penyesuaianGaji
+                // 'data' => $detail
             ], Response::HTTP_OK);
         } catch (\Exception $e) {
             DB::rollBack();
@@ -479,5 +488,25 @@ class PenyesuaianGajiController extends Controller
             'message' => $message,
             'is_read' => false,
         ]);
+    }
+
+    private function calculatedPPH21ForMonths($penghasilanBruto, $ptkp_id)
+    {
+        // Langkah 1: Ambil data PTKP dari data_karyawans
+        $ptkp = DB::table('ptkps')->where('id', $ptkp_id)->first();
+
+        // Langkah 2: Cocokkan kategori_ter_id pada tabel ptkps dengan id kategori ter pada tabel kategori_ters
+        $kategoriTer = DB::table('kategori_ters')->where('id', $ptkp->kategori_ter_id)->first();
+
+        // Langkah 3: Ambil nilai percentage pada tabel ters dengan syarat kategori_ter_id dan gaji bruto antara from_ter dan to_ter
+        $ters = DB::table('ters')
+            ->select('percentage')
+            ->where('kategori_ter_id', $kategoriTer->id)
+            ->where('from_ter', '<=', $penghasilanBruto)
+            ->where('to_ter', '>=', $penghasilanBruto)
+            ->first();
+
+        $pph21Bulanan = ($ters->percentage / 100) * $penghasilanBruto;
+        return $pph21Bulanan;
     }
 }
