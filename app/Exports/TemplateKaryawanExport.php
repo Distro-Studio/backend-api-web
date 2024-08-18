@@ -17,7 +17,6 @@ class TemplateKaryawanExport implements FromArray, WithHeadings
     public function headings(): array
     {
         return [
-            'no',
             'nama',
             'email',
             'role',
