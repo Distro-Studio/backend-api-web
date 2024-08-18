@@ -52,8 +52,8 @@ class JadwalImport implements ToModel, WithHeadingRow, WithValidation
 
         return new Jadwal([
             'user_id' => $users->id,
-            'tanggal_mulai' => $row['tanggal_mulai'],
-            'tanggal_selesai' => $row['tanggal_selesai'],
+            'tgl_mulai' => $row['tanggal_mulai'],
+            'tgl_selesai' => $row['tanggal_selesai'],
             'shift_id' => $shifts->id,
         ]);
     }

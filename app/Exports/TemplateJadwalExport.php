@@ -5,8 +5,10 @@ namespace App\Exports;
 use Maatwebsite\Excel\Concerns\FromArray;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\FromCollection;
+use Maatwebsite\Excel\Concerns\WithColumnFormatting;
+use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 
-class TemplateJadwalExport implements FromArray, WithHeadings
+class TemplateJadwalExport implements FromArray, WithHeadings, WithColumnFormatting
 {
     public function array(): array
     {
@@ -18,11 +20,20 @@ class TemplateJadwalExport implements FromArray, WithHeadings
     public function headings(): array
     {
         return [
-            'no',
             'nama',
-            'tanggal_mulai',
-            'tanggal_selesai',
+            'tgl_mulai',
+            'tgl_selesai',
             'shift'
+        ];
+    }
+
+    public function columnFormats(): array
+    {
+        return [
+            'B' => NumberFormat::FORMAT_TEXT,
+            'C' => NumberFormat::FORMAT_TEXT,
+            'D' => NumberFormat::FORMAT_TEXT,
+            'E' => NumberFormat::FORMAT_TEXT,
         ];
     }
 }
