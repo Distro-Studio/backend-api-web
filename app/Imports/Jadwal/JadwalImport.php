@@ -50,11 +50,13 @@ class JadwalImport implements ToModel, WithHeadingRow, WithValidation
     {
         $users = $this->User->where('nama', $row['nama'])->first();
         $shifts = $this->Shift->where('nama', $row['shift'])->first();
+        $tgl_mulai = Carbon::createFromFormat('d-m-Y', $row['tanggal_mulai']);
+        $tgl_selesai = Carbon::createFromFormat('d-m-Y', $row['tanggal_selesai']);
 
         return new Jadwal([
             'user_id' => $users->id,
-            'tgl_mulai' => Carbon::createFromFormat('d-m-Y', $row['tanggal_mulai'])->format('Y-m-d'),
-            'tgl_selesai' => Carbon::createFromFormat('d-m-Y', $row['tanggal_selesai'])->format('Y-m-d'),
+            'tgl_mulai' => $tgl_mulai->format('Y-m-d'),
+            'tgl_selesai' => $tgl_selesai->format('Y-m-d'),
             'shift_id' => $shifts->id,
         ]);
     }
