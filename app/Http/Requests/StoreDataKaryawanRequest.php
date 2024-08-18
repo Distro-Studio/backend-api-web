@@ -68,6 +68,7 @@ class StoreDataKaryawanRequest extends FormRequest
             'role_id.exists' => 'Maaf role yang dipilih tidak valid.',
             'no_rm.required' => 'Nomor rekam medis karyawan tidak diperbolehkan kosong.',
             'no_manulife.string' => 'Nomor manulife karyawan tidak diperbolehkan kosong.',
+            'nik.required' => 'Nomor induk karyawan tidak diperbolehkan kosong.',
             'nik.string' => 'Nomor induk karyawan tidak diperbolehkan kosong.',
             'nik.numeric' => 'Nomor induk karyawan tidak diperbolehkan mengandung selain angka.',
             'tgl_masuk.required' => 'Tanggal masuk karyawan tidak diperbolehkan kosong.',

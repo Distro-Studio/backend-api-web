@@ -1400,6 +1400,7 @@ class DataKaryawanController extends Controller
         'email' => $data['email'],
         'no_rm' => $data['no_rm'],
         'no_manulife' => $data['no_manulife'],
+        'nik' => $data['nik'],
         'tgl_masuk' => $data['tgl_masuk'],
         'tgl_berakhir_pks' => $data['tgl_berakhir_pks'],
         'unit_kerja_id' => $data['unit_kerja_id'],
