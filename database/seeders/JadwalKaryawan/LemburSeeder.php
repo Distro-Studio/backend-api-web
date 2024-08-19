@@ -36,7 +36,7 @@ class LemburSeeder extends Seeder
                 'user_id' => $user_id,
                 'jadwal_id' => $jadwal_id,
                 'tgl_pengajuan' => date('Y-m-d', rand(mktime(0, 0, 0, 6, 1, 2024), mktime(0, 0, 0, 6, 30, 2024))),
-                'kompensasi_lembur_id' => $kompensasi_lembur_ids[array_rand($kompensasi_lembur_ids)],
+                // 'kompensasi_lembur_id' => $kompensasi_lembur_ids[array_rand($kompensasi_lembur_ids)],
                 'durasi' => $durasi_mulai . 'J ' . $durasi_selesai . 'M',
                 'catatan' => 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
                 // 'status_lembur_id' => $status_lembur_ids[array_rand($status_lembur_ids)],

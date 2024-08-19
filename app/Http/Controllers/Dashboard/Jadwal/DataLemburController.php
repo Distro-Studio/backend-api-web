@@ -226,7 +226,7 @@ class DataLemburController extends Controller
                 ],
                 'jadwal' => $lembur->jadwals,
                 'tgl_pengajuan' => $lembur->tgl_pengajuan,
-                'kompensasi' => $lembur->kategori_kompensasis,
+                // 'kompensasi' => $lembur->kategori_kompensasis,
                 'durasi' => $durasi,
                 'catatan' => $lembur->catatan,
                 'status_lembur' => $lembur->status_lemburs,
@@ -250,7 +250,14 @@ class DataLemburController extends Controller
         }
 
         $data = $request->validated();
-        // Set default value for status_lembur_id
+
+        // Validasi tanggal mulai tidak boleh hari ini, H+1, atau hari yang sudah terlewat
+        $tgl_mulai = Carbon::parse($data['tgl_pengajuan'])->startOfDay();
+        $today = Carbon::today();
+        if ($tgl_mulai->lte($today->addDay(1))) {
+            return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Tanggal pengajuan tidak boleh hari ini, atau hari yang sudah terlewat.'), Response::HTTP_BAD_REQUEST);
+        }
+
         $data['status_lembur_id'] = 1;
 
         $dataLembur = Lembur::create($data);

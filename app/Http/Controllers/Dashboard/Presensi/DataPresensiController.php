@@ -11,8 +11,6 @@ use Illuminate\Http\Request;
 use App\Helpers\RandomHelper;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
-use App\Helpers\StorageSeverHelper;
-use Illuminate\Support\Facades\Log;
 use App\Helpers\StorageServerHelper;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Gate;
@@ -55,7 +53,7 @@ class DataPresensiController extends Controller
 
         // Validasi untuk memastikan kategori ditemukan
         if (is_null($kategoriTepatWaktuId) || is_null($kategoriTerlambatId) || is_null($kategoriCutiId) || is_null($kategoriAbsenId)) {
-            return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Kategori presensi tidak ditemukan.'), Response::HTTP_BAD_REQUEST);
+            return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Kategori presensi tidak ditemukan.'), Response::HTTP_NOT_FOUND);
         }
 
         // Hitung jumlah presensi dalam setiap kategori

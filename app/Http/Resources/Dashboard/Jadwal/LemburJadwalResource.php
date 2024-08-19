@@ -69,7 +69,7 @@ class LemburJadwalResource extends JsonResource
                 ],
                 'jadwal' => $lembur->jadwals,
                 'tgl_pengajuan' => $lembur->tgl_pengajuan,
-                'kompensasi' => $lembur->kategori_kompensasis,
+                // 'kompensasi' => $lembur->kategori_kompensasis,
                 'durasi' => $lembur->durasi,
                 'catatan' => $lembur->catatan,
                 'status' => $lembur->status_lemburs,

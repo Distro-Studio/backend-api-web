@@ -1011,7 +1011,7 @@ class DataJadwalController extends Controller
                 $karyawanUnitKerja = $user->data_karyawans->unit_kerjas->id ?? null;
                 if ($adminUnitKerja !== $karyawanUnitKerja) {
                     DB::rollBack();
-                    return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, "Anda hanya dapat mengatur jadwal untuk karyawan dalam unit kerja yang sama dengan anda."), Response::HTTP_FORBIDDEN);
+                    return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, "Terdapat beberapa karyawan yang tidak sesuai dengan unit kerja anda. Anda hanya dapat mengatur jadwal karyawan dalam unit kerja yang sama dengan anda."), Response::HTTP_FORBIDDEN);
                 }
 
                 // Reset tanggalMulai untuk setiap user
