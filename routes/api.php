@@ -166,6 +166,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
             // ! Lembur ===========>
             Route::post('/get-lembur', [DataLemburController::class, 'index']);
+            Route::get('/get-jadwal-user-lembur/{userId}', [DataLemburController::class, 'getJadwalPengajuanLembur']);
             Route::get('/lembur/export', [DataLemburController::class, 'exportJadwalLembur']);
             Route::apiResource('/lembur', DataLemburController::class);
 

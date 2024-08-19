@@ -10,7 +10,6 @@ use App\Models\Notifikasi;
 use Illuminate\Http\Request;
 use App\Helpers\RandomHelper;
 use Illuminate\Http\Response;
-use Illuminate\Support\Collection;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Gate;
 use Maatwebsite\Excel\Facades\Excel;
@@ -22,39 +21,39 @@ use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
 
 class DataLemburController extends Controller
 {
-    public function getJadwalPengajuanLembur($userId)
-    {
-        if (!Gate::allows('view lemburKaryawan')) {
-            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
-        }
+    // public function getJadwalPengajuanLembur($userId)
+    // {
+    //     if (!Gate::allows('view tukarJadwal')) {
+    //         return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+    //     }
 
-        $user = User::where('id', $userId)->where('nama', '!=', 'Super Admin')->where('status_aktif', 2)
-            ->first();
-        if (!$user) {
-            return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Karyawan pengajuan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
-        }
+    //     $user = User::where('id', $userId)->where('nama', '!=', 'Super Admin')->where('status_aktif', 2)
+    //         ->first();
+    //     if (!$user) {
+    //         return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Karyawan pengajuan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+    //     }
 
-        $jadwal = Jadwal::with('shifts')->where('user_id', $userId)->get();
-        if ($jadwal->isEmpty()) {
-            return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Jadwal karyawan pengajuan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
-        }
+    //     $jadwal = Jadwal::with('shifts')->where('user_id', $userId)->where('shift_id', '!=', 0)->get();
+    //     if ($jadwal->isEmpty()) {
+    //         return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Jadwal karyawan pengajuan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+    //     }
 
-        // Ambil range tanggal untuk jadwal
-        $start_date = $jadwal->min('tgl_mulai');
-        $end_date = $jadwal->max('tgl_selesai');
-        $date_range = $this->generateDateRange($start_date, $end_date);
+    //     // Ambil range tanggal untuk jadwal
+    //     $start_date = $jadwal->min('tgl_mulai');
+    //     $end_date = $jadwal->max('tgl_selesai');
+    //     $date_range = $this->generateDateRange($start_date, $end_date);
 
-        $user_schedule_array = $this->formatSchedules($jadwal, $date_range);
+    //     $user_schedule_array = $this->formatSchedules($jadwal, $date_range);
 
-        return response()->json([
-            'status' => Response::HTTP_OK,
-            'message' => "Detai jadwall dan karyawan pengajuan berhasil ditampilkan.",
-            'data' => [
-                'user' => $user,
-                'list_jadwal' => $user_schedule_array
-            ]
-        ], Response::HTTP_OK);
-    }
+    //     return response()->json([
+    //         'status' => Response::HTTP_OK,
+    //         'message' => "Detai jadwall dan karyawan pengajuan berhasil ditampilkan.",
+    //         'data' => [
+    //             'user' => $user,
+    //             'list_jadwal' => $user_schedule_array
+    //         ]
+    //     ], Response::HTTP_OK);
+    // }
 
     public function index(Request $request)
     {
@@ -355,6 +354,66 @@ class DataLemburController extends Controller
         } catch (\Throwable $e) {
             return response()->json(new WithoutDataResource(Response::HTTP_INTERNAL_SERVER_ERROR, 'Maaf sepertinya terjadi error. Message: ' . $e->getMessage()), Response::HTTP_INTERNAL_SERVER_ERROR);
         }
+    }
+
+    private function generateDateRange($start_date, $end_date)
+    {
+        $dates = [];
+        for ($date = $start_date; $date->lte($end_date); $date->addDay()) {
+            $dates[] = $date->format('Y-m-d');
+        }
+        return $dates;
+    }
+
+    private function formatSchedules($jadwal, $date_range)
+    {
+        $user_schedules_by_date = [];
+        // Iterasi melalui jadwal dan rentang tanggal, menyimpan semua jadwal yang sesuai
+        foreach ($jadwal as $schedule) {
+            $tgl_mulai_formatted = Carbon::parse(RandomHelper::convertToDateString($schedule->tgl_mulai));
+            $tgl_selesai_formatted = Carbon::parse(RandomHelper::convertToDateString($schedule->tgl_selesai));
+
+            $current_date = $tgl_mulai_formatted->copy();
+
+            // Tentukan apakah ini adalah shift yang berakhir keesokan harinya
+            $is_overnight_shift = $tgl_selesai_formatted->greaterThan($tgl_mulai_formatted);
+
+            // Jika ini adalah shift yang berlangsung hingga keesokan hari, hanya tampilkan sekali pada hari `tgl_mulai`
+            if ($is_overnight_shift) {
+                $date_key = $tgl_mulai_formatted->format('Y-m-d');
+                if (!isset($user_schedules_by_date[$date_key])) {
+                    $user_schedules_by_date[$date_key] = [];
+                }
+                $user_schedules_by_date[$date_key][] = $schedule;
+            } else {
+                while ($current_date->lte($tgl_selesai_formatted)) {
+                    $date_key = $current_date->format('Y-m-d');
+                    if (!isset($user_schedules_by_date[$date_key])) {
+                        $user_schedules_by_date[$date_key] = [];
+                    }
+                    $user_schedules_by_date[$date_key][] = $schedule;
+                    $current_date->addDay();
+                }
+            }
+        }
+
+        $user_schedule_array = [];
+        foreach ($date_range as $date) {
+            if (isset($user_schedules_by_date[$date])) {
+                foreach ($user_schedules_by_date[$date] as $schedule) {
+                    $shift = $schedule->shifts;
+                    $user_schedule_array[] = [
+                        'id' => $schedule->id,
+                        'tanggal' => $date,
+                        'nama_shift' => $shift ? $shift->nama : 'Libur',
+                        'jam_from' => $shift ? $shift->jam_from : 'N/A',
+                        'jam_to' => $shift ? $shift->jam_to : 'N/A',
+                    ];
+                }
+            }
+        }
+
+        return $user_schedule_array;
     }
 
     private function createNotifikasiLembur($dataLembur)

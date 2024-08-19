@@ -113,12 +113,14 @@ class RolesController extends Controller
                 ];
             } elseif ($role->hasPermissionTo($permission)) {
                 return [
+                    'id' => $permission->id,
                     'name' => $permission->name,
                     'group' => $permission->group,
                     'has_permission' => true, // Permission ada di DB dan di-assign ke role
                 ];
             } else {
                 return [
+                    'id' => $permission->id,
                     'name' => $permission->name,
                     'group' => $permission->group,
                     'has_permission' => false, // Permission ada di DB tetapi tidak di-assign
@@ -237,6 +239,36 @@ class RolesController extends Controller
     //     return $groupedPermissions->values()->toArray();
     // }
 
+    // protected function formatPermissions($permissions)
+    // {
+    //     if ($permissions->isEmpty()) {
+    //         return null;
+    //     }
+
+    //     $permissionTypes = ['view', 'create', 'edit', 'delete', 'import', 'export', 'verifikasi1', 'verifikasi2'];
+
+    //     $groupedPermissions = $permissions->groupBy('group')->map(function ($group, $groupName) use ($permissionTypes) {
+    //         $permissionsArray = [];
+    //         foreach ($permissionTypes as $type) {
+    //             $permissionItem = $group->first(function ($item) use ($type) {
+    //                 return str_contains($item['name'], $type);
+    //             });
+
+    //             if ($permissionItem) {
+    //                 $permissionsArray[$type] = $permissionItem['has_permission'];
+    //             } else {
+    //                 $permissionsArray[$type] = null; // Jika tidak ada permission di DB
+    //             }
+    //         }
+    //         return [
+    //             'name' => $groupName,
+    //             'permissions' => $permissionsArray,
+    //         ];
+    //     });
+
+    //     return $groupedPermissions->values()->toArray();
+    // }
+
     protected function formatPermissions($permissions)
     {
         if ($permissions->isEmpty()) {
@@ -253,9 +285,15 @@ class RolesController extends Controller
                 });
 
                 if ($permissionItem) {
-                    $permissionsArray[$type] = $permissionItem['has_permission'];
+                    $permissionsArray[$type] = [
+                        'id' => $permissionItem['id'],
+                        'has_permission' => $permissionItem['has_permission']
+                    ];
                 } else {
-                    $permissionsArray[$type] = null; // Jika tidak ada permission di DB
+                    $permissionsArray[$type] = [
+                        'id' => null,
+                        'has_permission' => null
+                    ]; // Jika tidak ada permission di DB
                 }
             }
             return [

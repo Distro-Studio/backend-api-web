@@ -1008,10 +1008,12 @@ class DataJadwalController extends Controller
                 }
 
                 // Validasi kesamaan unit kerja antara admin dan karyawan
-                $karyawanUnitKerja = $user->data_karyawans->unit_kerjas->id ?? null;
-                if ($adminUnitKerja !== $karyawanUnitKerja) {
-                    DB::rollBack();
-                    return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, "Terdapat beberapa karyawan yang tidak sesuai dengan unit kerja anda. Anda hanya dapat mengatur jadwal karyawan dalam unit kerja yang sama dengan anda."), Response::HTTP_FORBIDDEN);
+                if ($admin->nama !== 'Super Admin') {
+                    $karyawanUnitKerja = $user->data_karyawans->unit_kerjas->id ?? null;
+                    if ($adminUnitKerja !== $karyawanUnitKerja) {
+                        DB::rollBack();
+                        return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, "Terdapat beberapa karyawan yang tidak sesuai dengan unit kerja Anda. Anda hanya dapat mengatur jadwal karyawan dalam unit kerja yang sama dengan Anda."), Response::HTTP_FORBIDDEN);
+                    }
                 }
 
                 // Reset tanggalMulai untuk setiap user
@@ -1091,15 +1093,16 @@ class DataJadwalController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Anda tidak dapat mengupdate jadwal pada tanggal hari ini.'), Response::HTTP_BAD_REQUEST);
         }
 
-        // Validasi kesamaan unit kerja antara admin yang login dan karyawan
+        // Get admin yang sedang login
         $admin = Auth::user();
         $adminUnitKerja = $admin->data_karyawans->unit_kerjas->id ?? null;
 
+        // Get user data
         $user = User::findOrFail($userId);
         $dataKaryawan = $user->data_karyawans;
         $karyawanUnitKerja = $dataKaryawan->unit_kerjas->id ?? null;
 
-        if ($adminUnitKerja !== $karyawanUnitKerja) {
+        if ($admin->nama !== 'Super Admin' && $adminUnitKerja !== $karyawanUnitKerja) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda hanya dapat mengatur jadwal untuk karyawan dalam unit kerja yang sama dengan anda.'), Response::HTTP_FORBIDDEN);
         }
 
@@ -1205,7 +1208,6 @@ class DataJadwalController extends Controller
         ], Response::HTTP_OK);
     }
 
-    // ? optional || jika tgl selesai lebih 1 hari dari tgl mulai dan shift id 3, maka tidak bisa update shift di tanggal selesai
     public function update(StoreJadwalShiftKaryawanRequest $request, $userId)
     {
         if (!Gate::allows('edit jadwalKaryawan')) {
@@ -1221,15 +1223,17 @@ class DataJadwalController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Anda tidak dapat memperbarui jadwal pada tanggal hari ini.'), Response::HTTP_BAD_REQUEST);
         }
 
-        // Validasi kesamaan unit kerja antara admin yang login dan karyawan
+        // Get admin yang sedang login
         $admin = Auth::user();
         $adminUnitKerja = $admin->data_karyawans->unit_kerjas->id ?? null;
 
+        // Get user data
         $user = User::findOrFail($userId);
         $dataKaryawan = $user->data_karyawans;
         $karyawanUnitKerja = $dataKaryawan->unit_kerjas->id ?? null;
 
-        if ($adminUnitKerja !== $karyawanUnitKerja) {
+        // Validasi kesamaan unit kerja antara admin dan karyawan kecuali jika admin adalah Super Admin
+        if ($admin->nama !== 'Super Admin' && $adminUnitKerja !== $karyawanUnitKerja) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda hanya dapat memperbarui jadwal untuk karyawan dalam unit kerja yang sama dengan anda.'), Response::HTTP_FORBIDDEN);
         }
 
