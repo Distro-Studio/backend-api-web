@@ -748,6 +748,7 @@ class DataKaryawanController extends Controller
         'nama_file' => $item->nama_file,
         'ext' => $item->ext,
         'size' => $item->size,
+        'status_berkas' => $item->status_berkas,
         'created_at' => $item->created_at,
         'updated_at' => $item->updated_at,
       ];
@@ -770,63 +771,124 @@ class DataKaryawanController extends Controller
           'updated_at' => $user->updated_at,
         ],
         'jumlah_dokumen' => $berkas->count(),
+        'status_berkas' => $berkas->status_berkas,
         'data_dokumen' => $formattedData,
       ],
     ], Response::HTTP_OK);
   }
 
-  public function verifikasiBerkas(Request $request, $berkasId)
+  // ini versi tanpa data_karyawan_id
+  // public function verifikasiBerkas(Request $request, $berkasId)
+  // {
+  //   if (!Gate::allows('verifikasi1 berkas')) {
+  //     return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+  //   }
+
+  //   // Cari berkas berdasarkan ID
+  //   $berkas = Berkas::find($berkasId);
+
+  //   if (!$berkas) {
+  //     return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data berkas tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+  //   }
+
+  //   $status_berkas_id = $berkas->status_berkas_id;
+
+  //   // Logika verifikasi disetujui tahap 1
+  //   if ($request->has('verifikasi_disetujui') && $request->verifikasi_disetujui == 1) {
+  //     // Jika status_berkas_id = 1 (default)
+  //     if ($status_berkas_id == 1) {
+  //       $berkas->status_berkas_id = 2; // Update status ke disetujui
+  //       $berkas->verifikator_1 = Auth::id(); // Set verifikator_1
+  //       $berkas->save();
+
+  //       // Kirim notifikasi bahwa berkas telah diverifikasi
+  //       $this->createNotifikasiBerkas($berkas, 'disetujui');
+
+  //       return response()->json(new WithoutDataResource(Response::HTTP_OK, "Verifikasi berkas '{$berkas->nama}' telah disetujui."), Response::HTTP_OK);
+  //     } else {
+  //       return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Berkas '{$berkas->nama}' tidak dalam status untuk disetujui."), Response::HTTP_BAD_REQUEST);
+  //     }
+  //   }
+  //   // Logika verifikasi ditolak
+  //   // elseif ($request->has('verifikasi_ditolak') && $request->verifikasi_ditolak == 1) {
+  //   //   // Jika status_berkas_id = 1 (default)
+  //   //   if ($status_berkas_id == 1) {
+  //   //     $berkas->status_berkas_id = 3; // Update status ke ditolak
+  //   //     $berkas->verifikator_1 = Auth::id(); // Set verifikator
+  //   //     $berkas->alasan = 'Verifikasi ditolak karena: ' . $request->input('alasan', null); // Tambahkan alasan penolakan
+  //   //     $berkas->save();
+
+  //   //     // Kirim notifikasi bahwa berkas telah ditolak
+  //   //     $this->createNotifikasiBerkas($berkas, 'ditolak');
+
+  //   //     return response()->json(new WithoutDataResource(Response::HTTP_OK, "Verifikasi berkas '{$berkas->nama}' telah ditolak."), Response::HTTP_OK);
+  //   //   } else {
+  //   //     return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Berkas '{$berkas->nama}' tidak dalam status untuk ditolak."), Response::HTTP_BAD_REQUEST);
+  //   //   }
+  //   // } 
+  //   else {
+  //     return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Aksi tidak valid.'), Response::HTTP_BAD_REQUEST);
+  //   }
+  // }
+
+  // ini berdasarkan data_karyawan_id
+  public function verifikasiBerkas(Request $request, $data_karyawan_id)
   {
     if (!Gate::allows('verifikasi1 berkas')) {
       return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
     }
 
-    // Cari berkas berdasarkan ID
-    $berkas = Berkas::find($berkasId);
+    // Cari user berdasarkan data_karyawan_id
+    $user = User::where('data_karyawan_id', $data_karyawan_id)->first();
 
-    if (!$berkas) {
-      return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data berkas tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+    if (!$user) {
+      return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data karyawan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
     }
 
-    $status_berkas_id = $berkas->status_berkas_id;
+    // Ambil semua berkas terkait dengan user ini
+    $berkasList = $user->berkas;
 
-    // Logika verifikasi disetujui tahap 1
-    if ($request->has('verifikasi_disetujui') && $request->verifikasi_disetujui == 1) {
-      // Jika status_berkas_id = 1 (default)
-      if ($status_berkas_id == 1) {
-        $berkas->status_berkas_id = 2; // Update status ke disetujui
-        $berkas->verifikator_1 = Auth::id(); // Set verifikator
-        $berkas->alasan = null; // Reset alasan jika sebelumnya ditolak
-        $berkas->save();
+    if ($berkasList->isEmpty()) {
+      return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Tidak ada data berkas yang ditemukan untuk karyawan ini.'), Response::HTTP_NOT_FOUND);
+    }
 
-        // Kirim notifikasi bahwa berkas telah diverifikasi
-        $this->createNotifikasiBerkas($berkas, 'disetujui');
+    foreach ($berkasList as $berkas) {
+      $status_berkas_id = $berkas->status_berkas_id;
 
-        return response()->json(new WithoutDataResource(Response::HTTP_OK, "Verifikasi berkas '{$berkas->nama}' telah disetujui."), Response::HTTP_OK);
-      } else {
-        return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Berkas '{$berkas->nama}' tidak dalam status untuk disetujui."), Response::HTTP_BAD_REQUEST);
+      // Logika verifikasi disetujui tahap 1
+      if ($request->has('verifikasi_disetujui') && $request->verifikasi_disetujui == 1) {
+        // Jika status_berkas_id = 1 (default)
+        if ($status_berkas_id == 1) {
+          $berkas->status_berkas_id = 2; // Update status ke disetujui
+          $berkas->verifikator_1 = Auth::id(); // Set verifikator_1
+          $berkas->save();
+
+          // Kirim notifikasi bahwa berkas telah diverifikasi
+          $this->createNotifikasiBerkas($berkas, 'disetujui');
+        } else {
+          return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Berkas '{$berkas->nama}' tidak dalam status untuk disetujui."), Response::HTTP_BAD_REQUEST);
+        }
+      }
+      // Logika verifikasi ditolak (opsional)
+      // else if ($request->has('verifikasi_ditolak') && $request->verifikasi_ditolak == 1) {
+      //   if ($status_berkas_id == 1) {
+      //     $berkas->status_berkas_id = 3; // Update status ke ditolak
+      //     $berkas->verifikator_1 = Auth::id(); // Set verifikator
+      //     $berkas->alasan = 'Verifikasi ditolak karena: ' . $request->input('alasan', null); // Tambahkan alasan penolakan
+      //     $berkas->save();
+
+      //     // Kirim notifikasi bahwa berkas telah ditolak
+      //     $this->createNotifikasiBerkas($berkas, 'ditolak');
+      //   } else {
+      //     return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Berkas '{$berkas->nama}' tidak dalam status untuk ditolak."), Response::HTTP_BAD_REQUEST);
+      //   }
+      // } 
+      else {
+        return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Aksi tidak valid.'), Response::HTTP_BAD_REQUEST);
       }
     }
-    // Logika verifikasi ditolak
-    // elseif ($request->has('verifikasi_ditolak') && $request->verifikasi_ditolak == 1) {
-    //   // Jika status_berkas_id = 1 (default)
-    //   if ($status_berkas_id == 1) {
-    //     $berkas->status_berkas_id = 3; // Update status ke ditolak
-    //     $berkas->verifikator_1 = Auth::id(); // Set verifikator
-    //     $berkas->alasan = 'Verifikasi ditolak karena: ' . $request->input('alasan', null); // Tambahkan alasan penolakan
-    //     $berkas->save();
 
-    //     // Kirim notifikasi bahwa berkas telah ditolak
-    //     $this->createNotifikasiBerkas($berkas, 'ditolak');
-
-    //     return response()->json(new WithoutDataResource(Response::HTTP_OK, "Verifikasi berkas '{$berkas->nama}' telah ditolak."), Response::HTTP_OK);
-    //   } else {
-    //     return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Berkas '{$berkas->nama}' tidak dalam status untuk ditolak."), Response::HTTP_BAD_REQUEST);
-    //   }
-    // } 
-    else {
-      return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Aksi tidak valid.'), Response::HTTP_BAD_REQUEST);
-    }
+    return response()->json(new WithoutDataResource(Response::HTTP_OK, "Verifikasi berkas untuk karyawan '{$user->nama}' berhasil verifikasi."), Response::HTTP_OK);
   }
 
   public function getDataCuti($data_karyawan_id)
