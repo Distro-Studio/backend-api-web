@@ -162,43 +162,43 @@ class RolesController extends Controller
         ], Response::HTTP_OK);
     }
 
-    public function destroy(Role $role)
-    {
-        if (!Gate::allows('delete role', $role)) {
-            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
-        }
+    // public function destroy(Role $role)
+    // {
+    //     if (!Gate::allows('delete role', $role)) {
+    //         return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+    //     }
 
-        if ($role->id == 1 || $role->name === 'Super Admin') {
-            return response()->json([
-                'status' => Response::HTTP_FORBIDDEN,
-                'message' => 'Role Super Admin tidak dapat dihapus.',
-            ]);
-        }
+    //     if ($role->id == 1 || $role->name === 'Super Admin') {
+    //         return response()->json([
+    //             'status' => Response::HTTP_FORBIDDEN,
+    //             'message' => 'Role Super Admin tidak dapat dihapus.',
+    //         ]);
+    //     }
 
-        $role->delete();
+    //     $role->delete();
 
-        $successMessage = "Data role '{$role->name}' berhasil dihapus.";
-        return response()->json(new WithoutDataResource(Response::HTTP_OK, $successMessage), Response::HTTP_OK);
-    }
+    //     $successMessage = "Data role '{$role->name}' berhasil dihapus.";
+    //     return response()->json(new WithoutDataResource(Response::HTTP_OK, $successMessage), Response::HTTP_OK);
+    // }
 
-    public function restore($id)
-    {
-        $role = Role::withTrashed()->find($id);
+    // public function restore($id)
+    // {
+    //     $role = Role::withTrashed()->find($id);
 
-        if (!Gate::allows('delete role', $role)) {
-            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
-        }
+    //     if (!Gate::allows('delete role', $role)) {
+    //         return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+    //     }
 
-        $role->restore();
+    //     $role->restore();
 
-        if (is_null($role->deleted_at)) {
-            $successMessage = "Data role '{$role->name}' berhasil dipulihkan.";
-            return response()->json(new WithoutDataResource(Response::HTTP_OK, $successMessage), Response::HTTP_OK);
-        } else {
-            $successMessage = 'Restore data tidak dapat diproses, Silahkan hubungi admin untuk dilakukan pengecekan ulang.';
-            return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, $successMessage), Response::HTTP_BAD_REQUEST);
-        }
-    }
+    //     if (is_null($role->deleted_at)) {
+    //         $successMessage = "Data role '{$role->name}' berhasil dipulihkan.";
+    //         return response()->json(new WithoutDataResource(Response::HTTP_OK, $successMessage), Response::HTTP_OK);
+    //     } else {
+    //         $successMessage = 'Restore data tidak dapat diproses, Silahkan hubungi admin untuk dilakukan pengecekan ulang.';
+    //         return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, $successMessage), Response::HTTP_BAD_REQUEST);
+    //     }
+    // }
 
     protected function formatData(Collection $collection)
     {
@@ -214,31 +214,6 @@ class RolesController extends Controller
             ];
         });
     }
-
-    // protected function formatPermissions($permissions)
-    // {
-    //     if ($permissions->isEmpty()) {
-    //         return null;
-    //     }
-
-    //     $permissionTypes = ['view', 'create', 'edit', 'delete', 'import', 'export', 'verifikasi'];
-
-    //     $groupedPermissions = $permissions->groupBy('group')->map(function ($group, $groupName) use ($permissionTypes) {
-    //         $permissionsArray = [];
-    //         foreach ($permissionTypes as $type) {
-    //             $hasPermission = $group->contains(function ($item) use ($type) {
-    //                 return str_contains($item->name, $type);
-    //             });
-    //             $permissionsArray[$type] = $hasPermission ? true : null;
-    //         }
-    //         return [
-    //             'name' => $groupName,
-    //             'permissions' => $permissionsArray,
-    //         ];
-    //     });
-
-    //     return $groupedPermissions->values()->toArray();
-    // }
 
     // protected function formatPermissions($permissions)
     // {
