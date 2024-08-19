@@ -442,7 +442,7 @@ class DataTukarJadwalController extends Controller
     public function store(StoreTukarJadwalRequest $request)
     {
         if (!Gate::allows('create tukarJadwal')) {
-            return response()->json(['message' => 'Anda tidak memiliki hak akses untuk melakukan proses ini.'], Response::HTTP_FORBIDDEN);
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
         $data = $request->validated();
@@ -457,13 +457,13 @@ class DataTukarJadwalController extends Controller
 
         // Verifikasi unit kerja
         if ($userPengajuan->data_karyawans->unit_kerjas->id !== $userDitukar->data_karyawans->unit_kerjas->id) {
-            return response()->json(['message' => 'Karyawan harus berada di unit kerja yang sama untuk menukar jadwal.'], Response::HTTP_BAD_REQUEST);
+            return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Karyawan harus berada di unit kerja yang sama untuk menukar jadwal.'), Response::HTTP_BAD_REQUEST);
         }
 
         if (!is_null($jadwalPengajuan->shift_id) && !is_null($jadwalDitukar->shift_id)) {
             // Verifikasi tanggal
             if ($tglMulaiPengajuan !== $tglMulaiDitukar) {
-                return response()->json(['message' => 'Jadwal harus pada tanggal yang sama untuk menukar jadwal.'], Response::HTTP_BAD_REQUEST);
+                return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Jadwal harus pada tanggal yang sama untuk menukar jadwal.'), Response::HTTP_BAD_REQUEST);
             }
 
             // Tukar shift dengan shift
@@ -498,7 +498,7 @@ class DataTukarJadwalController extends Controller
                 ->first();
 
             if (!$jadwalKerjaPengajuan) {
-                return response()->json(['message' => 'Jadwal kerja user pengajuan tidak ditemukan pada tanggal yang diminta.'], Response::HTTP_BAD_REQUEST);
+                return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Jadwal kerja user pengajuan tidak ditemukan pada tanggal yang diminta.'), Response::HTTP_BAD_REQUEST);
             }
 
             // Tukar user_id pada jadwal libur
@@ -533,7 +533,7 @@ class DataTukarJadwalController extends Controller
             // Buat dan simpan notifikasi
             $this->createNotifikasiTukarJadwal($userPengajuan, $userDitukar, $jadwalPengajuan, $jadwalDitukar);
         } else {
-            return response()->json(['message' => 'Tidak bisa menukar shift dengan libur atau sebaliknya.'], Response::HTTP_BAD_REQUEST);
+            return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Tidak bisa menukar shift dengan libur atau sebaliknya.'), Response::HTTP_BAD_REQUEST);
         }
 
         return response()->json([

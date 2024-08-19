@@ -30,12 +30,12 @@ class DataLemburController extends Controller
         $user = User::where('id', $userId)->where('nama', '!=', 'Super Admin')->where('status_aktif', 2)
             ->get();
         if (!$user) {
-            return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Karyawan ditukar tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+            return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Karyawan pengajuan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
         }
 
         $jadwal = Jadwal::with('shifts')->where('user_id', $userId)->where('shift_id', '!=', 0)->get();
         if ($jadwal->isEmpty()) {
-            return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Jadwal karyawan ditukar tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+            return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Jadwal karyawan pengajuan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
         }
 
         $start_date = $jadwal->min('tgl_mulai');
@@ -342,9 +342,8 @@ class DataLemburController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
-        $dataLembur = Lembur::all(); // Sesuaikan dengan model atau query Anda
+        $dataLembur = Lembur::all();
         if ($dataLembur->isEmpty()) {
-            // Kembalikan respons JSON ketika tabel kosong
             return response()->json(new WithoutDataResource(Response::HTTP_OK, 'Tidak ada data lembur karyawan yang tersedia untuk diekspor.'), Response::HTTP_OK);
         }
 

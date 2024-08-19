@@ -16,8 +16,8 @@ class JadwalNonShiftSeeder extends Seeder
         NonShift::create([
             'id' => 1,
             'nama' => 'Jam Pulang',
-            'jam_from' => '17:00:00',
-            'jam_to' => '01:30:00',
+            'jam_from' => '06:00:00',
+            'jam_to' => '17:30:00',
         ]);
     }
 }

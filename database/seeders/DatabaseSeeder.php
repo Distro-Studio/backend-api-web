@@ -94,23 +94,22 @@ class DatabaseSeeder extends Seeder
       StatusTukarJadwalSeeder::class,
 
       LokasiKantorSeeder::class,
-      JadwalNonShiftSeeder::class,
-
-        /* ==== Pengaturan Karyawan ==== */
+      
+      /* ==== Pengaturan Karyawan ==== */
       JabatanSeeder::class,
       KelompokGajiSeeder::class,
       KompetensiSeeder::class,
       UnitKerjaSeeder::class,
-
-        /* ==== Pengaturan Finance ==== */
+      
+      /* ==== Pengaturan Finance ==== */
       KategoriTERSeeder::class,
       PTKPSeeder::class,
       PremiSeeder::class,
       TERSeeder::class,
-
-        /* ==== Pengaturan Managemen Waktu ==== */
+      
+      /* ==== Pengaturan Managemen Waktu ==== */
       ShiftSeeder::class,
-      NonShiftSeeder::class,
+      JadwalNonShiftSeeder::class,
       HariLiburSeeder::class,
       TipeCutiSeeder::class,
 
