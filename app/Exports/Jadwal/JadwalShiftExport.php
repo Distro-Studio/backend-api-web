@@ -2,16 +2,15 @@
 
 namespace App\Exports\Jadwal;
 
-use App\Helpers\RandomHelper;
 use Carbon\Carbon;
-use App\Models\Shift;
 use App\Models\Jadwal;
+use App\Helpers\RandomHelper;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\Exportable;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\FromCollection;
 
-class JadwalExport implements FromCollection, WithHeadings
+class JadwalShiftExport implements FromCollection, WithHeadings
 {
     use Exportable;
 
@@ -21,17 +20,26 @@ class JadwalExport implements FromCollection, WithHeadings
             ->get();
 
         $schedules = $jadwals->map(function ($schedule, $index) {
+            // Jika shift_id = 0, karyawan libur
+            if ($schedule->shift_id == 0) {
+                $namaShift = 'Libur';
+                $jam_from = 'N/A';
+                $jam_to = 'N/A';
+            } else {
+                $namaShift = $schedule->shifts->nama ?? 'N/A';
+                $convertJam_From = RandomHelper::convertToTimeString($schedule->shifts->jam_from);
+                $convertJam_To = RandomHelper::convertToTimeString($schedule->shifts->jam_to);
+                $jam_from = $convertJam_From ? Carbon::parse($convertJam_From)->format('H:i:s') : 'N/A';
+                $jam_to = $convertJam_To ? Carbon::parse($convertJam_To)->format('H:i:s') : 'N/A';
+            }
+
             $convertTanggal_Mulai = RandomHelper::convertToDateString($schedule->tgl_mulai);
             $convertTanggal_Selesai = RandomHelper::convertToDateString($schedule->tgl_selesai);
-            $convertJam_From = RandomHelper::convertToTimeString($schedule->shifts->jam_from);
-            $convertJam_To = RandomHelper::convertToTimeString($schedule->shifts->jam_to);
-            $tgl_mulai = Carbon::parse($convertTanggal_Mulai)->format('d-m-Y') ?? 'N/A';
-            $tgl_selesai = Carbon::parse($convertTanggal_Selesai)->format('d-m-Y') ?? 'N/A';
-            $jam_from = Carbon::parse($convertJam_From)->format('H:i:s') ?? 'N/A';
-            $jam_to = Carbon::parse($convertJam_To)->format('H:i:s') ?? 'N/A';
+            $tgl_mulai = $convertTanggal_Mulai ? Carbon::parse($convertTanggal_Mulai)->format('d-m-Y') : 'N/A';
+            $tgl_selesai = $convertTanggal_Selesai ? Carbon::parse($convertTanggal_Selesai)->format('d-m-Y') : 'N/A';
 
             $unitKerjas = $schedule->users->data_karyawans->unit_kerjas ?? 'N/A';
-            $jenisKaryawan = $unitKerjas ? ($unitKerjas->jenis_karyawan ? 'Shift' : 'Non-Shift') : 'N/A'; // 1 = Shift, 0 = Non-Shift
+            $jenisKaryawan = $unitKerjas ? ($unitKerjas->jenis_karyawan ? 'Shift' : 'Non-Shift') : 'N/A';
             $namaUnit = $unitKerjas ? $unitKerjas->nama_unit : 'N/A';
 
             return [
@@ -39,12 +47,11 @@ class JadwalExport implements FromCollection, WithHeadings
                 'user' => $schedule->users->nama,
                 'jenis_karyawan' => $jenisKaryawan,
                 'nama_unit' => $namaUnit,
-                'nama_shift' => $schedule->shifts->nama,
+                'nama_shift' => $namaShift,
                 $tgl_mulai,
                 $tgl_selesai,
                 $jam_from,
                 $jam_to,
-                'jam_to' => $schedule->shifts->jam_to,
                 'created_at' => Carbon::parse($schedule->created_at)->format('d-m-Y H:i:s'),
                 'updated_at' => Carbon::parse($schedule->updated_at)->format('d-m-Y H:i:s'),
             ];

@@ -99,8 +99,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
         // TODO: aktifkan send email di create & transfer karyawan
         // TODO: ganti email di create & transfer karyawan
-
-        // ! Rombak semua datetime format ke carbon => cek dulu, jika aman tidak usah | tapi untuk next project store semua ke format y-m-d
+        // TODO: ganti send email dengan email create akun pada validasi jika email berubah
         Route::group(['prefix' => '/karyawan'], function () {
             // ! Data Karyawan ===========>
             Route::post('/get-data-karyawan', [DataKaryawanController::class, 'index']);
@@ -151,7 +150,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
             // ! Jadwal ===========>
             Route::post('/get-data-jadwal', [DataJadwalController::class, 'index']);
             Route::post('/create-shift/{userId}', [DataJadwalController::class, 'createShiftByDate']);
-            Route::get('/export', [DataJadwalController::class, 'exportJadwalKaryawan']);
+            Route::get('/export-shift', [DataJadwalController::class, 'exportJadwalKaryawanShift']);
+            Route::get('/export-non-shift', [DataJadwalController::class, 'exportJadwalKaryawanNonShift']);
             Route::post('/import', [DataJadwalController::class, 'importJadwalKaryawan']);
             Route::apiResource('/data-jadwal', DataJadwalController::class);
 
@@ -289,7 +289,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
             // ! Shift ===========>
             Route::post('/shift/restore/{id}', [ShiftController::class, 'restore']);
             Route::apiResource('/shift', ShiftController::class);
-            
+
             // ! Non-Shift ===========>
             // Route::post('/non-shift/restore/{id}', [NonShiftController::class, 'restore']);
             // Route::apiResource('/non-shift', NonShift::class);

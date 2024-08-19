@@ -59,7 +59,7 @@ class DataKaryawanController extends Controller
 
     $userShift = User::whereHas('data_karyawans.unit_kerjas', function ($query) {
       $query->where('jenis_karyawan', 0); // 0 = non shift
-    })->where('nama', '!=', 'Super Admin')->get();
+    })->where('nama', '!=', 'Super Admin')->where('status_aktif', 2)->get();
     return response()->json([
       'status' => Response::HTTP_OK,
       'message' => 'Retrieving all user shift for dropdown',
@@ -75,7 +75,7 @@ class DataKaryawanController extends Controller
 
     $userShift = User::whereHas('data_karyawans.unit_kerjas', function ($query) {
       $query->where('jenis_karyawan', 1); // 1 = shift
-    })->where('nama', '!=', 'Super Admin')->get();
+    })->where('nama', '!=', 'Super Admin')->where('status_aktif', 2)->get();
     return response()->json([
       'status' => Response::HTTP_OK,
       'message' => 'Retrieving all user shift for dropdown',
@@ -89,7 +89,7 @@ class DataKaryawanController extends Controller
       return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
     }
 
-    $user = User::where('nama', '!=', 'Super Admin')->get();
+    $user = User::where('nama', '!=', 'Super Admin')->where('status_aktif', 2)->get();
     return response()->json([
       'status' => Response::HTTP_OK,
       'message' => 'Retrieving all user for dropdown',
@@ -1980,15 +1980,19 @@ class DataKaryawanController extends Controller
 
     // Memeriksa apakah email telah berubah
     if ($oldEmail !== $newEmail) {
-      // Memeriksa status_aktif
       if ($user->status_aktif !== 1) {
         return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Email tidak dapat diubah, Status akun harus dalam keadaan belum aktif.'), Response::HTTP_NOT_ACCEPTABLE);
       }
 
-      // Update email di data karyawan
+      $generatedPassword = RandomHelper::generatePassword();
       $karyawan->email = $newEmail;
-      Mail::to($newEmail)->send(new SendAccountResetPassword($newEmail, $data['nama']));
-      // Mail::to($row['email'])->send(new SendAccoundUsersMail($data['email'], $password, $data['nama']));
+      $user->password = Hash::make($generatedPassword);
+
+      $karyawan->save();
+      $user->save();
+
+      // Kirim email dengan password baru
+      AccountEmailJob::dispatch($newEmail, $generatedPassword, $data['nama']);
     }
 
     // Update nama di tabel users
@@ -2145,6 +2149,11 @@ class DataKaryawanController extends Controller
 
     $user = $karyawan->users;
 
+    // Validasi pertama kali untuk memastikan data_completion_step = 0
+    if ($user->data_completion_step !== 0) {
+      return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Proses ini tidak bisa dilanjutkan karena langkah pengisian data belum mencapai tahap akhir."), Response::HTTP_BAD_REQUEST);
+    }
+
     if ($user->status_aktif === 1) {
       // Verifikasi data karyawan
       $fieldsToCheck = [
@@ -2153,6 +2162,7 @@ class DataKaryawanController extends Controller
         'no_hp',
         'jenis_kelamin',
         'nik_ktp',
+        'nik',
         'no_kk',
         'kategori_agama_id',
         'kategori_darah_id',
@@ -2165,7 +2175,8 @@ class DataKaryawanController extends Controller
         'no_sip',
         'masa_berlaku_sip',
         'no_bpjsksh',
-        'no_bpjsktk'
+        'no_bpjsktk',
+        'tgl_berakhir_pks'
       ];
 
       $nullFields = [];
@@ -2185,7 +2196,7 @@ class DataKaryawanController extends Controller
       // Jika semua data valid, update status_aktif menjadi 2
       $user->status_aktif = 2;
       $karyawan->verifikator_1 = Auth::id(); // Masukkan auth user_id ke dalam verifikator_1
-      $user->data_completion_step = 0;
+      // $user->data_completion_step = 0;
       $karyawan->save(); // Simpan perubahan pada data_karyawans
       $message = "Karyawan '{$karyawan->users->nama}' berhasil diaktifkan.";
     } elseif ($user->status_aktif === 2) {
@@ -2199,7 +2210,6 @@ class DataKaryawanController extends Controller
     }
 
     $user->save();
-
     return response()->json(new WithoutDataResource(Response::HTTP_OK, $message), Response::HTTP_OK);
   }
 

@@ -466,7 +466,7 @@ class DataCutiController extends Controller
 
     public function verifikasiCuti(Request $request, $cutiId)
     {
-        if (!Gate::allows('verifikasi verifikator1')) {
+        if (!Gate::allows('verifikasi1 cutiKaryawan')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
@@ -482,7 +482,7 @@ class DataCutiController extends Controller
         // Logika verifikasi disetujui tahap 1
         if ($request->has('verifikasi_disetujui') && $request->verifikasi_disetujui == 1) {
             // Jika status_cuti_id = 1 (default) atau 3 (ditolak sebelumnya)
-            if ($status_cuti_id == 1 || $status_cuti_id == 3) {
+            if ($status_cuti_id == 1) {
                 $cuti->status_cuti_id = 2; // Update status ke tahap 1 disetujui
                 $cuti->verifikator_1 = Auth::id(); // Set verifikator tahap 1
                 $cuti->alasan = null;

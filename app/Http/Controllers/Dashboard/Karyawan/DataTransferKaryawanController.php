@@ -298,6 +298,14 @@ class DataTransferKaryawanController extends Controller
 
         $data = $request->validated();
 
+        // Validasi tanggal mulai tidak boleh hari ini, H+1, atau hari yang sudah terlewat
+        $tgl_mulai = Carbon::createFromFormat('d-m-Y', $data['tgl_mulai'])->startOfDay();
+        $today = Carbon::today();
+
+        if ($tgl_mulai->lte($today->addDay(2))) {
+            return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Tanggal mulai hanya diperbolehkan untuk 2 hari kedepan.'), Response::HTTP_BAD_REQUEST);
+        }
+
         // with server
         DB::beginTransaction();
         try {

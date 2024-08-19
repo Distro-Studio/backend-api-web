@@ -26,7 +26,7 @@ class DataTukarJadwalController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
-        $user = User::where('id', $userId)->where('nama', '!=', 'Super Admin')
+        $user = User::where('id', $userId)->where('nama', '!=', 'Super Admin')->where('status_aktif', 2)
             ->first();
         if (!$user) {
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Karyawan pengajuan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
@@ -154,8 +154,8 @@ class DataTukarJadwalController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
-        $user = User::where('id', $userId)->where('nama', '!=', 'Super Admin')
-            ->first();
+        $user = User::where('id', $userId)->where('nama', '!=', 'Super Admin')->where('status_aktif', 2)
+            ->get();
         if (!$user) {
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Karyawan ditukar tidak ditemukan.'), Response::HTTP_NOT_FOUND);
         }
@@ -165,10 +165,6 @@ class DataTukarJadwalController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Jadwal karyawan ditukar tidak ditemukan.'), Response::HTTP_NOT_FOUND);
         }
 
-        // Ambil range tanggal untuk jadwal
-        // $start_date = Carbon::parse(RandomHelper::convertToDateString($jadwal->min('tgl_mulai')));
-        // $end_date = Carbon::parse(RandomHelper::convertToDateString($jadwal->max('tgl_selesai')));
-        // $date_range = $this->generateDateRange($start_date, $end_date);
         $start_date = $jadwal->min('tgl_mulai');
         $end_date = $jadwal->max('tgl_selesai');
         $date_range = $this->generateDateRange($start_date, $end_date);
@@ -757,12 +753,13 @@ class DataTukarJadwalController extends Controller
         foreach ($date_range as $date) {
             if (isset($user_schedules_by_date[$date])) {
                 foreach ($user_schedules_by_date[$date] as $schedule) {
+                    $shift = $schedule->shifts;
                     $user_schedule_array[] = [
                         'id' => $schedule->id,
                         'tanggal' => $date,
-                        'nama_shift' => $schedule->shifts->nama,
-                        'jam_from' => $schedule->shifts->jam_from,
-                        'jam_to' => $schedule->shifts->jam_to,
+                        'nama_shift' => $shift ? $shift->nama : 'Libur',
+                        'jam_from' => $shift ? $shift->jam_from : 'N/A',
+                        'jam_to' => $shift ? $shift->jam_to : 'N/A',
                     ];
                 }
             }

@@ -186,7 +186,12 @@ class PenggajianController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
-        $data_karyawan_ids = DataKaryawan::where('email', '!=', 'super_admin@admin.rski')->pluck('id')->toArray();
+        $data_karyawan_ids = DataKaryawan::where('email', '!=', 'super_admin@admin.rski')
+            ->whereHas('users', function ($query) {
+                $query->where('status_aktif', 2);
+            })
+            ->pluck('id')
+            ->toArray();
         $sertakan_bor = $request->has('bor') && $request->bor == 1;
 
         // Ambil jadwal penggajian dari tabel jadwal_penggajians

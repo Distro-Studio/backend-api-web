@@ -13,6 +13,8 @@ use App\Helpers\RandomHelper;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use App\Exports\Jadwal\JadwalExport;
+use App\Exports\Jadwal\JadwalNonShiftExport;
+use App\Exports\Jadwal\JadwalShiftExport;
 use App\Http\Controllers\Controller;
 use App\Imports\Jadwal\JadwalImport;
 use Illuminate\Support\Facades\Gate;
@@ -759,8 +761,8 @@ class DataJadwalController extends Controller
         $filters = $request->all();
 
         // Membuat query pengguna
-        $usersQuery = User::where('nama', '!=', 'Super Admin');
-        // $usersQuery = User::where('nama', '!=', 'Super Admin')->where('status_aktif', 2);
+        // $usersQuery = User::where('nama', '!=', 'Super Admin');
+        $usersQuery = User::where('nama', '!=', 'Super Admin')->where('status_aktif', 2);
 
         // Filter berdasarkan filter yang diberikan
         if (isset($filters['unit_kerja'])) {
@@ -908,13 +910,24 @@ class DataJadwalController extends Controller
             } else if ($user->data_karyawans->unit_kerjas->jenis_karyawan == 0) {
                 // Jika user non-shift, gunakan data dari tabel non_shifts atau hari libur
                 foreach ($date_range as $date) {
-                    if (isset($hariLibur[$date])) {
+                    $day_of_week = Carbon::createFromFormat('Y-m-d', $date)->dayOfWeek;
+
+                    if ($day_of_week == Carbon::SUNDAY) {
+                        // Libur pada hari Minggu
+                        $user_schedule_array[$date] = [
+                            'id' => null,
+                            'nama' => 'Libur Minggu',
+                            'jam_from' => null,
+                            'jam_to' => null,
+                            'status' => 4 // libur minggu
+                        ];
+                    } elseif (isset($hariLibur[$date])) {
                         $user_schedule_array[$date] = [
                             'id' => $hariLibur[$date]->id,
                             'nama' => $hariLibur[$date]->nama,
                             'jam_from' => null,
                             'jam_to' => null,
-                            'status' => 3 // libur
+                            'status' => 3 // libur besar
                         ];
                     } else if ($nonShift) {
                         $user_schedule_array[$date] = [
@@ -945,7 +958,6 @@ class DataJadwalController extends Controller
             ];
         });
 
-        // Check if the result is empty
         if ($result->isEmpty()) {
             return response()->json([
                 'status' => Response::HTTP_NOT_FOUND,
@@ -1249,20 +1261,27 @@ class DataJadwalController extends Controller
         }
     }
 
-    public function exportJadwalKaryawan()
+    public function exportJadwalKaryawanShift()
     {
-        if (!Gate::allows('export dataKaryawan')) {
+        if (!Gate::allows('export jadwalKaryawan')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
-        $dataCuti = Jadwal::all(); // Sesuaikan dengan model atau query Anda
-        if ($dataCuti->isEmpty()) {
-            // Kembalikan respons JSON ketika tabel kosong
-            return response()->json(new WithoutDataResource(Response::HTTP_OK, 'Tidak ada data jadwal karyawan yang tersedia untuk diekspor.'), Response::HTTP_OK);
+        try {
+            return Excel::download(new JadwalShiftExport(), 'jadwal-shift-karyawan.xls');
+        } catch (\Throwable $e) {
+            return response()->json(new WithoutDataResource(Response::HTTP_INTERNAL_SERVER_ERROR, 'Maaf sepertinya terjadi error. Message: ' . $e->getMessage()), Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    public function exportJadwalKaryawanNonShift()
+    {
+        if (!Gate::allows('export jadwalKaryawan')) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
         try {
-            return Excel::download(new JadwalExport(), 'jadwal-karyawan.xls');
+            return Excel::download(new JadwalNonShiftExport(), 'jadwal-non-shift-karyawan.xls');
         } catch (\Throwable $e) {
             return response()->json(new WithoutDataResource(Response::HTTP_INTERNAL_SERVER_ERROR, 'Maaf sepertinya terjadi error. Message: ' . $e->getMessage()), Response::HTTP_INTERNAL_SERVER_ERROR);
         }
