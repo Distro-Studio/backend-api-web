@@ -107,6 +107,7 @@ class RolesController extends Controller
         $rolePermissions = $allPermissions->map(function ($permission) use ($role) {
             if (!$permission) {
                 return [
+                    'id' => $permission->id,
                     'name' => $permission->name,
                     'group' => $permission->group,
                     'has_permission' => null, // Permission tidak ada di DB
