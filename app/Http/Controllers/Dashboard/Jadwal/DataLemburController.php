@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Dashboard\Jadwal;
 
 use Carbon\Carbon;
+use App\Models\User;
+use App\Models\Jadwal;
 use App\Models\Lembur;
 use App\Models\Notifikasi;
 use Illuminate\Http\Request;
@@ -20,6 +22,40 @@ use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
 
 class DataLemburController extends Controller
 {
+    public function getJadwalPengajuanLembur($userId)
+    {
+        if (!Gate::allows('view lemburKaryawan')) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
+
+        $user = User::where('id', $userId)->where('nama', '!=', 'Super Admin')->where('status_aktif', 2)
+            ->first();
+        if (!$user) {
+            return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Karyawan pengajuan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+        }
+
+        $jadwal = Jadwal::with('shifts')->where('user_id', $userId)->get();
+        if ($jadwal->isEmpty()) {
+            return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Jadwal karyawan pengajuan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+        }
+
+        // Ambil range tanggal untuk jadwal
+        $start_date = $jadwal->min('tgl_mulai');
+        $end_date = $jadwal->max('tgl_selesai');
+        $date_range = $this->generateDateRange($start_date, $end_date);
+
+        $user_schedule_array = $this->formatSchedules($jadwal, $date_range);
+
+        return response()->json([
+            'status' => Response::HTTP_OK,
+            'message' => "Detai jadwall dan karyawan pengajuan berhasil ditampilkan.",
+            'data' => [
+                'user' => $user,
+                'list_jadwal' => $user_schedule_array
+            ]
+        ], Response::HTTP_OK);
+    }
+
     public function index(Request $request)
     {
         if (!Gate::allows('view lemburKaryawan')) {
