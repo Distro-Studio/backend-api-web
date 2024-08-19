@@ -2156,42 +2156,42 @@ class DataKaryawanController extends Controller
 
     if ($user->status_aktif === 1) {
       // Verifikasi data karyawan
-      $fieldsToCheck = [
-        'tempat_lahir',
-        'tgl_lahir',
-        'no_hp',
-        'jenis_kelamin',
-        'nik_ktp',
-        'nik',
-        'no_kk',
-        'kategori_agama_id',
-        'kategori_darah_id',
-        'tinggi_badan',
-        'alamat',
-        'tahun_lulus',
-        'no_ijazah',
-        'no_str',
-        'masa_berlaku_str',
-        'no_sip',
-        'masa_berlaku_sip',
-        'no_bpjsksh',
-        'no_bpjsktk',
-        'tgl_berakhir_pks'
-      ];
+      // $fieldsToCheck = [
+      //   'tempat_lahir',
+      //   'tgl_lahir',
+      //   'no_hp',
+      //   'jenis_kelamin',
+      //   'nik_ktp',
+      //   'nik',
+      //   'no_kk',
+      //   'kategori_agama_id',
+      //   'kategori_darah_id',
+      //   'tinggi_badan',
+      //   'alamat',
+      //   'tahun_lulus',
+      //   'no_ijazah',
+      //   'no_str',
+      //   'masa_berlaku_str',
+      //   'no_sip',
+      //   'masa_berlaku_sip',
+      //   'no_bpjsksh',
+      //   'no_bpjsktk',
+      //   'tgl_berakhir_pks'
+      // ];
 
-      $nullFields = [];
-      foreach ($fieldsToCheck as $field) {
-        if (is_null($karyawan->$field)) {
-          $nullFields[] = $field;
-        }
-      }
+      // $nullFields = [];
+      // foreach ($fieldsToCheck as $field) {
+      //   if (is_null($karyawan->$field)) {
+      //     $nullFields[] = $field;
+      //   }
+      // }
 
-      if (!empty($nullFields)) {
-        // Log data yang belum terisi
-        Log::warning("Data karyawan ID {$karyawan->id} memiliki field yang belum terisi: " . implode(', ', $nullFields));
-        // Reset data jika ada yang null
-        return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Data karyawan '{$karyawan->users->nama}' belum lengkap, pastikan semua data telah diisi."), Response::HTTP_BAD_REQUEST);
-      }
+      // if (!empty($nullFields)) {
+      //   // Log data yang belum terisi
+      //   Log::warning("Data karyawan ID {$karyawan->id} memiliki field yang belum terisi: " . implode(', ', $nullFields));
+      //   // Reset data jika ada yang null
+      //   return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Data karyawan '{$karyawan->users->nama}' belum lengkap, pastikan semua data telah diisi."), Response::HTTP_BAD_REQUEST);
+      // }
 
       // Jika semua data valid, update status_aktif menjadi 2
       $user->status_aktif = 2;
