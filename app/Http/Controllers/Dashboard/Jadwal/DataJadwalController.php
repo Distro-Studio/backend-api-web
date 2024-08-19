@@ -13,13 +13,14 @@ use App\Helpers\RandomHelper;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use App\Exports\Jadwal\JadwalExport;
-use App\Exports\Jadwal\JadwalNonShiftExport;
-use App\Exports\Jadwal\JadwalShiftExport;
 use App\Http\Controllers\Controller;
 use App\Imports\Jadwal\JadwalImport;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\TemplateJadwalExport;
+use App\Exports\Jadwal\JadwalShiftExport;
+use App\Exports\Jadwal\JadwalNonShiftExport;
 use App\Http\Requests\StoreJadwalKaryawanRequest;
 use App\Http\Requests\StoreJadwalShiftKaryawanRequest;
 use App\Http\Requests\Excel_Import\ImportJadwalKaryawan;
@@ -973,7 +974,6 @@ class DataJadwalController extends Controller
         ], Response::HTTP_OK);
     }
 
-    // TODO: Tambahkan validasi pada create ini, user id yang dipilih sesuai dengan unit kerja yang melakukan create
     public function store(StoreJadwalKaryawanRequest $request)
     {
         if (!Gate::allows('create jadwalKaryawan')) {
@@ -993,6 +993,10 @@ class DataJadwalController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Tidak diperbolehkan menerapkan jadwal untuk hari ini atau hari terlewat. Hanya diperbolehkan H+1 hari ini.'), Response::HTTP_NOT_ACCEPTABLE);
         }
 
+        // Get unit kerja yang sedang login
+        $admin = Auth::user();
+        $adminUnitKerja = $admin->data_karyawans->unit_kerjas->id ?? null;
+
         DB::beginTransaction();
         try {
             foreach ($data['user_id'] as $userId) {
@@ -1001,6 +1005,13 @@ class DataJadwalController extends Controller
                 if (!$user) {
                     DB::rollBack();
                     return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, "Data karyawan dengan ID '{$userId}' tidak ditemukan."), Response::HTTP_NOT_FOUND);
+                }
+
+                // Validasi kesamaan unit kerja antara admin dan karyawan
+                $karyawanUnitKerja = $user->data_karyawans->unit_kerjas->id ?? null;
+                if ($adminUnitKerja !== $karyawanUnitKerja) {
+                    DB::rollBack();
+                    return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, "Anda hanya dapat mengatur jadwal untuk karyawan dalam unit kerja yang sama dengan anda."), Response::HTTP_FORBIDDEN);
                 }
 
                 // Reset tanggalMulai untuk setiap user
@@ -1078,6 +1089,18 @@ class DataJadwalController extends Controller
         // Validasi tanggal mulai
         if ($tanggalMulai->format('Y-m-d') == $today) {
             return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Anda tidak dapat mengupdate jadwal pada tanggal hari ini.'), Response::HTTP_BAD_REQUEST);
+        }
+
+        // Validasi kesamaan unit kerja antara admin yang login dan karyawan
+        $admin = Auth::user();
+        $adminUnitKerja = $admin->data_karyawans->unit_kerjas->id ?? null;
+
+        $user = User::findOrFail($userId);
+        $dataKaryawan = $user->data_karyawans;
+        $karyawanUnitKerja = $dataKaryawan->unit_kerjas->id ?? null;
+
+        if ($adminUnitKerja !== $karyawanUnitKerja) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda hanya dapat mengatur jadwal untuk karyawan dalam unit kerja yang sama dengan anda.'), Response::HTTP_FORBIDDEN);
         }
 
         DB::beginTransaction();
@@ -1195,7 +1218,19 @@ class DataJadwalController extends Controller
         $today = Carbon::today()->format('Y-m-d');
 
         if ($tanggalMulai == $today) {
-            return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Anda tidak dapat mengupdate jadwal pada tanggal hari ini.'), Response::HTTP_BAD_REQUEST);
+            return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Anda tidak dapat memperbarui jadwal pada tanggal hari ini.'), Response::HTTP_BAD_REQUEST);
+        }
+
+        // Validasi kesamaan unit kerja antara admin yang login dan karyawan
+        $admin = Auth::user();
+        $adminUnitKerja = $admin->data_karyawans->unit_kerjas->id ?? null;
+
+        $user = User::findOrFail($userId);
+        $dataKaryawan = $user->data_karyawans;
+        $karyawanUnitKerja = $dataKaryawan->unit_kerjas->id ?? null;
+
+        if ($adminUnitKerja !== $karyawanUnitKerja) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda hanya dapat memperbarui jadwal untuk karyawan dalam unit kerja yang sama dengan anda.'), Response::HTTP_FORBIDDEN);
         }
 
         DB::beginTransaction();

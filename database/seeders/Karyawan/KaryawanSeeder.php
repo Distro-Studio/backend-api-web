@@ -59,6 +59,7 @@ class KaryawanSeeder extends Seeder
                 'nama' => 'User ' . $i,
                 'password' => 'password' . $i,
                 'status_aktif' => 2,
+                'data_completion_step' => 0,
             ]);
             $user->roles()->attach(rand(2, 4));
 
