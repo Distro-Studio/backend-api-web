@@ -21,39 +21,38 @@ use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
 
 class DataLemburController extends Controller
 {
-    // public function getJadwalPengajuanLembur($userId)
-    // {
-    //     if (!Gate::allows('view tukarJadwal')) {
-    //         return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
-    //     }
+    public function getJadwalPengajuanLembur($userId)
+    {
+        if (!Gate::allows('view tukarJadwal')) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
 
-    //     $user = User::where('id', $userId)->where('nama', '!=', 'Super Admin')->where('status_aktif', 2)
-    //         ->first();
-    //     if (!$user) {
-    //         return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Karyawan pengajuan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
-    //     }
+        $user = User::where('id', $userId)->where('nama', '!=', 'Super Admin')->where('status_aktif', 2)
+            ->get();
+        if (!$user) {
+            return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Karyawan ditukar tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+        }
 
-    //     $jadwal = Jadwal::with('shifts')->where('user_id', $userId)->where('shift_id', '!=', 0)->get();
-    //     if ($jadwal->isEmpty()) {
-    //         return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Jadwal karyawan pengajuan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
-    //     }
+        $jadwal = Jadwal::with('shifts')->where('user_id', $userId)->where('shift_id', '!=', 0)->get();
+        if ($jadwal->isEmpty()) {
+            return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Jadwal karyawan ditukar tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+        }
 
-    //     // Ambil range tanggal untuk jadwal
-    //     $start_date = $jadwal->min('tgl_mulai');
-    //     $end_date = $jadwal->max('tgl_selesai');
-    //     $date_range = $this->generateDateRange($start_date, $end_date);
+        $start_date = $jadwal->min('tgl_mulai');
+        $end_date = $jadwal->max('tgl_selesai');
+        $date_range = $this->generateDateRange($start_date, $end_date);
 
-    //     $user_schedule_array = $this->formatSchedules($jadwal, $date_range);
+        $user_schedule_array = $this->formatSchedules($jadwal, $date_range);
 
-    //     return response()->json([
-    //         'status' => Response::HTTP_OK,
-    //         'message' => "Detai jadwall dan karyawan pengajuan berhasil ditampilkan.",
-    //         'data' => [
-    //             'user' => $user,
-    //             'list_jadwal' => $user_schedule_array
-    //         ]
-    //     ], Response::HTTP_OK);
-    // }
+        return response()->json([
+            'status' => Response::HTTP_OK,
+            'message' => "Detai jadwal dan karyawan ditukar berhasil ditampilkan.",
+            'data' => [
+                'user' => $user,
+                'list_jadwal' => $user_schedule_array
+            ]
+        ], Response::HTTP_OK);
+    }
 
     public function index(Request $request)
     {
@@ -359,9 +358,14 @@ class DataLemburController extends Controller
     private function generateDateRange($start_date, $end_date)
     {
         $dates = [];
-        for ($date = $start_date; $date->lte($end_date); $date->addDay()) {
-            $dates[] = $date->format('Y-m-d');
+        $current = Carbon::parse($start_date);  // Pastikan ini sudah dalam format Y-m-d
+        $end = Carbon::parse($end_date);
+
+        while ($current->lte($end)) {
+            $dates[] = $current->format('Y-m-d');
+            $current->addDay();
         }
+
         return $dates;
     }
 
