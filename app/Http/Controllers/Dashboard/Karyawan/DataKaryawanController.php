@@ -2151,7 +2151,7 @@ class DataKaryawanController extends Controller
 
     // Validasi pertama kali untuk memastikan data_completion_step = 0
     if ($user->data_completion_step !== 0) {
-      return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Proses ini tidak bisa dilanjutkan karena langkah pengisian data belum mencapai tahap akhir."), Response::HTTP_BAD_REQUEST);
+      return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, "Proses ini tidak bisa dilanjutkan karena langkah pengisian data belum mencapai tahap akhir."), Response::HTTP_NOT_ACCEPTABLE);
     }
 
     if ($user->status_aktif === 1) {
