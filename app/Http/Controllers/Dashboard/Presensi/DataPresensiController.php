@@ -123,7 +123,7 @@ class DataPresensiController extends Controller
         // Filter
         if ($request->has('tanggal')) {
             $tanggal = RandomHelper::convertToDateString($request->tanggal);
-            $presensi->whereDate('jam_masuk', $tanggal);
+            $presensi->whereDate('created_at', $tanggal);
         } else {
             return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Pilih tanggal terlebih dahulu untuk menampilkan presensi.'), Response::HTTP_BAD_REQUEST);
         }
@@ -306,8 +306,16 @@ class DataPresensiController extends Controller
                 'id' => $presensi->id,
                 'user' => $presensi->users,
                 'unit_kerja' => $presensi->data_karyawans->unit_kerjas,
+                'jadwal' => [
+                    'id' => $presensi->jadwals->id,
+                    'tgl_mulai' => $presensi->jadwals->tgl_mulai,
+                    'tgl_selesai' => $presensi->jadwals->tgl_selesai,
+                    'shift' => $presensi->jadwals->shifts,
+                ],
                 'jam_masuk' => $presensi->jam_masuk,
                 'jam_keluar' => $presensi->jam_keluar,
+                'durasi' => $presensi->durasi,
+                'kategori_presensi' => $presensi->kategori_presensis,
                 'created_at' => $presensi->created_at,
                 'updated_at' => $presensi->updated_at
             ];
@@ -393,7 +401,7 @@ class DataPresensiController extends Controller
                     'tgl_mulai' => $presensi->jadwals->tgl_mulai,
                     'tgl_selesai' => $presensi->jadwals->tgl_selesai,
                     'shift' => $presensi->jadwals->shifts,
-                ],
+                ] ?? null,
                 'jam_masuk' => $presensi->jam_masuk,
                 'jam_keluar' => $presensi->jam_keluar,
                 'durasi' => $presensi->durasi,
@@ -483,18 +491,18 @@ class DataPresensiController extends Controller
 
         // Ambil semua presensi bulan ini dari karyawan yang sama
         $presensiBulanIni = Presensi::where('data_karyawan_id', $data_karyawan_id)
-            ->whereYear('jam_masuk', Carbon::now()->year)
-            ->whereMonth('jam_masuk', Carbon::now()->month)
-            ->orderBy('jam_masuk')
+            ->whereYear('created_at', Carbon::now()->year)
+            ->whereMonth('created_at', Carbon::now()->month)
+            ->orderBy('created_at', 'desc')
             ->get();
 
         // Memformat aktivitas presensi
         $aktivitasPresensi = [];
         foreach ($presensiBulanIni as $presensi) {
-            if ($presensi->jam_masuk) {
+            if ($presensi->created_at) {
                 $aktivitasPresensi[] = [
                     'presensi' => 'Masuk',
-                    'tanggal' => $presensi->jam_masuk,
+                    'tanggal' => $presensi->created_at,
                     'lat_masuk' => $presensiHariIni->lat,
                     'long_masuk' => $presensiHariIni->long,
                     'foto_masuk' => [
@@ -509,10 +517,10 @@ class DataPresensiController extends Controller
                     ],
                 ];
             }
-            if ($presensi->jam_keluar) {
+            if ($presensi->updated_at) {
                 $aktivitasPresensi[] = [
                     'presensi' => 'Keluar',
-                    'tanggal' => $presensi->jam_keluar,
+                    'tanggal' => $presensi->updated_at,
                     'lat_keluar' => $presensiHariIni->latkeluar,
                     'long_keluar' => $presensiHariIni->longkeluar,
                     'foto_keluar' => [

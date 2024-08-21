@@ -63,6 +63,7 @@ return new class extends Migration
             $table->string('tgl_berakhir_pks')->nullable();
             $table->integer('masa_diklat')->nullable();
             $table->foreignId('verifikator_1')->nullable()->constrained('users');
+            $table->boolean('status_reward_presensi')->default(true);
             $table->timestamps();
         });
     }

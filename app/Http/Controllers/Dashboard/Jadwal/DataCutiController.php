@@ -490,6 +490,19 @@ class DataCutiController extends Controller
                 // Buat dan simpan notifikasi
                 $this->createNotifikasiCutiTahap1($cuti, 'Disetujui');
 
+                // Cek apakah cuti_administratif pada tipe_cutis adalah true atau false
+                if (!$cuti->tipe_cutis->cuti_administratif) {
+                    // Jika cuti_administratif = false, lakukan update status_reward_presensi menjadi false
+                    $user_id = $cuti->user_id;
+                    $data_karyawan_id = DB::table('data_karyawans')
+                        ->where('user_id', $user_id)
+                        ->value('id');
+
+                    DB::table('data_karyawans')
+                        ->where('id', $data_karyawan_id)
+                        ->update(['status_reward_presensi' => false]);
+                }
+
                 return response()->json(new WithoutDataResource(Response::HTTP_OK, "Verifikasi tahap 1 untuk Cuti '{$cuti->tipe_cutis->nama}' telah disetujui."), Response::HTTP_OK);
             } else {
                 return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Cuti '{$cuti->tipe_cutis->nama}' tidak dalam status untuk disetujui pada tahap 1."), Response::HTTP_BAD_REQUEST);

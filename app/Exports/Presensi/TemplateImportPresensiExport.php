@@ -17,11 +17,12 @@ class TemplateImportPresensiExport implements FromArray, WithHeadings
     public function headings(): array
     {
         return [
-            'no',
             'nama',
             'nik_ktp',
             'jam_masuk',
-            'jam_keluar'
+            'jam_keluar',
+            'tanggal_masuk',
+            'jenis_karyawan'
         ];
     }
 }

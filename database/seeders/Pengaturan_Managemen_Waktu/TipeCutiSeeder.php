@@ -15,7 +15,7 @@ class TipeCutiSeeder extends Seeder
     {
         $cutiData = [
             [
-                'nama' => 'Cuti Tahunan',
+                'nama' => 'Cuti Tahunan', //
                 'kuota' => 12,
                 'is_need_requirement' => false,
                 'keterangan' => 'Maksimal cuti 12 hari',
@@ -43,7 +43,7 @@ class TipeCutiSeeder extends Seeder
                 'cuti_administratif' => false
             ],
             [
-                'nama' => 'Cuti Besar',
+                'nama' => 'Cuti Besar', //
                 'kuota' => 12,
                 'is_need_requirement' => true,
                 'keterangan' => 'Maksimal cuti 12 hari, jika masa kerja lebih dari 8 tahun',

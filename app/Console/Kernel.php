@@ -2,6 +2,7 @@
 
 namespace App\Console;
 
+use App\Console\Commands\UpdateAndResetReward;
 use App\Console\Commands\UpdateAutoPublishPenggajian;
 use DateTimeZone;
 use Carbon\Carbon;
@@ -17,6 +18,7 @@ class Kernel extends ConsoleKernel
     protected $commands = [
         UpdateDataKaryawanTransfer::class,
         UpdateAutoPublishPenggajian::class,
+        UpdateAndResetReward::class,
     ];
 
     /**
@@ -35,6 +37,11 @@ class Kernel extends ConsoleKernel
             ->timezone('Asia/Jakarta')
             ->hourly()
             ->between('23.58', '01.00');
+
+        // Update & reset reward presensi
+        $schedule->command('app:update-and-reset-reward-presensi')
+            ->monthlyOn(Carbon::now()->endOfMonth()->day, '00:00')
+            ->timezone('Asia/Jakarta');
     }
 
     /**

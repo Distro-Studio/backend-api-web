@@ -72,7 +72,7 @@ class KaryawanSeeder extends Seeder
                 'email' => 'user' . $i . '@example.com',
                 'no_rm' => rand(1214, 5000000),
                 'no_manulife' => rand(1214, 5000000),
-                'tgl_masuk' => Carbon::parse($tgl_masuk),
+                'tgl_masuk' => $tgl_masuk,
                 'unit_kerja_id' => $unit_kerja_id[array_rand($unit_kerja_id)],
                 'jabatan_id' => $jabatan_id[array_rand($jabatan_id)],
                 'kompetensi_id' => $kompetensi_id[array_rand($kompetensi_id)],
@@ -91,7 +91,7 @@ class KaryawanSeeder extends Seeder
                 'uang_lembur' => rand(0, 120000),
                 'ptkp_id' => $ptkp_id[array_rand($ptkp_id)],
 
-                "tgl_keluar" => Carbon::parse($tgl_keluar),
+                "tgl_keluar" => $tgl_keluar,
                 "no_kk" => rand(1214, 500000000),
                 "alamat" => 'missing impossible coach amount welcome here night trail diameter nervous graph outline shinning perfectly try refer classroom climb burn spider grabbed waste little provide',
                 "gelar_depan" => $gelar_dpn[array_rand($gelar_dpn)],

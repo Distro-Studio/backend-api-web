@@ -46,11 +46,12 @@ class StoreJabatanRequest extends FormRequest
 
     public function failedValidation(Validator $validator)
     {
-        $reponse = [
+        $messages = implode(' ', $validator->errors()->all());
+        $response = [
             'status' => Response::HTTP_BAD_REQUEST,
-            'message' => $validator->errors()
+            'message' => $messages,
         ];
 
-        throw new HttpResponseException(response()->json($reponse, Response::HTTP_BAD_REQUEST));
+        throw new HttpResponseException(response()->json($response, Response::HTTP_BAD_REQUEST));
     }
 }

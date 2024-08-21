@@ -216,4 +216,14 @@ class DataKaryawan extends Model
     {
         return $this->belongsTo(User::class, 'verifikator_1', 'id');
     }
+
+    /**
+     * Get all of the reward_presensis for the DataKaryawan
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function reward_presensis(): HasMany
+    {
+        return $this->hasMany(RewardbulanLalu::class, 'data_karyawan_id', 'id');
+    }
 }

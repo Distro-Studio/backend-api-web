@@ -4,10 +4,8 @@ namespace App\Exports;
 
 use Maatwebsite\Excel\Concerns\FromArray;
 use Maatwebsite\Excel\Concerns\WithHeadings;
-use Maatwebsite\Excel\Concerns\FromCollection;
-use Maatwebsite\Excel\Concerns\WithColumnFormatting;
 
-class TemplateJadwalExport implements FromArray, WithHeadings, WithColumnFormatting
+class TemplateJadwalExport implements FromArray, WithHeadings
 {
     public function array(): array
     {
@@ -23,16 +21,6 @@ class TemplateJadwalExport implements FromArray, WithHeadings, WithColumnFormatt
             'tanggal_mulai',
             'tanggal_selesai',
             'shift'
-        ];
-    }
-
-    public function columnFormats(): array
-    {
-        return [
-            'A' => \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING,
-            'B' => \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING,
-            'C' => \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING,
-            'D' => \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING,
         ];
     }
 }

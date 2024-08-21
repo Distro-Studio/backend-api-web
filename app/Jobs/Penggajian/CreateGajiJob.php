@@ -410,7 +410,7 @@ class CreateGajiJob implements ShouldQueue
             ->first();
 
         $pph21Bulanan = ($ters->percentage / 100) * $penghasilanBruto;
-        return $pph21Bulanan;
+        return ceil($pph21Bulanan);
     }
 
     private function calculatedPPH21ForDecember($dataKaryawan, $reward)
@@ -454,7 +454,7 @@ class CreateGajiJob implements ShouldQueue
             ->whereBetween('tgl_penggajian', [Carbon::create($currentYear, 1, 1), Carbon::create($currentYear, 11, 30)])
             ->sum('pph_21');
         $pph21Desember = $pph21Tahunan - $pph21BulananTotal;
-        return $pph21Desember;
+        return ceil($pph21Desember);
     }
 
     private function calculatedRewardBOR($data_karyawan_id, $sertakan_bor)
@@ -477,46 +477,63 @@ class CreateGajiJob implements ShouldQueue
         return $totalBOR;
     }
 
+    // private function calculatedRewardPresensi($data_karyawan_id)
+    // {
+    //     // Ambil user_id yang sesuai dengan data_karyawan_id
+    //     $userId = DB::table('data_karyawans')
+    //         ->where('id', $data_karyawan_id)
+    //         ->value('user_id');
+
+    //     // Tentukan tanggal awal dan akhir bulan sebelumnya
+    //     $startDate = Carbon::now()->subMonth()->startOfMonth();
+    //     $endDate = Carbon::now()->subMonth()->endOfMonth();
+
+    //     // Ambil ID untuk kategori 'Tepat Waktu'
+    //     $kategoriTepatWaktuId = DB::table('kategori_presensis')->where('label', 'Tepat Waktu')->value('id');
+
+    //     // Hitung jumlah presensi 'Tepat Waktu' dari tanggal 1 sampai akhir bulan sebelumnya
+    //     $presensiCount = DB::table('presensis')
+    //         ->where('data_karyawan_id', $data_karyawan_id)
+    //         ->where('kategori_presensi_id', $kategoriTepatWaktuId)
+    //         ->whereBetween('jam_masuk', [$startDate, $endDate])
+    //         ->count();
+    //     Log::info("Presensi tepat waktu terhitung: {$presensiCount}");
+
+    //     // Hitung jumlah hari dalam bulan sebelumnya
+    //     $totalDays = $startDate->daysInMonth;
+
+    //     // Memeriksa selain 'Cuti Tahunan' dan 'Cuti Besar'
+    //     $invalidCutiCount = DB::table('cutis')
+    //         ->join('tipe_cutis', 'cutis.tipe_cuti_id', '=', 'tipe_cutis.id')
+    //         ->where('cutis.user_id', $userId)
+    //         ->where('tipe_cutis.cuti_administratif', false)
+    //         ->where(function ($query) use ($startDate, $endDate) {
+    //             $query->whereBetween('tgl_from', [$startDate, $endDate])
+    //                 ->orWhereBetween('tgl_to', [$startDate, $endDate]);
+    //         })
+    //         ->count();
+    //     Log::info("Cuti selain 'Cuti Tahunan' dan 'Cuti Besar' terhitung: {$invalidCutiCount}");
+
+    //     // Jika tidak ada cuti selain 'Cuti Tahunan' dan 'Cuti Besar' dan presensi tepat waktu sama dengan jumlah hari dalam bulan sebelumnya, berikan bonus presensi
+    //     $bonusPresensi = 0;
+    //     if ($invalidCutiCount == 0 && $presensiCount == $totalDays) {
+    //         $bonusPresensi = 300000;
+    //     }
+
+    //     return $bonusPresensi;
+    // }
+
+    // ini yg pake scheduller
     private function calculatedRewardPresensi($data_karyawan_id)
     {
-        // Ambil user_id yang sesuai dengan data_karyawan_id
-        $userId = DB::table('data_karyawans')
+        $statusRewardPresensi = DB::table('data_karyawans')
             ->where('id', $data_karyawan_id)
-            ->value('user_id');
+            ->value('status_reward_presensi');
 
-        // Tentukan tanggal awal dan akhir bulan sebelumnya
-        $startDate = Carbon::now()->subMonth()->startOfMonth();
-        $endDate = Carbon::now()->subMonth()->endOfMonth();
-
-        // Ambil ID untuk kategori 'Tepat Waktu'
-        $kategoriTepatWaktuId = DB::table('kategori_presensis')->where('label', 'Tepat Waktu')->value('id');
-
-        // Hitung jumlah presensi 'Tepat Waktu' dari tanggal 1 sampai akhir bulan sebelumnya
-        $presensiCount = DB::table('presensis')
-            ->where('data_karyawan_id', $data_karyawan_id)
-            ->where('kategori_presensi_id', $kategoriTepatWaktuId)
-            ->whereBetween('jam_masuk', [$startDate, $endDate])
-            ->count();
-        Log::info("Presensi tepat waktu terhitung: {$presensiCount}");
-
-        // Hitung jumlah hari dalam bulan sebelumnya
-        $totalDays = $startDate->daysInMonth;
-
-        // Memeriksa selain 'Cuti Tahunan' dan 'Cuti Besar'
-        $invalidCutiCount = DB::table('cutis')
-            ->join('tipe_cutis', 'cutis.tipe_cuti_id', '=', 'tipe_cutis.id')
-            ->where('cutis.user_id', $userId)
-            ->where('tipe_cutis.cuti_administratif', false)
-            ->where(function ($query) use ($startDate, $endDate) {
-                $query->whereBetween('tgl_from', [$startDate, $endDate])
-                    ->orWhereBetween('tgl_to', [$startDate, $endDate]);
-            })
-            ->count();
-        Log::info("Cuti selain 'Cuti Tahunan' dan 'Cuti Besar' terhitung: {$invalidCutiCount}");
-
-        // Jika tidak ada cuti selain 'Cuti Tahunan' dan 'Cuti Besar' dan presensi tepat waktu sama dengan jumlah hari dalam bulan sebelumnya, berikan bonus presensi
         $bonusPresensi = 0;
-        if ($invalidCutiCount == 0 && $presensiCount == $totalDays) {
+
+        // Jika status_reward_presensi adalah true, karyawan mendapatkan reward
+        if ($statusRewardPresensi) {
             $bonusPresensi = 300000;
         }
 
