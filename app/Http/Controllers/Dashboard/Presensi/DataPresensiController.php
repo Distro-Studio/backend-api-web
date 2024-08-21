@@ -6,6 +6,7 @@ use Carbon\Carbon;
 use App\Models\Berkas;
 use App\Models\Jadwal;
 use App\Models\Presensi;
+use App\Models\DataKaryawan;
 use App\Models\LokasiKantor;
 use Illuminate\Http\Request;
 use App\Helpers\RandomHelper;
@@ -56,6 +57,9 @@ class DataPresensiController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Kategori presensi tidak ditemukan.'), Response::HTTP_NOT_FOUND);
         }
 
+        // Calculate total number of employees excluding the super admin
+        $calculatedKaryawan = DataKaryawan::where('email', '!=', 'super_admin@admin.rski')->count();
+
         // Hitung jumlah presensi dalam setiap kategori
         $countTepatWaktu = Presensi::where('kategori_presensi_id', $kategoriTepatWaktuId)
             ->whereDate('jam_masuk', $today)
@@ -90,6 +94,7 @@ class DataPresensiController extends Controller
             'status' => Response::HTTP_OK,
             'message' => 'Perhitungan presensi seluruh karyawan berhasil ditampilkan.',
             'data' => [
+                'total_karyawan' => $calculatedKaryawan,
                 'total_hadir' => $totalHadir,
                 'total_tepat_waktu' => $countTepatWaktu,
                 'total_terlambat' => $countTerlambat,

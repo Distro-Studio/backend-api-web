@@ -171,7 +171,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::apiResource('/lembur', DataLemburController::class);
 
             // ! Cuti ===========>
-            Route::post('/cuti/{cutiId}/verifikasi', [DataCutiController::class, 'verifikasiCuti']);
+            Route::post('/cuti/{cutiId}/verifikasi-tahap-1', [DataCutiController::class, 'verifikasiTahap1']);
+            Route::post('/cuti/{cutiId}/verifikasi-tahap-2', [DataCutiController::class, 'verifikasiTahap2']);
             Route::post('/get-cuti', [DataCutiController::class, 'index']);
             Route::get('/cuti/export', [DataCutiController::class, 'exportJadwalCuti']);
             Route::apiResource('/cuti', DataCutiController::class);

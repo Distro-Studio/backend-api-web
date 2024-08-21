@@ -74,18 +74,38 @@ class StorageServerHelper
 		}
 	}
 
+	// single upload
 	public static function uploadToServer(Request $request, $filename = 'File Upload')
 	{
 		self::login();
 		$file = $request->file('dokumen');
-
-		// $random_filename = Str::random(20);
 
 		$responseupload = Http::withHeaders([
 			'Authorization' => 'Bearer ' . self::$token,
 		])->asMultipart()->post('http://127.0.0.1:8001/api/upload', [
 			'filename' => $filename,
 			// 'filename' => $random_filename,
+			'file' => fopen($file->getRealPath(), 'r'),
+			'kategori' => 'Umum'
+		]);
+
+		$uploadinfo = $responseupload->json();
+		$dataupload = $uploadinfo['data'];
+
+		self::logout();
+
+		return $dataupload;
+	}
+
+	// multi upload
+	public static function multipleUploadToServer($file, $filename = 'File Upload')
+	{
+		self::login();
+
+		$responseupload = Http::withHeaders([
+			'Authorization' => 'Bearer ' . self::$token,
+		])->asMultipart()->post('http://127.0.0.1:8001/api/upload', [
+			'filename' => $filename,
 			'file' => fopen($file->getRealPath(), 'r'),
 			'kategori' => 'Umum'
 		]);

@@ -83,7 +83,7 @@ class KaryawanSeeder extends Seeder
                 "nik_ktp" => rand(1214, 500000),
                 'kelompok_gaji_id' => $kelompok_gaji_id[array_rand($kelompok_gaji_id)],
                 'no_rekening' => rand(152368, 500000000),
-                'tunjangan_jabatan' => rand(250000, 500000),
+                // 'tunjangan_jabatan' => rand(250000, 500000),
                 'tunjangan_fungsional' => rand(70000, 250000),
                 'tunjangan_khusus' => rand(0, 120000),
                 'tunjangan_lainnya' => rand(250000, 1000000),

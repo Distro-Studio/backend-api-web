@@ -437,6 +437,7 @@ class CalculateHelper
             + $reward
             + $penghasilanTHR
             + $dataKaryawan->tunjangan_jabatan
+            + $dataKaryawan->tunjangan_kompetensi
             + $dataKaryawan->tunjangan_fungsional
             + $dataKaryawan->tunjangan_khusus
             + $dataKaryawan->tunjangan_lainnya
@@ -447,6 +448,7 @@ class CalculateHelper
     public static function calculatedTotalTunjangan($dataKaryawan)
     {
         return $dataKaryawan->tunjangan_jabatan
+            + $dataKaryawan->tunjangan_kompetensi
             + $dataKaryawan->tunjangan_fungsional
             + $dataKaryawan->tunjangan_khusus
             + $dataKaryawan->tunjangan_lainnya;

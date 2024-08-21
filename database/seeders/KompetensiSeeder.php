@@ -36,7 +36,7 @@ class KompetensiSeeder extends Seeder
             DB::table('kompetensis')->insert([
                 'nama_kompetensi' => $nama_kompetensi,
                 'jenis_kompetensi' => rand(0, 1),
-                'total_tunjangan' => $total_tunjangan,
+                'tunjangan_kompetensi' => $total_tunjangan,
                 'nilai_bor' => 120000,
                 'created_at' => $created_at,
                 'updated_at' => $updated_at,

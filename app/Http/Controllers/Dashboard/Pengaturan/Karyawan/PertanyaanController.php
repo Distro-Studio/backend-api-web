@@ -38,7 +38,7 @@ class PertanyaanController extends Controller
             ->with(['jenis_penilaians.status_karyawans', 'jenis_penilaians.jabatan_penilais', 'jenis_penilaians.jabatan_dinilais'])
             ->orderBy('created_at', 'desc');
 
-        if ($pertanyaan->isEmpty()) {
+        if (!$pertanyaan) {
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data kuesioner tidak ditemukan.'), Response::HTTP_NOT_FOUND);
         }
 

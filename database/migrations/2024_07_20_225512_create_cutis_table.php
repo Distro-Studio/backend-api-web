@@ -21,6 +21,7 @@ return new class extends Migration
             $table->integer('durasi');
             $table->foreignId('status_cuti_id')->constrained('status_cutis');
             $table->foreignId('verifikator_1')->nullable()->constrained('users');
+            $table->foreignId('verifikator_2')->nullable()->constrained('users');
             $table->text('alasan')->nullable();
             $table->timestamps();
         });

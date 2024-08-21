@@ -59,7 +59,7 @@ class JabatanSeeder extends Seeder
                 DB::table('jabatans')->insert([
                     'nama_jabatan' => $nama_jabatan,
                     'is_struktural' => $is_struktural,
-                    'tunjangan' => $tunjangan,
+                    'tunjangan_jabatan' => $tunjangan,
                     'created_at' => $created_at,
                     'updated_at' => $updated_at,
                 ]);

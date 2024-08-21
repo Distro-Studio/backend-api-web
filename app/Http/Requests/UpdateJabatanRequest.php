@@ -27,7 +27,7 @@ class UpdateJabatanRequest extends FormRequest
         return [
             'nama_jabatan' => 'required|string|max:255',
             'is_struktural' => 'required|boolean',
-            'tunjangan' => 'required|numeric'
+            'tunjangan_jabatan' => 'required|numeric'
         ];
     }
 
@@ -36,11 +36,10 @@ class UpdateJabatanRequest extends FormRequest
         return [
             'nama_jabatan.required' => 'Nama jabatan tidak diperbolehkan kosong.',
             'nama_jabatan.string' => 'Nama jabatan tidak diperbolehkan mengandung angka.',
-            'nama_jabatan.unique' => 'Nama jabatan tersebut sudah pernah dibuat.',
             'nama_jabatan.max' => 'Nama jabatan melebihi batas maksimum panjang karakter.',
             'is_struktural.required' => 'Jenis jabatan tidak diperbolehkan kosong.',
-            'tunjangan.required' => 'Jumlah tunjangan tidak diperbolehkan kosong.',
-            'tunjangan.numeric' => 'Tunjangan hanya diperbolehkan berisi angka.',
+            'tunjangan_jabatan.required' => 'Jumlah tunjangan jabatan tidak diperbolehkan kosong.',
+            'tunjangan_jabatan.numeric' => 'Tunjangan jabatan hanya diperbolehkan berisi angka.',
         ];
     }
 

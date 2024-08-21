@@ -13,7 +13,7 @@ class StatusAktifUserSeeder extends Seeder
      */
     public function run(): void
     {
-        $status = ['Belum Aktif', 'Aktif', 'Dinonaktifkan'];
+        $status = ['Belum Aktif', 'Aktif', 'Tidak Aktif'];
         foreach ($status as $status) {
             DB::table('status_aktifs')->insert([
                 'label' => $status,

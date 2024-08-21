@@ -14,7 +14,7 @@ use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
 
 class KompetensiController extends Controller
 {
-    public function index(Request $request)
+    public function index()
     {
         if (!Gate::allows('view kompetensi')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
@@ -141,7 +141,7 @@ class KompetensiController extends Controller
                 'id' => $kompetensi->id,
                 'nama_kompetensi' => $kompetensi->nama_kompetensi,
                 'jenis_kompetensi' => $kompetensi->jenis_kompetensi,
-                'total_tunjangan' => $kompetensi->total_tunjangan,
+                'tunjangan_kompetensi' => $kompetensi->tunjangan_kompetensi,
                 'nilai_bor' => $kompetensi->nilai_bor,
                 'deleted_at' => $kompetensi->deleted_at,
                 'created_at' => $kompetensi->created_at,

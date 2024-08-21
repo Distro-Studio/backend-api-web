@@ -32,7 +32,7 @@ class DataTukarJadwalController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Karyawan pengajuan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
         }
 
-        $jadwal = Jadwal::with('shifts')->where('user_id', $userId)->get();
+        $jadwal = Jadwal::with('shifts')->where('user_id', $userId)->where('shift_id', '!=', 0)->get();
         if ($jadwal->isEmpty()) {
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Jadwal karyawan pengajuan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
         }
@@ -40,8 +40,6 @@ class DataTukarJadwalController extends Controller
         // Ambil range tanggal untuk jadwal
         $start_date = $jadwal->min('tgl_mulai');
         $end_date = $jadwal->max('tgl_selesai');
-        // $start_date = Carbon::parse($jadwal->min('tgl_mulai'))->format('Y-m-d');
-        // $end_date = Carbon::parse($jadwal->max('tgl_selesai'))->format('Y-m-d');
         $date_range = $this->generateDateRange($start_date, $end_date);
 
         $user_schedule_array = $this->formatSchedules($jadwal, $date_range);
@@ -160,7 +158,7 @@ class DataTukarJadwalController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Karyawan ditukar tidak ditemukan.'), Response::HTTP_NOT_FOUND);
         }
 
-        $jadwal = Jadwal::with('shifts')->where('user_id', $userId)->get();
+        $jadwal = Jadwal::with('shifts')->where('user_id', $userId)->where('shift_id', '!=', 0)->get();
         if ($jadwal->isEmpty()) {
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Jadwal karyawan ditukar tidak ditemukan.'), Response::HTTP_NOT_FOUND);
         }

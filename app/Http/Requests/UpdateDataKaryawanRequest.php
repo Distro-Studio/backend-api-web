@@ -38,13 +38,42 @@ class UpdateDataKaryawanRequest extends FormRequest
             // Step 2
             'kelompok_gaji_id' => 'required|integer|exists:kelompok_gajis,id',
             'no_rekening' => 'required|numeric',
-            'tunjangan_jabatan' => 'required|numeric',
+            // 'tunjangan_jabatan' => 'required|numeric',
             'tunjangan_fungsional' => 'required|numeric',
             'tunjangan_khusus' => 'required|numeric',
             'tunjangan_lainnya' => 'required|numeric',
             'uang_makan' => 'required|numeric',
             'uang_lembur' => 'nullable|numeric',
             'ptkp_id' => 'required|integer|exists:ptkps,id',
+
+            // tambahan dari mobile
+            'tempat_lahir' => 'required',
+            'tanggal_lahir' => 'required|string',
+            'no_hp' => 'required|numeric',
+            'jenis_kelamin' => 'required|in:0,1',
+            'nik_ktp' => 'required|integer|digits:16',
+            'no_kk' => 'required|integer|digits:16',
+            'kategori_agama_id' => 'required|exists:kategori_agamas,id',
+            'kategori_darah_id' => 'required|exists:kategori_darahs,id',
+            'tinggi_badan' => 'required|integer',
+            'alamat' => 'required',
+            'tahun_lulus' => 'required|numeric',
+            'no_ijazah' => 'required',
+
+            'no_str' => 'required',
+            'masa_berlaku_str' => 'nullable|string',
+            'no_sip' => 'required',
+            'masa_berlaku_sip' => 'required',
+            'no_bpjsksh' => 'required',
+            'no_bpjsktk' => 'required',
+
+            'file_ktp' => 'required|file|max:10240',
+            'file_kk' => 'required|file|max:10240',
+            'file_sip' => 'required|file|max:10240',
+            'file_bpjs_kesehatan' => 'required|file|max:10240',
+            'file_bpjs_ketenagakerjaan' => 'required|file|max:10240',
+            'file_ijazah' => 'required|file|max:10240',
+            'file_sertifikat' => 'required|file|max:10240',
         ];
     }
 
@@ -85,44 +114,98 @@ class UpdateDataKaryawanRequest extends FormRequest
             'kelompok_gaji_id.exists' => 'Maaf kelompok gaji yang dipilih tidak valid.',
             'no_rekening.required' => 'Nomor rekening karyawan tidak diperbolehkan kosong.',
             'no_rekening.numeric' => 'Nomor rekening karyawan tidak diperbolehkan mengandung huruf.',
-            'no_rekening.max' => 'Nomor rekening karyawan melebihi batas maksimum panjang karakter.',
+            // 'no_rekening.max' => 'Nomor rekening karyawan melebihi batas maksimum panjang karakter.',
             'tunjangan_jabatan.required' => 'Tunjangan jabatan karyawan tidak diperbolehkan kosong.',
             'tunjangan_jabatan.numeric' => 'Tunjangan jabatan karyawan tidak diperbolehkan mengandung huruf.',
-            'tunjangan_jabatan.max' => 'Tunjangan jabatan karyawan melebihi batas maksimum panjang karakter.',
+            // 'tunjangan_jabatan.max' => 'Tunjangan jabatan karyawan melebihi batas maksimum panjang karakter.',
             'tunjangan_fungsional.required' => 'Tunjangan fungsional karyawan tidak diperbolehkan kosong.',
             'tunjangan_fungsional.numeric' => 'Tunjangan fungsional karyawan tidak diperbolehkan mengandung huruf.',
-            'tunjangan_fungsional.max' => 'Tunjangan fungsional karyawan melebihi batas maksimum panjang karakter.',
+            // 'tunjangan_fungsional.max' => 'Tunjangan fungsional karyawan melebihi batas maksimum panjang karakter.',
             'tunjangan_khusus.required' => 'Tunjangan khusus karyawan tidak diperbolehkan kosong.',
             'tunjangan_khusus.numeric' => 'Tunjangan khusus karyawan tidak diperbolehkan mengandung huruf.',
-            'tunjangan_khusus.max' => 'Tunjangan khusus karyawan melebihi batas maksimum panjang karakter.',
+            // 'tunjangan_khusus.max' => 'Tunjangan khusus karyawan melebihi batas maksimum panjang karakter.',
             'tunjangan_lainnya.required' => 'Tunjangan karyawan lainya tidak diperbolehkan kosong.',
             'tunjangan_lainnya.numeric' => 'Tunjangan karyawan lainya tidak diperbolehkan mengandung huruf.',
-            'tunjangan_lainnya.max' => 'Tunjangan lainya karyawan melebihi batas maksimum panjang karakter.',
+            // 'tunjangan_lainnya.max' => 'Tunjangan lainya karyawan melebihi batas maksimum panjang karakter.',
             'uang_makan.required' => 'Uang makan karyawan tidak diperbolehkan kosong.',
             'uang_makan.numeric' => 'Uang makan karyawan tidak diperbolehkan mengandung huruf.',
-            'uang_makan.max' => 'Uang makan karyawan melebihi batas maksimum panjang karakter.',
+            // 'uang_makan.max' => 'Uang makan karyawan melebihi batas maksimum panjang karakter.',
             'uang_lembur.required' => 'Uang lembur karyawan tidak diperbolehkan kosong.',
             'uang_lembur.numeric' => 'Uang lembur karyawan tidak diperbolehkan mengandung huruf.',
-            'uang_lembur.max' => 'Uang lembur karyawan melebihi batas maksimum panjang karakter.',
+            // 'uang_lembur.max' => 'Uang lembur karyawan melebihi batas maksimum panjang karakter.',
             'ptkp_id.required' => 'Silahkan pilih PTKP karyawan terlebih dahulu.',
             'ptkp_id.exists' => 'Maaf PTKP yang dipilih tidak valid.',
+
+            'tempat_lahir.required' => 'Tempat lahir karyawan tidak diperbolehkan kosong.',
+            'tanggal_lahir.required' => 'Tanggal lahir karyawan tidak diperbolehkan kosong.',
+            'tanggal_lahir.string' => 'Tanggal lahir karyawan tidak diperbolehkan mengandung selain angka.',
+            'no_hp.required' => 'Nomor HP karyawan tidak diperbolehkan kosong.',
+            'no_hp.numeric' => 'Nomor HP karyawan tidak diperbolehkan mengandung selain angka.',
+            'jenis_kelamin.required' => 'Jenis kelamin karyawan tidak diperbolehkan kosong.',
+            'jenis_kelamin.in' => 'Jenis kelamin karyawan tidak diperbolehkan selain laki-laki atau perempuan.',
+            'nik_ktp.required' => 'NIK KTP karyawan tidak diperbolehkan kosong.',
+            'nik_ktp.integer' => 'NIK KTP karyawan tidak diperbolehkan mengandung selain angka.',
+            'nik_ktp.digits' => 'NIK KTP karyawan melebihi batas maksimum panjang 16 karakter.',
+            'no_kk.required' => 'Nomor KK karyawan tidak diperbolehkan kosong.',
+            'no_kk.integer' => 'Nomor KK karyawan tidak diperbolehkan mengandung selain angka.',
+            'no_kk.digits' => 'Nomor KK karyawan melebihi batas maksimum panjang 16 karakter.',
+            'kategori_agama_id.required' => 'Agama karyawan tidak diperbolehkan kosong.',
+            'kategori_agama_id.exists' => 'Agama karyawan yang dipilih yang tidak valid.',
+            'kategori_darah_id.required' => 'Silahkan pilih Golongan darah karyawan terlebih dahulu.',
+            'kategori_darah_id.exists' => 'Golongan darah karyawan yang dipilih tidak valid.',
+            'tinggi_badan.required' => 'Tinggi badan karyawan tidak diperbolehkan kosong.',
+            'tinggi_badan.integer' => 'Tinggi badan karyawan tidak diperbolehkan mengandung selain angka.',
+            'alamat.required' => 'Alamat karyawan tidak diperbolehkan kosong.',
+            'tahun_lulus.required' => 'Tahun lulus karyawan tidak diperbolehkan kosong.',
+            'tahun_lulus.numeric' => 'Tahun lulus karyawan tidak diperbolehkan mengandung selain angka.',
+            'no_ijazah.required' => 'Nomor ijazah karyawan tidak diperbolehkan kosong.',
+
+            'no_str.required' => 'Nomor STR karyawan tidak diperbolehkan kosong.',
+            'masa_berlaku_str.string' => 'Masa berlaku STR karyawan tidak diperbolehkan mengandung selain angka.',
+            'no_sip.required' => 'Nomor SIP karyawan tidak diperbolehkan kosong.',
+            'masa_berlaku_sip.required' => 'Masa berlaku SIP karyawan tidak diperbolehkan kosong.',
+            'no_bpjsksh.required' => 'Nomor BPJS Kesehatan karyawan tidak diperbolehkan kosong.',
+            'no_bpjsktk.required' => 'Nomor BPJS Ketenagakerjaan karyawan tidak diperbolehkan kosong.',
+
+            // file
+            'file_ktp.required' => 'File KTP karyawan tidak diperbolehkan kosong.',
+            'file_ktp.file' => 'File KTP karyawan tidak diperbolehkan mengandung selain dokumen.',
+            'file_ktp.max' => 'File KTP karyawan yang diunggah harus kurang dari 10 MB.',
+            'file_kk.required' => 'File KK karyawan tidak diperbolehkan kosong.',
+            'file_kk.file' => 'File KK karyawan tidak diperbolehkan mengandung selain dokumen.',
+            'file_kk.max' => 'File KK karyawan yang diunggah harus kurang dari 10 MB.',
+            'file_sip.required' => 'File SIP karyawan tidak diperbolehkan kosong.',
+            'file_sip.file' => 'File SIP karyawan tidak diperbolehkan mengandung selain dokumen.',
+            'file_sip.max' => 'File SIP karyawan yang diunggah harus kurang dari 10 MB.',
+            'file_bpjs_kesehatan.required' => 'File BPJS Kesehatan karyawan tidak diperbolehkan kosong.',
+            'file_bpjs_kesehatan.file' => 'File BPJS Kesehatan karyawan tidak diperbolehkan mengandung selain dokumen.',
+            'file_bpjs_kesehatan.max' => 'File BPJS Kesehatan karyawan yang diunggah harus kurang dari 10 MB.',
+            'file_bpjs_ketenagakerjaan.required' => 'File BPJS Ketenagakerjaan karyawan tidak diperbolehkan kosong.',
+            'file_bpjs_ketenagakerjaan.file' => 'File BPJS Ketenagakerjaan karyawan tidak diperbolehkan mengandung selain dokumen.',
+            'file_bpjs_ketenagakerjaan.max' => 'File BPJS Ketenagakerjaan karyawan yang diunggah harus kurang dari 10 MB.',
+            'file_ijazah.required' => 'File Ijazah karyawan tidak diperbolehkan kosong.',
+            'file_ijazah.file' => 'File Ijazah karyawan tidak diperbolehkan mengandung selain dokumen.',
+            'file_ijazah.max' => 'File Ijazah karyawan yang diunggah harus kurang dari 10 MB.',
+            'file_sertifikat.required' => 'File Sertifikat karyawan tidak diperbolehkan kosong.',
+            'file_sertifikat.file' => 'File Sertifikat karyawan tidak diperbolehkan mengandung selain dokumen.',
+            'file_sertifikat.max' => 'File Sertifikat karyawan yang diunggah harus kurang dari 10 MB.',
         ];
     }
 
     public function failedValidation(Validator $validator)
     {
-        // $reponse = [
-        //     'status' => Response::HTTP_BAD_REQUEST,
-        //     'message' => $validator->errors()
-        // ];
-
-        // throw new HttpResponseException(response()->json($reponse, Response::HTTP_BAD_REQUEST));
-        $messages = implode(' ', $validator->errors()->all());
-        $response = [
+        $reponse = [
             'status' => Response::HTTP_BAD_REQUEST,
-            'message' => $messages,
+            'message' => $validator->errors()
         ];
 
-        throw new HttpResponseException(response()->json($response, Response::HTTP_BAD_REQUEST));
+        throw new HttpResponseException(response()->json($reponse, Response::HTTP_BAD_REQUEST));
+        // $messages = implode(' ', $validator->errors()->all());
+        // $response = [
+        //     'status' => Response::HTTP_BAD_REQUEST,
+        //     'message' => $messages,
+        // ];
+
+        // throw new HttpResponseException(response()->json($response, Response::HTTP_BAD_REQUEST));
     }
 }

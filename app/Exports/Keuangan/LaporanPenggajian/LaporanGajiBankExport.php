@@ -12,7 +12,7 @@ class LaporanGajiBankExport implements FromCollection, WithMultipleSheets
 {
     use Exportable;
 
-   protected $months;
+    protected $months;
     protected $years;
 
     public function __construct(array $months, array $years)

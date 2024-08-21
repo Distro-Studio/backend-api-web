@@ -374,13 +374,13 @@ class PenyesuaianGajiController extends Controller
       // $bulanMulai = Carbon::parse($request->bulan_mulai);
       $bulanMulai = Carbon::parse(RandomHelper::convertToDateString($request->bulan_mulai));
 
-            if ($bulanMulai->month == $currentMonth && $bulanMulai->year == $currentYear) {
-                // Kurangi take home pay dengan besaran penyesuaian yang baru dibuat
-                $penggajian->gaji_bruto += $request->besaran;
-                // $pph = $this->calculatedPPH21ForMonths($penggajian->gaji_bruto, $penggajian->data_karyawans->ptkp_id);
-                $pph = CalculateHelper::calculatedPPH21ForMonths($penggajian->gaji_bruto, $penggajian->data_karyawans->ptkp_id);
-                $penggajian->pph_21 = $pph;
-                $penggajian->save();
+      if ($bulanMulai->month == $currentMonth && $bulanMulai->year == $currentYear) {
+        // Kurangi take home pay dengan besaran penyesuaian yang baru dibuat
+        $penggajian->gaji_bruto += $request->besaran;
+        // $pph = $this->calculatedPPH21ForMonths($penggajian->gaji_bruto, $penggajian->data_karyawans->ptkp_id);
+        $pph = CalculateHelper::calculatedPPH21ForMonths($penggajian->gaji_bruto, $penggajian->data_karyawans->ptkp_id);
+        $penggajian->pph_21 = $pph;
+        $penggajian->save();
 
         $detail = DetailGaji::where('penggajian_id', $penggajian->id)->where('nama_detail', 'PPH21')->update(['besaran' => $pph]);
 

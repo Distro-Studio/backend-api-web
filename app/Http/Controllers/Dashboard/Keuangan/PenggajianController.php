@@ -156,8 +156,9 @@ class PenggajianController extends Controller
                 ]
             ];
         }
+
         if ($datariwayatPenggajian->isEmpty()) {
-            return response()->json(new WithoutDataResource(Response::HTTP_OK, 'Tidak ada data riwayat penggajian karyawan yang tersedia.'), Response::HTTP_OK);
+            return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Tidak ada data riwayat penggajian karyawan yang tersedia.'), Response::HTTP_NOT_FOUND);
         }
 
         $formattedData = $datariwayatPenggajian->map(function ($riwayatPenggajian) {

@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('diklats', function (Blueprint $table) {
             $table->id();
             $table->string('gambar')->nullable();
+            // $table->foreignId('gambar')->nullable()->constrained('berkas');
             $table->string('nama');
             $table->foreignId('kategori_diklat_id')->constrained('kategori_diklats');
             $table->foreignId('status_diklat_id')->constrained('status_diklats');

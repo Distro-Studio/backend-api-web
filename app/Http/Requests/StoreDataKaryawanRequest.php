@@ -43,7 +43,7 @@ class StoreDataKaryawanRequest extends FormRequest
             // Step 2
             'kelompok_gaji_id' => 'required|integer|exists:kelompok_gajis,id',
             'no_rekening' => 'required|numeric',
-            'tunjangan_jabatan' => 'required|numeric',
+            // 'tunjangan_jabatan' => 'required|numeric',
             'tunjangan_fungsional' => 'required|numeric',
             'tunjangan_khusus' => 'required|numeric',
             'tunjangan_lainnya' => 'required|numeric',

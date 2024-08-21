@@ -65,10 +65,18 @@ class CreateGajiJob implements ShouldQueue
             ->join('kelompok_gajis', 'data_karyawans.kelompok_gaji_id', '=', 'kelompok_gajis.id')
             ->leftJoin('penggajians', 'data_karyawans.id', '=', 'penggajians.data_karyawan_id')
             ->join('status_karyawans', 'data_karyawans.status_karyawan_id', '=', 'status_karyawans.id')
+            ->join('jabatans', 'data_karyawans.jabatan_id', '=', 'jabatans.id')
+            ->join('kompetensis', 'data_karyawans.kompetensi_id', '=', 'kompetensis.id')
             ->select(
                 'data_karyawans.id as data_karyawan_id',
                 DB::raw('COALESCE(kelompok_gajis.besaran_gaji, 0) as gaji_pokok'),
-                DB::raw('COALESCE(data_karyawans.tunjangan_jabatan, 0) as tunjangan_jabatan'),
+                // DB::raw('COALESCE(data_karyawans.tunjangan_jabatan, 0) as tunjangan_jabatan'), 
+
+                // TUNJANGAN JABATAN DIAMBIL DARI TABEL JABATAN
+                DB::raw('COALESCE(jabatans.tunjangan_jabatan, 0) as tunjangan_jabatan'),
+                // TUNJANGAN KOMPETENSI DIAMBIL DARI TABEL KOMPETENSI
+                DB::raw('COALESCE(kompetensis.tunjangan_kompetensi, 0) as tunjangan_kompetensi'),
+
                 DB::raw('COALESCE(data_karyawans.tunjangan_fungsional, 0) as tunjangan_fungsional'),
                 DB::raw('COALESCE(data_karyawans.tunjangan_khusus, 0) as tunjangan_khusus'),
                 DB::raw('COALESCE(data_karyawans.tunjangan_lainnya, 0) as tunjangan_lainnya'),
@@ -195,6 +203,12 @@ class CreateGajiJob implements ShouldQueue
                     'kategori_gaji_id' => $kategori_penambah,
                     'nama_detail' => 'Tunjangan Khusus',
                     'besaran' => $dataKaryawan->tunjangan_khusus == 0 ? null : $dataKaryawan->tunjangan_khusus
+                ],
+                [
+                    'penggajian_id' => $penggajian->id,
+                    'kategori_gaji_id' => $kategori_penambah,
+                    'nama_detail' => 'Tunjangan Kompetensi',
+                    'besaran' => $dataKaryawan->tunjangan_kompetensi == 0 ? null : $dataKaryawan->tunjangan_kompetensi
                 ],
                 [
                     'penggajian_id' => $penggajian->id,
@@ -515,6 +529,7 @@ class CreateGajiJob implements ShouldQueue
             + $reward
             + $penghasilanTHR
             + $dataKaryawan->tunjangan_jabatan
+            + $dataKaryawan->tunjangan_kompetensi
             + $dataKaryawan->tunjangan_fungsional
             + $dataKaryawan->tunjangan_khusus
             + $dataKaryawan->tunjangan_lainnya
@@ -525,6 +540,7 @@ class CreateGajiJob implements ShouldQueue
     private function calculatedTotalTunjangan($dataKaryawan)
     {
         return $dataKaryawan->tunjangan_jabatan
+            + $dataKaryawan->tunjangan_kompetensi
             + $dataKaryawan->tunjangan_fungsional
             + $dataKaryawan->tunjangan_khusus
             + $dataKaryawan->tunjangan_lainnya;

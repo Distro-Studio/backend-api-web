@@ -323,7 +323,7 @@ class DataCutiController extends Controller
 
         // Menambahkan durasi ke data sebelum menyimpan
         $data['durasi'] = $durasi;
-        $data['status_cuti_id'] = 2;
+        $data['status_cuti_id'] = 1;
         $dataCuti = Cuti::create($data);
 
         $message = "Data cuti karyawan '{$dataCuti->users->nama}' berhasil dibuat untuk tipe cuti '{$dataCuti->tipe_cutis->nama}' dengan durasi {$dataCuti->durasi} hari.";
@@ -464,7 +464,7 @@ class DataCutiController extends Controller
         }
     }
 
-    public function verifikasiCuti(Request $request, $cutiId)
+    public function verifikasiTahap1(Request $request, $cutiId)
     {
         if (!Gate::allows('verifikasi1 cutiKaryawan')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
@@ -474,40 +474,124 @@ class DataCutiController extends Controller
         $cuti = Cuti::find($cutiId);
 
         if (!$cuti) {
-            return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data cuti tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+            return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Cuti tidak ditemukan.'), Response::HTTP_NOT_FOUND);
         }
 
         $status_cuti_id = $cuti->status_cuti_id;
 
-        // Logika verifikasi disetujui tahap 1
-        if ($request->has('verifikasi_disetujui') && $request->verifikasi_disetujui == 1) {
-            // Jika status_cuti_id = 1 (default) atau 3 (ditolak sebelumnya)
+        if ($request->has('verifikasi_pertama_disetujui') && $request->verifikasi_pertama_disetujui == 1) {
+            // Jika status_cuti_id = 1, maka bisa disetujui
             if ($status_cuti_id == 1) {
                 $cuti->status_cuti_id = 2; // Update status ke tahap 1 disetujui
-                $cuti->verifikator_1 = Auth::id(); // Set verifikator tahap 1
+                $cuti->verifikator_1 = Auth::id();
                 $cuti->alasan = null;
                 $cuti->save();
 
-                return response()->json(new WithoutDataResource(Response::HTTP_OK, "Verifikasi tahap 1 untuk cuti '{$cuti->users->nama}' telah disetujui."), Response::HTTP_OK);
+                // Buat dan simpan notifikasi
+                $this->createNotifikasiCutiTahap1($cuti, 'Disetujui');
+
+                return response()->json(new WithoutDataResource(Response::HTTP_OK, "Verifikasi tahap 1 untuk Cuti '{$cuti->tipe_cutis->nama}' telah disetujui."), Response::HTTP_OK);
             } else {
-                return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Cuti '{$cuti->users->nama}' tidak dalam status untuk disetujui pada tahap 1."), Response::HTTP_BAD_REQUEST);
+                return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Cuti '{$cuti->tipe_cutis->nama}' tidak dalam status untuk disetujui pada tahap 1."), Response::HTTP_BAD_REQUEST);
             }
-        }
-        // Logika verifikasi ditolak tahap 1
-        elseif ($request->has('verifikasi_ditolak') && $request->verifikasi_ditolak == 1) {
-            // Jika status_cuti_id = 1 (default)
+        } elseif ($request->has('verifikasi_pertama_ditolak') && $request->verifikasi_pertama_ditolak == 1) {
+            // Jika status_cuti_id = 1, maka bisa ditolak
             if ($status_cuti_id == 1) {
                 $cuti->status_cuti_id = 3; // Update status ke tahap 1 ditolak
-                $cuti->verifikator_1 = Auth::id(); // Set verifikator tahap 1
-                $cuti->alasan = 'Verifikasi ditolak karena: ' . $request->input('alasan', null);
+                $cuti->verifikator_1 = Auth::id();
+                $cuti->alasan = 'Verifikasi tahap 1 ditolak karena: ' . $request->input('alasan', null);
                 $cuti->save();
 
-                return response()->json(new WithoutDataResource(Response::HTTP_OK, "Verifikasi tahap 1 untuk cuti '{$cuti->users->nama}' telah ditolak."), Response::HTTP_OK);
+                // Buat dan simpan notifikasi
+                $this->createNotifikasiCutiTahap1($cuti, 'Ditolak');
+
+
+                return response()->json(new WithoutDataResource(Response::HTTP_OK, "Verifikasi tahap 1 untuk Cuti '{$cuti->tipe_cutis->nama}' telah ditolak."), Response::HTTP_OK);
             } else {
-                return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Cuti '{$cuti->users->nama}' tidak dalam status untuk ditolak pada tahap 1."), Response::HTTP_BAD_REQUEST);
+                return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Cuti '{$cuti->tipe_cutis->nama}' tidak dalam status untuk ditolak pada tahap 1."), Response::HTTP_BAD_REQUEST);
             }
         } else {
             return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Aksi tidak valid.'), Response::HTTP_BAD_REQUEST);
         }
+    }
+
+    public function verifikasiTahap2(Request $request, $cutiId)
+    {
+        if (!Gate::allows('verifikasi2 cutiKaryawan')) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
+
+        // Cari cuti berdasarkan ID
+        $cuti = Cuti::find($cutiId);
+
+        if (!$cuti) {
+            return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Cuti tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+        }
+
+        $status_cuti_id = $cuti->status_cuti_id;
+
+        if ($request->has('verifikasi_kedua_disetujui') && $request->verifikasi_kedua_disetujui == 1) {
+            // Jika status_cuti_id = 2, maka bisa disetujui
+            if ($status_cuti_id == 2) {
+                $cuti->status_cuti_id = 4; // Update status ke tahap 2 disetujui
+                $cuti->verifikator_2 = Auth::id();
+                $cuti->alasan = null;
+                $cuti->save();
+
+                $this->createNotifikasiCutiTahap2($cuti, 'Disetujui');
+
+                return response()->json(new WithoutDataResource(Response::HTTP_OK, "Verifikasi tahap 2 untuk Cuti '{$cuti->tipe_cutis->nama}' telah disetujui."), Response::HTTP_OK);
+            } else {
+                return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Cuti '{$cuti->tipe_cutis->nama}' tidak dalam status untuk disetujui pada tahap 1."), Response::HTTP_BAD_REQUEST);
+            }
+        } elseif ($request->has('verifikasi_kedua_ditolak') && $request->verifikasi_kedua_ditolak == 1) {
+            // Jika status_cuti_id = 1, maka bisa ditolak
+            if ($status_cuti_id == 2) {
+                $cuti->status_cuti_id = 5; // Update status ke tahap 1 ditolak
+                $cuti->verifikator_2 = Auth::id();
+                $cuti->alasan = 'Verifikasi tahap 2 ditolak karena: ' . $request->input('alasan', null);
+                $cuti->save();
+
+                $this->createNotifikasiCutiTahap2($cuti, 'Ditolak');
+
+                return response()->json(new WithoutDataResource(Response::HTTP_OK, "Verifikasi tahap 2 untuk Cuti '{$cuti->tipe_cutis->nama}' telah ditolak."), Response::HTTP_OK);
+            } else {
+                return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Cuti '{$cuti->tipe_cutis->nama}' tidak dalam status untuk ditolak pada tahap 1."), Response::HTTP_BAD_REQUEST);
+            }
+        } else {
+            return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Aksi tidak valid.'), Response::HTTP_BAD_REQUEST);
+        }
+    }
+
+    private function createNotifikasiCutiTahap1($cuti, $status)
+    {
+        $statusText = $status === 'Disetujui' ? 'Disetujui' : 'Ditolak';
+        $verifikator = Auth::user()->nama;
+        $konversiTgl = Carbon::parse(RandomHelper::convertToDateString($cuti->tgl_mulai))->locale('id')->isoFormat('D MMMM YYYY');
+        $message = "Pengajuan cuti '{$cuti->tipe_cutis->nama}' Anda pada tanggal '{$konversiTgl}' telah '{$statusText}' tahap 1 oleh '{$verifikator}'.";
+
+        // Buat notifikasi untuk user yang mengajukan cuti
+        Notifikasi::create([
+            'kategori_notifikasi_id' => 1,
+            'user_id' => $cuti->user_id, // Penerima notifikasi
+            'message' => $message,
+            'is_read' => false,
+        ]);
+    }
+
+    private function createNotifikasiCutiTahap2($cuti, $status)
+    {
+        $statusText = $status === 'Disetujui' ? 'Disetujui' : 'Ditolak';
+        $verifikator = Auth::user()->nama;
+        $konversiTgl = Carbon::parse(RandomHelper::convertToDateString($cuti->tgl_mulai))->locale('id')->isoFormat('D MMMM YYYY');
+        $message = "Pengajuan cuti '{$cuti->tipe_cutis->nama}' Anda pada tanggal '{$konversiTgl}' telah '{$statusText}' tahap 2 oleh '{$verifikator}'.";
+
+        // Buat notifikasi untuk user yang mengajukan cuti
+        Notifikasi::create([
+            'kategori_notifikasi_id' => 1,
+            'user_id' => $cuti->user_id, // Penerima notifikasi
+            'message' => $message,
+            'is_read' => false,
+        ]);
     }
 }

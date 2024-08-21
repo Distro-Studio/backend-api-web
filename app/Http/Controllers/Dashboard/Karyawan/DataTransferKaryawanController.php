@@ -364,13 +364,6 @@ class DataTransferKaryawanController extends Controller
             $transfer = TransferKaryawan::create($data);
 
             $users = $transfer->users;
-            // $unit_kerja_asals = $transfer->unit_kerja_asals->nama_unit;
-            // $unit_kerja_tujuans = $transfer->unit_kerja_tujuans->nama_unit;
-            // $jabatan_asals = $transfer->jabatan_asals->nama_jabatan;
-            // $jabatan_tujuans = $transfer->jabatan_tujuans->nama_jabatan;
-            // $kelompok_gaji_asals = $transfer->kelompok_gaji_asals->nama_kelompok;
-            // $kelompok_gaji_tujuans = $transfer->kelompok_gaji_tujuans->nama_kelompok;
-            // $role_asal = $users->role_asals->name;
             $unit_kerja_asals = $transfer->unit_kerja_asals->nama_unit ?? $user->data_karyawans->unit_kerjas->nama_unit;
             $unit_kerja_tujuans = $transfer->unit_kerja_tujuans->nama_unit ?? $unit_kerja_asals;
             $jabatan_asals = $transfer->jabatan_asals->nama_jabatan ?? $user->data_karyawans->jabatans->nama_jabatan;
