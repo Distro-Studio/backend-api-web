@@ -853,11 +853,11 @@ class DataKaryawanController extends Controller
       return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data karyawan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
     }
 
-    // Ambil semua berkas terkait dengan user ini
-    $berkasList = $user->berkas;
+    // Ambil semua berkas terkait dengan user ini yang belum diverifikasi
+    $berkasList = $user->berkas->where('status_berkas_id', 1);
 
     if ($berkasList->isEmpty()) {
-      return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Tidak ada data berkas yang ditemukan untuk karyawan ini.'), Response::HTTP_NOT_FOUND);
+      return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Tidak ada berkas yang perlu diverifikasi untuk karyawan ini.'), Response::HTTP_NOT_FOUND);
     }
 
     foreach ($berkasList as $berkas) {
@@ -865,7 +865,6 @@ class DataKaryawanController extends Controller
 
       // Logika verifikasi disetujui tahap 1
       if ($request->has('verifikasi_disetujui') && $request->verifikasi_disetujui == 1) {
-        // Jika status_berkas_id = 1 (default)
         if ($status_berkas_id == 1) {
           $berkas->status_berkas_id = 2; // Update status ke disetujui
           $berkas->verifikator_1 = Auth::id();
@@ -893,7 +892,7 @@ class DataKaryawanController extends Controller
       }
     }
 
-    return response()->json(new WithoutDataResource(Response::HTTP_OK, "Verifikasi berkas untuk karyawan '{$user->nama}' berhasil verifikasi."), Response::HTTP_OK);
+    return response()->json(new WithoutDataResource(Response::HTTP_OK, "Verifikasi berkas untuk karyawan '{$user->nama}' berhasil dilakukan."), Response::HTTP_OK);
   }
 
   public function getDataCuti($data_karyawan_id)
