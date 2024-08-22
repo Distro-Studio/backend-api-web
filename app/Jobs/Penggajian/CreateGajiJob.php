@@ -85,7 +85,8 @@ class CreateGajiJob implements ShouldQueue
                 DB::raw('COALESCE(data_karyawans.uang_lembur, 0) as uang_lembur'),
                 'data_karyawans.ptkp_id as ptkp_id',
                 'status_karyawans.label as status_karyawan',
-                'data_karyawans.tgl_masuk as tgl_masuk'
+                'data_karyawans.tgl_masuk as tgl_masuk',
+                'data_karyawans.user_id as user_id'
             );
 
         if (!empty($this->data_karyawan_ids)) {
@@ -105,9 +106,10 @@ class CreateGajiJob implements ShouldQueue
         foreach ($dataKaryawans as $dataKaryawan) {
             $data_karyawan_id = $dataKaryawan->data_karyawan_id;
 
-            // Hitung reward (BOR dan Bonus Presensi)
+            // Hitung reward (BOR dan Bonus Presensi dan Lembur)
             $rewardBOR = $this->calculatedRewardBOR($data_karyawan_id, $this->sertakan_bor);
             $rewardBonusPresensi = $this->calculatedRewardPresensi($data_karyawan_id);
+            $rewardLembur = $this->calculatedLembur($dataKaryawan);
             $totalReward = $rewardBOR + $rewardBonusPresensi;
 
             // Tentukan apakah THR perlu dihitung
@@ -115,7 +117,7 @@ class CreateGajiJob implements ShouldQueue
             Log::info("THR: " . $penghasilanTHR);
 
             // Hitung penghasilan THR, bruto, total tunjangan, dan total premi
-            $penghasilanBruto = $this->calculatedPenghasilanBruto($dataKaryawan, $totalReward, $penghasilanTHR);
+            $penghasilanBruto = $this->calculatedPenghasilanBruto($dataKaryawan, $totalReward, $penghasilanTHR, $rewardLembur);
             $totalTunjangan = $this->calculatedTotalTunjangan($dataKaryawan);
             $totalPremi = $this->calculatedPremi($data_karyawan_id, $penghasilanBruto, $dataKaryawan->gaji_pokok);
 
@@ -221,7 +223,7 @@ class CreateGajiJob implements ShouldQueue
                     'penggajian_id' => $penggajian->id,
                     'kategori_gaji_id' => $kategori_penambah,
                     'nama_detail' => 'Uang Lembur',
-                    'besaran' => $dataKaryawan->uang_lembur == 0 ? null : $dataKaryawan->uang_lembur
+                    'besaran' => $rewardLembur == 0 ? null : $rewardLembur
                 ],
                 [
                     'penggajian_id' => $penggajian->id,
@@ -541,7 +543,7 @@ class CreateGajiJob implements ShouldQueue
         return $bonusPresensi;
     }
 
-    private function calculatedPenghasilanBruto($dataKaryawan, $reward, $penghasilanTHR)
+    private function calculatedPenghasilanBruto($dataKaryawan, $reward, $penghasilanTHR, $rewardLembur)
     {
         return $dataKaryawan->gaji_pokok
             + $reward
@@ -552,29 +554,32 @@ class CreateGajiJob implements ShouldQueue
             + $dataKaryawan->tunjangan_khusus
             + $dataKaryawan->tunjangan_lainnya
             + $dataKaryawan->uang_makan
-            + $dataKaryawan->uang_lembur;
+            + $rewardLembur;
     }
 
     private function calculatedLembur($dataKaryawan)
     {
-        // Ambil nilai uang_lembur dari data_karyawan
         $rate_lembur = $dataKaryawan->uang_lembur;
 
-        // Ambil semua lembur terkait dengan data_karyawan
+        // Ambil semua record lembur untuk karyawan ini
         $lemburRecords = Lembur::where('user_id', $dataKaryawan->user_id)->get();
 
+        // Inisialisasi total bonus lembur
         $totalBonusLembur = 0;
 
+        // Loop melalui setiap record lembur
         foreach ($lemburRecords as $lembur) {
-            // Konversi durasi dari format H:i:s menjadi total menit
-            $durasi = Carbon::parse($lembur->durasi);
-            $totalMinutes = ($durasi->hour * 60) + $durasi->minute + ($durasi->second / 60);
+            // Cek apakah durasi lembur null
+            if (!is_null($lembur->durasi)) {
+                // Konversi durasi menjadi menit
+                $durasiLembur = Carbon::parse($lembur->durasi);
+                $durasiMenit = ($durasiLembur->hour * 60) + $durasiLembur->minute;
 
-            // Hitung bonus lembur
-            $bonusLembur = ($rate_lembur / 60) * $totalMinutes;
-
-            // Tambahkan bonus lembur ke total
-            $totalBonusLembur += $bonusLembur;
+                // Hitung bonus lembur untuk lembur ini dan tambahkan ke total
+                $bonusLembur = ($rate_lembur / 60) * $durasiMenit;
+                $totalBonusLembur += $bonusLembur;
+                Log::info("Total bonus lembur: $totalBonusLembur, dari karyawan {$dataKaryawan->user_id}");
+            }
         }
 
         return $totalBonusLembur;
