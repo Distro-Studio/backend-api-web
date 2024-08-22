@@ -159,7 +159,6 @@ class DataKaryawanController extends Controller
     $user = Auth::user();
     $roles = Role::all();
 
-    // Filter out 'Super Admin' role if the logged-in user is not 'Super Admin'
     if ($user->nama !== 'Super Admin') {
       $roles = $roles->filter(function ($role) {
         return $role->name !== 'Super Admin';
@@ -667,8 +666,8 @@ class DataKaryawanController extends Controller
     // Format data berkas
     $formattedData = $berkas->map(function ($item) use ($baseUrl) {
       $fileExt = $item->ext ? StorageServerHelper::getExtensionFromMimeType($item->ext) : null;
-      $fileUrl = $baseUrl . $item->path . ($fileExt ? '.' . $fileExt : '');
-      // $fileUrl = $baseUrl . $item->path;
+      // $fileUrl = $baseUrl . $item->path . ($fileExt ? '.' . $fileExt : '');
+      $fileUrl = $baseUrl . $item->path;
 
       return [
         'id' => $item->id,
@@ -1435,8 +1434,8 @@ class DataKaryawanController extends Controller
       $berkas = Berkas::where('id', $berkasId)->first();
       if ($berkas) {
         $extension = StorageServerHelper::getExtensionFromMimeType($berkas->ext);
-        $formattedPaths[$field] = $baseUrl . $berkas->path . '.' . $extension;
-        // $formattedPaths[$field] = $baseUrl . $berkas->path;
+        // $formattedPaths[$field] = $baseUrl . $berkas->path . '.' . $extension;
+        $formattedPaths[$field] = $baseUrl . $berkas->path;
       } else {
         $formattedPaths[$field] = null;
       }
@@ -1570,7 +1569,7 @@ class DataKaryawanController extends Controller
       $berkas = Berkas::where('id', $berkasId)->first();
       if ($berkas) {
         $extension = StorageServerHelper::getExtensionFromMimeType($berkas->ext);
-        $formattedPaths[$field] = $baseUrl . $berkas->path . '.' . $extension;
+        $formattedPaths[$field] = $baseUrl . $berkas->path;
       } else {
         $formattedPaths[$field] = null;
       }
