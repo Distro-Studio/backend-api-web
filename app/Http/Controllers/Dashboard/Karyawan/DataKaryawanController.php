@@ -734,7 +734,12 @@ class DataKaryawanController extends Controller
 
     // Ambil data user dari berkas yang pertama
     $user = $berkas->first()->users;
-    $baseUrl = env('STORAGE_SERVER_DOMAIN'); // Ganti dengan URL domain Anda
+    $baseUrl = env('STORAGE_SERVER_DOMAIN');
+
+    $statusBerkas = 'Diverifikasi';
+    if ($berkas->where('status_berkas_id', 1)->isNotEmpty()) {
+      $statusBerkas = 'Belum Diverifikasi';
+    }
 
     // Format data berkas
     $formattedData = $berkas->map(function ($item) use ($baseUrl) {
@@ -774,7 +779,7 @@ class DataKaryawanController extends Controller
           'updated_at' => $user->updated_at,
         ],
         'jumlah_dokumen' => $berkas->count(),
-        'status_berkas' => $berkas->status_berkas,
+        'status_berkas' => $statusBerkas,
         'data_dokumen' => $formattedData,
       ],
     ], Response::HTTP_OK);
@@ -863,7 +868,7 @@ class DataKaryawanController extends Controller
         // Jika status_berkas_id = 1 (default)
         if ($status_berkas_id == 1) {
           $berkas->status_berkas_id = 2; // Update status ke disetujui
-          $berkas->verifikator_1 = Auth::id(); // Set verifikator_1
+          $berkas->verifikator_1 = Auth::id();
           $berkas->save();
 
           // Kirim notifikasi bahwa berkas telah diverifikasi
@@ -871,22 +876,19 @@ class DataKaryawanController extends Controller
         } else {
           return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Berkas '{$berkas->nama}' tidak dalam status untuk disetujui."), Response::HTTP_BAD_REQUEST);
         }
-      }
-      // Logika verifikasi ditolak (opsional)
-      // else if ($request->has('verifikasi_ditolak') && $request->verifikasi_ditolak == 1) {
-      //   if ($status_berkas_id == 1) {
-      //     $berkas->status_berkas_id = 3; // Update status ke ditolak
-      //     $berkas->verifikator_1 = Auth::id(); // Set verifikator
-      //     $berkas->alasan = 'Verifikasi ditolak karena: ' . $request->input('alasan', null); // Tambahkan alasan penolakan
-      //     $berkas->save();
+      } else if ($request->has('verifikasi_ditolak') && $request->verifikasi_ditolak == 1) {
+        if ($status_berkas_id == 1) {
+          $berkas->status_berkas_id = 3; // Update status ke ditolak
+          $berkas->verifikator_1 = Auth::id();
+          $berkas->alasan = 'Verifikasi ditolak karena: ' . $request->input('alasan', null); // Tambahkan alasan penolakan
+          $berkas->save();
 
-      //     // Kirim notifikasi bahwa berkas telah ditolak
-      //     $this->createNotifikasiBerkas($berkas, 'ditolak');
-      //   } else {
-      //     return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Berkas '{$berkas->nama}' tidak dalam status untuk ditolak."), Response::HTTP_BAD_REQUEST);
-      //   }
-      // } 
-      else {
+          // Kirim notifikasi bahwa berkas telah ditolak
+          $this->createNotifikasiBerkas($berkas, 'ditolak');
+        } else {
+          return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Berkas '{$berkas->nama}' tidak dalam status untuk ditolak."), Response::HTTP_BAD_REQUEST);
+        }
+      } else {
         return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Aksi tidak valid.'), Response::HTTP_BAD_REQUEST);
       }
     }

@@ -19,6 +19,7 @@ use App\Http\Requests\StoreCutiJadwalRequest;
 use App\Http\Requests\UpdateCutiJadwalRequest;
 use App\Http\Resources\Dashboard\Jadwal\CutiJadwalResource;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
+use App\Models\RiwayatIzin;
 
 class DataCutiController extends Controller
 {
@@ -576,6 +577,63 @@ class DataCutiController extends Controller
         }
     }
 
+    // ini verifikasi izin 2 jam dalam 1 bulan
+    public function verifikasiRiwayatIzin(Request $request, $izinId)
+    {
+        if (!Gate::allows('verifikasi1 riwayatPerizinan')) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
+
+        // Cari riwayat izin berdasarkan ID
+        $riwayat_izin = RiwayatIzin::find($izinId);
+
+        if (!$riwayat_izin) {
+            return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Riwayat perizinan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+        }
+
+        $status_izin_id = $riwayat_izin->status_izin_id;
+
+        if ($request->has('verifikasi_pertama_disetujui') && $request->verifikasi_pertama_disetujui == 1) {
+            if ($status_izin_id == 1) {
+                $riwayat_izin->status_izin_id = 2;
+                $riwayat_izin->verifikator_1 = Auth::id();
+                $riwayat_izin->alasan = null;
+                $riwayat_izin->save();
+
+                $data_karyawan_id = DB::table('data_karyawans')
+                    ->where('user_id', $riwayat_izin->user_id)
+                    ->value('id');
+
+                DB::table('data_karyawans')
+                    ->where('id', $data_karyawan_id)
+                    ->update(['status_reward_presensi' => false]);
+
+                // Buat dan simpan notifikasi
+                $this->createNotifikasiIzin($riwayat_izin, 'Disetujui');
+
+                return response()->json(new WithoutDataResource(Response::HTTP_OK, "Verifikasi perizinan dari '{$riwayat_izin->users->nama}' telah disetujui."), Response::HTTP_OK);
+            } else {
+                return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Riwayat izin dari '{$riwayat_izin->users->nama}' tidak dalam status untuk disetujui."), Response::HTTP_BAD_REQUEST);
+            }
+        } elseif ($request->has('verifikasi_pertama_ditolak') && $request->verifikasi_pertama_ditolak == 1) {
+            if ($status_izin_id == 1) {
+                $riwayat_izin->status_izin_id = 3;
+                $riwayat_izin->verifikator_1 = Auth::id();
+                $riwayat_izin->alasan = 'Verifikasi perizinan ditolak karena: ' . $request->input('alasan', null);
+                $riwayat_izin->save();
+
+                // Buat dan simpan notifikasi
+                $this->createNotifikasiIzin($riwayat_izin, 'Ditolak');
+
+                return response()->json(new WithoutDataResource(Response::HTTP_OK, "Verifikasi perizinan dari '{$riwayat_izin->users->nama}' telah ditolak."), Response::HTTP_OK);
+            } else {
+                return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Riwayat Izin '{$riwayat_izin->id}' tidak dalam status untuk ditolak."), Response::HTTP_BAD_REQUEST);
+            }
+        } else {
+            return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Aksi tidak valid.'), Response::HTTP_BAD_REQUEST);
+        }
+    }
+
     private function createNotifikasiCutiTahap1($cuti, $status)
     {
         $statusText = $status === 'Disetujui' ? 'Disetujui' : 'Ditolak';
@@ -603,6 +661,22 @@ class DataCutiController extends Controller
         Notifikasi::create([
             'kategori_notifikasi_id' => 1,
             'user_id' => $cuti->user_id, // Penerima notifikasi
+            'message' => $message,
+            'is_read' => false,
+        ]);
+    }
+
+    private function createNotifikasiIzin($riwayat_izin, $status)
+    {
+        $statusText = $status === 'Disetujui' ? 'Disetujui' : 'Ditolak';
+        $verifikator = Auth::user()->nama;
+        $konversiTgl = Carbon::parse(RandomHelper::convertToDateString($riwayat_izin->created_at))->locale('id')->isoFormat('D MMMM YYYY');
+        $message = "Pengajuan perizinan Anda pada tanggal '{$konversiTgl}' telah '{$statusText}' oleh '{$verifikator}'.";
+
+        // Buat notifikasi untuk user yang mengajukan cuti
+        Notifikasi::create([
+            'kategori_notifikasi_id' => 10,
+            'user_id' => $riwayat_izin->user_id, // Penerima notifikasi
             'message' => $message,
             'is_read' => false,
         ]);

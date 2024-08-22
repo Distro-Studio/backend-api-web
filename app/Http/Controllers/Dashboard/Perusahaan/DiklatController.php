@@ -20,7 +20,6 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Maatwebsite\Excel\Facades\Excel;
-use Illuminate\Support\Facades\Storage;
 use App\Exports\Perusahaan\DiklatExport;
 use App\Http\Requests\StoreDiklatRequest;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
@@ -192,7 +191,7 @@ class DiklatController extends Controller
             $diklat = Diklat::create([
                 'gambar' => $gambarUrl,
                 'nama' => $data['nama'],
-                'kategori_diklat_id' => $data['kategori_diklat_id'],
+                'kategori_diklat_id' => 1,
                 'status_diklat_id' => 1,
                 'deskripsi' => $data['deskripsi'],
                 'kuota' => $data['kuota'],
@@ -221,6 +220,75 @@ class DiklatController extends Controller
                 'message' => "Terjadi kesalahan saat menyimpan data diklat, Error: {$e->getMessage()}"
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
+    }
+
+    public function show($diklatId)
+    {
+        // Check user permission to view diklat
+        if (!Gate::allows('view diklat')) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
+
+        // Find diklat by ID
+        $diklat = Diklat::with([
+            'kategori_diklats',
+            'status_diklats',
+            'peserta_diklat' => function ($query) {
+                $query->select('id', 'diklat_id', 'peserta'); // Select relevant fields
+            },
+        ])->find($diklatId);
+
+        if (!$diklat) {
+            return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Diklat tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+        }
+
+        // Ambil path untuk gambar dan dokumen eksternal
+        $baseUrl = env('STORAGE_SERVER_DOMAIN'); // Ganti dengan URL domain Anda
+
+        $gambarUrl = null;
+        if ($diklat->gambar) {
+            $gambarBerkas = Berkas::where('id', $diklat->gambar)->first();
+            if ($gambarBerkas) {
+                $gambarExt = StorageServerHelper::getExtensionFromMimeType($gambarBerkas->ext);
+                $gambarUrl = $baseUrl . $gambarBerkas->path . '.' . $gambarExt;
+            }
+        }
+
+        $dokumenUrl = null;
+        if ($diklat->dokumen_eksternal) {
+            $dokumenBerkas = Berkas::where('id', $diklat->dokumen_eksternal)->first();
+            if ($dokumenBerkas) {
+                $dokumenExt = StorageServerHelper::getExtensionFromMimeType($dokumenBerkas->ext);
+                $dokumenUrl = $baseUrl . $dokumenBerkas->path . '.' . $dokumenExt;
+            }
+        }
+
+        // Format the data for the response
+        $detailDiklat = [
+            'id' => $diklat->id,
+            'nama' => $diklat->nama,
+            'kategori_diklat' => $diklat->kategori_diklats,
+            'status_diklat' => $diklat->status_diklats,
+            'deskripsi' => $diklat->deskripsi,
+            'kuota' => $diklat->kuota,
+            'tgl_mulai' => $diklat->tgl_mulai,
+            'tgl_selesai' => $diklat->tgl_selesai,
+            'jam_mulai' => $diklat->jam_mulai,
+            'jam_selesai' => $diklat->jam_selesai,
+            'durasi' => $diklat->durasi,
+            'lokasi' => $diklat->lokasi,
+            'gambar' => $gambarUrl,
+            'dokumen_eksternal' => $dokumenUrl,
+            'peserta_diklat' => $diklat->peserta_diklat->toArray(),
+            'created_at' => $diklat->created_at,
+            'updated_at' => $diklat->updated_at,
+        ];
+
+        return response()->json([
+            'status' => Response::HTTP_OK,
+            'message' => "Detail diklat '{$diklat->nama}' berhasil ditampilkan.",
+            'data' => $detailDiklat,
+        ], Response::HTTP_OK);
     }
 
     public function exportDiklat()
@@ -320,6 +388,35 @@ class DiklatController extends Controller
                 return response()->json(new WithoutDataResource(Response::HTTP_OK, "Verifikasi tahap 2 untuk Diklat '{$diklat->nama}' telah ditolak."), Response::HTTP_OK);
             } else {
                 return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Diklat '{$diklat->nama}' tidak dalam status untuk ditolak pada tahap 2."), Response::HTTP_BAD_REQUEST);
+            }
+        } else {
+            return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Aksi tidak valid.'), Response::HTTP_BAD_REQUEST);
+        }
+    }
+
+    // Untuk verifikasi diklat eksternal
+    public function verifikasiDiklatExternal(Request $request, $diklatId)
+    {
+        if (!Gate::allows('verifikasi1 diklat')) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
+
+        $diklat = Diklat::find($diklatId);
+        if (!$diklat) {
+            return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Diklat eksternal tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+        }
+
+        $status_diklat_id = $diklat->status_diklat_id;
+        if ($request->has('diklat_eksternal_disetujui') && $request->diklat_eksternal_disetujui == 1) {
+            // Jika status_diklat_id = 1, maka bisa disetujui
+            if ($status_diklat_id == 1) {
+                $diklat->status_diklat_id = 2;
+                $diklat->verifikator_1 = Auth::id();
+                $diklat->durasi = $request->input('durasi');
+                $diklat->save();
+                return response()->json(new WithoutDataResource(Response::HTTP_OK, "Verifikasi untuk Diklat Eksternal '{$diklat->nama}' telah disetujui."), Response::HTTP_OK);
+            } else {
+                return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Diklat Eksternal '{$diklat->nama}' tidak dalam status untuk disetujui."), Response::HTTP_BAD_REQUEST);
             }
         } else {
             return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Aksi tidak valid.'), Response::HTTP_BAD_REQUEST);

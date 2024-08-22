@@ -22,7 +22,7 @@ class StoreDiklatRequest extends FormRequest
         return [
             'dokumen' => 'nullable|image|mimes:jpeg,png,jpg,svg|max:5048',
             'nama' => 'required|string|max:255',
-            'kategori_diklat_id' => 'required|integer|exists:kategori_diklats,id',
+            // 'kategori_diklat_id' => 'required|integer|exists:kategori_diklats,id',
             'deskripsi' => 'required|string|max:225',
             'kuota' => 'required|integer|min:1',
             'tgl_mulai' => 'required|string',

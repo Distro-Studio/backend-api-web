@@ -22,62 +22,64 @@ class DiklatSeeder extends Seeder
      */
     public function run(): void
     {
-        $kategoriDiklatIds = KategoriDiklat::pluck('id')->all();
-        $kategoriBerkas = KategoriBerkas::where('label', 'System')->first();
-        $statusBerkas = StatusBerkas::where('label', 'Menunggu')->first();
-        $user_ids = User::where('nama', '!=', 'Super Admin')->pluck('id')->all();
+        $kategoriDiklatIds = [1, 2];
+        $user_ids = User::where('nama', '!=', 'Super Admin')->pluck('id')->take(25)->all();
 
-        for ($i = 1; $i <= 25; $i++) {
-            if (count($user_ids) <= $i) {
-                break; // break if we run out of unique user_ids
-            }
-
-            $user_id = $user_ids[$i];
-            // Generate random dates
+        foreach ($user_ids as $i => $user_id) {
             $startDate = Carbon::now()->subDays(rand(0, 365));
             $endDate = $startDate->copy()->addDays(rand(1, 5));
             $startTime = Carbon::parse('08:00:00');
             $endTime = $startTime->copy()->addHours(rand(1, 4));
-
-            // Calculate duration
             $duration = $startTime->diffInSeconds($endTime);
 
-            // Generate image name based on the Diklat name and date
-            $bulanTahun = $startDate->locale('id')->format('MMMM Y');
-            $gambarName = 'Diklat Thumbnail - Diklat ' . $i . ' ' . $bulanTahun;
-            $gambarUrl = '/path/to/diklat/thumbnails/' . $gambarName;
+            // Pilih kategori diklat ID secara acak
+            $kategori_diklat_id = $kategoriDiklatIds[array_rand($kategoriDiklatIds)];
 
-            // Create Diklat record
-            $diklat = Diklat::create([
-                'gambar' => $gambarUrl,
-                'nama' => 'Diklat ' . $i,
-                'kategori_diklat_id' => $kategoriDiklatIds[array_rand($kategoriDiklatIds)],
+            if ($kategori_diklat_id == 1) {
+                // Jika kategori diklat adalah Internal
+                $gambarUrl = '/path/to/diklat/thumbnails/Diklat_Thumbnail_' . $i;
+                $berkas_gambar = $this->createBerkas($user_id, 'Berkas Diklat - ' . User::find($user_id)->nama, $gambarUrl);
+                $dokumen_eksternal = null;
+                $kuota = rand(10, 50);
+            } else {
+                // Jika kategori diklat adalah Eksternal
+                $gambarUrl = '/path/to/diklat/thumbnails/Diklat_Eksternal_' . $i;
+                $berkas_gambar = null;
+                $dokumen_eksternal = $this->createBerkas($user_id, 'Berkas Diklat Eksternal - ' . User::find($user_id)->nama, $gambarUrl);
+                $kuota = 1;
+            }
+
+            Diklat::create([
+                'gambar' => $berkas_gambar ? $berkas_gambar->id : null,
+                'dokumen_eksternal' => $dokumen_eksternal ? $dokumen_eksternal->id : null,
+                'nama' => 'Diklat ' . ($i + 1),
+                'kategori_diklat_id' => $kategori_diklat_id,
                 'status_diklat_id' => 1,
-                'deskripsi' => 'Deskripsi Diklat ' . $i,
-                'kuota' => rand(10, 50),
+                'deskripsi' => 'Deskripsi Diklat ' . ($i + 1),
+                'kuota' => $kuota,
                 'tgl_mulai' => $startDate->format('Y-m-d'),
                 'tgl_selesai' => $endDate->format('Y-m-d'),
                 'jam_mulai' => $startTime->format('H:i:s'),
                 'jam_selesai' => $endTime->format('H:i:s'),
                 'durasi' => $duration,
-                'lokasi' => 'Lokasi ' . $i,
+                'lokasi' => 'Lokasi ' . ($i + 1),
             ]);
-
-            Berkas::create([
-                'user_id' => $user_id,
-                'file_id' => (string) Str::uuid(),
-                'nama' => 'Berkas Diklat - ' . User::find($user_id)->nama,
-                'kategori_berkas_id' => $kategoriBerkas->id,
-                'status_berkas_id' => $statusBerkas->id,
-                'path' => $gambarUrl,
-                'tgl_upload' => now(),
-                'nama_file' => 'dokumen_' . $user_id,
-                'ext' => 'image/jpeg',
-                'size' => rand(1000, 2000), // Example file size in KB
-            ]);
-
-            // Update Diklat record with the image URL
-            $diklat->update(['gambar' => $gambarUrl]);
         }
+    }
+
+    private function createBerkas($user_id, $nama, $path)
+    {
+        return Berkas::create([
+            'user_id' => $user_id,
+            'file_id' => (string) Str::uuid(),
+            'nama' => $nama,
+            'kategori_berkas_id' => KategoriBerkas::where('label', 'System')->first()->id,
+            'status_berkas_id' => StatusBerkas::where('label', 'Menunggu')->first()->id,
+            'path' => $path,
+            'tgl_upload' => now(),
+            'nama_file' => 'dokumen_' . $user_id,
+            'ext' => 'image/jpeg',
+            'size' => rand(1000, 2000),
+        ]);
     }
 }

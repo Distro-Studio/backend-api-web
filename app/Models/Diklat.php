@@ -42,4 +42,24 @@ class Diklat extends Model
     {
         return $this->hasMany(PesertaDiklat::class, 'diklat_id', 'id');
     }
+
+    /**
+     * Get the dokumen_eksternals that owns the Diklat
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function berkas_dokumen_eksternals(): BelongsTo
+    {
+        return $this->belongsTo(Berkas::class, 'dokumen_eksternal', 'id');
+    }
+
+    /**
+     * Get the berkas_gambar that owns the Diklat
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function berkas_gambars(): BelongsTo
+    {
+        return $this->belongsTo(Berkas::class, 'gambar', 'id');
+    }
 }

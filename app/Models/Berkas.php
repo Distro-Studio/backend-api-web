@@ -30,7 +30,7 @@ class Berkas extends Model
      */
     public function presensi_foto_masuk(): HasMany
     {
-        return $this->hasMany(Presensi::class, 'foto_masuk', 'local_key');
+        return $this->hasMany(Presensi::class, 'foto_masuk', 'id');
     }
 
     /**
@@ -40,7 +40,7 @@ class Berkas extends Model
      */
     public function presensi_foto_keluar(): HasMany
     {
-        return $this->hasMany(Presensi::class, 'foto_keluar', 'local_key');
+        return $this->hasMany(Presensi::class, 'foto_keluar', 'id');
     }
 
     /**
@@ -81,5 +81,25 @@ class Berkas extends Model
     public function perubahan_berkas(): HasMany
     {
         return $this->hasMany(PerubahanBerkas::class, 'berkas_id', 'id');
+    }
+
+    /**
+     * Get all of the diklats for the Berkas
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function berkas_dokumen_eksternal(): HasMany
+    {
+        return $this->hasMany(Diklat::class, 'dokumen_eksternal', 'id');
+    }
+
+    /**
+     * Get all of the dokumen_gambar for the Berkas
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function berkas_gambar(): HasMany
+    {
+        return $this->hasMany(Diklat::class, 'gambar', 'id');
     }
 }

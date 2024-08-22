@@ -176,6 +176,9 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::post('/get-cuti', [DataCutiController::class, 'index']);
             Route::get('/cuti/export', [DataCutiController::class, 'exportJadwalCuti']);
             Route::apiResource('/cuti', DataCutiController::class);
+
+            // ! Izin ===========>
+            Route::post('/izin/{izinId}/verifikasi-perizinan', [DataCutiController::class, 'verifikasiRiwayatIzin']);
         });
 
         Route::group(['prefix' => '/keuangan'], function () {
@@ -209,9 +212,11 @@ Route::middleware(['auth:sanctum'])->group(function () {
             // ! Diklat ===========>
             Route::post('/get-data-diklat', [DiklatController::class, 'index']);
             Route::post('/diklat', [DiklatController::class, 'store']);
+            Route::get('/diklat/{diklatId}', [DiklatController::class, 'show']);
             Route::get('/diklat/export', [DiklatController::class, 'exportDiklat']);
             Route::post('/diklat/{diklatId}/verifikasi-step-1', [DiklatController::class, 'verifikasiTahap1']);
             Route::post('/diklat/{diklatId}/verifikasi-step-2', [DiklatController::class, 'verifikasiTahap2']);
+            Route::post('/diklat/{diklatId}/verifikasi-diklat-eksternal', [DiklatController::class, 'verifikasiDiklatExternal']);
 
             // ! Pelaporan ===========>
             Route::post('/get-data-pelaporan', [PelaporanController::class, 'index']);

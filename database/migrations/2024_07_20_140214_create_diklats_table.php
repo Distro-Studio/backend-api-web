@@ -13,10 +13,10 @@ return new class extends Migration
     {
         Schema::create('diklats', function (Blueprint $table) {
             $table->id();
-            $table->string('gambar')->nullable();
-            // $table->foreignId('gambar')->nullable()->constrained('berkas');
+            $table->foreignId('gambar')->nullable()->constrained('berkas');
+            $table->foreignId('dokumen_eksternal')->nullable()->constrained('berkas');
             $table->string('nama');
-            $table->foreignId('kategori_diklat_id')->constrained('kategori_diklats');
+            $table->foreignId('kategori_diklat_id')->constrained('kategori_diklats'); // 1 = Internal 2 = Eksternal
             $table->foreignId('status_diklat_id')->constrained('status_diklats');
             $table->string('deskripsi');
             $table->integer('kuota');

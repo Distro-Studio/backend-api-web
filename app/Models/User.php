@@ -242,4 +242,14 @@ class User extends Authenticatable
     {
         return $this->hasMany(Penilaian::class, 'user_dinilai', 'id');
     }
+
+    /**
+     * Get all of the riwayat_izins for the User
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function riwayat_izins(): HasMany
+    {
+        return $this->hasMany(RiwayatIzin::class, 'user_id', 'id');
+    }
 }

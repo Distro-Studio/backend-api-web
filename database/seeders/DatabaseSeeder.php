@@ -26,6 +26,7 @@ use Database\Seeders\Constant\Status\StatusGajiSeeder;
 use Database\Seeders\Constant\Status\StatusKaryawanSeeder;
 use Database\Seeders\Constant\Status\StatusLemburSeeder;
 use Database\Seeders\Constant\Status\StatusPresensiSeeder;
+use Database\Seeders\Constant\Status\StatusRiwayatIzinSeeder;
 use Database\Seeders\Constant\Status\StatusRiwayatPerubahanSeeder;
 use Database\Seeders\Constant\Status\StatusTukarJadwalSeeder;
 use Database\Seeders\JadwalKaryawan\CutiJadwalSeeder;
@@ -92,6 +93,7 @@ class DatabaseSeeder extends Seeder
       StatusKaryawanSeeder::class,
       StatusLemburSeeder::class,
       StatusTukarJadwalSeeder::class,
+      StatusRiwayatIzinSeeder::class,
 
       LokasiKantorSeeder::class,
       
