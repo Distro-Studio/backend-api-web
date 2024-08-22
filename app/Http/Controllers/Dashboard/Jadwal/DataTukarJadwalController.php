@@ -54,44 +54,6 @@ class DataTukarJadwalController extends Controller
         ], Response::HTTP_OK);
     }
 
-    // ambil user ditukar dari jadwal pengajuan
-    // ini lom update
-    // public function getUserDitukar($jadwalId)
-    // {
-    //     if (!Gate::allows('view tukarJadwal')) {
-    //         return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
-    //     }
-
-    //     $jadwal = Jadwal::find($jadwalId);
-    //     if (!$jadwal) {
-    //         return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Jadwal karyawan pengajuan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
-    //     }
-
-    //     $unitKerjaId = $jadwal->users->data_karyawans->unit_kerjas->id;
-    //     $tglMulai = Carbon::parse($jadwal->tgl_mulai)->format('Y-m-d');
-    //     $tglSelesai = Carbon::parse($jadwal->tgl_selesai)->format('Y-m-d');
-
-    //     $users = User::whereHas('jadwals', function ($query) use ($jadwal, $tglMulai, $tglSelesai) {
-    //         $query->where('shift_id', '!=', $jadwal->shift_id)
-    //             ->whereBetween('tgl_mulai', [$tglMulai, $tglSelesai])
-    //             ->whereBetween('tgl_selesai', [$tglMulai, $tglSelesai]);
-    //     })->whereHas('data_karyawans.unit_kerjas', function ($query) use ($unitKerjaId) {
-    //         $query->where('id', $unitKerjaId);
-    //     })->where('id', '!=', $jadwal->user_id)
-    //         ->where('nama', '!=', 'Super Admin')
-    //         ->get();
-
-    //     if ($users->isEmpty()) {
-    //         return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Karyawan ditukar tidak ditemukan.'), Response::HTTP_NOT_FOUND);
-    //     }
-
-    //     return response()->json([
-    //         'status' => Response::HTTP_OK,
-    //         'message' => "Karyawan ditukar berhasil didapatkan.",
-    //         'data' => $users
-    //     ]);
-    // }
-
     public function getUserDitukar($jadwalId)
     {
         if (!Gate::allows('view tukarJadwal')) {
@@ -672,48 +634,6 @@ class DataTukarJadwalController extends Controller
 
         return $dates;
     }
-
-    // ini bug jadwal malam tampil 2x
-    // private function formatSchedules($jadwal, $date_range)
-    // {
-    //     $user_schedules_by_date = [];
-    //     // Iterasi melalui jadwal dan rentang tanggal, menyimpan semua jadwal yang sesuai
-    //     foreach ($jadwal as $schedule) {
-    //         // Pastikan tanggal dalam format Y-m-d menggunakan helper sebelum parsing dengan Carbon
-    //         $tgl_mulai_formatted = Carbon::parse(RandomHelper::convertToDateString($schedule->tgl_mulai));
-    //         $tgl_selesai_formatted = Carbon::parse(RandomHelper::convertToDateString($schedule->tgl_selesai));
-
-    //         $current_date = $tgl_mulai_formatted->copy();
-    //         while ($current_date->lte($tgl_selesai_formatted)) {
-    //             $date_key = $current_date->format('Y-m-d');
-
-    //             // Jika ada beberapa jadwal dalam satu hari, kita perlu mengelolanya
-    //             if (!isset($user_schedules_by_date[$date_key])) {
-    //                 $user_schedules_by_date[$date_key] = [];
-    //             }
-    //             $user_schedules_by_date[$date_key][] = $schedule;
-
-    //             $current_date->addDay();
-    //         }
-    //     }
-
-    //     $user_schedule_array = [];
-    //     foreach ($date_range as $date) {
-    //         if (isset($user_schedules_by_date[$date])) {
-    //             foreach ($user_schedules_by_date[$date] as $schedule) {
-    //                 $user_schedule_array[] = [
-    //                     'id' => $schedule->id,
-    //                     'tanggal' => $date,
-    //                     'nama_shift' => $schedule->shifts->nama,
-    //                     'jam_from' => $schedule->shifts->jam_from,
-    //                     'jam_to' => $schedule->shifts->jam_to,
-    //                 ];
-    //             }
-    //         }
-    //     }
-
-    //     return $user_schedule_array;
-    // }
 
     private function formatSchedules($jadwal, $date_range)
     {

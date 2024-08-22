@@ -18,7 +18,6 @@ use App\Models\Kompetensi;
 use App\Models\Notifikasi;
 use App\Models\TrackRecord;
 use App\Models\TukarJadwal;
-use Illuminate\Support\Str;
 use App\Models\DataKaryawan;
 use App\Models\DataKeluarga;
 use App\Models\KelompokGaji;
@@ -26,22 +25,17 @@ use App\Models\LokasiKantor;
 use Illuminate\Http\Request;
 use App\Helpers\RandomHelper;
 use Illuminate\Http\Response;
-use App\Models\KategoriBerkas;
 use App\Models\StatusKaryawan;
 use App\Models\RiwayatPerubahan;
 use App\Models\TransferKaryawan;
-use App\Mail\SendAccoundUsersMail;
 use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Models\Role;
-use Illuminate\Support\Facades\Log;
 use App\Helpers\StorageServerHelper;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Mail;
 use Maatwebsite\Excel\Facades\Excel;
-use App\Mail\SendAccountResetPassword;
 use App\Exports\TemplateKaryawanExport;
 use App\Exports\Karyawan\KaryawanExport;
 use App\Imports\Karyawan\KaryawanImport;
@@ -162,11 +156,20 @@ class DataKaryawanController extends Controller
       return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
     }
 
-    $role = Role::all();
+    $user = Auth::user();
+    $roles = Role::all();
+
+    // Filter out 'Super Admin' role if the logged-in user is not 'Super Admin'
+    if ($user->nama !== 'Super Admin') {
+      $roles = $roles->filter(function ($role) {
+        return $role->name !== 'Super Admin';
+      });
+    }
+
     return response()->json([
       'status' => Response::HTTP_OK,
-      'message' => 'Retrieving all role for dropdown',
-      'data' => $role
+      'message' => 'Retrieving all roles for dropdown',
+      'data' => $roles->values()
     ], Response::HTTP_OK);
   }
 
@@ -449,86 +452,6 @@ class DataKaryawanController extends Controller
     ], Response::HTTP_OK);
   }
 
-  // ini tanpa perubahan dan feedback
-  // public function getDataRekamJejak($data_karyawan_id)
-  // {
-  //   if (!Gate::allows('view dataKaryawan')) {
-  //     return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
-  //   }
-
-  //   // Cari karyawan berdasarkan data_karyawan_id
-  //   $karyawan = DataKaryawan::where('email', '!=', 'super_admin@admin.rski')->find($data_karyawan_id);
-  //   if (!$karyawan) {
-  //     return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data karyawan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
-  //   }
-
-  //   // Ambil user dari karyawan
-  //   $user = $karyawan->users;
-
-  //   // Ambil semua rekam jejak dari user_id
-  //   $rekamJejakList = TrackRecord::where('user_id', $user->id)
-  //     ->whereIn('kategori_record_id', [2, 3])
-  //     ->get();
-  //   if ($rekamJejakList->isEmpty()) {
-  //     return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data rekam jejak karyawan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
-  //   }
-
-  //   // Format data rekam jejak
-  //   $formattedData = $rekamJejakList->map(function ($item) {
-  //     $user = $item->users;
-
-  //     // Ambil data transfer jika ada
-  //     $transfer = TransferKaryawan::where('user_id', $user->id)->first();
-
-  //     return [
-  //       'id' => $item->id,
-  //       'user' => [
-  //         'id' => $user->id,
-  //         'nama' => $user->nama,
-  //         'email_verified_at' => $user->email_verified_at,
-  //         'data_karyawan_id' => $user->data_karyawan_id,
-  //         'foto_profil' => $user->foto_profil,
-  //         'data_completion_step' => $user->data_completion_step,
-  //         'status_aktif' => $user->status_aktif,
-  //         'created_at' => $user->created_at,
-  //         'updated_at' => $user->updated_at
-  //       ],
-  //       'kategori_rekam_jejak' => $item->kategori_track_records,
-  //       'content' => [
-  //         'tgl_masuk' => $item->tgl_masuk,
-  //         'tgl_keluar' => $item->tgl_keluar,
-  //         'unit_kerja_asal' => $transfer->unit_kerja_asals,
-  //         'unit_kerja_tujuan' => $transfer->unit_kerja_tujuans,
-  //         'jabatan_asal' => $transfer->jabatan_asals,
-  //         'jabatan_tujuan' => $transfer->jabatan_tujuans,
-  //         'kategori_transfer' => $transfer->kategori_transfer_karyawans,
-  //         'alasan' => $transfer->alasan,
-  //         'dokumen' => $transfer->dokumen,
-  //         'created_at' => $item->created_at,
-  //         'updated_at' => $item->updated_at
-  //       ]
-  //     ];
-  //   });
-
-  //   // Menghitung masa kerja dengan helper
-  //   $tglMasuk = RandomHelper::convertToDateString($karyawan->tgl_masuk);
-  //   $tglKeluar = $user->tgl_keluar ? RandomHelper::convertToDateString($karyawan->tgl_keluar) : null;
-  //   $masaKerja = $this->calculateTrackRecordMasaKerja($tglMasuk, $tglKeluar);
-
-  //   return response()->json([
-  //     'status' => Response::HTTP_OK,
-  //     'message' => "Data rekam jejak karyawan '{$user->nama}' berhasil ditampilkan.",
-  //     'data' => [
-  //       'id' => $karyawan->id,
-  //       'user' => $user,
-  //       'tgl_masuk_karyawan' => $karyawan->tgl_masuk,
-  //       'tgl_keluar_karyawan' => $karyawan->tgl_keluar,
-  //       'masa_kerja_karyawan' => $masaKerja,
-  //       'list_rekam_jejak' => $formattedData
-  //     ]
-  //   ], Response::HTTP_OK);
-  // }
-
   public function getDataRekamJejak($data_karyawan_id)
   {
     if (!Gate::allows('view dataKaryawan')) {
@@ -745,6 +668,7 @@ class DataKaryawanController extends Controller
     $formattedData = $berkas->map(function ($item) use ($baseUrl) {
       $fileExt = $item->ext ? StorageServerHelper::getExtensionFromMimeType($item->ext) : null;
       $fileUrl = $baseUrl . $item->path . ($fileExt ? '.' . $fileExt : '');
+      // $fileUrl = $baseUrl . $item->path;
 
       return [
         'id' => $item->id,
@@ -784,60 +708,6 @@ class DataKaryawanController extends Controller
       ],
     ], Response::HTTP_OK);
   }
-
-  // ini versi tanpa data_karyawan_id
-  // public function verifikasiBerkas(Request $request, $berkasId)
-  // {
-  //   if (!Gate::allows('verifikasi1 berkas')) {
-  //     return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
-  //   }
-
-  //   // Cari berkas berdasarkan ID
-  //   $berkas = Berkas::find($berkasId);
-
-  //   if (!$berkas) {
-  //     return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data berkas tidak ditemukan.'), Response::HTTP_NOT_FOUND);
-  //   }
-
-  //   $status_berkas_id = $berkas->status_berkas_id;
-
-  //   // Logika verifikasi disetujui tahap 1
-  //   if ($request->has('verifikasi_disetujui') && $request->verifikasi_disetujui == 1) {
-  //     // Jika status_berkas_id = 1 (default)
-  //     if ($status_berkas_id == 1) {
-  //       $berkas->status_berkas_id = 2; // Update status ke disetujui
-  //       $berkas->verifikator_1 = Auth::id(); // Set verifikator_1
-  //       $berkas->save();
-
-  //       // Kirim notifikasi bahwa berkas telah diverifikasi
-  //       $this->createNotifikasiBerkas($berkas, 'disetujui');
-
-  //       return response()->json(new WithoutDataResource(Response::HTTP_OK, "Verifikasi berkas '{$berkas->nama}' telah disetujui."), Response::HTTP_OK);
-  //     } else {
-  //       return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Berkas '{$berkas->nama}' tidak dalam status untuk disetujui."), Response::HTTP_BAD_REQUEST);
-  //     }
-  //   }
-  //   // Logika verifikasi ditolak
-  //   // elseif ($request->has('verifikasi_ditolak') && $request->verifikasi_ditolak == 1) {
-  //   //   // Jika status_berkas_id = 1 (default)
-  //   //   if ($status_berkas_id == 1) {
-  //   //     $berkas->status_berkas_id = 3; // Update status ke ditolak
-  //   //     $berkas->verifikator_1 = Auth::id(); // Set verifikator
-  //   //     $berkas->alasan = 'Verifikasi ditolak karena: ' . $request->input('alasan', null); // Tambahkan alasan penolakan
-  //   //     $berkas->save();
-
-  //   //     // Kirim notifikasi bahwa berkas telah ditolak
-  //   //     $this->createNotifikasiBerkas($berkas, 'ditolak');
-
-  //   //     return response()->json(new WithoutDataResource(Response::HTTP_OK, "Verifikasi berkas '{$berkas->nama}' telah ditolak."), Response::HTTP_OK);
-  //   //   } else {
-  //   //     return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Berkas '{$berkas->nama}' tidak dalam status untuk ditolak."), Response::HTTP_BAD_REQUEST);
-  //   //   }
-  //   // } 
-  //   else {
-  //     return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Aksi tidak valid.'), Response::HTTP_BAD_REQUEST);
-  //   }
-  // }
 
   // ini berdasarkan data_karyawan_id
   public function verifikasiBerkas(Request $request, $data_karyawan_id)
@@ -1519,131 +1389,6 @@ class DataKaryawanController extends Controller
     }
   }
 
-  // show by user id 
-  // ini tanpa url "lihat"
-  // public function showByUserId($user_id)
-  // {
-  //   if (!Gate::allows('view dataKaryawan')) {
-  //     return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
-  //   }
-
-  //   // Cari user berdasarkan user_id
-  //   $user = User::find($user_id);
-
-  //   if (!$user) {
-  //     return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Akun karyawan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
-  //   }
-
-  //   // Ambil data_karyawan_id dari user
-  //   $data_karyawan_id = $user->data_karyawan_id;
-
-  //   // Cari data karyawan berdasarkan data_karyawan_id
-  //   $karyawan = DataKaryawan::where('email', '!=', 'super_admin@admin.rski')->find($data_karyawan_id);
-
-  //   if (!$karyawan) {
-  //     return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data karyawan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
-  //   }
-  //   $role = $karyawan->users->roles->first();
-
-  //   // Ambil data pengurang gaji
-  //   $pengurangGaji = DB::table('pengurang_gajis')
-  //     ->join('premis', 'pengurang_gajis.premi_id', '=', 'premis.id')
-  //     ->where('pengurang_gajis.data_karyawan_id', $karyawan->id)
-  //     ->select(
-  //       'premis.id',
-  //       'premis.nama_premi',
-  //       'premis.kategori_potongan_id',
-  //       'premis.jenis_premi',
-  //       'premis.besaran_premi',
-  //       'premis.minimal_rate',
-  //       'premis.maksimal_rate',
-  //       'premis.created_at',
-  //       'premis.updated_at'
-  //     )
-  //     ->get();
-
-  //   $formattedData = [
-  //     'id' => $karyawan->id,
-  //     'user' => [
-  //       'id' => $karyawan->users->id,
-  //       'nama' => $karyawan->users->nama,
-  //       'email_verified_at' => $karyawan->users->email_verified_at,
-  //       'data_karyawan_id' => $karyawan->users->data_karyawan_id,
-  //       'foto_profil' => $karyawan->users->foto_profil,
-  //       'data_completion_step' => $karyawan->users->data_completion_step,
-  //       'status_aktif' => $karyawan->users->status_aktif,
-  //       'created_at' => $karyawan->users->created_at,
-  //       'updated_at' => $karyawan->users->updated_at
-  //     ],
-  //     'role' => [
-  //       'id' => $role->id,
-  //       'name' => $role->name,
-  //       'deskripsi' => $role->deskripsi,
-  //       'created_at' => $role->created_at,
-  //       'updated_at' => $role->updated_at
-  //     ], // role_id
-  //     'potongan_gaji' => $pengurangGaji,
-  //     'nik' => $karyawan->nik,
-  //     'email' => $karyawan->email,
-  //     'no_rm' => $karyawan->no_rm,
-  //     'no_sip' => $karyawan->no_sip,
-  //     'path_sip'
-  //     'no_manulife' => $karyawan->no_manulife,
-  //     'tgl_masuk' => $karyawan->tgl_masuk,
-  //     'unit_kerja' => $karyawan->unit_kerjas, // unit_kerja_id
-  //     'jabatan' => $karyawan->jabatans, // jabatan_id
-  //     'kompetensi' => $karyawan->kompetensis, // kompetensi_id
-  //     'nik_ktp' => $karyawan->nik_ktp,
-  //     'path_nik_ktp' => 
-  //     'status_karyawan' => $karyawan->status_karyawans, // status_karyawan_id
-  //     'tempat_lahir' => $karyawan->tempat_lahir,
-  //     'tgl_lahir' => $karyawan->tgl_lahir,
-  //     'kelompok_gaji' => $karyawan->kelompok_gajis, // kelompok_gaji_id
-  //     'no_rekening' => $karyawan->no_rekening,
-  //     'tunjangan_jabatan' => $karyawan->tunjangan_jabatan,
-  //     'tunjangan_fungsional' => $karyawan->tunjangan_fungsional,
-  //     'tunjangan_khusus' => $karyawan->tunjangan_khusus,
-  //     'tunjangan_lainnya' => $karyawan->tunjangan_lainnya,
-  //     'uang_lembur' => $karyawan->uang_lembur,
-  //     'uang_makan' => $karyawan->uang_makan,
-  //     'ptkp' => $karyawan->ptkps, // ptkp_id
-  //     'tgl_keluar' => $karyawan->tgl_keluar,
-  //     'no_kk' => $karyawan->no_kk,
-  //     'path_kartu_keluarga' => 
-  //     'alamat' => $karyawan->alamat,
-  //     'gelar_depan' => $karyawan->gelar_depan,
-  //     'no_hp' => $karyawan->no_hp,
-  //     'no_bpjsksh' => $karyawan->no_bpjsksh,
-  //     'path_bpjsksh' =>
-  //     'no_bpjs_kesehatan' => $karyawan->no_bpjsktk,
-  //     'tgl_diangkat' => $karyawan->tgl_diangkat,
-  //     'masa_kerja' => $karyawan->masa_kerja,
-  //     'npwp' => $karyawan->npwp,
-  //     'jenis_kelamin' => $karyawan->jenis_kelamin,
-  //     'agama' => $karyawan->kategori_agamas, // agama_id
-  //     'golongan_darah' => $karyawan->kategori_darahs, // golongan_darah_id
-  //     'pendidikan_terakhir' => $karyawan->kategori_pendidikans, // pendidikan_terakhir_id
-  //     'tinggi_badan' => $karyawan->tinggi_badan,
-  //     'berat_badan' => $karyawan->berat_badan,
-  //     'no_ijazah' => $karyawan->no_ijazah,
-  //     'path_ijazah' =>
-  //     'tahun_lulus' => $karyawan->tahun_lulus,
-  //     'no_str' => $karyawan->no_str,
-  //     'path_str' =>
-  //     'masa_berlaku_str' => $karyawan->masa_berlaku_str,
-  //     'tgl_berakhir_pks' => $karyawan->tgl_berakhir_pks,
-  //     'masa_diklat' => $karyawan->masa_diklat,
-  //     'created_at' => $karyawan->created_at,
-  //     'updated_at' => $karyawan->updated_at
-  //   ];
-
-  //   return response()->json([
-  //     'status' => Response::HTTP_OK,
-  //     'message' => "Detail karyawan '{$karyawan->users->nama}' berhasil ditampilkan.",
-  //     'data' => $formattedData,
-  //   ], Response::HTTP_OK);
-  // }
-
   public function showByUserId($user_id)
   {
     if (!Gate::allows('view dataKaryawan')) {
@@ -1673,18 +1418,17 @@ class DataKaryawanController extends Controller
 
     $role = $karyawan->users->roles->first();
 
-    // Retrieve the associated files (berkas)
     $berkasFields = [
-      'file_ktp' => $karyawan->nik_ktp,
-      'file_kk' => $karyawan->no_kk,
-      'file_sip' => $karyawan->no_sip,
-      'file_bpjs_kesehatan' => $karyawan->no_bpjsksh,
-      'file_bpjs_ketenagakerjaan' => $karyawan->no_bpjsktk,
-      'file_ijazah' => $karyawan->no_ijazah,
-      'file_sertifikat' => $karyawan->no_str,
+      'file_ktp' => $karyawan->file_ktp,
+      'file_kk' => $karyawan->file_kk,
+      'file_sip' => $karyawan->file_sip,
+      'file_bpjs_kesehatan' => $karyawan->file_bpjsksh,
+      'file_bpjs_ketenagakerjaan' => $karyawan->file_bpjsktk,
+      'file_ijazah' => $karyawan->file_ijazah,
+      'file_sertifikat' => $karyawan->file_sertifikat,
     ];
 
-    $baseUrl = env('STORAGE_SERVER_DOMAIN'); // Replace with your actual storage server URL
+    $baseUrl = env('STORAGE_SERVER_DOMAIN');
 
     $formattedPaths = [];
     foreach ($berkasFields as $field => $berkasId) {
@@ -1692,6 +1436,7 @@ class DataKaryawanController extends Controller
       if ($berkas) {
         $extension = StorageServerHelper::getExtensionFromMimeType($berkas->ext);
         $formattedPaths[$field] = $baseUrl . $berkas->path . '.' . $extension;
+        // $formattedPaths[$field] = $baseUrl . $berkas->path;
       } else {
         $formattedPaths[$field] = null;
       }
@@ -1789,114 +1534,6 @@ class DataKaryawanController extends Controller
     ], Response::HTTP_OK);
   }
 
-  // show by data karyawan
-  // ini tanpa url "lihat"
-  // public function showByDataKaryawanId($data_karyawan_id)
-  // {
-  //   if (!Gate::allows('view dataKaryawan')) {
-  //     return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
-  //   }
-
-  //   // Cari data karyawan berdasarkan data_karyawan_id
-  //   $karyawan = DataKaryawan::where('email', '!=', 'super_admin@admin.rski')->find($data_karyawan_id);
-
-  //   if (!$karyawan) {
-  //     return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data karyawan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
-  //   }
-  //   $role = $karyawan->users->roles->first();
-  //   // Ambil data pengurang gaji
-  //   $pengurangGaji = DB::table('pengurang_gajis')
-  //     ->join('premis', 'pengurang_gajis.premi_id', '=', 'premis.id')
-  //     ->where('pengurang_gajis.data_karyawan_id', $karyawan->id)
-  //     ->select(
-  //       'premis.id',
-  //       'premis.nama_premi',
-  //       'premis.kategori_potongan_id',
-  //       'premis.jenis_premi',
-  //       'premis.besaran_premi',
-  //       'premis.minimal_rate',
-  //       'premis.maksimal_rate',
-  //       'premis.created_at',
-  //       'premis.updated_at'
-  //     )
-  //     ->get();
-
-  //   $formattedData = [
-  //     'id' => $karyawan->id,
-  //     'user' => [
-  //       'id' => $karyawan->users->id,
-  //       'nama' => $karyawan->users->nama,
-  //       'email_verified_at' => $karyawan->users->email_verified_at,
-  //       'data_karyawan_id' => $karyawan->users->data_karyawan_id,
-  //       'foto_profil' => $karyawan->users->foto_profil,
-  //       'data_completion_step' => $karyawan->users->data_completion_step,
-  //       'status_aktif' => $karyawan->users->status_aktif,
-  //       'created_at' => $karyawan->users->created_at,
-  //       'updated_at' => $karyawan->users->updated_at
-  //     ],
-  //     'role' => [
-  //       'id' => $role->id,
-  //       'name' => $role->name,
-  //       'deskripsi' => $role->deskripsi,
-  //       'created_at' => $role->created_at,
-  //       'updated_at' => $role->updated_at
-  //     ], // role_id
-  //     'potongan_gaji' => $pengurangGaji,
-  //     'email' => $karyawan->email,
-  //     'nik' => $karyawan->nik,
-  //     'no_rm' => $karyawan->no_rm,
-  //     'no_sip' => $karyawan->no_sip,
-  //     'no_manulife' => $karyawan->no_manulife,
-  //     'tgl_masuk' => $karyawan->tgl_masuk,
-  //     'unit_kerja' => $karyawan->unit_kerjas, // unit_kerja_id
-  //     'jabatan' => $karyawan->jabatans, // jabatan_id
-  //     'kompetensi' => $karyawan->kompetensis, // kompetensi_id
-  //     'nik_ktp' => $karyawan->nik_ktp,
-  //     'status_karyawan' => $karyawan->status_karyawans, // status_karyawan_id
-  //     'tempat_lahir' => $karyawan->tempat_lahir,
-  //     'tgl_lahir' => $karyawan->tgl_lahir,
-  //     'kelompok_gaji' => $karyawan->kelompok_gajis, // kelompok_gaji_id
-  //     'no_rekening' => $karyawan->no_rekening,
-  //     'tunjangan_jabatan' => $karyawan->tunjangan_jabatan,
-  //     'tunjangan_fungsional' => $karyawan->tunjangan_fungsional,
-  //     'tunjangan_khusus' => $karyawan->tunjangan_khusus,
-  //     'tunjangan_lainnya' => $karyawan->tunjangan_lainnya,
-  //     'uang_lembur' => $karyawan->uang_lembur,
-  //     'uang_makan' => $karyawan->uang_makan,
-  //     'ptkp' => $karyawan->ptkps, // ptkp_id
-  //     'tgl_keluar' => $karyawan->tgl_keluar,
-  //     'no_kk' => $karyawan->no_kk,
-  //     'alamat' => $karyawan->alamat,
-  //     'gelar_depan' => $karyawan->gelar_depan,
-  //     'no_hp' => $karyawan->no_hp,
-  //     'no_bpjsksh' => $karyawan->no_bpjsksh,
-  //     'no_bpjsktk' => $karyawan->no_bpjsktk,
-  //     'tgl_diangkat' => $karyawan->tgl_diangkat,
-  //     'masa_kerja' => $karyawan->masa_kerja,
-  //     'npwp' => $karyawan->npwp,
-  //     'jenis_kelamin' => $karyawan->jenis_kelamin,
-  //     'agama' => $karyawan->kategori_agamas, // agama_id
-  //     'golongan_darah' => $karyawan->kategori_darahs, // golongan_darah_id
-  //     'pendidikan_terakhir' => $karyawan->kategori_pendidikans, // pendidikan_terakhir_id
-  //     'tinggi_badan' => $karyawan->tinggi_badan,
-  //     'berat_badan' => $karyawan->berat_badan,
-  //     'no_ijazah' => $karyawan->no_ijazah,
-  //     'tahun_lulus' => $karyawan->tahun_lulus,
-  //     'no_str' => $karyawan->no_str,
-  //     'masa_berlaku_str' => $karyawan->masa_berlaku_str,
-  //     'tgl_berakhir_pks' => $karyawan->tgl_berakhir_pks,
-  //     'masa_diklat' => $karyawan->masa_diklat,
-  //     'created_at' => $karyawan->created_at,
-  //     'updated_at' => $karyawan->updated_at
-  //   ];
-
-  //   return response()->json([
-  //     'status' => Response::HTTP_OK,
-  //     'message' => "Detail karyawan '{$karyawan->users->nama}' berhasil ditampilkan.",
-  //     'data' => $formattedData,
-  //   ], Response::HTTP_OK);
-  // }
-
   public function showByDataKaryawanId($data_karyawan_id)
   {
     if (!Gate::allows('view dataKaryawan')) {
@@ -1916,18 +1553,17 @@ class DataKaryawanController extends Controller
 
     $role = $karyawan->users->roles->first();
 
-    // Retrieve the associated files (berkas)
     $berkasFields = [
-      'file_ktp' => $karyawan->nik_ktp,
-      'file_kk' => $karyawan->no_kk,
-      'file_sip' => $karyawan->no_sip,
-      'file_bpjs_kesehatan' => $karyawan->no_bpjsksh,
-      'file_bpjs_ketenagakerjaan' => $karyawan->no_bpjsktk,
-      'file_ijazah' => $karyawan->no_ijazah,
-      'file_sertifikat' => $karyawan->no_str,
+      'file_ktp' => $karyawan->file_ktp,
+      'file_kk' => $karyawan->file_kk,
+      'file_sip' => $karyawan->file_sip,
+      'file_bpjs_kesehatan' => $karyawan->file_bpjsksh,
+      'file_bpjs_ketenagakerjaan' => $karyawan->file_bpjsktk,
+      'file_ijazah' => $karyawan->file_ijazah,
+      'file_sertifikat' => $karyawan->file_sertifikat,
     ];
 
-    $baseUrl = env('STORAGE_SERVER_DOMAIN'); // Replace with your actual storage server URL
+    $baseUrl = env('STORAGE_SERVER_DOMAIN');
 
     $formattedPaths = [];
     foreach ($berkasFields as $field => $berkasId) {
@@ -2032,218 +1668,6 @@ class DataKaryawanController extends Controller
     ], Response::HTTP_OK);
   }
 
-  // public function update(UpdateDataKaryawanRequest $request, $id)
-  // {
-  //   if (!Gate::allows('edit dataKaryawan')) {
-  //     return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
-  //   }
-
-  //   $data = $request->validated();
-  //   $karyawan = DataKaryawan::find($id);
-
-  //   if (!$karyawan) {
-  //     return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data karyawan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
-  //   }
-
-  //   $user = $karyawan->users;
-  //   $oldEmail = $karyawan->email;
-  //   $newEmail = $data['email'];
-
-  //   // Memeriksa apakah email telah berubah
-  //   if ($oldEmail !== $newEmail) {
-  //     if ($user->status_aktif !== 1) {
-  //       return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Email tidak dapat diubah, Status akun harus dalam keadaan belum aktif.'), Response::HTTP_NOT_ACCEPTABLE);
-  //     }
-
-  //     $generatedPassword = RandomHelper::generatePassword();
-  //     $karyawan->email = $newEmail;
-  //     $user->password = Hash::make($generatedPassword);
-
-  //     $karyawan->save();
-  //     $user->save();
-
-  //     // Kirim email dengan password baru
-  //     AccountEmailJob::dispatch($newEmail, $generatedPassword, $data['nama']);
-  //   }
-
-  //   // Handle file uploads
-  //   $berkasFields = [
-  //     'file_ktp' => $karyawan->nik_ktp,
-  //     'file_kk' => $karyawan->no_kk,
-  //     'file_sip' => $karyawan->no_sip,
-  //     'file_bpjs_kesehatan' => $karyawan->no_bpjsksh,
-  //     'file_bpjs_ketenagakerjaan' => $karyawan->no_bpjsktk,
-  //     'file_ijazah' => $karyawan->no_ijazah,
-  //     'file_sertifikat' => $karyawan->no_str,
-  //   ];
-
-  //   DB::beginTransaction();
-  //   try {
-  //     StorageServerHelper::login();
-
-  //     foreach ($berkasFields as $fieldName => $fieldValue) {
-  //       if ($request->hasFile($fieldName)) {
-  //         $file = $request->file($fieldName);
-  //         $random_filename = Str::random(20);
-  //         $dataupload = StorageServerHelper::multipleUploadToServer($file, $random_filename);  // Pass the file directly
-  //         $data[$fieldName] = $dataupload['path'];
-
-  //         // Existing logic to handle berkas records
-  //         $berkas = Berkas::where('user_id', $karyawan->user_id)
-  //           ->where('nama', $random_filename)
-  //           ->first();
-  //         // dd($berkas);
-
-  //         if (!$berkas) {
-  //           // Update existing berkas record
-  //           $berkas->update([
-  //             'file_id' => $dataupload['id_file']['id'],
-  //             'kategori_berkas_id' => $berkas->kategori_berkas_id,
-  //             'status_berkas_id' => 2,
-  //             'path' => $dataupload['path'],
-  //             'tgl_upload' => now(),
-  //             'nama_file' => $dataupload['nama_file'],
-  //             'ext' => $dataupload['ext'],
-  //             'size' => $dataupload['size'],
-  //           ]);
-  //         } else {
-  //           // Create a new berkas record
-  //           $kategoriBerkas = KategoriBerkas::where('label', 'System')->first();
-  //           if (!$kategoriBerkas) {
-  //             throw new Exception('Kategori berkas tidak ditemukan.');
-  //           }
-
-  //           Berkas::create([
-  //             'user_id' => $karyawan->user_id,
-  //             'file_id' => $dataupload['id_file']['id'],
-  //             'nama' => $random_filename,
-  //             'kategori_berkas_id' => $kategoriBerkas->id,
-  //             'status_berkas_id' => 2,
-  //             'path' => $dataupload['path'],
-  //             'tgl_upload' => now(),
-  //             'nama_file' => $dataupload['nama_file'],
-  //             'ext' => $dataupload['ext'],
-  //             'size' => $dataupload['size'],
-  //           ]);
-  //         }
-  //         Log::info('Berkas ' . $fieldName . ' untuk ' . $user->nama . ' berhasil di upload.');
-  //       }
-  //     }
-
-  //     StorageServerHelper::logout();
-
-  //     // Update nama di tabel users
-  //     $user->nama = $data['nama'];
-  //     $user->save();
-
-  //     // Update role di tabel users
-  //     if (isset($data['role_id'])) {
-  //       $user->roles()->sync([$data['role_id']]);
-  //     }
-
-  //     $karyawan->update($data);
-
-  //     // Update potongan gaji (premi)
-  //     $premis = $request->input('premi_id', []);
-  //     DB::table('pengurang_gajis')->where('data_karyawan_id', $karyawan->id)->delete(); // Hapus potongan gaji yang lama
-
-  //     if (!empty($premis)) {
-  //       $premisData = DB::table('premis')->whereIn('id', $premis)->get();
-  //       if ($premisData->isEmpty()) {
-  //         return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Potongan yang dipilih tidak valid.'), Response::HTTP_NOT_FOUND);
-  //       }
-
-  //       foreach ($premisData as $premi) {
-  //         DB::table('pengurang_gajis')->insert([
-  //           'data_karyawan_id' => $karyawan->id,
-  //           'premi_id' => $premi->id,
-  //           'created_at' => Carbon::now(),
-  //           'updated_at' => Carbon::now(),
-  //         ]);
-  //       }
-  //     }
-  //     $role = $karyawan->users->roles->first();
-
-  //     $formattedData = [
-  //       'id' => $karyawan->id,
-  //       'user' => [
-  //         'id' => $karyawan->users->id,
-  //         'nama' => $karyawan->users->nama,
-  //         'email_verified_at' => $karyawan->users->email_verified_at,
-  //         'data_karyawan_id' => $karyawan->users->data_karyawan_id,
-  //         'foto_profil' => $karyawan->users->foto_profil,
-  //         'data_completion_step' => $karyawan->users->data_completion_step,
-  //         'status_aktif' => $karyawan->users->status_aktif,
-  //         'created_at' => $karyawan->users->created_at,
-  //         'updated_at' => $karyawan->users->updated_at
-  //       ],
-  //       'role' => [
-  //         'id' => $role->id,
-  //         'name' => $role->name,
-  //         'deskripsi' => $role->deskripsi,
-  //         'created_at' => $role->created_at,
-  //         'updated_at' => $role->updated_at
-  //       ], // role_id
-  //       'email' => $karyawan->email,
-  //       'nik' => $karyawan->nik,
-  //       'no_rm' => $karyawan->no_rm,
-  //       'no_sip' => $karyawan->no_sip,
-  //       'masa_berlaku_sip' => $karyawan->masa_berlaku_sip,
-  //       'no_manulife' => $karyawan->no_manulife,
-  //       'tgl_masuk' => $karyawan->tgl_masuk,
-  //       'unit_kerja' => $karyawan->unit_kerjas, // unit_kerja_id
-  //       'jabatan' => $karyawan->jabatans, // jabatan_id
-  //       'kompetensi' => $karyawan->kompetensis, // kompetensi_id
-  //       'nik_ktp' => $karyawan->nik_ktp,
-  //       'status_karyawan' => $karyawan->status_karyawans, // status_karyawan_id
-  //       'tempat_lahir' => $karyawan->tempat_lahir,
-  //       'tgl_lahir' => $karyawan->tgl_lahir,
-  //       'kelompok_gaji' => $karyawan->kelompok_gajis, // kelompok_gaji_id
-  //       'no_rekening' => $karyawan->no_rekening,
-  //       'tunjangan_jabatan' => $karyawan->tunjangan_jabatan,
-  //       'tunjangan_fungsional' => $karyawan->tunjangan_fungsional,
-  //       'tunjangan_khusus' => $karyawan->tunjangan_khusus,
-  //       'tunjangan_lainnya' => $karyawan->tunjangan_lainnya,
-  //       'uang_lembur' => $karyawan->uang_lembur,
-  //       'uang_makan' => $karyawan->uang_makan,
-  //       'ptkp' => $karyawan->ptkps, // ptkp_id
-  //       'tgl_keluar' => $karyawan->tgl_keluar,
-  //       'no_kk' => $karyawan->no_kk,
-  //       'alamat' => $karyawan->alamat,
-  //       'gelar_depan' => $karyawan->gelar_depan,
-  //       'no_hp' => $karyawan->no_hp,
-  //       'no_bpjsksh' => $karyawan->no_bpjsksh,
-  //       'no_bpjsktk' => $karyawan->no_bpjsktk,
-  //       'tgl_diangkat' => $karyawan->tgl_diangkat,
-  //       'masa_kerja' => $karyawan->masa_kerja,
-  //       'npwp' => $karyawan->npwp,
-  //       'jenis_kelamin' => $karyawan->jenis_kelamin,
-  //       'agama' => $karyawan->kategori_agamas, // agama_id
-  //       'golongan_darah' => $karyawan->kategori_darahs, // golongan_darah_id
-  //       'pendidikan_terakhir' => $karyawan->kategori_pendidikans, // pendidikan_terakhir_id
-  //       'tinggi_badan' => $karyawan->tinggi_badan,
-  //       'berat_badan' => $karyawan->berat_badan,
-  //       'no_ijazah' => $karyawan->no_ijazah,
-  //       'tahun_lulus' => $karyawan->tahun_lulus,
-  //       'no_str' => $karyawan->no_str,
-  //       'masa_berlaku_str' => $karyawan->masa_berlaku_str,
-  //       'tgl_berakhir_pks' => $karyawan->tgl_berakhir_pks,
-  //       'masa_diklat' => $karyawan->masa_diklat,
-  //       'created_at' => $karyawan->created_at,
-  //       'updated_at' => $karyawan->updated_at
-  //     ];
-
-  //     return response()->json([
-  //       'status' => Response::HTTP_OK,
-  //       'message' => "Data karyawan '{$karyawan->users->nama}' berhasil diperbarui.",
-  //       'data' => $formattedData,
-  //     ], Response::HTTP_OK);
-  //   } catch (Exception $e) {
-  //     DB::rollBack();
-  //     return response()->json(new WithoutDataResource(Response::HTTP_INTERNAL_SERVER_ERROR, 'Error: ' . $e->getMessage()), Response::HTTP_INTERNAL_SERVER_ERROR);
-  //   }
-  // }
-
   public function update(UpdateDataKaryawanRequest $request, $id)
   {
     if (!Gate::allows('edit dataKaryawan')) {
@@ -2279,69 +1703,69 @@ class DataKaryawanController extends Controller
     }
 
     // Menangani upload berkas
-    $berkasFields = [
-      'file_ktp' => $karyawan->nik_ktp,
-      'file_kk' => $karyawan->no_kk,
-      'file_sip' => $karyawan->no_sip,
-      'file_bpjs_kesehatan' => $karyawan->no_bpjsksh,
-      'file_bpjs_ketenagakerjaan' => $karyawan->no_bpjsktk,
-      'file_ijazah' => $karyawan->no_ijazah,
-      'file_sertifikat' => $karyawan->no_str,
-    ];
+    // $berkasFields = [
+    //   'file_ktp' => $karyawan->nik_ktp,
+    //   'file_kk' => $karyawan->no_kk,
+    //   'file_sip' => $karyawan->no_sip,
+    //   'file_bpjs_kesehatan' => $karyawan->no_bpjsksh,
+    //   'file_bpjs_ketenagakerjaan' => $karyawan->no_bpjsktk,
+    //   'file_ijazah' => $karyawan->no_ijazah,
+    //   'file_sertifikat' => $karyawan->no_str,
+    // ];
 
     DB::beginTransaction();
     try {
-      StorageServerHelper::login();
+      // StorageServerHelper::login();
 
-      foreach ($berkasFields as $fieldName => $fieldValue) {
-        if ($request->hasFile($fieldName)) {
-          $file = $request->file($fieldName);
-          $random_filename = Str::random(20);
-          $dataupload = StorageServerHelper::multipleUploadToServer($file, $random_filename);
-          $data[$fieldName] = $dataupload['path'];
+      // foreach ($berkasFields as $fieldName => $fieldValue) {
+      //   if ($request->hasFile($fieldName)) {
+      //     $file = $request->file($fieldName);
+      //     $random_filename = Str::random(20);
+      //     $dataupload = StorageServerHelper::multipleUploadToServer($file, $random_filename);
+      //     $data[$fieldName] = $dataupload['path'];
 
-          // Cek apakah berkas ada, jika tidak, buat baru
-          $berkas = Berkas::where('user_id', $karyawan->user_id)
-            ->where('nama', $fieldName)
-            ->first();
+      //     // Cek apakah berkas ada, jika tidak, buat baru
+      //     $berkas = Berkas::where('user_id', $karyawan->user_id)
+      //       ->where('nama', $fieldName)
+      //       ->first();
 
-          if ($berkas) {
-            // Update berkas yang ada
-            $berkas->update([
-              'file_id' => $dataupload['id_file']['id'],
-              'kategori_berkas_id' => $berkas->kategori_berkas_id,
-              'status_berkas_id' => 2,
-              'path' => $dataupload['path'],
-              'tgl_upload' => now(),
-              'nama_file' => $dataupload['nama_file'],
-              'ext' => $dataupload['ext'],
-              'size' => $dataupload['size'],
-            ]);
-          } else {
-            // Buat berkas baru jika tidak ditemukan
-            $kategoriBerkas = KategoriBerkas::where('label', 'System')->first();
-            if (!$kategoriBerkas) {
-              throw new Exception('Kategori berkas tidak ditemukan.');
-            }
+      //     if ($berkas) {
+      //       // Update berkas yang ada
+      //       $berkas->update([
+      //         'file_id' => $dataupload['id_file']['id'],
+      //         'kategori_berkas_id' => $berkas->kategori_berkas_id,
+      //         'status_berkas_id' => 2,
+      //         'path' => $dataupload['path'],
+      //         'tgl_upload' => now(),
+      //         'nama_file' => $dataupload['nama_file'],
+      //         'ext' => $dataupload['ext'],
+      //         'size' => $dataupload['size'],
+      //       ]);
+      //     } else {
+      //       // Buat berkas baru jika tidak ditemukan
+      //       $kategoriBerkas = KategoriBerkas::where('label', 'System')->first();
+      //       if (!$kategoriBerkas) {
+      //         throw new Exception('Kategori berkas tidak ditemukan.');
+      //       }
 
-            Berkas::create([
-              'user_id' => $karyawan->user_id,
-              'file_id' => $dataupload['id_file']['id'],
-              'nama' => $fieldName,
-              'kategori_berkas_id' => $kategoriBerkas->id,
-              'status_berkas_id' => 2,
-              'path' => $dataupload['path'],
-              'tgl_upload' => now(),
-              'nama_file' => $dataupload['nama_file'],
-              'ext' => $dataupload['ext'],
-              'size' => $dataupload['size'],
-            ]);
-          }
-          Log::info('Berkas ' . $fieldName . ' untuk ' . $user->nama . ' berhasil di upload.');
-        }
-      }
+      //       Berkas::create([
+      //         'user_id' => $karyawan->user_id,
+      //         'file_id' => $dataupload['id_file']['id'],
+      //         'nama' => $fieldName,
+      //         'kategori_berkas_id' => $kategoriBerkas->id,
+      //         'status_berkas_id' => 2,
+      //         'path' => $dataupload['path'],
+      //         'tgl_upload' => now(),
+      //         'nama_file' => $dataupload['nama_file'],
+      //         'ext' => $dataupload['ext'],
+      //         'size' => $dataupload['size'],
+      //       ]);
+      //     }
+      //     Log::info('Berkas ' . $fieldName . ' untuk ' . $user->nama . ' berhasil di upload.');
+      //   }
+      // }
 
-      StorageServerHelper::logout();
+      // StorageServerHelper::logout();
 
       // Update nama di tabel users
       $user->nama = $data['nama'];

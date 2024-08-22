@@ -37,13 +37,13 @@ class DiklatSeeder extends Seeder
 
             if ($kategori_diklat_id == 1) {
                 // Jika kategori diklat adalah Internal
-                $gambarUrl = '/path/to/diklat/thumbnails/Diklat_Thumbnail_' . $i;
+                $gambarUrl = '/path/to/diklat/berkas/Diklat_Thumbnail_' . $i;
                 $berkas_gambar = $this->createBerkas($user_id, 'Berkas Diklat - ' . User::find($user_id)->nama, $gambarUrl);
                 $dokumen_eksternal = null;
                 $kuota = rand(10, 50);
             } else {
                 // Jika kategori diklat adalah Eksternal
-                $gambarUrl = '/path/to/diklat/thumbnails/Diklat_Eksternal_' . $i;
+                $gambarUrl = '/path/to/diklat/berkas/Diklat_Eksternal_' . $i;
                 $berkas_gambar = null;
                 $dokumen_eksternal = $this->createBerkas($user_id, 'Berkas Diklat Eksternal - ' . User::find($user_id)->nama, $gambarUrl);
                 $kuota = 1;

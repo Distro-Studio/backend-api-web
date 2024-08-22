@@ -226,4 +226,74 @@ class DataKaryawan extends Model
     {
         return $this->hasMany(RewardbulanLalu::class, 'data_karyawan_id', 'id');
     }
+
+    /**
+     * Get the file_ktp that owns the DataKaryawan
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function file_ktp(): BelongsTo
+    {
+        return $this->belongsTo(Berkas::class, 'file_ktp', 'id');
+    }
+
+    /**
+     * Get the file_kk that owns the DataKaryawan
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function file_kk(): BelongsTo
+    {
+        return $this->belongsTo(Berkas::class, 'file_kk', 'id');
+    }
+
+    /**
+     * Get the file_sip that owns the DataKaryawan
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function file_sip(): BelongsTo
+    {
+        return $this->belongsTo(Berkas::class, 'file_sip', 'id');
+    }
+
+    /**
+     * Get the file_bpjsksh that owns the DataKaryawan
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function file_bpjsksh(): BelongsTo
+    {
+        return $this->belongsTo(Berkas::class, 'file_bpjsksh', 'id');
+    }
+
+    /**
+     * Get the file_bpjsktk that owns the DataKaryawan
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function file_bpjsktk(): BelongsTo
+    {
+        return $this->belongsTo(Berkas::class, 'file_bpjsktk', 'id');
+    }
+
+    /**
+     * Get the file_ijazah that owns the DataKaryawan
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function file_ijazah(): BelongsTo
+    {
+        return $this->belongsTo(Berkas::class, 'file_ijazah', 'id');
+    }
+
+    /**
+     * Get the file_sertifikat that owns the DataKaryawan
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function file_sertifikat(): BelongsTo
+    {
+        return $this->belongsTo(Berkas::class, 'file_sertifikat', 'id');
+    }
 }

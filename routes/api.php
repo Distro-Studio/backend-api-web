@@ -228,12 +228,12 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::apiResource('/jenis-penilaian', JenisPenilaianController::class);
 
             // ! Penilaian ===========>
-            Route::get('/get-user-dinilai', [PenilaianController::class, 'getUserDinilai']);
-            Route::get('/get-user-penilai', [PenilaianController::class, 'getUserPenilai']);
-            Route::post('/get-user-belum-dinilai', [PenilaianController::class, 'getKaryawanBelumDinilai']);
-            Route::post('/get-data-penilaian', [PenilaianController::class, 'index']);
-            Route::get('/penilaian/export', [PenilaianController::class, 'exportPenilaian']);
-            Route::apiResource('/penilaian', PenilaianController::class);
+            // Route::get('/get-user-dinilai', [PenilaianController::class, 'getUserDinilai']);
+            // Route::get('/get-user-penilai', [PenilaianController::class, 'getUserPenilai']);
+            // Route::post('/get-user-belum-dinilai', [PenilaianController::class, 'getKaryawanBelumDinilai']);
+            // Route::post('/get-data-penilaian', [PenilaianController::class, 'index']);
+            // Route::get('/penilaian/export', [PenilaianController::class, 'exportPenilaian']);
+            // Route::apiResource('/penilaian', PenilaianController::class);
         });
 
         Route::group(['prefix' => '/pengaturan'], function () {

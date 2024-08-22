@@ -5,19 +5,21 @@ namespace Database\Seeders\Karyawan;
 use Carbon\Carbon;
 use App\Models\Ptkp;
 use App\Models\User;
+use App\Models\Berkas;
 use App\Models\Jabatan;
 use App\Models\UnitKerja;
 use App\Models\Kompetensi;
 use App\Models\TrackRecord;
+use Illuminate\Support\Str;
 use App\Models\DataKaryawan;
 use App\Models\DataKeluarga;
+use App\Models\KelompokGaji;
 use App\Models\KategoriAgama;
 use App\Models\KategoriDarah;
-use App\Models\KategoriPendidikan;
-use App\Models\KelompokGaji;
 use App\Models\StatusKaryawan;
 use Illuminate\Database\Seeder;
 use App\Models\TransferKaryawan;
+use App\Models\KategoriPendidikan;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 
 class KaryawanSeeder extends Seeder
@@ -28,19 +30,96 @@ class KaryawanSeeder extends Seeder
     public function run(): void
     {
         $cityborn = [
-            'Magelang', 'Semarang', 'Salatiga', 'Surakarta', 'Yogyakarta', 'Klaten', 'Sragen',
-            'Boyolali', 'Demak', 'Kudus', 'Pati', 'Rembang', 'Blora', 'Grobogan', 'Jepara',
-            'Purworejo', 'Wonosobo', 'Pekalongan', 'Batang', 'Kajen', 'Pemalang',
-            'Tegal', 'Brebes', 'Cilacap', 'Kebumen', 'Purbalingga', 'Banyumas', 'Cilacap',
-            'Purwokerto', 'Banjarnegara', 'Wonosobo', 'Temanggung', 'Magelang', 'Boyolali',
-            'Banyuwangi', 'Blitar', 'Bondowoso', 'Bojonegoro', 'Jember', 'Jombang', 'Kediri',
-            'Lamongan', 'Lumajang', 'Madura', 'Magetan', 'Madiun', 'Malang', 'Mojokerto',
-            'Nganjuk', 'Pacitan', 'Pamekasan', 'Pasuruan', 'Ponorogo', 'Probolinggo', 'Sidoarjo',
-            'Situbondo', 'Sumenep', 'Surabaya', 'Trenggalek', 'Tuban', 'Tulungagung',
-            'Bandung', 'Bekasi', 'Bogor', 'Ciamis', 'Cirebon', 'Depok', 'Garut', 'Indramayu',
-            'Karawang', 'Kuningan', 'Majalengka', 'Pangandaran', 'Purwakarta', 'Subang',
-            'Sukabumi', 'Sumedang', 'Tasikmalaya', 'Tegal', 'Cirebon', 'Indramayu', 'Majalengka',
-            'Subang', 'Kuningan', 'Ciamis', 'Tasikmalaya', 'Garut', 'Sumedang', 'Bandung', 'Cianjur',
+            'Magelang',
+            'Semarang',
+            'Salatiga',
+            'Surakarta',
+            'Yogyakarta',
+            'Klaten',
+            'Sragen',
+            'Boyolali',
+            'Demak',
+            'Kudus',
+            'Pati',
+            'Rembang',
+            'Blora',
+            'Grobogan',
+            'Jepara',
+            'Purworejo',
+            'Wonosobo',
+            'Pekalongan',
+            'Batang',
+            'Kajen',
+            'Pemalang',
+            'Tegal',
+            'Brebes',
+            'Cilacap',
+            'Kebumen',
+            'Purbalingga',
+            'Banyumas',
+            'Cilacap',
+            'Purwokerto',
+            'Banjarnegara',
+            'Wonosobo',
+            'Temanggung',
+            'Magelang',
+            'Boyolali',
+            'Banyuwangi',
+            'Blitar',
+            'Bondowoso',
+            'Bojonegoro',
+            'Jember',
+            'Jombang',
+            'Kediri',
+            'Lamongan',
+            'Lumajang',
+            'Madura',
+            'Magetan',
+            'Madiun',
+            'Malang',
+            'Mojokerto',
+            'Nganjuk',
+            'Pacitan',
+            'Pamekasan',
+            'Pasuruan',
+            'Ponorogo',
+            'Probolinggo',
+            'Sidoarjo',
+            'Situbondo',
+            'Sumenep',
+            'Surabaya',
+            'Trenggalek',
+            'Tuban',
+            'Tulungagung',
+            'Bandung',
+            'Bekasi',
+            'Bogor',
+            'Ciamis',
+            'Cirebon',
+            'Depok',
+            'Garut',
+            'Indramayu',
+            'Karawang',
+            'Kuningan',
+            'Majalengka',
+            'Pangandaran',
+            'Purwakarta',
+            'Subang',
+            'Sukabumi',
+            'Sumedang',
+            'Tasikmalaya',
+            'Tegal',
+            'Cirebon',
+            'Indramayu',
+            'Majalengka',
+            'Subang',
+            'Kuningan',
+            'Ciamis',
+            'Tasikmalaya',
+            'Garut',
+            'Sumedang',
+            'Bandung',
+            'Cianjur',
         ];
 
         $gelar_dpn = ['Adv.', 'Ar.', 'apt.', 'dr.', 'drg.', 'drh.', 'Ir.', 'Ns.', 'Ak.'];
@@ -67,6 +146,8 @@ class KaryawanSeeder extends Seeder
             $tgl_keluar = date('Y-m-d', rand(mktime(0, 0, 0, 1, 1, 2023), mktime(0, 0, 0, 12, 31, 2024)));
             $tgl_lahir = date('Y-m-d', rand(mktime(0, 0, 0, 1, 1, 1900), mktime(0, 0, 0, 12, 31, 2003)));
             $tgl_str = date('Y-m-d', rand(mktime(0, 0, 0, 1, 1, 2023), mktime(0, 0, 0, 12, 31, 2028)));
+
+            // Create DataKaryawan
             $dataKaryawan = DataKaryawan::create([
                 'user_id' => $user->id,
                 'email' => 'user' . $i . '@example.com',
@@ -79,27 +160,25 @@ class KaryawanSeeder extends Seeder
                 'status_karyawan_id' => $status_karyawan_id[array_rand($status_karyawan_id)],
                 'tempat_lahir' => $cityborn[array_rand($cityborn)],
                 'tgl_lahir' => $tgl_lahir,
-                "nik" => rand(1214, 5000000),
-                "nik_ktp" => rand(1214, 500000),
+                "nik" => rand(1214, 50000000),
+                "nik_ktp" => rand(1214, 50000000),
                 'kelompok_gaji_id' => $kelompok_gaji_id[array_rand($kelompok_gaji_id)],
                 'no_rekening' => rand(152368, 500000000),
-                // 'tunjangan_jabatan' => rand(250000, 500000),
                 'tunjangan_fungsional' => rand(70000, 250000),
                 'tunjangan_khusus' => rand(0, 120000),
                 'tunjangan_lainnya' => rand(250000, 1000000),
                 'uang_makan' => rand(0, 70000),
                 'uang_lembur' => rand(0, 120000),
                 'ptkp_id' => $ptkp_id[array_rand($ptkp_id)],
-
                 "tgl_keluar" => $tgl_keluar,
                 "no_kk" => rand(1214, 500000000),
-                "alamat" => 'missing impossible coach amount welcome here night trail diameter nervous graph outline shinning perfectly try refer classroom climb burn spider grabbed waste little provide',
+                "alamat" => 'be former rear pool driver porch meal bottle meet cloud same',
                 "gelar_depan" => $gelar_dpn[array_rand($gelar_dpn)],
                 "no_hp" => rand(1214, 500000000),
                 "no_bpjsksh" => rand(1214, 500000000),
                 "no_bpjsktk" => rand(1214, 500000000),
                 "tgl_diangkat" => $tgl_keluar,
-                "masa_kerja" => rand(1, 60),
+                "masa_kerja" => rand(1, 40),
                 "npwp" => rand(1214, 500000000),
                 "jenis_kelamin" => rand(0, 1),
                 "kategori_agama_id" => $kategori_agama_id[array_rand($kategori_agama_id)],
@@ -116,6 +195,35 @@ class KaryawanSeeder extends Seeder
                 "tgl_berakhir_pks" => $tgl_keluar,
                 "masa_diklat" => rand(1, 10),
             ]);
+
+            // Create Berkas records and associate them with DataKaryawan
+            $berkasFields = [
+                'file_ktp' => 'KTP',
+                'file_kk' => 'KK',
+                'file_sip' => 'SIP',
+                'file_bpjsksh' => 'BPJS Kesehatan',
+                'file_bpjsktk' => 'BPJS Ketenagakerjaan',
+                'file_ijazah' => 'Ijazah',
+                'file_sertifikat' => 'STR',
+            ];
+
+            foreach ($berkasFields as $field => $namaBerkas) {
+                $berkas = Berkas::create([
+                    'user_id' => $user->id,
+                    'file_id' => (string) Str::uuid(),
+                    'nama' => $namaBerkas . ' - ' . $user->nama,
+                    'kategori_berkas_id' => 1,
+                    'status_berkas_id' => 1,
+                    'path' => '/path/to/personal/berkas/' . strtolower(str_replace(' ', '_', $namaBerkas)) . '/' . $user->nama,
+                    'tgl_upload' => now(),
+                    'nama_file' => strtolower(str_replace(' ', '_', $namaBerkas)),
+                    'ext' => 'application/pdf',
+                    'size' => rand(1000, 2000),
+                ]);
+                $dataKaryawan->{$field} = $berkas->id;
+            }
+
+            $dataKaryawan->save();
 
             // Perbarui user dengan data_karyawan_id
             $user->data_karyawan_id = $dataKaryawan->id;
