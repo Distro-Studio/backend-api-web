@@ -857,7 +857,7 @@ class DataKaryawanController extends Controller
     $berkasList = $user->berkas->where('status_berkas_id', 1);
 
     if ($berkasList->isEmpty()) {
-      return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Tidak ada berkas yang perlu diverifikasi untuk karyawan ini.'), Response::HTTP_NOT_FOUND);
+      return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, "Tidak ada berkas yang perlu diverifikasi untuk karyawan '{$user->nama}'."), Response::HTTP_NOT_FOUND);
     }
 
     foreach ($berkasList as $berkas) {
