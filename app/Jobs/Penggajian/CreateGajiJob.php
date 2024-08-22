@@ -2,10 +2,11 @@
 
 namespace App\Jobs\Penggajian;
 
-use App\Helpers\RandomHelper;
 use Carbon\Carbon;
+use App\Models\Lembur;
 use App\Models\DetailGaji;
 use App\Models\Penggajian;
+use App\Helpers\RandomHelper;
 use Illuminate\Bus\Queueable;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -556,7 +557,27 @@ class CreateGajiJob implements ShouldQueue
 
     private function calculatedLembur($dataKaryawan)
     {
+        // Ambil nilai uang_lembur dari data_karyawan
         $rate_lembur = $dataKaryawan->uang_lembur;
+
+        // Ambil semua lembur terkait dengan data_karyawan
+        $lemburRecords = Lembur::where('user_id', $dataKaryawan->user_id)->get();
+
+        $totalBonusLembur = 0;
+
+        foreach ($lemburRecords as $lembur) {
+            // Konversi durasi dari format H:i:s menjadi total menit
+            $durasi = Carbon::parse($lembur->durasi);
+            $totalMinutes = ($durasi->hour * 60) + $durasi->minute + ($durasi->second / 60);
+
+            // Hitung bonus lembur
+            $bonusLembur = ($rate_lembur / 60) * $totalMinutes;
+
+            // Tambahkan bonus lembur ke total
+            $totalBonusLembur += $bonusLembur;
+        }
+
+        return $totalBonusLembur;
     }
 
     private function calculatedTotalTunjangan($dataKaryawan)

@@ -63,7 +63,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/get-list-jabatan', [DataKaryawanController::class, 'getAllDataJabatan']);
     Route::get('/get-list-status-karyawan', [DataKaryawanController::class, 'getAllDataStatusKaryawan']);
     Route::get('/get-list-kompetensi', [DataKaryawanController::class, 'getAllDataKompetensi']);
-    Route::get('/get-list-role', [DataKaryawanController::class, 'getAllDataRole']);
+    Route::get('/get-list-role', [DataKaryawanController::class, 'getAllDataRole']); // TODO: jika yang login bukan super admin hilangkan list opsi SUPER ADMIN
     Route::get('/get-list-kelompok-gaji', [DataKaryawanController::class, 'getAllDataKelompokGaji']);
     Route::get('/get-list-ptkp', [DataKaryawanController::class, 'getAllDataPTKP']);
     Route::get('/get-list-kategori-transfer', [DataTransferKaryawanController::class, 'getAllKategoriTransfer']);
