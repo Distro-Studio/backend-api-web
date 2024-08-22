@@ -554,6 +554,11 @@ class CreateGajiJob implements ShouldQueue
             + $dataKaryawan->uang_lembur;
     }
 
+    private function calculatedLembur($dataKaryawan)
+    {
+        $rate_lembur = $dataKaryawan->uang_lembur;
+    }
+
     private function calculatedTotalTunjangan($dataKaryawan)
     {
         return $dataKaryawan->tunjangan_jabatan
