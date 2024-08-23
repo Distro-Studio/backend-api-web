@@ -10,8 +10,19 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 class TukarJadwal extends Model
 {
     use HasFactory, SoftDeletes;
-
     protected $guarded = ['id'];
+
+    protected $casts = [
+        'id' => 'integer',
+        'user_pengajuan' => 'integer',
+        'jadwal_pengajuan' => 'integer',
+        'user_ditukar' => 'integer',
+        'jadwal_ditukar' => 'integer',
+        'status_penukaran_id' => 'integer',
+        'kategori_penukaran_id' => 'integer',
+        'verifikator_1' => 'integer',
+        'verifikator_2' => 'integer'
+    ];
 
     /**
      * Get the user_pengajuan that owns the TukarJadwal

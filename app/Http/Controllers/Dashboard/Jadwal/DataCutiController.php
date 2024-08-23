@@ -257,6 +257,7 @@ class DataCutiController extends Controller
                 'catatan' => $dataCuti->catatan,
                 'durasi' => $dataCuti->durasi,
                 'status_cuti' => $dataCuti->status_cutis,
+                'alasan' => $cuti->alasan ?? null,
                 'created_at' => $dataCuti->created_at,
                 'updated_at' => $dataCuti->updated_at
             ];
@@ -363,6 +364,29 @@ class DataCutiController extends Controller
                 'catatan' => $cuti->catatan,
                 'durasi' => $cuti->durasi,
                 'status_cuti' => $cuti->status_cutis,
+                'verifikator_1' => $cuti->verifikator_1_cutis ? [
+                    'id' => $cuti->verifikator_1_cutis->id,
+                    'nama' => $cuti->verifikator_1_cutis->nama,
+                    'email_verified_at' => $cuti->verifikator_1_cutis->email_verified_at,
+                    'data_karyawan_id' => $cuti->verifikator_1_cutis->data_karyawan_id,
+                    'foto_profil' => $cuti->verifikator_1_cutis->foto_profil,
+                    'data_completion_step' => $cuti->verifikator_1_cutis->data_completion_step,
+                    'status_aktif' => $cuti->verifikator_1_cutis->status_aktif,
+                    'created_at' => $cuti->verifikator_1_cutis->created_at,
+                    'updated_at' => $cuti->verifikator_1_cutis->updated_at
+                ] : null,
+                'verifikator_2' => $cuti->verifikator_2_cutis ? [
+                    'id' => $cuti->verifikator_2_cutis->id,
+                    'nama' => $cuti->verifikator_2_cutis->nama,
+                    'email_verified_at' => $cuti->verifikator_2_cutis->email_verified_at,
+                    'data_karyawan_id' => $cuti->verifikator_2_cutis->data_karyawan_id,
+                    'foto_profil' => $cuti->verifikator_2_cutis->foto_profil,
+                    'data_completion_step' => $cuti->verifikator_2_cutis->data_completion_step,
+                    'status_aktif' => $cuti->verifikator_2_cutis->status_aktif,
+                    'created_at' => $cuti->verifikator_2_cutis->created_at,
+                    'updated_at' => $cuti->verifikator_2_cutis->updated_at
+                ] : null,
+                'alasan' => $cuti->alasan ?? null,
                 'created_at' => $cuti->created_at,
                 'updated_at' => $cuti->updated_at
             ];

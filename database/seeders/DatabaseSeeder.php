@@ -131,7 +131,7 @@ class DatabaseSeeder extends Seeder
         PerizinanSeeder::class,
         JadwalSeeder::class,
         // LemburSeeder::class,
-        // CutiJadwalSeeder::class,
+        CutiJadwalSeeder::class,
         TukarJadwalSeeder::class,
 
         // /* ==== Presensi ==== */

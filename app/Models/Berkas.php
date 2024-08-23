@@ -10,8 +10,15 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 class Berkas extends Model
 {
     use HasFactory;
-
     protected $guarded = ['id'];
+
+    protected $casts = [
+        'id' => 'integer',
+        'user_id' => 'integer',
+        'kategori_berkas_id' => 'integer',
+        'status_berkas_id' => 'integer',
+        'verifikator_1' => 'integer',
+    ];
 
     /**
      * Get the users that owns the Berkas

@@ -9,8 +9,14 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 class Pelaporan extends Model
 {
     use HasFactory;
-
     protected $guarded = ['id'];
+
+    protected $casts = [
+        'id' => 'integer',
+        'pelapor' => 'integer',
+        'pelaku' => 'integer',
+        'upload_foto' => 'integer'
+    ];
 
     /**
      * Get the user_pelapor that owns the Pelaporan

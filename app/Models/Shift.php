@@ -10,8 +10,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 class Shift extends Model
 {
     use HasFactory, SoftDeletes;
-
     protected $guarded = ['id'];
+
+    protected $casts = [
+        'id' => 'integer'
+    ];
 
     /**
      * Get all of the jadwal for the Shift

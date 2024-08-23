@@ -11,8 +11,12 @@ use Spatie\Permission\Models\Role;
 class Pertanyaan extends Model
 {
     use HasFactory, SoftDeletes;
-
     protected $guarded = ['id'];
+
+    protected $casts = [
+        'id' => 'integer',
+        'jenis_penilaian_id' => 'integer'
+    ];
 
     /**
      * Get the jenis_penilaians that owns the Pertanyaan

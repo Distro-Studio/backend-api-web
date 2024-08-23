@@ -12,8 +12,14 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class JenisPenilaian extends Model
 {
     use HasFactory, SoftDeletes;
-
     protected $guarded = ['id'];
+
+    protected $casts = [
+        'id' => 'integer',
+        'status_karyawan_id' => 'integer',
+        'jabatan_penilai' => 'integer',
+        'jabatan_dinilai' => 'integer',
+    ];
 
     /**
      * Get the status_karyawans that owns the JenisPenilaian

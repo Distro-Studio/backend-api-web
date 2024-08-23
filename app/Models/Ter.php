@@ -10,8 +10,15 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 class Ter extends Model
 {
     use HasFactory, SoftDeletes;
-
     protected $guarded = ['id'];
+
+    protected $casts = [
+        'id' => 'integer',
+        'kategori_ter_id' => 'integer',
+        'from_ter' => 'integer',
+        'to_ter' => 'integer',
+        'percentage' => 'decimal:4,2'
+    ];
 
     /**
      * Get the kategori_ter that owns the Ter

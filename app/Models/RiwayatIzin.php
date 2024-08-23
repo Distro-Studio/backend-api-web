@@ -9,8 +9,15 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 class RiwayatIzin extends Model
 {
     use HasFactory;
-
     protected $guarded = ['id'];
+
+    protected $casts = [
+        'id' => 'integer',
+        'user_id' => 'integer',
+        'durasi' => 'integer',
+        'status_izin_id' => 'integer',
+        'verifikator_1' => 'integer'
+    ];
 
     /**
      * Get the users that owns the RiwayatIzin

@@ -8,7 +8,11 @@ use Illuminate\Database\Eloquent\Model;
 class Pengumuman extends Model
 {
     use HasFactory;
-
     protected $guarded = ['id'];
     protected $table = 'pengumumans';
+
+    protected $casts = [
+        'id' => 'integer',
+        'is_read' => 'boolean'
+    ];
 }

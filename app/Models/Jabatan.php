@@ -12,6 +12,12 @@ class Jabatan extends Model
     use HasFactory, SoftDeletes;
     protected $guarded = ['id'];
 
+    protected $casts = [
+        'id' => 'integer',
+        'is_struktural' => 'boolean',
+        'tunjangan_jabatan' => 'integer',
+    ];
+
     /**
      * Get all of the data_karyawan for the Jabatan
      *

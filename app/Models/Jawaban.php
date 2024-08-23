@@ -9,8 +9,14 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 class Jawaban extends Model
 {
     use HasFactory;
-
     protected $guarded = ['id'];
+
+    protected $casts = [
+        'id' => 'integer',
+        'user_penilai' => 'integer',
+        'pertanyaan_id' => 'integer',
+        'jawaban' => 'integer',
+    ];
 
     /**
      * Get the user_penilais that owns the Jawaban

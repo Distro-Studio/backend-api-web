@@ -10,8 +10,16 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 class Penilaian extends Model
 {
     use HasFactory;
-
     protected $guarded = ['id'];
+
+    protected $casts = [
+        'id' => 'integer',
+        'user_dinilai' => 'integer',
+        'user_penilai' => 'integer',
+        'jenis_penilaian_id' => 'integer',
+        'total_pertanyaan' => 'integer',
+        'rata_rata' => 'integer'
+    ];
 
     /**
      * Get the jenis_penilaians that owns the Penilaian

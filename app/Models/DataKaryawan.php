@@ -12,6 +12,40 @@ class DataKaryawan extends Model
     use HasFactory;
     protected $guarded = ['id'];
 
+    protected $casts = [
+        'id' => 'integer',
+        'user_id' => 'integer',
+        'unit_kerja_id' => 'integer',
+        'jabatan_id' => 'integer',
+        'kompetensi_id' => 'integer',
+        'tunjangan_fungsional' => 'integer',
+        'tunjangan_khusus' => 'integer',
+        'tunjangan_lainnya' => 'integer',
+        'uang_makan' => 'integer',
+        'uang_lembur' => 'integer',
+        'masa_kerja' => 'integer',
+        'jenis_kelamin' => 'integer',
+        'kategori_agama_id' => 'integer',
+        'kategori_darah_id' => 'integer',
+        'tinggi_badan' => 'integer',
+        'berat_badan' => 'integer',
+        'pendidikan_terakhir' => 'integer',
+        'tahun_lulus' => 'integer',
+        'status_karyawan_id' => 'integer',
+        'kelompok_gaji_id' => 'integer',
+        'ptkp_id' => 'integer',
+        'masa_diklat' => 'integer',
+        'verifikator_1' => 'integer',
+        'status_reward_presensi' => 'boolean',
+        'file_ktp' => 'integer',
+        'file_kk' => 'integer',
+        'file_sip' => 'integer',
+        'file_bpjs_kes' => 'integer',
+        'file_bpjs_ktk' => 'integer',
+        'file_ijazah' => 'integer',
+        'file_sertifikat' => 'integer',
+    ];
+
     public function setUangMakan($value)
     {
         $this->attributes['uang_makan'] = $value == 0 ? null : $value;

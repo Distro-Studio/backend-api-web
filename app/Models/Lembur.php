@@ -9,8 +9,13 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 class Lembur extends Model
 {
     use HasFactory;
-
     protected $guarded = ['id'];
+
+    protected $casts = [
+        'id' => 'integer',
+        'user_id' => 'integer',
+        'jadwal_id' => 'integer'
+    ];
 
     /**
      * Get the user that owns the Lembur

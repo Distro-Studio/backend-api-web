@@ -9,8 +9,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 class KategoriGaji extends Model
 {
     use HasFactory;
-
     protected $guarded = ['id'];
+
+    protected $casts = [
+        'id' => 'integer',
+        'label' => 'string'
+    ];
 
     /**
      * Get all of the detail_gajis for the KategoriGaji

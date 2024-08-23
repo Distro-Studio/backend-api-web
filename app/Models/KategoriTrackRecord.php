@@ -9,8 +9,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 class KategoriTrackRecord extends Model
 {
     use HasFactory;
-
     protected $guarded = ['id'];
+
+    protected $casts = [
+        'id' => 'integer',
+        'label' => 'string'
+    ];
 
     /**
      * Get all of the track_records for the KategoriTrackRecord

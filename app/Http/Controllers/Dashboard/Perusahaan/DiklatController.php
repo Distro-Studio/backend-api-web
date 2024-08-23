@@ -14,7 +14,6 @@ use App\Helpers\RandomHelper;
 use Illuminate\Http\Response;
 use App\Models\KategoriBerkas;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use App\Helpers\StorageServerHelper;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
@@ -121,6 +120,7 @@ class DiklatController extends Controller
                 'durasi' => $diklat->durasi,
                 'lokasi' => $diklat->lokasi,
                 'list_peserta' => $pesertaList, // List of participants
+                'alasan' => $diklat->alasan ?? null,
                 'created_at' => $diklat->created_at,
                 'updated_at' => $diklat->updated_at
             ];
@@ -277,9 +277,34 @@ class DiklatController extends Controller
             'jam_selesai' => $diklat->jam_selesai,
             'durasi' => $diklat->durasi,
             'lokasi' => $diklat->lokasi,
-            'gambar' => $gambarUrl,
-            'dokumen_eksternal' => $dokumenUrl,
+            // 'gambar' => $gambarUrl,
+            'gambar' => $diklat->gambar ?? null,
+            // 'dokumen_eksternal' => $dokumenUrl,
+            'dokumen_eksternal' => $diklat->dokumen_eksternal ?? null,
             'peserta_diklat' => $diklat->peserta_diklat->toArray(),
+            'verifikator_1' => $diklat->verifikator_1_diklats ? [
+                'id' => $diklat->verifikator_1_diklats->id,
+                'nama' => $diklat->verifikator_1_diklats->nama,
+                'email_verified_at' => $diklat->verifikator_1_diklats->email_verified_at,
+                'data_karyawan_id' => $diklat->verifikator_1_diklats->data_karyawan_id,
+                'foto_profil' => $diklat->verifikator_1_diklats->foto_profil,
+                'data_completion_step' => $diklat->verifikator_1_diklats->data_completion_step,
+                'status_aktif' => $diklat->verifikator_1_diklats->status_aktif,
+                'created_at' => $diklat->verifikator_1_diklats->created_at,
+                'updated_at' => $diklat->verifikator_1_diklats->updated_at
+            ] : null,
+            'verifikator_2' => $diklat->verifikator_2_diklats ? [
+                'id' => $diklat->verifikator_2_diklats->id,
+                'nama' => $diklat->verifikator_2_diklats->nama,
+                'email_verified_at' => $diklat->verifikator_2_diklats->email_verified_at,
+                'data_karyawan_id' => $diklat->verifikator_2_diklats->data_karyawan_id,
+                'foto_profil' => $diklat->verifikator_2_diklats->foto_profil,
+                'data_completion_step' => $diklat->verifikator_2_diklats->data_completion_step,
+                'status_aktif' => $diklat->verifikator_2_diklats->status_aktif,
+                'created_at' => $diklat->verifikator_2_diklats->created_at,
+                'updated_at' => $diklat->verifikator_2_diklats->updated_at
+            ] : null,
+            'alasan' => $diklat->alasan ?? null,
             'created_at' => $diklat->created_at,
             'updated_at' => $diklat->updated_at,
         ];

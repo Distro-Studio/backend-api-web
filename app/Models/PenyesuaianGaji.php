@@ -10,8 +10,14 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 class PenyesuaianGaji extends Model
 {
     use HasFactory, SoftDeletes;
-
     protected $guarded = ['id'];
+
+    protected $casts = [
+        'id' => 'integer',
+        'penggajian_id' => 'integer',
+        'kategori_gaji_id' => 'integer',
+        'besaran' => 'integer'
+    ];
 
     /**
      * Get the penggajians that owns the PenyesuaianGaji

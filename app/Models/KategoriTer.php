@@ -10,8 +10,12 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class KategoriTer extends Model
 {
     use HasFactory, SoftDeletes;
-
     protected $guarded = ['id'];
+
+    protected $casts = [
+        'id' => 'integer',
+        'nama_kategori_ter' => 'string'
+    ];
 
     /**
      * Get all of the ptkp for the KategoriTer

@@ -12,6 +12,13 @@ class Kompetensi extends Model
     use HasFactory, SoftDeletes;
     protected $guarded = ['id'];
 
+    protected $casts = [
+        'id' => 'integer',
+        'jenis_kompetensi' => 'boolean',
+        'tunjangan_kompetensi' => 'integer',
+        'nilai_bor' => 'integer'
+    ];
+
     /**
      * Get all of the data_karyawan for the Kompetensi
      *

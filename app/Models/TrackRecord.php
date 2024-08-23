@@ -11,6 +11,12 @@ class TrackRecord extends Model
     use HasFactory;
     protected $guarded = ['id'];
 
+    protected $casts = [
+        'id' => 'integer',
+        'user_id' => 'integer',
+        'kategori_record_id' => 'integer'
+    ];
+
     /**
      * Get the user that owns the TrackRecord
      *

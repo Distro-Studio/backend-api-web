@@ -10,8 +10,19 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 class Diklat extends Model
 {
     use HasFactory;
-
     protected $guarded = ['id'];
+
+    protected $casts = [
+        'id' => 'integer',
+        'gambar' => 'integer',
+        'dokumen_eksternal' => 'integer',
+        'kategori_diklat_id' => 'integer',
+        'status_diklat_id' => 'integer',
+        'kuota' => 'integer',
+        'durasi' => 'integer',
+        'verifikator_1' => 'integer',
+        'verifikator_2' => 'integer',
+    ];
 
     /**
      * Get the kategori_diklats that owns the Diklat
@@ -61,5 +72,25 @@ class Diklat extends Model
     public function berkas_gambars(): BelongsTo
     {
         return $this->belongsTo(Berkas::class, 'gambar', 'id');
+    }
+
+    /**
+     * Get the verifikator_1_diklats that owns the Cuti
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function verifikator_1_diklats(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'verifikator_1', 'id');
+    }
+
+    /**
+     * Get the verifikator_2_diklats that owns the Cuti
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function verifikator_2_diklats(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'verifikator_2', 'id');
     }
 }

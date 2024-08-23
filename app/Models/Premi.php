@@ -11,8 +11,17 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 class Premi extends Model
 {
     use HasFactory, SoftDeletes;
-
     protected $guarded = ['id'];
+
+    protected $casts = [
+        'id' => 'integer',
+        'kategori_potongan_id' => 'integer',
+        'jenis_premi' => 'boolean',
+        'besaran_premi' => 'integer',
+        'minimal_rate' => 'integer',
+        'maksimal_rate' => 'integer',
+        'has_custom_formula' => 'boolean'
+    ];
 
     // Mutator for minimal_rate
     public function setMinimalRateAttribute($value)

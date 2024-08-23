@@ -12,6 +12,11 @@ class KelompokGaji extends Model
     use HasFactory, SoftDeletes;
     protected $guarded = ['id'];
 
+    protected $casts = [
+        'id' => 'integer',
+        'besaran_gaji' => 'integer'
+    ];
+
     /**
      * Get all of the data_karyawan for the KelompokGaji
      *

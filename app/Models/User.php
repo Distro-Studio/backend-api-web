@@ -39,8 +39,13 @@ class User extends Authenticatable
      * @var array<string, string>
      */
     protected $casts = [
+        'id' => 'integer',
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
+        'role_id' => 'integer',
+        'data_karyawan_id' => 'integer',
+        'data_completion_step' => 'integer',
+        'status_aktif' => 'integer'
     ];
 
     /**

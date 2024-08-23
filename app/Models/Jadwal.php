@@ -10,10 +10,14 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 class Jadwal extends Model
 {
     use HasFactory;
-
     protected $guarded = ['id'];
-
     protected $table = 'jadwals';
+
+    protected $casts = [
+        'id' => 'integer',
+        'user_id' => 'integer',
+        'shift_id' => 'integer',
+    ];
 
     /**
      * Get all of the presensi for the Jadwal

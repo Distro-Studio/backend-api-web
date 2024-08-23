@@ -678,7 +678,7 @@ class DataKaryawanController extends Controller
         'file_id' => $item->file_id,
         'nama' => $item->nama,
         'kategori_dokumen' => $item->kategori_berkas,
-        'path' => $fileUrl,
+        'path' => $item->path,
         'tgl_upload' => $item->tgl_upload,
         'nama_file' => $item->nama_file,
         'ext' => $item->ext,
@@ -1435,19 +1435,19 @@ class DataKaryawanController extends Controller
       'file_sertifikat' => $karyawan->file_sertifikat ?? null,
     ];
 
-    $baseUrl = env('STORAGE_SERVER_DOMAIN');
+    // $baseUrl = env('STORAGE_SERVER_DOMAIN');
 
-    $formattedPaths = [];
-    foreach ($berkasFields as $field => $berkasId) {
-      $berkas = Berkas::where('id', $berkasId)->first();
-      if ($berkas) {
-        $extension = StorageServerHelper::getExtensionFromMimeType($berkas->ext);
-        // $formattedPaths[$field] = $baseUrl . $berkas->path . '.' . $extension;
-        $formattedPaths[$field] = $baseUrl . $berkas->path;
-      } else {
-        $formattedPaths[$field] = null;
-      }
-    }
+    // $formattedPaths = [];
+    // foreach ($berkasFields as $field => $berkasId) {
+    //   $berkas = Berkas::where('id', $berkasId)->first();
+    //   if ($berkas) {
+    //     $extension = StorageServerHelper::getExtensionFromMimeType($berkas->ext);
+    //     // $formattedPaths[$field] = $baseUrl . $berkas->path . '.' . $extension;
+    //     $formattedPaths[$field] = $baseUrl . $berkas->path;
+    //   } else {
+    //     $formattedPaths[$field] = null;
+    //   }
+    // }
 
     // Format the karyawan data
     $formattedData = array_merge([
@@ -1532,7 +1532,7 @@ class DataKaryawanController extends Controller
       'masa_diklat' => $karyawan->masa_diklat,
       'created_at' => $karyawan->created_at,
       'updated_at' => $karyawan->updated_at
-    ], $formattedPaths);
+    ], $berkasFields);
 
     return response()->json([
       'status' => Response::HTTP_OK,
@@ -1570,18 +1570,18 @@ class DataKaryawanController extends Controller
       'file_sertifikat' => $karyawan->file_sertifikat ?? null,
     ];
 
-    $baseUrl = env('STORAGE_SERVER_DOMAIN');
+    // $baseUrl = env('STORAGE_SERVER_DOMAIN');
 
-    $formattedPaths = [];
-    foreach ($berkasFields as $field => $berkasId) {
-      $berkas = Berkas::where('id', $berkasId)->first();
-      if ($berkas) {
-        $extension = StorageServerHelper::getExtensionFromMimeType($berkas->ext);
-        $formattedPaths[$field] = $baseUrl . $berkas->path;
-      } else {
-        $formattedPaths[$field] = null;
-      }
-    }
+    // $formattedPaths = [];
+    // foreach ($berkasFields as $field => $berkasId) {
+    //   $berkas = Berkas::where('id', $berkasId)->first();
+    //   if ($berkas) {
+    //     $extension = StorageServerHelper::getExtensionFromMimeType($berkas->ext);
+    //     $formattedPaths[$field] = $baseUrl . $berkas->path;
+    //   } else {
+    //     $formattedPaths[$field] = null;
+    //   }
+    // }
 
     // Format the karyawan data
     $formattedData = array_merge([
@@ -1666,7 +1666,7 @@ class DataKaryawanController extends Controller
       'masa_diklat' => $karyawan->masa_diklat,
       'created_at' => $karyawan->created_at,
       'updated_at' => $karyawan->updated_at
-    ], $formattedPaths);
+    ], $berkasFields);
 
     return response()->json([
       'status' => Response::HTTP_OK,

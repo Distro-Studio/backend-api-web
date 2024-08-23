@@ -12,6 +12,11 @@ class UnitKerja extends Model
     use HasFactory, SoftDeletes;
     protected $guarded = ['id'];
 
+    protected $casts = [
+        'id' => 'integer',
+        'jenis_karyawan' => 'boolean'
+    ];
+
     /**
      * Get all of the data_karyawan for the UnitKerja
      *

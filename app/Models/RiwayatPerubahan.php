@@ -10,8 +10,14 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 class RiwayatPerubahan extends Model
 {
     use HasFactory;
-
     protected $guarded = ['id'];
+
+    protected $casts = [
+        'id' => 'integer',
+        'data_karyawan_id' => 'integer',
+        'status_perubahan_id' => 'integer',
+        'verifikator_1' => 'integer'
+    ];
 
     /**
      * Get the data_karyawans that owns the RiwayatPerubahan

@@ -9,8 +9,15 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 class PerubahanKeluarga extends Model
 {
     use HasFactory;
-
     protected $guarded = ['id'];
+
+    protected $casts = [
+        'id' => 'integer',
+        'riwayat_perubahan_id' => 'integer',
+        'jenis_perubahan' => 'boolean',
+        'data_keluarga_id' => 'integer',
+        'status_hidup' => 'boolean'
+    ];
 
     /**
      * Get the riwayat_perubahan that owns the PerubahanKeluarga

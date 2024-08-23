@@ -9,8 +9,13 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 class Thr extends Model
 {
     use HasFactory;
-
     protected $guarded = ['id'];
+
+    protected $casts = [
+        'id' => 'integer',
+        'nominal_satu' => 'integer',
+        'nominal_dua' => 'integer'
+    ];
 
     /**
      * Get the run_thr associated with the Thr

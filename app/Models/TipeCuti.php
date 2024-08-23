@@ -10,8 +10,14 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 class TipeCuti extends Model
 {
     use HasFactory, SoftDeletes;
-
     protected $guarded = ['id'];
+
+    protected $casts = [
+        'id' => 'integer',
+        'kuota' => 'integer',
+        'is_need_requirement' => 'boolean',
+        'cuti_administratif' => 'boolean'
+    ];
 
     /**
      * Get all of the cuti for the TipeCuti

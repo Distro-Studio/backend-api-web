@@ -11,8 +11,13 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 class Ptkp extends Model
 {
     use HasFactory, SoftDeletes;
-
     protected $guarded = ['id'];
+
+    protected $casts = [
+        'id' => 'integer',
+        'kategori_ter_id' => 'integer',
+        'nilai' => 'integer'
+    ];
 
     /**
      * Get all of the data_karyawan for the Ptkp

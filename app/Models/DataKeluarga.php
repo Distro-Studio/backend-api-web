@@ -10,8 +10,13 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 class DataKeluarga extends Model
 {
     use HasFactory;
-
     protected $guarded = ['id'];
+
+    protected $casts = [
+        'id' => 'integer',
+        'data_karyawan_id' => 'integer',
+        'status_hidup' => 'boolean',
+    ];
 
     /**
      * Get the data_karyawan that owns the DataKeluarga

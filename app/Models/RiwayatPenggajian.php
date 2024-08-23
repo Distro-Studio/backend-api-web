@@ -11,8 +11,14 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 class RiwayatPenggajian extends Model
 {
     use HasFactory;
-
     protected $guarded = ['id'];
+
+    protected $casts = [
+        'id' => 'integer',
+        'karyawan_verifikasi' => 'integer',
+        'jenis_riwayat' => 'boolean',
+        'status_gaji_id' => 'integer'
+    ];
 
     /**
      * Get all of the penggajians for the RiwayatPenggajian

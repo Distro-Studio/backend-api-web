@@ -9,8 +9,10 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class NonShift extends Model
 {
     use HasFactory, SoftDeletes;
-
     protected $guarded = ['id'];
-
     protected $table = 'non_shifts';
+
+    protected $casts = [
+        'id' => 'integer'
+    ];
 }

@@ -11,6 +11,12 @@ class ActivityLog extends Model
     use HasFactory;
     protected $guarded = ['id'];
 
+    protected $casts = [
+        'id' => 'integer',
+        'kategori_activity_id' => 'integer',
+        'user_id' => 'integer',
+    ];
+
     /**
      * Get the user that owns the ActivityLog
      *

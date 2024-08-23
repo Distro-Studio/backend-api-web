@@ -10,8 +10,21 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 class Penggajian extends Model
 {
     use HasFactory;
-
     protected $guarded = ['id'];
+
+    protected $casts = [
+        'id' => 'integer',
+        'riwayat_penggajian_id' => 'integer',
+        'data_karyawan_id' => 'integer',
+        'gaji_pokok' => 'integer',
+        'total_tunjangan' => 'integer',
+        'reward' => 'integer',
+        'gaji_bruto' => 'integer',
+        'total_premi' => 'integer',
+        'pph_21' => 'integer',
+        'take_home_pay' => 'integer',
+        'status_gaji_id' => 'integer'
+    ];
 
     /**
      * Get the riwayat_penggajians that owns the Penggajian

@@ -10,8 +10,18 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 class Presensi extends Model
 {
     use HasFactory;
-
     protected $guarded = ['id'];
+
+    protected $casts = [
+        'id' => 'integer',
+        'user_id' => 'integer',
+        'data_karyawan_id' => 'integer',
+        'jadwal_id' => 'integer',
+        'durasi' => 'integer',
+        'foto_masuk' => 'integer',
+        'foto_keluar' => 'integer',
+        'kategori_presensi_id' => 'integer'
+    ];
 
     /**
      * Get the user that owns the Presensi

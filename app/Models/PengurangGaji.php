@@ -9,8 +9,13 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 class PengurangGaji extends Model
 {
     use HasFactory;
-
     protected $guarded = ['id'];
+
+    protected $casts = [
+        'id' => 'integer',
+        'data_karyawan_id' => 'integer',
+        'premi_id' => 'integer'
+    ];
 
     /**
      * Get the data_karyawans that owns the PengurangGaji

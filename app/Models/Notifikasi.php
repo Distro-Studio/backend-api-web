@@ -11,8 +11,14 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 class Notifikasi extends Model
 {
     use HasFactory;
-
     protected $guarded = ['id'];
+
+    protected $casts = [
+        'id' => 'integer',
+        'kategori_notifikasi_id' => 'integer',
+        'user_id' => 'integer',
+        'is_read' => 'boolean'
+    ];
 
     /**
      * Get the kategori_notifikasis that owns the Notifikasi
