@@ -513,7 +513,7 @@ class DataCutiController extends Controller
             if ($status_cuti_id == 1) {
                 $cuti->status_cuti_id = 3; // Update status ke tahap 1 ditolak
                 $cuti->verifikator_1 = Auth::id();
-                $cuti->alasan = 'Verifikasi tahap 1 ditolak karena: ' . $request->input('alasan', null);
+                $cuti->alasan = $request->input('alasan', null);
                 $cuti->save();
 
                 // Buat dan simpan notifikasi
@@ -563,7 +563,7 @@ class DataCutiController extends Controller
             if ($status_cuti_id == 2) {
                 $cuti->status_cuti_id = 5; // Update status ke tahap 1 ditolak
                 $cuti->verifikator_2 = Auth::id();
-                $cuti->alasan = 'Verifikasi tahap 2 ditolak karena: ' . $request->input('alasan', null);
+                $cuti->alasan = $request->input('alasan', null);
                 $cuti->save();
 
                 $this->createNotifikasiCutiTahap2($cuti, 'Ditolak');

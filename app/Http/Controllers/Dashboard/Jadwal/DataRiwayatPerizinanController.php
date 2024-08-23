@@ -328,7 +328,7 @@ class DataRiwayatPerizinanController extends Controller
             if ($status_izin_id == 1) {
                 $riwayat_izin->status_izin_id = 3;
                 $riwayat_izin->verifikator_1 = Auth::id();
-                $riwayat_izin->alasan = 'Verifikasi perizinan ditolak karena: ' . $request->input('alasan', null);
+                $riwayat_izin->alasan = $request->input('alasan', null);
                 $riwayat_izin->save();
 
                 // Buat dan simpan notifikasi

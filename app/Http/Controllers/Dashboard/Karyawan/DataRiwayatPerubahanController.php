@@ -410,7 +410,7 @@ class DataRiwayatPerubahanController extends Controller
             if ($status_perubahan_id == 1) {
                 $riwayat->status_perubahan_id = 3; // Update status ke ditolak
                 $riwayat->verifikator_1 = Auth::id(); // Set verifikator tahap 1
-                $riwayat->alasan = 'Verifikasi ditolak karena: ' . $request->input('alasan', null);
+                $riwayat->alasan = $request->input('alasan', null);
                 $riwayat->save();
 
                 return response()->json(new WithoutDataResource(Response::HTTP_OK, "Verifikasi untuk riwayat perubahan '{$riwayat->kolom}' telah ditolak."), Response::HTTP_OK);

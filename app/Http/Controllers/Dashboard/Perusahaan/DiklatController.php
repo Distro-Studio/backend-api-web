@@ -341,7 +341,7 @@ class DiklatController extends Controller
             if ($status_diklat_id == 1) {
                 $diklat->status_diklat_id = 3; // Update status ke tahap 1 ditolak
                 $diklat->verifikator_1 = Auth::id(); // Set verifikator tahap 1
-                $diklat->alasan = 'Verifikasi tahap 1 ditolak karena: ' . $request->input('alasan', null);
+                $diklat->alasan = $request->input('alasan', null);
                 $diklat->save();
                 return response()->json(new WithoutDataResource(Response::HTTP_OK, "Verifikasi tahap 1 untuk Diklat '{$diklat->nama}' telah ditolak."), Response::HTTP_OK);
             } else {
@@ -381,9 +381,9 @@ class DiklatController extends Controller
         } elseif ($request->has('verifikasi_kedua_ditolak') && $request->verifikasi_kedua_ditolak == 1) {
             // Jika status_diklat_id = 2, maka bisa ditolak
             if ($status_diklat_id == 2) {
-                $diklat->status_diklat_id = 5; // Update status ke tahap 2 ditolak
-                $diklat->verifikator_2 = Auth::id(); // Set verifikator tahap 2
-                $diklat->alasan = 'Verifikasi tahap 2 ditolak karena: ' . $request->input('alasan', null);
+                $diklat->status_diklat_id = 5;
+                $diklat->verifikator_2 = Auth::id();
+                $diklat->alasan = $request->input('alasan', null);
                 $diklat->save();
                 return response()->json(new WithoutDataResource(Response::HTTP_OK, "Verifikasi tahap 2 untuk Diklat '{$diklat->nama}' telah ditolak."), Response::HTTP_OK);
             } else {
