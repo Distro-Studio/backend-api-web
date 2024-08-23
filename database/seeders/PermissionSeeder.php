@@ -14,7 +14,7 @@ class PermissionSeeder extends Seeder
             // Verifikasi
             'Berkas' => ['verifikasi1 berkas'],
             'Riwayat Perubahan' => ['verifikasi1 riwayatPerubahan'],
-            'Riwayat Izin' => ['verifikasi1 riwayatPerizinan'],
+            'Riwayat Izin' => ['view riwayatPerizinan', 'export riwayatPerizinan', 'verifikasi1 riwayatPerizinan'],
 
             // Perusahaan
             'Diklat' => ['create diklat', 'view diklat', 'export diklat', 'verifikasi1 diklat', 'verifikasi2 diklat'],

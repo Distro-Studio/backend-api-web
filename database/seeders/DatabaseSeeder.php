@@ -35,6 +35,7 @@ use Database\Seeders\Karyawan\KaryawanSeeder;
 use Database\Seeders\Presensi\PresensiSeeder;
 use Database\Seeders\JadwalKaryawan\JadwalSeeder;
 use Database\Seeders\JadwalKaryawan\LemburSeeder;
+use Database\Seeders\JadwalKaryawan\PerizinanSeeder;
 use Database\Seeders\JadwalKaryawan\TukarJadwalSeeder;
 use Database\Seeders\Pengaturan_Finance\TERSeeder;
 use Database\Seeders\Pengaturan_Finance\PremiSeeder;
@@ -127,6 +128,7 @@ class DatabaseSeeder extends Seeder
       PerubahanPersonalSeeder::class,
 
         // // /* ==== Jadwals ==== */
+        PerizinanSeeder::class,
         // JadwalSeeder::class,
         // LemburSeeder::class,
         // CutiJadwalSeeder::class,

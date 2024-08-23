@@ -31,4 +31,14 @@ class RiwayatIzin extends Model
     {
         return $this->belongsTo(StatusRiwayatIzin::class, 'status_izin_id', 'id');
     }
+
+    /**
+     * Get the verifikator_izins that owns the RiwayatIzin
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function verifikator_izins(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'verifikator_1', 'id');
+    }
 }

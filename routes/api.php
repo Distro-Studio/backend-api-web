@@ -5,6 +5,7 @@ use App\Http\Controllers\Dashboard\InboxController;
 use App\Http\Controllers\Dashboard\Jadwal\DataCutiController;
 use App\Http\Controllers\Dashboard\Jadwal\DataJadwalController;
 use App\Http\Controllers\Dashboard\Jadwal\DataLemburController;
+use App\Http\Controllers\Dashboard\Jadwal\DataRiwayatPerizinanController;
 use App\Http\Controllers\Dashboard\Jadwal\DataTukarJadwalController;
 use App\Http\Controllers\Dashboard\Karyawan\DataKaryawanController;
 use App\Http\Controllers\Dashboard\Karyawan\DataRiwayatPerubahanController;
@@ -169,16 +170,18 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::get('/get-jadwal-user-lembur/{userId}', [DataLemburController::class, 'getJadwalPengajuanLembur']);
             Route::get('/lembur/export', [DataLemburController::class, 'exportJadwalLembur']);
             Route::apiResource('/lembur', DataLemburController::class);
-
+            
             // ! Cuti ===========>
             Route::post('/cuti/{cutiId}/verifikasi-tahap-1', [DataCutiController::class, 'verifikasiTahap1']);
             Route::post('/cuti/{cutiId}/verifikasi-tahap-2', [DataCutiController::class, 'verifikasiTahap2']);
             Route::post('/get-cuti', [DataCutiController::class, 'index']);
             Route::get('/cuti/export', [DataCutiController::class, 'exportJadwalCuti']);
             Route::apiResource('/cuti', DataCutiController::class);
-
+            
             // ! Izin ===========>
-            Route::post('/izin/{izinId}/verifikasi-perizinan', [DataCutiController::class, 'verifikasiRiwayatIzin']);
+            Route::post('/get-perizinan', [DataRiwayatPerizinanController::class, 'index']);
+            Route::post('/izin/{izinId}/verifikasi-perizinan', [DataRiwayatPerizinanController::class, 'verifikasiRiwayatIzin']);
+            Route::get('/izin/{id}', [DataRiwayatPerizinanController::class, 'show']);
         });
 
         Route::group(['prefix' => '/keuangan'], function () {

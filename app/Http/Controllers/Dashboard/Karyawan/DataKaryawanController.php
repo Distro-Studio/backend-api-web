@@ -1426,13 +1426,13 @@ class DataKaryawanController extends Controller
     $role = $karyawan->users->roles->first();
 
     $berkasFields = [
-      'file_ktp' => $karyawan->file_ktp,
-      'file_kk' => $karyawan->file_kk,
-      'file_sip' => $karyawan->file_sip,
-      'file_bpjs_kesehatan' => $karyawan->file_bpjsksh,
-      'file_bpjs_ketenagakerjaan' => $karyawan->file_bpjsktk,
-      'file_ijazah' => $karyawan->file_ijazah,
-      'file_sertifikat' => $karyawan->file_sertifikat,
+      'file_ktp' => $karyawan->file_ktp ?? null,
+      'file_kk' => $karyawan->file_kk ?? null,
+      'file_sip' => $karyawan->file_sip ?? null,
+      'file_bpjs_kesehatan' => $karyawan->file_bpjsksh ?? null,
+      'file_bpjs_ketenagakerjaan' => $karyawan->file_bpjsktk ?? null,
+      'file_ijazah' => $karyawan->file_ijazah ?? null,
+      'file_sertifikat' => $karyawan->file_sertifikat ?? null,
     ];
 
     $baseUrl = env('STORAGE_SERVER_DOMAIN');
@@ -1561,13 +1561,13 @@ class DataKaryawanController extends Controller
     $role = $karyawan->users->roles->first();
 
     $berkasFields = [
-      'file_ktp' => $karyawan->file_ktp,
-      'file_kk' => $karyawan->file_kk,
-      'file_sip' => $karyawan->file_sip,
-      'file_bpjs_kesehatan' => $karyawan->file_bpjsksh,
-      'file_bpjs_ketenagakerjaan' => $karyawan->file_bpjsktk,
-      'file_ijazah' => $karyawan->file_ijazah,
-      'file_sertifikat' => $karyawan->file_sertifikat,
+      'file_ktp' => $karyawan->file_ktp ?? null,
+      'file_kk' => $karyawan->file_kk ?? null,
+      'file_sip' => $karyawan->file_sip ?? null,
+      'file_bpjs_kesehatan' => $karyawan->file_bpjsksh ?? null,
+      'file_bpjs_ketenagakerjaan' => $karyawan->file_bpjsktk ?? null,
+      'file_ijazah' => $karyawan->file_ijazah ?? null,
+      'file_sertifikat' => $karyawan->file_sertifikat ?? null,
     ];
 
     $baseUrl = env('STORAGE_SERVER_DOMAIN');

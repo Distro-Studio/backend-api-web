@@ -164,6 +164,17 @@ class DataRiwayatPerubahanController extends Controller
             }
         }
 
+        if (isset($filters['status_verfikasi'])) {
+            $statusverfikasi = $filters['status_verfikasi'];
+            $data_perubahan->whereHas('status_perubahans', function ($query) use ($statusverfikasi) {
+                if (is_array($statusverfikasi)) {
+                    $query->whereIn('id', $statusverfikasi);
+                } else {
+                    $query->where('id', '=', $statusverfikasi);
+                }
+            });
+        }
+
         // Search
         if (isset($filters['search'])) {
             $searchTerm = '%' . $filters['search'] . '%';

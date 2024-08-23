@@ -49,7 +49,7 @@ class RoleSeeder extends Seeder
             // verifikasi
             'verifikasi1 berkas',
             'verifikasi1 riwayatPerubahan',
-            'verifikasi1 riwayatPerizinan',
+            'view riwayatPerizinan', 'export riwayatPerizinan', 'verifikasi1 riwayatPerizinan',
             
             'create diklat', 'view diklat', 'export diklat', 'verifikasi1 diklat', 'verifikasi2 diklat',
             'view pelaporanKaryawan', 'export pelaporanKaryawan',
