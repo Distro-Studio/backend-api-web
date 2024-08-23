@@ -32,7 +32,7 @@ class DataTukarJadwalController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Karyawan pengajuan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
         }
 
-        $jadwal = Jadwal::with('shifts')->where('user_id', $userId)->where('shift_id', '!=', 0)->get();
+        $jadwal = Jadwal::with('shifts')->where('user_id', $userId)->get();
         if ($jadwal->isEmpty()) {
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Jadwal karyawan pengajuan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
         }
@@ -120,7 +120,7 @@ class DataTukarJadwalController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Karyawan ditukar tidak ditemukan.'), Response::HTTP_NOT_FOUND);
         }
 
-        $jadwal = Jadwal::with('shifts')->where('user_id', $userId)->where('shift_id', '!=', 0)->get();
+        $jadwal = Jadwal::with('shifts')->where('user_id', $userId)->get();
         if ($jadwal->isEmpty()) {
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Jadwal karyawan ditukar tidak ditemukan.'), Response::HTTP_NOT_FOUND);
         }
@@ -560,39 +560,54 @@ class DataTukarJadwalController extends Controller
 
         $formattedData = [
             'id' => $tukarJadwal->id,
-            'unit_kerja' => $tukarJadwal->user_pengajuans->data_karyawans->unit_kerjas,
-            'user_pengajuan' => [
-                'user' => [
-                    'id' => $userPengajuan->id,
-                    'nama' => $userPengajuan->nama,
-                    'email_verified_at' => $userPengajuan->email_verified_at,
-                    'data_karyawan_id' => $userPengajuan->data_karyawan_id,
-                    'foto_profil' => $userPengajuan->foto_profil,
-                    'data_completion_step' => $userPengajuan->data_completion_step,
-                    'status_aktif' => $userPengajuan->status_aktif,
-                    'created_at' => $userPengajuan->created_at,
-                    'updated_at' => $userPengajuan->updated_at,
-                ],
-                'jadwal' => $jadwalPengajuan,
-                'status' => $tukarJadwal->status_tukar_jadwals,
-                'kategori' => $tukarJadwal->kategori_tukar_jadwals,
+            'tanggal_pengajuan' => $tukarJadwal->created_at,
+            'status_penukaran' => $tukarJadwal->status_tukar_jadwals,
+            'kategori_penukaran' => $tukarJadwal->kategori_tukar_jadwals,
+            'unit_kerja' => $userPengajuan->data_karyawans->unit_kerjas,
+            'karyawan_pengajuan' => [
+                'id' => $userPengajuan->id,
+                'nama' => $userPengajuan->nama,
+                'email_verified_at' => $userPengajuan->email_verified_at,
+                'data_karyawan_id' => $userPengajuan->data_karyawan_id,
+                'foto_profil' => $userPengajuan->foto_profil,
+                'data_completion_step' => $userPengajuan->data_completion_step,
+                'status_aktif' => $userPengajuan->status_aktif,
+                'created_at' => $userPengajuan->created_at,
+                'updated_at' => $userPengajuan->updated_at
             ],
-            'user_ditukar' => [
-                'user' => [
-                    'id' => $userDitukar->id,
-                    'nama' => $userDitukar->nama,
-                    'email_verified_at' => $userDitukar->email_verified_at,
-                    'data_karyawan_id' => $userDitukar->data_karyawan_id,
-                    'foto_profil' => $userDitukar->foto_profil,
-                    'data_completion_step' => $userDitukar->data_completion_step,
-                    'status_aktif' => $userDitukar->status_aktif,
-                    'created_at' => $userDitukar->created_at,
-                    'updated_at' => $userDitukar->updated_at,
-                ],
-                'jadwal' => $jadwalDitukar,
-                'status' => $tukarJadwal->status_tukar_jadwals,
-                'kategori' => $tukarJadwal->kategori_tukar_jadwals,
+            'karyawan_ditukar' => [
+                'id' => $userDitukar->id,
+                'nama' => $userDitukar->nama,
+                'email_verified_at' => $userDitukar->email_verified_at,
+                'data_karyawan_id' => $userDitukar->data_karyawan_id,
+                'foto_profil' => $userDitukar->foto_profil,
+                'data_completion_step' => $userDitukar->data_completion_step,
+                'status_aktif' => $userDitukar->status_aktif,
+                'created_at' => $userDitukar->created_at,
+                'updated_at' => $userDitukar->updated_at
             ],
+            'pertukaran_jadwal' => [
+                [
+                    'jadwal_karyawan_pengajuan' => [
+                        'id' => $jadwalPengajuan->id,
+                        'tgl_mulai' => $jadwalPengajuan->tgl_mulai,
+                        'tgl_selesai' => $jadwalPengajuan->tgl_selesai,
+                        'shift' => $jadwalPengajuan->shifts,
+                        'created_at' => $jadwalPengajuan->created_at,
+                        'updated_at' => $jadwalPengajuan->updated_at
+                    ],
+                    'jadwal_karyawan_ditukar' => [
+                        'id' => $jadwalDitukar->id,
+                        'tgl_mulai' => $jadwalDitukar->tgl_mulai,
+                        'tgl_selesai' => $jadwalDitukar->tgl_selesai,
+                        'shift' => $jadwalDitukar->shifts,
+                        'created_at' => $jadwalDitukar->created_at,
+                        'updated_at' => $jadwalDitukar->updated_at
+                    ]
+                ]
+            ],
+            'created_at' => $tukarJadwal->created_at,
+            'updated_at' => $tukarJadwal->updated_at
         ];
 
         return response()->json([

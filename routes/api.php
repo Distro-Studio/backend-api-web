@@ -63,7 +63,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/get-list-jabatan', [DataKaryawanController::class, 'getAllDataJabatan']);
     Route::get('/get-list-status-karyawan', [DataKaryawanController::class, 'getAllDataStatusKaryawan']);
     Route::get('/get-list-kompetensi', [DataKaryawanController::class, 'getAllDataKompetensi']);
-    Route::get('/get-list-role', [DataKaryawanController::class, 'getAllDataRole']); // TODO: jika yang login bukan super admin hilangkan list opsi SUPER ADMIN
+    Route::get('/get-list-role', [DataKaryawanController::class, 'getAllDataRole']);
     Route::get('/get-list-kelompok-gaji', [DataKaryawanController::class, 'getAllDataKelompokGaji']);
     Route::get('/get-list-ptkp', [DataKaryawanController::class, 'getAllDataPTKP']);
     Route::get('/get-list-kategori-transfer', [DataTransferKaryawanController::class, 'getAllKategoriTransfer']);
@@ -219,8 +219,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::post('/diklat/{diklatId}/verifikasi-diklat-eksternal', [DiklatController::class, 'verifikasiDiklatExternal']);
 
             // ! Pelaporan ===========>
-            Route::post('/get-data-pelaporan', [PelaporanController::class, 'index']);
-            Route::get('/pelaporan/export', [PelaporanController::class, 'exportPelaporan']);
+            // Route::post('/get-data-pelaporan', [PelaporanController::class, 'index']);
+            // Route::get('/pelaporan/export', [PelaporanController::class, 'exportPelaporan']);
 
             // ! Jenis Penilaian ===========>
             Route::post('/jenis-penilaian/restore/{jenis_penilaian}', [JenisPenilaianController::class, 'restore']);
@@ -228,12 +228,12 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::apiResource('/jenis-penilaian', JenisPenilaianController::class);
 
             // ! Penilaian ===========>
-            // Route::get('/get-user-dinilai', [PenilaianController::class, 'getUserDinilai']);
-            // Route::get('/get-user-penilai', [PenilaianController::class, 'getUserPenilai']);
-            // Route::post('/get-user-belum-dinilai', [PenilaianController::class, 'getKaryawanBelumDinilai']);
-            // Route::post('/get-data-penilaian', [PenilaianController::class, 'index']);
-            // Route::get('/penilaian/export', [PenilaianController::class, 'exportPenilaian']);
-            // Route::apiResource('/penilaian', PenilaianController::class);
+            Route::get('/get-user-dinilai', [PenilaianController::class, 'getUserDinilai']);
+            Route::get('/get-user-penilai', [PenilaianController::class, 'getUserPenilai']);
+            Route::post('/get-user-belum-dinilai', [PenilaianController::class, 'getKaryawanBelumDinilai']);
+            Route::post('/get-data-penilaian', [PenilaianController::class, 'index']);
+            Route::get('/penilaian/export', [PenilaianController::class, 'exportPenilaian']);
+            Route::apiResource('/penilaian', PenilaianController::class);
         });
 
         Route::group(['prefix' => '/pengaturan'], function () {

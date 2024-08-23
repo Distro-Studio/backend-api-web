@@ -44,7 +44,7 @@ class StorageServerHelper
 
 	public static function login()
 	{
-		$response = Http::asForm()->post('http://127.0.0.1:8001/api/login', [
+		$response = Http::asForm()->post(env('STORAGE_SERVER_DOMAIN') . '/api/login', [
 			'username' => env('USERNAME_STORAGE'),
 			'password' => env('PASSWORD_STORAGE')
 		]);
@@ -68,7 +68,7 @@ class StorageServerHelper
 		if (self::$token) {
 			Http::withHeaders([
 				'Authorization' => 'Bearer ' . self::$token,
-			])->post('http://127.0.0.1:8001/api/logout');
+			])->post(env('STORAGE_SERVER_DOMAIN') . '/api/logout');
 
 			self::$token = null;
 		}
@@ -82,7 +82,7 @@ class StorageServerHelper
 
 		$responseupload = Http::withHeaders([
 			'Authorization' => 'Bearer ' . self::$token,
-		])->asMultipart()->post('http://127.0.0.1:8001/api/upload', [
+		])->asMultipart()->post(env('STORAGE_SERVER_DOMAIN') . '/api/upload', [
 			'filename' => $filename,
 			// 'filename' => $random_filename,
 			'file' => fopen($file->getRealPath(), 'r'),
@@ -104,7 +104,7 @@ class StorageServerHelper
 
 		$responseupload = Http::withHeaders([
 			'Authorization' => 'Bearer ' . self::$token,
-		])->asMultipart()->post('http://127.0.0.1:8001/api/upload', [
+		])->asMultipart()->post(env('STORAGE_SERVER_DOMAIN') . '/api/upload', [
 			'filename' => $filename,
 			'file' => fopen($file->getRealPath(), 'r'),
 			'kategori' => 'Umum'

@@ -658,9 +658,13 @@ class DataKaryawanController extends Controller
     $user = $berkas->first()->users;
     $baseUrl = env('STORAGE_SERVER_DOMAIN');
 
+    $alasanDitolak = null;
     $statusBerkas = 'Diverifikasi';
-    if ($berkas->where('status_berkas_id', 1)->isNotEmpty()) {
-      $statusBerkas = 'Belum Diverifikasi';
+    if ($berkas->contains('status_berkas_id', 1)) {
+      $statusBerkas = 'Menunggu';
+    } elseif ($berkas->contains('status_berkas_id', 3)) {
+      $statusBerkas = 'Ditolak';
+      $alasanDitolak = $berkas->where('status_berkas_id', 3)->sortByDesc('updated_at')->first()->alasan;
     }
 
     // Format data berkas
@@ -702,7 +706,11 @@ class DataKaryawanController extends Controller
           'updated_at' => $user->updated_at,
         ],
         'jumlah_dokumen' => $berkas->count(),
-        'status_berkas' => $statusBerkas,
+        'status_berkas' => [
+          'status' => $statusBerkas,
+          'alasan' => $alasanDitolak,
+          'terakhir_diperbarui' => $berkas->sortByDesc('updated_at')->first()->updated_at
+        ],
         'data_dokumen' => $formattedData,
       ],
     ], Response::HTTP_OK);

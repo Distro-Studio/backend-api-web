@@ -29,14 +29,11 @@ class LemburJadwalExport implements FromCollection, WithHeadings, WithMapping
         return [
             'no',
             'nama',
-            'tanggal_pengajuan',
             'tanggal_mulai',
             'tanggal_selesai',
             'shift',
             'durasi',
             'catatan',
-            'kompensasi_lembur',
-            'status_lembur',
             'created_at',
             'updated_at',
         ];
@@ -51,24 +48,19 @@ class LemburJadwalExport implements FromCollection, WithHeadings, WithMapping
         $seconds = RandomHelper::convertTimeStringToSeconds($timeString);
         $duration = RandomHelper::convertToHoursMinutes($seconds);
 
-        $convertTgl_Pengajuan = RandomHelper::convertToDateString($lembur->tgl_pengajuan);
         $convertTgl_Mulai = RandomHelper::convertToDateString($lembur->jadwals->tgl_mulai);
         $convertTgl_Selesai = RandomHelper::convertToDateString($lembur->jadwals->tgl_selesai);
-        $tgl_pengajuan = Carbon::parse($convertTgl_Pengajuan)->format('d-m-Y');
         $tgl_mulai = Carbon::parse($convertTgl_Mulai)->format('d-m-Y');
         $tgl_selesai = Carbon::parse($convertTgl_Selesai)->format('d-m-Y');
 
         return [
             $no++,
             $lembur->users->nama,
-            $tgl_pengajuan,
             $tgl_mulai,
             $tgl_selesai,
             $lembur->jadwals->shifts->nama,
             $duration, // Ubah durasi menjadi jam dan menit
             $lembur->catatan,
-            $lembur->kategori_kompensasis->label,
-            $lembur->status_lemburs->label,
             Carbon::parse($lembur->created_at)->format('d-m-Y H:i:s'),
             Carbon::parse($lembur->updated_at)->format('d-m-Y H:i:s')
         ];

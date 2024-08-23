@@ -39,6 +39,9 @@ use Database\Seeders\JadwalKaryawan\TukarJadwalSeeder;
 use Database\Seeders\Pengaturan_Finance\TERSeeder;
 use Database\Seeders\Pengaturan_Finance\PremiSeeder;
 use Database\Seeders\Karyawan\KeluargaKaryawanSeeder;
+use Database\Seeders\Karyawan\PerubahanBerkasSeeder;
+use Database\Seeders\Karyawan\PerubahanKeluargaSeeder;
+use Database\Seeders\Karyawan\PerubahanPersonalSeeder;
 use Database\Seeders\Karyawan\RiwayatPerubahanSeeder;
 use Database\Seeders\Karyawan\TrackRecordSeeder;
 use Database\Seeders\Karyawan\TransferKaryawanSeeder;
@@ -119,7 +122,9 @@ class DatabaseSeeder extends Seeder
       KaryawanSeeder::class,
       KeluargaKaryawanSeeder::class,
       TransferKaryawanSeeder::class,
-      RiwayatPerubahanSeeder::class,
+      PerubahanBerkasSeeder::class,
+      PerubahanKeluargaSeeder::class,
+      PerubahanPersonalSeeder::class,
 
         // // /* ==== Jadwals ==== */
         // JadwalSeeder::class,
