@@ -22,26 +22,6 @@ use App\Exports\Keuangan\LaporanPenggajian\RekapGajiPenerimaanExport;
 
 class PenggajianController extends Controller
 {
-    // public function calculatedInfo()
-    // {
-    //     if (!Gate::allows('view penggajianKaryawan')) {
-    //         return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
-    //     }
-
-    //     $periodeSekarang = Carbon::now()->format('Y-m');
-    //     $jumlahKaryawanTetap = DataKaryawan::where('status_karyawan', 'Tetap')->count();
-    //     $jumlahKaryawanKontrak = DataKaryawan::where('status_karyawan', 'Kontrak')->count();
-    //     return response()->json([
-    //         'status' => Response::HTTP_OK,
-    //         'message' => 'Perhitungan informasi tambahan penggajian karyawan.',
-    //         'data' => [
-    //             'periode_sekarang' => $periodeSekarang,
-    //             'karyawan_tetap' => $jumlahKaryawanTetap,
-    //             'karyawan_kontrak' => $jumlahKaryawanKontrak
-    //         ],
-    //     ], Response::HTTP_OK);
-    // }
-
     public function publikasiPenggajian()
     {
         if (!Gate::allows('create penggajianKaryawan')) {

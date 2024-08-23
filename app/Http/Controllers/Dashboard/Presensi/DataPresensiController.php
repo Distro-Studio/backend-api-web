@@ -6,6 +6,7 @@ use Carbon\Carbon;
 use App\Models\Berkas;
 use App\Models\Jadwal;
 use App\Models\Presensi;
+use App\Models\HariLibur;
 use App\Models\DataKaryawan;
 use App\Models\LokasiKantor;
 use Illuminate\Http\Request;
@@ -44,7 +45,7 @@ class DataPresensiController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
-        $today = Carbon::today()->format('Y-m-d');
+        $today = Carbon::today('Asia/Jakarta')->format('Y-m-d');
 
         // Ambil ID untuk setiap kategori dari tabel kategori_presensis
         $kategoriTepatWaktuId = DB::table('kategori_presensis')->where('label', 'Tepat Waktu')->value('id');
@@ -77,18 +78,30 @@ class DataPresensiController extends Controller
             ->whereDate('jam_masuk', $today)
             ->count('user_id');
 
-        // Konversi tanggal tgl_mulai dan tgl_selesai menjadi format yang sesuai untuk perbandingan
-        $jadwalLibur = Jadwal::where('shift_id', 0)->get();
+        // Hitung karyawan shift yang libur berdasarkan user_id
+        $countLiburShift = Jadwal::where('shift_id', 0)
+            ->whereDate('tgl_mulai', '<=', $today)
+            ->whereDate('tgl_selesai', '>=', $today)
+            ->count('user_id');
 
-        $countLibur = $jadwalLibur->filter(function ($jadwal) use ($today) {
-            $tglMulai = Carbon::parse(RandomHelper::convertToDateString($jadwal->tgl_mulai))->format('Y-m-d');
-            $tglSelesai = Carbon::parse(RandomHelper::convertToDateString($jadwal->tgl_selesai))->format('Y-m-d');
-            return $tglMulai <= $today && $tglSelesai >= $today;
-        })->count();
+        // Periksa apakah hari ini adalah hari libur
+        $isHariLibur = HariLibur::whereDate('tanggal', $today)->exists();
+
+        // Hitung karyawan non-shift yang libur berdasarkan hari libur
+        $countLiburNonShift = DataKaryawan::whereHas('unit_kerjas', function ($query) {
+            $query->where('jenis_karyawan', 0);
+        })->when($isHariLibur, function ($query) {
+            return $query->distinct('id')->count('id');  // Hitung berdasarkan user_id
+        }, function ($query) {
+            return 0;
+        });
+
+        // Total karyawan yang libur
+        $countLibur = $countLiburShift + $countLiburNonShift;
 
         // Hitung total hadir dan total tidak hadir
         $totalHadir = $countTepatWaktu + $countTerlambat;
-        $totalTidakHadir = $countCuti + $countAbsen + $countLibur;
+        $totalTidakHadir = $countCuti + $countAbsen;
 
         return response()->json([
             'status' => Response::HTTP_OK,

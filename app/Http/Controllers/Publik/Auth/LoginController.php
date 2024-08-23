@@ -4,18 +4,12 @@ namespace App\Http\Controllers\Publik\Auth;
 
 use App\Models\User;
 use Illuminate\Support\Str;
-use App\Models\DataKaryawan;
-use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Cookie;
 use App\Http\Requests\LoginDashboardRequest;
-use App\Jobs\EmailNotification\AccountEmailJob;
-use App\Http\Requests\UpdateUserPasswordRequest;
 use App\Http\Resources\Dashboard\User\UserResource;
-use App\Http\Requests\UpdatePasswordWrongEmailRequest;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
 
 class LoginController extends Controller
@@ -24,12 +18,6 @@ class LoginController extends Controller
     {
         $credentials = $request->validated();
 
-        // if (!auth()->attempt($credentials)) {
-        //     return response()->json(new WithoutDataResource(Response::HTTP_UNAUTHORIZED, 'Password atau email anda tidak valid'), Response::HTTP_UNAUTHORIZED);
-        // }
-        // $user = auth()->user();
-
-        // Retrieve the user based on the email in the data_karyawans table
         $user = User::whereHas('data_karyawans', function ($query) use ($credentials) {
             $query->where('email', $credentials['email']);
         })->first();

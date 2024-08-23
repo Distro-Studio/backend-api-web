@@ -127,12 +127,12 @@ class DatabaseSeeder extends Seeder
       PerubahanKeluargaSeeder::class,
       PerubahanPersonalSeeder::class,
 
-        // // /* ==== Jadwals ==== */
+        // /* ==== Jadwals ==== */
         PerizinanSeeder::class,
-        JadwalSeeder::class,
+        // JadwalSeeder::class,
         // LemburSeeder::class,
-        CutiJadwalSeeder::class,
-        TukarJadwalSeeder::class,
+        // CutiJadwalSeeder::class,
+        // TukarJadwalSeeder::class,
 
         // /* ==== Presensi ==== */
         // PresensiSeeder::class,

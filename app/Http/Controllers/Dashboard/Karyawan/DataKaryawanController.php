@@ -1694,8 +1694,8 @@ class DataKaryawanController extends Controller
 
     // Memeriksa apakah email telah berubah
     if ($oldEmail !== $newEmail) {
-      if ($user->status_aktif !== 1) {
-        return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Email tidak dapat diubah, Status akun harus dalam keadaan belum aktif.'), Response::HTTP_NOT_ACCEPTABLE);
+      if ($user->status_aktif !== 1 && $user->status_aktif !== 3) {
+        return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Email tidak dapat diubah, Status akun harus dalam keadaan belum aktif atau dinonaktifkan.'), Response::HTTP_NOT_ACCEPTABLE);
       }
 
       $generatedPassword = RandomHelper::generatePassword();

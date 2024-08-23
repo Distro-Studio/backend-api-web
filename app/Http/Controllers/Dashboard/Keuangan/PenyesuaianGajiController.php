@@ -14,13 +14,11 @@ use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Gate;
 use Maatwebsite\Excel\Facades\Excel;
-use App\Jobs\Penggajian\CreateGajiJob;
 use App\Exports\Keuangan\PenyesuaianGajiExport;
 use App\Helpers\CalculateHelper;
 use App\Http\Requests\StorePenyesuaianGajiRequest;
 use App\Http\Requests\StorePenyesuaianGajiCustomRequest;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
-use App\Http\Resources\Dashboard\Keuangan\PenyesuaianGajiResource;
 
 class PenyesuaianGajiController extends Controller
 {

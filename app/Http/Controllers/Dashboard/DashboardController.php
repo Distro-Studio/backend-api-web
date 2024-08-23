@@ -8,18 +8,18 @@ use App\Models\Lembur;
 use App\Models\Jabatan;
 use App\Models\Presensi;
 use App\Models\DataKaryawan;
-use Illuminate\Http\Request;
 use App\Helpers\RandomHelper;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
+use App\Models\HariLibur;
 
 class DashboardController extends Controller
 {
     public function calculatedHeader()
     {
-        $today = Carbon::today()->format('Y-m-d');
+        $today = Carbon::today('Asia/Jakarta')->format('Y-m-d');
 
         // Retrieve the ID for each category
         $kategoriCutiId = DB::table('kategori_presensis')->where('label', 'Cuti')->value('id');
@@ -28,14 +28,26 @@ class DashboardController extends Controller
         // Calculate total number of employees excluding the super admin
         $calculatedKaryawan = DataKaryawan::where('email', '!=', 'super_admin@admin.rski')->count();
 
-        // Konversi tanggal tgl_mulai dan tgl_selesai menjadi format yang sesuai untuk perbandingan
-        $jadwalLibur = Jadwal::where('shift_id', 0)->get();
+        // Hitung karyawan shift yang libur berdasarkan user_id
+        $countLiburShift = Jadwal::where('shift_id', 0)
+            ->whereDate('tgl_mulai', '<=', $today)
+            ->whereDate('tgl_selesai', '>=', $today)
+            ->count('user_id');
 
-        $countLibur = $jadwalLibur->filter(function ($jadwal) use ($today) {
-            $tglMulai = Carbon::parse(RandomHelper::convertToDateString($jadwal->tgl_mulai))->format('Y-m-d');
-            $tglSelesai = Carbon::parse(RandomHelper::convertToDateString($jadwal->tgl_selesai))->format('Y-m-d');
-            return $tglMulai <= $today && $tglSelesai >= $today;
-        })->count();
+        // Periksa apakah hari ini adalah hari libur
+        $isHariLibur = HariLibur::whereDate('tanggal', $today)->exists();
+
+        // Hitung karyawan non-shift yang libur berdasarkan hari libur
+        $countLiburNonShift = DataKaryawan::whereHas('unit_kerjas', function ($query) {
+            $query->where('jenis_karyawan', 0);
+        })->when($isHariLibur, function ($query) {
+            return $query->distinct('id')->count('id');  // Hitung berdasarkan user_id
+        }, function ($query) {
+            return 0;
+        });
+
+        // Total karyawan yang libur
+        $countLibur = $countLiburShift + $countLiburNonShift;
 
         // Calculate the number of employees on leave today
         $countCuti = Presensi::where('kategori_presensi_id', $kategoriCutiId)
@@ -192,11 +204,8 @@ class DashboardController extends Controller
                     'created_at' => $lembur->jadwals->created_at,
                     'updated_at' => $lembur->jadwals->updated_at
                 ],
-                'tgl_pengajuan' => $lembur->tgl_pengajuan,
-                'kompensasi_lembur_id' => $lembur->kategori_kompensasis,
                 'durasi' => $lembur->durasi,
                 'catatan' => $lembur->catatan,
-                'status_lembur_id' => $lembur->status_lemburs,
                 'created_at' => $lembur->created_at,
                 'updated_at' => $lembur->updated_at
             ];
