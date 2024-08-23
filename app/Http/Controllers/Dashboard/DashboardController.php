@@ -164,7 +164,7 @@ class DashboardController extends Controller
 
     public function getLemburToday()
     {
-        $today = Carbon::today()->format('Y-m-d');
+        $today = Carbon::today('Asia/Jakarta')->format('Y-m-d');
 
         // Retrieve lembur entries for today based on tgl_mulai from jadwals
         $dataLembur = Lembur::with(['users.data_karyawans.unit_kerjas', 'jadwals' => function ($query) use ($today) {
