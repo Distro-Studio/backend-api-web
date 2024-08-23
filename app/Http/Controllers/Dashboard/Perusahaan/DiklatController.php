@@ -418,6 +418,17 @@ class DiklatController extends Controller
             } else {
                 return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Diklat Eksternal '{$diklat->nama}' tidak dalam status untuk disetujui."), Response::HTTP_BAD_REQUEST);
             }
+        } elseif ($request->has('diklat_eksternal_ditolak') && $request->diklat_eksternal_ditolak == 1) {
+            // Jika status_diklat_id = 2, maka bisa ditolak
+            if ($status_diklat_id == 2) {
+                $diklat->status_diklat_id = 5;
+                $diklat->verifikator_2 = Auth::id();
+                $diklat->alasan = $request->input('alasan', null);
+                $diklat->save();
+                return response()->json(new WithoutDataResource(Response::HTTP_OK, "Verifikasi tahap 2 untuk Diklat Eksternal '{$diklat->nama}' telah ditolak."), Response::HTTP_OK);
+            } else {
+                return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Diklat Eksternal '{$diklat->nama}' tidak dalam status untuk ditolak pada tahap 2."), Response::HTTP_BAD_REQUEST);
+            }
         } else {
             return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Aksi tidak valid.'), Response::HTTP_BAD_REQUEST);
         }

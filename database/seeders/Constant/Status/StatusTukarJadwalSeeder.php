@@ -13,7 +13,8 @@ class StatusTukarJadwalSeeder extends Seeder
      */
     public function run(): void
     {
-        $status = ['Menunggu', 'Disetujui', 'Tidak Disetujui'];
+        // $status = ['Menunggu', 'Disetujui', 'Tidak Disetujui'];
+        $status = ['Menunggu Verifikasi', 'Verifikasi 1 Disetujui', 'Verifikasi 1 Ditolak', 'Verifikasi 2 Disetujui', 'Verifikasi 2 Ditolak'];
 
         foreach ($status as $status) {
             DB::table('status_tukar_jadwals')->insert([

@@ -19,6 +19,9 @@ return new class extends Migration
             $table->foreignId('jadwal_ditukar')->constrained('jadwals');
             $table->foreignId('status_penukaran_id')->constrained('status_tukar_jadwals');
             $table->foreignId('kategori_penukaran_id')->constrained('kategori_tukar_jadwals');
+            $table->foreignId('verifikator_1')->nullable()->constrained('users');
+            $table->foreignId('verifikator_2')->nullable()->constrained('users');
+            $table->text('alasan')->nullable();
             $table->softDeletes();
             $table->timestamps();
         });

@@ -72,4 +72,24 @@ class TukarJadwal extends Model
     {
         return $this->belongsTo(KategoriTukarJadwal::class, 'kategori_penukaran_id', 'id');
     }
+
+    /**
+     * Get the verifikator_1_users that owns the TukarJadwal
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function verifikator_1_users(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'verifikator_1', 'id');
+    }
+
+    /**
+     * Get the verifikator_2_admins that owns the TukarJadwal
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function verifikator_2_admins(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'verifikator_2', 'id');
+    }
 }

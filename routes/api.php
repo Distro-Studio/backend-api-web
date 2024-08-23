@@ -162,6 +162,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::get('/get-tukar-jadwal/user-ditukar/{jadwalId}', [DataTukarJadwalController::class, 'getUserDitukar']);
             Route::get('/get-tukar-jadwal/jadwal-ditukar/{userId}', [DataTukarJadwalController::class, 'getJadwalDitukar']);
 
+            Route::post('/tukar-jadwal/{tukarJadwalId}/verifikasi-step-2', [DataTukarJadwalController::class, 'verifikasiTahap2']);
             Route::get('/tukar-jadwal/export', [DataTukarJadwalController::class, 'exportJadwalTukar']);
             Route::apiResource('/tukar-jadwal', DataTukarJadwalController::class);
 

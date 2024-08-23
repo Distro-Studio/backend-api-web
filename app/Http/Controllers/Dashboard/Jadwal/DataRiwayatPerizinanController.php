@@ -286,7 +286,6 @@ class DataRiwayatPerizinanController extends Controller
         ], Response::HTTP_OK);
     }
 
-
     public function verifikasiRiwayatIzin(Request $request, $izinId)
     {
         if (!Gate::allows('verifikasi1 riwayatPerizinan')) {
