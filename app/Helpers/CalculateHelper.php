@@ -3,11 +3,13 @@
 namespace App\Helpers;
 
 use Carbon\Carbon;
+use App\Models\Lembur;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
+use App\Helpers\RandomHelper;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\DB;
 
 class CalculateHelper
 {
@@ -321,10 +323,10 @@ class CalculateHelper
         return $pph21Bulanan;
     }
 
-    public static function calculatedPPH21ForDecember($dataKaryawan, $reward)
+    public static function calculatedPPH21ForDecember($dataKaryawan, $reward, $penghasilanTHR = 0, $rewardLembur)
     {
         // 1. Hitung bruto dan premi Desember
-        $penghasilanBrutoDesember = self::calculatedPenghasilanBruto($dataKaryawan, $reward);
+        $penghasilanBrutoDesember = self::calculatedPenghasilanBruto($dataKaryawan, $reward, $penghasilanTHR = 0, $rewardLembur);
         $totalPremiDesember = self::calculatedPremi($dataKaryawan->data_karyawan_id, $penghasilanBrutoDesember, $dataKaryawan->gaji_pokok);
         $currentYear = Carbon::now()->year;
 
@@ -401,7 +403,7 @@ class CalculateHelper
         return $bonusPresensi;
     }
 
-    public static function calculatedPenghasilanBruto($dataKaryawan, $reward, $penghasilanTHR = 0)
+    private function calculatedPenghasilanBruto($dataKaryawan, $reward, $penghasilanTHR = 0, $rewardLembur)
     {
         return $dataKaryawan->gaji_pokok
             + $reward
@@ -412,7 +414,35 @@ class CalculateHelper
             + $dataKaryawan->tunjangan_khusus
             + $dataKaryawan->tunjangan_lainnya
             + $dataKaryawan->uang_makan
-            + $dataKaryawan->uang_lembur;
+            + $rewardLembur;
+    }
+
+    public function calculatedLembur($dataKaryawan)
+    {
+        $rate_lembur = $dataKaryawan->uang_lembur;
+
+        // Ambil semua record lembur untuk karyawan ini
+        $lemburRecords = Lembur::where('user_id', $dataKaryawan->user_id)->get();
+
+        // Inisialisasi total bonus lembur
+        $totalBonusLembur = 0;
+
+        // Loop melalui setiap record lembur
+        foreach ($lemburRecords as $lembur) {
+            // Cek apakah durasi lembur null
+            if (!is_null($lembur->durasi)) {
+                // Konversi durasi menjadi menit
+                $durasiLembur = Carbon::parse($lembur->durasi);
+                $durasiMenit = ($durasiLembur->hour * 60) + $durasiLembur->minute;
+
+                // Hitung bonus lembur untuk lembur ini dan tambahkan ke total
+                $bonusLembur = ($rate_lembur / 60) * $durasiMenit;
+                $totalBonusLembur += $bonusLembur;
+                Log::info("Total bonus lembur: $totalBonusLembur, dari karyawan {$dataKaryawan->user_id}");
+            }
+        }
+
+        return $totalBonusLembur;
     }
 
     public static function calculatedTotalTunjangan($dataKaryawan)
