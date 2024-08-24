@@ -70,4 +70,14 @@ class JenisPenilaian extends Model
     {
         return $this->hasMany(Penilaian::class, 'jenis_penilaian_id', 'id');
     }
+
+    /**
+     * Get all of the pertanyaans for the JenisPenilaian
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function pertanyaans(): HasMany
+    {
+        return $this->hasMany(Pertanyaan::class, 'jenis_penilaian_id', 'id');
+    }
 }

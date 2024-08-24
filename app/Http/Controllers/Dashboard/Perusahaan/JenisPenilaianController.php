@@ -71,13 +71,41 @@ class JenisPenilaianController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
-        $jenis_penilaian = JenisPenilaian::find($id);
+        $jenis_penilaian = JenisPenilaian::with('pertanyaans')->find($id);
         if (!$jenis_penilaian) {
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data jenis penilaian karyawan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
         }
         $message = "Detail jenis penilaian karyawan untuk status '{$jenis_penilaian->status_karyawans->label}' dan jabatan dinilai '{$jenis_penilaian->jabatan_dinilais->nama_jabatan}' berhasil ditampilkan.";
 
-        return response()->json(new JenisPenilaianResource(Response::HTTP_OK, $message, $jenis_penilaian), Response::HTTP_OK);
+        $formattedData = [
+            'id' => $jenis_penilaian->id,
+            'jenis_penilaian' => [
+                'id' => $jenis_penilaian->id,
+                'nama' => $jenis_penilaian->nama,
+                'status_karyawan' => $jenis_penilaian->status_karyawans,
+                'jabatan_penilai' => $jenis_penilaian->jabatan_penilais,
+                'jabatan_dinilai' => $jenis_penilaian->jabatan_dinilais,
+            ],
+            'jumlah_pertanyaan' => $jenis_penilaian->pertanyaans->count(),
+            'list_pertanyaan' => $jenis_penilaian->pertanyaans->map(function ($pertanyaan) {
+                return [
+                    'id' => $pertanyaan->id,
+                    'pertanyaan' => $pertanyaan->pertanyaan,
+                    'deleted_at' => $pertanyaan->deleted_at,
+                    'created_at' => $pertanyaan->created_at,
+                    'updated_at' => $pertanyaan->updated_at,
+                ];
+            })->toArray(),
+            'deleted_at' => $jenis_penilaian->deleted_at,
+            'created_at' => $jenis_penilaian->created_at,
+            'updated_at' => $jenis_penilaian->updated_at
+        ];
+
+        return response()->json([
+            'status' => Response::HTTP_OK,
+            'message' => $message,
+            'data' => $formattedData
+        ], Response::HTTP_OK);
     }
 
     public function update(UpdateJenisPenilaianRequest $request, $id)

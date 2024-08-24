@@ -381,13 +381,15 @@ class PenilaianController extends Controller
         // Query untuk mengambil users yang belum memiliki penilaian
         $karyawanBelumDinilaiQuery = User::whereDoesntHave('user_penilaian_dinilais')
             ->whereHas('data_karyawans', function ($query) use ($filters) {
-                if (isset($filters['status_karyawan'])) {
-                    $statusKaryawan = $filters['status_karyawan'];
-                    if (is_array($statusKaryawan)) {
-                        $query->whereIn('status_karyawan_id', $statusKaryawan);
-                    } else {
-                        $query->where('status_karyawan_id', $statusKaryawan);
-                    }
+                if (isset($filters['jenis_karyawan'])) {
+                    $jenisKaryawan = $filters['jenis_karyawan'];
+                    $query->whereHas('unit_kerjas', function ($query) use ($jenisKaryawan) {
+                        if (is_array($jenisKaryawan)) {
+                            $query->whereIn('jenis_karyawan', $jenisKaryawan);
+                        } else {
+                            $query->where('jenis_karyawan', '=', $jenisKaryawan);
+                        }
+                    });
                 }
             });
         $karyawanBelumDinilai = $karyawanBelumDinilaiQuery->get();
@@ -413,6 +415,7 @@ class PenilaianController extends Controller
                     'updated_at' => $user->updated_at
                 ],
                 'status_karyawan' => $user->data_karyawans->status_karyawans ?? null,
+                'unit_kerja' => $user->data_karyawans->unit_kerjas ?? null,
             ];
         });
         return response()->json([
