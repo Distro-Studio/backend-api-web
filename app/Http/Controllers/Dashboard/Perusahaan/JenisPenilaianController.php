@@ -42,11 +42,22 @@ class JenisPenilaianController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data jenis penilaian karyawan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
         }
 
-        $successMessage = "Data jenis penilaian karyawan berhasil ditampilkan.";
-        $formattedData = $this->formatData($jenis_penilaian);
+        $formattedData = $jenis_penilaian->map(function ($jenis_penilaian) {
+            return [
+                'id' => $jenis_penilaian->id,
+                'nama' => $jenis_penilaian->nama,
+                'status_karyawan' => $jenis_penilaian->status_karyawans,
+                'jabatan_penilai' => $jenis_penilaian->jabatan_penilais,
+                'jabatan_dinilai' => $jenis_penilaian->jabatan_dinilais,
+                'deleted_at' => $jenis_penilaian->deleted_at,
+                'created_at' => $jenis_penilaian->created_at,
+                'updated_at' => $jenis_penilaian->updated_at
+            ];
+        });
+
         return response()->json([
             'status' => Response::HTTP_OK,
-            'message' => $successMessage,
+            'message' => "Data jenis penilaian karyawan berhasil ditampilkan.",
             'data' => $formattedData,
         ], Response::HTTP_OK);
     }
@@ -160,21 +171,5 @@ class JenisPenilaianController extends Controller
             $successMessage = 'Restore data tidak dapat diproses, Silahkan hubungi admin untuk dilakukan pengecekan ulang.';
             return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, $successMessage), Response::HTTP_BAD_REQUEST);
         }
-    }
-
-    protected function formatData(Collection $collection)
-    {
-        return $collection->transform(function ($jenis_penilaian) {
-            return [
-                'id' => $jenis_penilaian->id,
-                'nama' => $jenis_penilaian->nama,
-                'status_karyawan' => $jenis_penilaian->status_karyawans,
-                'jabatan_penilai' => $jenis_penilaian->jabatan_penilais,
-                'jabatan_dinilai' => $jenis_penilaian->jabatan_dinilais,
-                'deleted_at' => $jenis_penilaian->deleted_at,
-                'created_at' => $jenis_penilaian->created_at,
-                'updated_at' => $jenis_penilaian->updated_at
-            ];
-        });
     }
 }
