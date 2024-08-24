@@ -36,7 +36,7 @@ class DataKaryawan extends Model
         'ptkp_id' => 'integer',
         'masa_diklat' => 'integer',
         'verifikator_1' => 'integer',
-        'status_reward_presensi' => 'boolean',
+        'status_reward_presensi' => 'integer',
         'file_ktp' => 'integer',
         'file_kk' => 'integer',
         'file_sip' => 'integer',

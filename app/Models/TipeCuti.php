@@ -15,8 +15,8 @@ class TipeCuti extends Model
     protected $casts = [
         'id' => 'integer',
         'kuota' => 'integer',
-        'is_need_requirement' => 'boolean',
-        'cuti_administratif' => 'boolean'
+        'is_need_requirement' => 'integer',
+        'cuti_administratif' => 'integer'
     ];
 
     /**

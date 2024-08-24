@@ -15,7 +15,7 @@ class RewardbulanLalu extends Model
     protected $casts = [
         'id' => 'integer',
         'data_karyawan_id' => 'integer',
-        'status_reward' => 'boolean'
+        'status_reward' => 'integer'
     ];
 
     /**

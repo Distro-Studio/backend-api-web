@@ -16,7 +16,7 @@ class RiwayatPenggajian extends Model
     protected $casts = [
         'id' => 'integer',
         'karyawan_verifikasi' => 'integer',
-        'jenis_riwayat' => 'boolean',
+        'jenis_riwayat' => 'integer',
         'status_gaji_id' => 'integer'
     ];
 

@@ -14,9 +14,9 @@ class PerubahanKeluarga extends Model
     protected $casts = [
         'id' => 'integer',
         'riwayat_perubahan_id' => 'integer',
-        'jenis_perubahan' => 'boolean',
+        'jenis_perubahan' => 'integer',
         'data_keluarga_id' => 'integer',
-        'status_hidup' => 'boolean'
+        'status_hidup' => 'integer'
     ];
 
     /**

@@ -16,11 +16,11 @@ class Premi extends Model
     protected $casts = [
         'id' => 'integer',
         'kategori_potongan_id' => 'integer',
-        'jenis_premi' => 'boolean',
+        'jenis_premi' => 'integer',
         'besaran_premi' => 'integer',
         'minimal_rate' => 'integer',
         'maksimal_rate' => 'integer',
-        'has_custom_formula' => 'boolean'
+        'has_custom_formula' => 'integer'
     ];
 
     // Mutator for minimal_rate

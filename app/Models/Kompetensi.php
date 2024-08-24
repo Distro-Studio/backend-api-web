@@ -14,7 +14,7 @@ class Kompetensi extends Model
 
     protected $casts = [
         'id' => 'integer',
-        'jenis_kompetensi' => 'boolean',
+        'jenis_kompetensi' => 'integer',
         'tunjangan_kompetensi' => 'integer',
         'nilai_bor' => 'integer'
     ];

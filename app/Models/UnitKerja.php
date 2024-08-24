@@ -14,7 +14,7 @@ class UnitKerja extends Model
 
     protected $casts = [
         'id' => 'integer',
-        'jenis_karyawan' => 'boolean'
+        'jenis_karyawan' => 'integer',
     ];
 
     /**

@@ -15,7 +15,7 @@ class DataKeluarga extends Model
     protected $casts = [
         'id' => 'integer',
         'data_karyawan_id' => 'integer',
-        'status_hidup' => 'boolean',
+        'status_hidup' => 'integer',
     ];
 
     /**
