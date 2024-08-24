@@ -158,7 +158,7 @@ class DiklatController extends Controller
                 // Upload file using helper
                 $random_filename = Str::random(20);
                 $dataupload = StorageServerHelper::uploadToServer($request, $random_filename);
-                $gambarUrl = $dataupload['path'];
+                // $gambarUrl = $dataupload['path'];
 
                 $kategoriBerkas = KategoriBerkas::where('label', 'System')->first();
                 if (!$kategoriBerkas) {
@@ -182,6 +182,8 @@ class DiklatController extends Controller
                     throw new Exception('Berkas gagal di upload.');
                 }
 
+                $gambarId = $berkas->id;
+
                 StorageServerHelper::logout();
             }
 
@@ -189,7 +191,7 @@ class DiklatController extends Controller
             $jamSelesai = Carbon::parse(RandomHelper::convertToTimeString($data['jam_selesai']));
             $durasi = $jamMulai->diffInSeconds($jamSelesai);
             $diklat = Diklat::create([
-                'gambar' => $gambarUrl,
+                'gambar' => $gambarId,
                 'nama' => $data['nama'],
                 'kategori_diklat_id' => 1,
                 'status_diklat_id' => 1,
@@ -269,6 +271,8 @@ class DiklatController extends Controller
             'nama' => $diklat->nama,
             'kategori_diklat' => $diklat->kategori_diklats,
             'status_diklat' => $diklat->status_diklats,
+            'gambar' => $diklat->berkas_gambars ?? null,
+            // 'gambar' => $gambarUrl,
             'deskripsi' => $diklat->deskripsi,
             'kuota' => $diklat->kuota,
             'tgl_mulai' => $diklat->tgl_mulai,
@@ -277,10 +281,8 @@ class DiklatController extends Controller
             'jam_selesai' => $diklat->jam_selesai,
             'durasi' => $diklat->durasi,
             'lokasi' => $diklat->lokasi,
-            // 'gambar' => $gambarUrl,
-            'gambar' => $diklat->gambar ?? null,
             // 'dokumen_eksternal' => $dokumenUrl,
-            'dokumen_eksternal' => $diklat->dokumen_eksternal ?? null,
+            'dokumen_eksternal' => $diklat->berkas_dokumen_eksternals ?? null,
             'peserta_diklat' => $diklat->peserta_diklat->toArray(),
             'verifikator_1' => $diklat->verifikator_1_diklats ? [
                 'id' => $diklat->verifikator_1_diklats->id,

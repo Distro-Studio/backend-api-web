@@ -19,7 +19,7 @@ class PengumumanController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
-        $pengumuman = Pengumuman::all();
+        $pengumuman = Pengumuman::orderBy('created_at', 'desc')->get();
         if ($pengumuman->isEmpty()) {
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data pengumuman tidak ditemukan.'), Response::HTTP_NOT_FOUND);
         }

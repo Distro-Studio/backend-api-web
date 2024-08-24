@@ -6,6 +6,7 @@ use Carbon\Carbon;
 use App\Models\User;
 use App\Models\Jadwal;
 use App\Models\Lembur;
+use App\Models\NonShift;
 use App\Models\Notifikasi;
 use Illuminate\Http\Request;
 use App\Helpers\RandomHelper;
@@ -21,34 +22,110 @@ use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
 
 class DataLemburController extends Controller
 {
+    // public function getJadwalPengajuanLembur($userId)
+    // {
+    //     if (!Gate::allows('view tukarJadwal')) {
+    //         return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+    //     }
+
+    //     $user = User::where('id', $userId)->where('nama', '!=', 'Super Admin')->where('status_aktif', 2)
+    //         ->get();
+    //     if (!$user) {
+    //         return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Karyawan pengajuan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+    //     }
+
+    //     $jadwal = Jadwal::with('shifts')->where('user_id', $userId)->where('shift_id', '!=', 0)->get();
+    //     if ($jadwal->isEmpty()) {
+    //         return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Jadwal karyawan pengajuan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+    //     }
+
+    //     $start_date = $jadwal->min('tgl_mulai');
+    //     $end_date = $jadwal->max('tgl_selesai');
+    //     $date_range = $this->generateDateRange($start_date, $end_date);
+
+    //     $user_schedule_array = $this->formatSchedules($jadwal, $date_range);
+
+    //     return response()->json([
+    //         'status' => Response::HTTP_OK,
+    //         'message' => "Detai jadwal dan karyawan lembur berhasil ditampilkan.",
+    //         'data' => [
+    //             'user' => $user,
+    //             'list_jadwal' => $user_schedule_array
+    //         ]
+    //     ], Response::HTTP_OK);
+    // }
+
     public function getJadwalPengajuanLembur($userId)
     {
         if (!Gate::allows('view tukarJadwal')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
-        $user = User::where('id', $userId)->where('nama', '!=', 'Super Admin')->where('status_aktif', 2)
-            ->get();
+        $user = User::where('id', $userId)
+            ->where('nama', '!=', 'Super Admin')
+            ->where('status_aktif', 2)
+            ->first(); // Menggunakan first() untuk mengambil satu record
+
         if (!$user) {
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Karyawan pengajuan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
         }
 
-        $jadwal = Jadwal::with('shifts')->where('user_id', $userId)->where('shift_id', '!=', 0)->get();
-        if ($jadwal->isEmpty()) {
-            return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Jadwal karyawan pengajuan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+        // Memeriksa jenis_karyawan melalui relasi unit_kerja
+        $jenisKaryawan = $user->data_karyawans->unit_kerjas->jenis_karyawan ?? null;
+        $today = Carbon::today('Asia/Jakarta')->format('Y-m-d');
+
+        if ($jenisKaryawan === 1) {
+            // Logika untuk karyawan shift
+            $jadwal = Jadwal::with('shifts')
+                ->where('user_id', $userId)
+                ->where('shift_id', '!=', 0)
+                ->where('tgl_selesai', '>=', $today)
+                ->get();
+
+            if ($jadwal->isEmpty()) {
+                return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Jadwal karyawan pengajuan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+            }
+
+            $start_date = $jadwal->min('tgl_mulai');
+            $end_date = $jadwal->max('tgl_selesai');
+            $date_range = $this->generateDateRange($start_date, $end_date);
+            $user_schedule_array = $this->formatSchedules($jadwal, $date_range);
+        } else {
+            // Logika untuk karyawan non-shift
+            $jadwal = NonShift::first(); // Mengambil jadwal dari tabel non_shifts (gunakan first() karena hanya ada satu jadwal di tabel ini)
+
+            if (!$jadwal) {
+                return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Jadwal non-shift tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+            }
+
+            // Format jadwal non-shift menjadi array
+            $user_schedule_array = [
+                [
+                    'id' => $jadwal->id,
+                    'nama' => $jadwal->nama,
+                    'jam_from' => $jadwal->jam_from,
+                    'jam_to' => $jadwal->jam_to,
+                    'created_at' => $jadwal->created_at,
+                    'updated_at' => $jadwal->updated_at
+                ]
+            ];
         }
-
-        $start_date = $jadwal->min('tgl_mulai');
-        $end_date = $jadwal->max('tgl_selesai');
-        $date_range = $this->generateDateRange($start_date, $end_date);
-
-        $user_schedule_array = $this->formatSchedules($jadwal, $date_range);
 
         return response()->json([
             'status' => Response::HTTP_OK,
-            'message' => "Detai jadwal dan karyawan ditukar berhasil ditampilkan.",
+            'message' => "Detail karyawan dan jadwalnya berhasil ditampilkan.",
             'data' => [
-                'user' => $user,
+                'user' => [
+                    'id' => $user->id,
+                    'nama' => $user->nama,
+                    'email_verified_at' => $user->email_verified_at,
+                    'data_karyawan_id' => $user->data_karyawan_id,
+                    'foto_profil' => $user->foto_profil,
+                    'data_completion_step' => $user->data_completion_step,
+                    'status_aktif' => $user->status_aktif,
+                    'created_at' => $user->created_at,
+                    'updated_at' => $user->updated_at
+                ],
                 'list_jadwal' => $user_schedule_array
             ]
         ], Response::HTTP_OK);

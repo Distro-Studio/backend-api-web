@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Dashboard\Perusahaan;
 
 use Carbon\Carbon;
 use App\Models\User;
-use App\Models\Jawaban;
 use App\Models\Penilaian;
 use App\Models\Notifikasi;
 use App\Models\Pertanyaan;
@@ -52,6 +51,13 @@ class PenilaianController extends Controller
                 })
                 ->whereColumn('user_dinilai', 'users.id');
         })->where('nama', '!=', 'Super Admin')->get();
+
+        if ($usersDinilai->isEmpty()) {
+            return response()->json([
+                'status' => Response::HTTP_NOT_FOUND,
+                'message' => 'Tidak ada karyawan yang sesuai dengan kriteria yang belum dinilai.'
+            ], Response::HTTP_NOT_FOUND);
+        }
 
         return response()->json([
             'status' => Response::HTTP_OK,
@@ -384,16 +390,35 @@ class PenilaianController extends Controller
                     }
                 }
             });
-
-        // Ambil hasil query
         $karyawanBelumDinilai = $karyawanBelumDinilaiQuery->get();
 
+        if ($karyawanBelumDinilai->isEmpty()) {
+            return response()->json([
+                'status' => Response::HTTP_NOT_FOUND,
+                'message' => 'Tidak ada karyawan yang belum dinilai.'
+            ], Response::HTTP_NOT_FOUND);
+        }
 
-        // Return data karyawan yang belum dinilai
+        $formattedData = $karyawanBelumDinilai->map(function ($user) {
+            return [
+                'user' => [
+                    'id' => $user->id,
+                    'nama' => $user->nama,
+                    'email_verified_at' => $user->email_verified_at,
+                    'data_karyawan_id' => $user->data_karyawan_id,
+                    'foto_profil' => $user->foto_profil,
+                    'data_completion_step' => $user->data_completion_step,
+                    'status_aktif' => $user->status_aktif,
+                    'created_at' => $user->created_at,
+                    'updated_at' => $user->updated_at
+                ],
+                'status_karyawan' => $user->data_karyawans->status_karyawans ?? null,
+            ];
+        });
         return response()->json([
             'status' => Response::HTTP_OK,
             'message' => 'Daftar karyawan yang belum dinilai berhasil diambil.',
-            'data' => $karyawanBelumDinilai,
+            'data' => $formattedData,
         ], Response::HTTP_OK);
     }
 
