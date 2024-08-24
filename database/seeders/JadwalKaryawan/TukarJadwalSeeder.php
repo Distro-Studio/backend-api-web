@@ -38,7 +38,7 @@ class TukarJadwalSeeder extends Seeder
                 'user_ditukar' => $user_ditukar,
                 'jadwal_pengajuan' => $jadwal_pengajuan,
                 'jadwal_ditukar' => $jadwal_ditukar,
-                'status_penukaran_id' => rand(1, 3), // Assuming you have a status field with 3 statuses
+                'status_penukaran_id' => 1, // Assuming you have a status field with 3 statuses
                 'kategori_penukaran_id' => rand(1, 2), // Assuming you have a category field with 2 categories
             ]);
         }

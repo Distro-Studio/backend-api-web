@@ -609,7 +609,7 @@ class DataTukarJadwalController extends Controller
                     ]
                 ]
             ],
-            'verifikator_user' =>$verifikator_1 ? [
+            'verifikator_user' => $verifikator_1 ? [
                 'id' => $verifikator_1->id,
                 'nama' => $verifikator_1->nama,
                 'email_verified_at' => $verifikator_1->email_verified_at,
@@ -620,7 +620,7 @@ class DataTukarJadwalController extends Controller
                 'created_at' => $verifikator_1->created_at,
                 'updated_at' => $verifikator_1->updated_at
             ] : null,
-            'verifikator_user' =>$verifikator_2 ? [
+            'verifikator_user' => $verifikator_2 ? [
                 'id' => $verifikator_2->id,
                 'nama' => $verifikator_2->nama,
                 'email_verified_at' => $verifikator_2->email_verified_at,
@@ -659,6 +659,50 @@ class DataTukarJadwalController extends Controller
             return Excel::download(new TukarJadwalExport(), 'pertukaran-jadwal.xls');
         } catch (\Throwable $e) {
             return response()->json(new WithoutDataResource(Response::HTTP_INTERNAL_SERVER_ERROR, 'Maaf sepertinya terjadi error. Message: ' . $e->getMessage()), Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    public function verifikasiTahap1(Request $request, $tukarJadwalId)
+    {
+        if (!Gate::allows('verifikasi1 tukarJadwal')) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
+
+        $tukar_jadwal = TukarJadwal::find($tukarJadwalId);
+        if (!$tukar_jadwal) {
+            return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data tukar jadwal tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+        }
+
+        $status_penukaran_id = $tukar_jadwal->status_penukaran_id;
+
+        if ($request->has('verifikasi_pertama_disetujui') && $request->verifikasi_pertama_disetujui == 1) {
+            if ($status_penukaran_id == 1) {
+                $tukar_jadwal->status_penukaran_id = 2;
+                $tukar_jadwal->verifikator_1 = Auth::id();
+                $tukar_jadwal->alasan = null;
+                $tukar_jadwal->save();
+
+                $this->createNotifikasiVerifikasiTahap1($tukar_jadwal, true);
+
+                return response()->json(new WithoutDataResource(Response::HTTP_OK, "Verifikasi tahap 1 pertukaran jadwal dari '{$tukar_jadwal->user_pengajuans->nama}' telah disetujui."), Response::HTTP_OK);
+            } else {
+                return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Pertukaran jadwal dari '{$tukar_jadwal->user_pengajuans->nama}' tidak dalam status untuk disetujui tahap 1."), Response::HTTP_BAD_REQUEST);
+            }
+        } elseif ($request->has('verifikasi_pertama_ditolak') && $request->verifikasi_pertama_ditolak == 1) {
+            if ($status_penukaran_id == 1) {
+                $tukar_jadwal->status_penukaran_id = 3;
+                $tukar_jadwal->verifikator_2 = Auth::id();
+                $tukar_jadwal->alasan = $request->input('alasan', null);
+                $tukar_jadwal->save();
+
+                $this->createNotifikasiVerifikasiTahap1($tukar_jadwal, false);
+
+                return response()->json(new WithoutDataResource(Response::HTTP_OK, "Verifikasi tahap 1 pertukaran jadwal dari '{$tukar_jadwal->user_pengajuans->nama}' telah ditolak."), Response::HTTP_OK);
+            } else {
+                return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Pertukaran jadwal dari '{$tukar_jadwal->user_pengajuans->nama}' tidak dalam status untuk ditolak tahap 1."), Response::HTTP_BAD_REQUEST);
+            }
+        } else {
+            return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Aksi tidak valid.'), Response::HTTP_BAD_REQUEST);
         }
     }
 
@@ -789,6 +833,40 @@ class DataTukarJadwalController extends Controller
         Notifikasi::create([
             'kategori_notifikasi_id' => 2, // Sesuaikan dengan kategori notifikasi yang sesuai
             'user_id' => $userDitukar->id, // Penerima notifikasi
+            'message' => $messageDitukar,
+            'is_read' => false,
+        ]);
+    }
+
+    private function createNotifikasiVerifikasiTahap1($tukarJadwal, $isApproved)
+    {
+        $userPengajuan = $tukarJadwal->user_pengajuans;
+        $userDitukar = $tukarJadwal->user_ditukars;
+
+        if ($isApproved) {
+            $messagePengajuan = "Verifikasi tahap 2 untuk pengajuan tukar jadwal Anda telah disetujui.";
+            $messageDitukar = "Verifikasi tahap 2 untuk pengajuan tukar jadwal dari {$userPengajuan->nama} telah disetujui.";
+        } else {
+            $messagePengajuan = "Verifikasi tahap 2 untuk pengajuan tukar jadwal Anda telah ditolak.";
+            $messageDitukar = "Verifikasi tahap 2 untuk pengajuan tukar jadwal dari {$userPengajuan->nama} telah ditolak.";
+            if ($tukarJadwal->alasan) {
+                $messagePengajuan .= " Alasan penolakan: {$tukarJadwal->alasan}.";
+                $messageDitukar .= " Alasan penolakan: {$tukarJadwal->alasan}.";
+            }
+        }
+
+        // Notifikasi untuk pengguna yang mengajukan
+        Notifikasi::create([
+            'kategori_notifikasi_id' => 3, // Sesuaikan dengan kategori notifikasi yang sesuai untuk verifikasi
+            'user_id' => $userPengajuan->id,
+            'message' => $messagePengajuan,
+            'is_read' => false,
+        ]);
+
+        // Notifikasi untuk pengguna yang ditukar jadwalnya
+        Notifikasi::create([
+            'kategori_notifikasi_id' => 3, // Sesuaikan dengan kategori notifikasi yang sesuai untuk verifikasi
+            'user_id' => $userDitukar->id,
             'message' => $messageDitukar,
             'is_read' => false,
         ]);

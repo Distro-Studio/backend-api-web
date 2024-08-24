@@ -58,7 +58,7 @@ class RoleSeeder extends Seeder
             'create thrKaryawan', 'view thrKaryawan', 'export thrKaryawan',
 
             'create jadwalKaryawan', 'edit jadwalKaryawan', 'delete jadwalKaryawan', 'view jadwalKaryawan', 'import jadwalKaryawan', 'export jadwalKaryawan',
-            'create tukarJadwal', 'edit tukarJadwal', 'delete tukarJadwal', 'view tukarJadwal', 'import tukarJadwal', 'export tukarJadwal', 'verifikasi2 tukarJadwal',
+            'create tukarJadwal', 'edit tukarJadwal', 'delete tukarJadwal', 'view tukarJadwal', 'import tukarJadwal', 'export tukarJadwal', 'verifikasi1 tukarJadwal', 'verifikasi2 tukarJadwal',
             'create lemburKaryawan', 'edit lemburKaryawan', 'delete lemburKaryawan', 'view lemburKaryawan', 'export lemburKaryawan',
             'create cutiKaryawan', 'edit cutiKaryawan', 'delete cutiKaryawan', 'view cutiKaryawan', 'export cutiKaryawan', 'verifikasi1 cutiKaryawan', 'verifikasi2 cutiKaryawan',
 
