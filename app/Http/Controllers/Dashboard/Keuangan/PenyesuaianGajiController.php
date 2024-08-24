@@ -376,15 +376,32 @@ class PenyesuaianGajiController extends Controller
         $penggajian->gaji_bruto += $request->besaran;
 
         $totalPremi = CalculateHelper::calculatedPremi($penggajian->data_karyawans->id, $penggajian->gaji_bruto, $penggajian->data_karyawans->kelompok_gajis->gaji_pokok);
-        $pph21Bulanan = CalculateHelper::calculatedPPH21ForMonths($penggajian->gaji_bruto, $penggajian->data_karyawans->ptkp_id);
 
-        $takeHomePay = $penggajian->gaji_bruto - $totalPremi - $pph21Bulanan;
+        if ($currentMonth >= 1 && $currentMonth <= 11) {
+          $pph21 = CalculateHelper::calculatedPPH21ForMonths($penggajian->gaji_bruto, $penggajian->data_karyawans->ptkp_id);
+        } else {
+          $bonusBOR = DetailGaji::where('penggajian_id', $penggajian->id)
+            ->where('nama_detail', 'Bonus BOR')
+            ->sum('besaran') ?: 0;
+          $bonusPresensi = DetailGaji::where('penggajian_id', $penggajian->id)
+            ->where('nama_detail', 'Bonus Presensi')
+            ->sum('besaran') ?: 0;
+          $bonusUangLembur = DetailGaji::where('penggajian_id', $penggajian->id)
+            ->where('nama_detail', 'Uang Lembur')
+            ->sum('besaran') ?: 0;
 
-        $penggajian->pph_21 = $pph21Bulanan;
+          $totalReward = $bonusBOR + $bonusPresensi + $bonusUangLembur;
+          $dataKaryawan = $penggajian->data_karyawans;
+          $pph21 = CalculateHelper::calculatedPPH21ForDecember($dataKaryawan, $totalReward);
+        }
+
+        $takeHomePay = $penggajian->gaji_bruto - $totalPremi - $pph21;
+
+        $penggajian->pph_21 = $pph21;
         $penggajian->take_home_pay = $takeHomePay;
         $penggajian->save();
 
-        DetailGaji::where('penggajian_id', $penggajian->id)->where('nama_detail', 'PPH21')->update(['besaran' => $pph21Bulanan]);
+        DetailGaji::where('penggajian_id', $penggajian->id)->where('nama_detail', 'PPH21')->update(['besaran' => $pph21]);
 
         // Simpan detail gaji ke tabel detail_gajis
         DetailGaji::create([
@@ -403,9 +420,7 @@ class PenyesuaianGajiController extends Controller
       return response()->json([
         'status' => Response::HTTP_OK,
         'message' => "Penambahan penggajian '{$penyesuaianGaji->nama_detail}' berhasil dilakukan untuk karyawan '{$userName}'.",
-        // 'message' => "Berhasil",
         'data' => $penyesuaianGaji
-        // 'data' => $detail
       ], Response::HTTP_OK);
     } catch (\Exception $e) {
       DB::rollBack();
@@ -446,8 +461,35 @@ class PenyesuaianGajiController extends Controller
 
       if ($bulanMulai->month == $currentMonth && $bulanMulai->year == $currentYear) {
         // Kurangi take home pay dengan besaran penyesuaian yang baru dibuat
-        $penggajian->take_home_pay -= $request->besaran;
+        $penggajian->gaji_bruto -= $request->besaran;
+
+        $totalPremi = CalculateHelper::calculatedPremi($penggajian->data_karyawans->id, $penggajian->gaji_bruto, $penggajian->data_karyawans->kelompok_gajis->gaji_pokok);
+
+        if ($currentMonth >= 1 && $currentMonth <= 11) {
+          $pph21 = CalculateHelper::calculatedPPH21ForMonths($penggajian->gaji_bruto, $penggajian->data_karyawans->ptkp_id);
+        } else {
+          $bonusBOR = DetailGaji::where('penggajian_id', $penggajian->id)
+            ->where('nama_detail', 'Bonus BOR')
+            ->sum('besaran') ?: 0;
+          $bonusPresensi = DetailGaji::where('penggajian_id', $penggajian->id)
+            ->where('nama_detail', 'Bonus Presensi')
+            ->sum('besaran') ?: 0;
+          $bonusUangLembur = DetailGaji::where('penggajian_id', $penggajian->id)
+            ->where('nama_detail', 'Uang Lembur')
+            ->sum('besaran') ?: 0;
+
+          $totalReward = $bonusBOR + $bonusPresensi + $bonusUangLembur;
+          $dataKaryawan = $penggajian->data_karyawans;
+          $pph21 = CalculateHelper::calculatedPPH21ForDecember($dataKaryawan, $totalReward);
+        }
+
+        $takeHomePay = $penggajian->gaji_bruto - $totalPremi - $pph21;
+
+        $penggajian->pph_21 = $pph21;
+        $penggajian->take_home_pay = $takeHomePay;
         $penggajian->save();
+
+        DetailGaji::where('penggajian_id', $penggajian->id)->where('nama_detail', 'PPH21')->update(['besaran' => $pph21]);
 
         // Simpan detail gaji ke tabel detail_gajis
         DetailGaji::create([
@@ -497,25 +539,5 @@ class PenyesuaianGajiController extends Controller
       'message' => $message,
       'is_read' => false,
     ]);
-  }
-
-  private function calculatedPPH21ForMonths($penghasilanBruto, $ptkp_id)
-  {
-    // Langkah 1: Ambil data PTKP dari data_karyawans
-    $ptkp = DB::table('ptkps')->where('id', $ptkp_id)->first();
-
-    // Langkah 2: Cocokkan kategori_ter_id pada tabel ptkps dengan id kategori ter pada tabel kategori_ters
-    $kategoriTer = DB::table('kategori_ters')->where('id', $ptkp->kategori_ter_id)->first();
-
-    // Langkah 3: Ambil nilai percentage pada tabel ters dengan syarat kategori_ter_id dan gaji bruto antara from_ter dan to_ter
-    $ters = DB::table('ters')
-      ->select('percentage')
-      ->where('kategori_ter_id', $kategoriTer->id)
-      ->where('from_ter', '<=', $penghasilanBruto)
-      ->where('to_ter', '>=', $penghasilanBruto)
-      ->first();
-
-    $pph21Bulanan = ($ters->percentage / 100) * $penghasilanBruto;
-    return $pph21Bulanan;
   }
 }

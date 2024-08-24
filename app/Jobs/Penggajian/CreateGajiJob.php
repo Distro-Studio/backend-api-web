@@ -106,18 +106,18 @@ class CreateGajiJob implements ShouldQueue
         foreach ($dataKaryawans as $dataKaryawan) {
             $data_karyawan_id = $dataKaryawan->data_karyawan_id;
 
-            // Hitung reward (BOR dan Bonus Presensi dan Lembur)
+            // Hitung reward (BOR, Bonus Presensi dan Lembur)
             $rewardBOR = $this->calculatedRewardBOR($data_karyawan_id, $this->sertakan_bor);
             $rewardBonusPresensi = $this->calculatedRewardPresensi($data_karyawan_id);
             $rewardLembur = $this->calculatedLembur($dataKaryawan);
-            $totalReward = $rewardBOR + $rewardBonusPresensi;
+            $totalReward = $rewardBOR + $rewardBonusPresensi + $rewardLembur;
 
             // Tentukan apakah THR perlu dihitung
             $penghasilanTHR = in_array($data_karyawan_id, $thrKaryawanIds) ? $this->calculatedTHR($dataKaryawan) : 0;
             Log::info("THR: " . $penghasilanTHR);
 
             // Hitung penghasilan THR, bruto, total tunjangan, dan total premi
-            $penghasilanBruto = $this->calculatedPenghasilanBruto($dataKaryawan, $totalReward, $penghasilanTHR, $rewardLembur);
+            $penghasilanBruto = $this->calculatedPenghasilanBruto($dataKaryawan, $totalReward, $penghasilanTHR);
             $totalTunjangan = $this->calculatedTotalTunjangan($dataKaryawan);
             $totalPremi = $this->calculatedPremi($data_karyawan_id, $penghasilanBruto, $dataKaryawan->gaji_pokok);
 
@@ -543,7 +543,7 @@ class CreateGajiJob implements ShouldQueue
         return $bonusPresensi;
     }
 
-    private function calculatedPenghasilanBruto($dataKaryawan, $reward, $penghasilanTHR, $rewardLembur)
+    private function calculatedPenghasilanBruto($dataKaryawan, $reward, $penghasilanTHR)
     {
         return $dataKaryawan->gaji_pokok
             + $reward
@@ -553,8 +553,7 @@ class CreateGajiJob implements ShouldQueue
             + $dataKaryawan->tunjangan_fungsional
             + $dataKaryawan->tunjangan_khusus
             + $dataKaryawan->tunjangan_lainnya
-            + $dataKaryawan->uang_makan
-            + $rewardLembur;
+            + $dataKaryawan->uang_makan;
     }
 
     private function calculatedLembur($dataKaryawan)

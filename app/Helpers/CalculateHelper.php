@@ -3,13 +3,9 @@
 namespace App\Helpers;
 
 use Carbon\Carbon;
-use App\Models\Lembur;
-use Illuminate\Support\Str;
-use Illuminate\Http\Request;
 use App\Helpers\RandomHelper;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Http;
 
 class CalculateHelper
 {
@@ -142,13 +138,13 @@ class CalculateHelper
             ->first();
 
         $pph21Bulanan = ($ters->percentage / 100) * $penghasilanBruto;
-        return $pph21Bulanan;
+        return ceil($pph21Bulanan);
     }
 
-    public static function calculatedPPH21ForDecember($dataKaryawan, $reward, $penghasilanTHR = 0, $rewardLembur)
+    public static function calculatedPPH21ForDecember($dataKaryawan, $reward, $penghasilanTHR = 0)
     {
         // 1. Hitung bruto dan premi Desember
-        $penghasilanBrutoDesember = self::calculatedPenghasilanBruto($dataKaryawan, $reward, $penghasilanTHR = 0, $rewardLembur);
+        $penghasilanBrutoDesember = self::calculatedPenghasilanBruto($dataKaryawan, $reward, $penghasilanTHR = 0);
         $totalPremiDesember = self::calculatedPremi($dataKaryawan->data_karyawan_id, $penghasilanBrutoDesember, $dataKaryawan->gaji_pokok);
         $currentYear = Carbon::now()->year;
 
@@ -186,7 +182,7 @@ class CalculateHelper
             ->whereBetween('tgl_penggajian', [Carbon::create($currentYear, 1, 1), Carbon::create($currentYear, 11, 30)])
             ->sum('pph_21');
         $pph21Desember = $pph21Tahunan - $pph21BulananTotal;
-        return $pph21Desember;
+        return ceil($pph21Desember);
     }
 
     public static function calculatedRewardBOR($data_karyawan_id, $sertakan_bor)
@@ -209,23 +205,7 @@ class CalculateHelper
         return $totalBOR;
     }
 
-    public function calculatedRewardPresensi($data_karyawan_id)
-    {
-        $statusRewardPresensi = DB::table('data_karyawans')
-            ->where('id', $data_karyawan_id)
-            ->value('status_reward_presensi');
-
-        $bonusPresensi = 0;
-
-        // Jika status_reward_presensi adalah true, karyawan mendapatkan reward
-        if ($statusRewardPresensi) {
-            $bonusPresensi = 300000;
-        }
-
-        return $bonusPresensi;
-    }
-
-    private function calculatedPenghasilanBruto($dataKaryawan, $reward, $penghasilanTHR = 0, $rewardLembur)
+    public static function calculatedPenghasilanBruto($dataKaryawan, $reward, $penghasilanTHR = 0)
     {
         return $dataKaryawan->gaji_pokok
             + $reward
@@ -235,36 +215,7 @@ class CalculateHelper
             + $dataKaryawan->tunjangan_fungsional
             + $dataKaryawan->tunjangan_khusus
             + $dataKaryawan->tunjangan_lainnya
-            + $dataKaryawan->uang_makan
-            + $rewardLembur;
-    }
-
-    public function calculatedLembur($dataKaryawan)
-    {
-        $rate_lembur = $dataKaryawan->uang_lembur;
-
-        // Ambil semua record lembur untuk karyawan ini
-        $lemburRecords = Lembur::where('user_id', $dataKaryawan->user_id)->get();
-
-        // Inisialisasi total bonus lembur
-        $totalBonusLembur = 0;
-
-        // Loop melalui setiap record lembur
-        foreach ($lemburRecords as $lembur) {
-            // Cek apakah durasi lembur null
-            if (!is_null($lembur->durasi)) {
-                // Konversi durasi menjadi menit
-                $durasiLembur = Carbon::parse($lembur->durasi);
-                $durasiMenit = ($durasiLembur->hour * 60) + $durasiLembur->minute;
-
-                // Hitung bonus lembur untuk lembur ini dan tambahkan ke total
-                $bonusLembur = ($rate_lembur / 60) * $durasiMenit;
-                $totalBonusLembur += $bonusLembur;
-                Log::info("Total bonus lembur: $totalBonusLembur, dari karyawan {$dataKaryawan->user_id}");
-            }
-        }
-
-        return $totalBonusLembur;
+            + $dataKaryawan->uang_makan;
     }
 
     public static function calculatedTotalTunjangan($dataKaryawan)
@@ -293,87 +244,5 @@ class CalculateHelper
             }
         }
         return $pph21;
-    }
-
-    public static function calculatedPenyesuaianPenambah($kategori_penambah, $penggajian_id, &$takeHomePay)
-    {
-        $details = [];
-
-        // Ambil data penyesuaian gaji penambah berdasarkan penggajian_id
-        $penyesuaianGajis = DB::table('penyesuaian_gajis')
-            ->where('penggajian_id', $penggajian_id)
-            ->where('kategori_gaji_id', $kategori_penambah)
-            ->get();
-
-        // Iterasi setiap penyesuaian gaji untuk validasi dan perhitungan
-        foreach ($penyesuaianGajis as $penyesuaianGaji) {
-            // $bulanMulai = $penyesuaianGaji->bulan_mulai ? Carbon::parse($penyesuaianGaji->bulan_mulai) : null;
-            // $bulanSelesai = $penyesuaianGaji->bulan_selesai ? Carbon::parse($penyesuaianGaji->bulan_selesai) : null;
-            $bulanMulai = $penyesuaianGaji->bulan_mulai ? Carbon::parse(RandomHelper::convertToDateString($penyesuaianGaji->bulan_mulai)) : null;
-            $bulanSelesai = $penyesuaianGaji->bulan_selesai ? Carbon::parse(RandomHelper::convertToDateString($penyesuaianGaji->bulan_selesai)) : null;
-            $currentDate = Carbon::now();
-
-            // Cek apakah saat ini berada pada rentang bulan mulai dan selesai atau jika null
-            if (
-                ($bulanMulai && $bulanSelesai && $currentDate->between($bulanMulai, $bulanSelesai)) ||
-                (!$bulanMulai && !$bulanSelesai) ||
-                ($bulanMulai && !$bulanSelesai && $currentDate->greaterThanOrEqualTo($bulanMulai)) ||
-                (!$bulanMulai && $bulanSelesai && $currentDate->lessThanOrEqualTo($bulanSelesai))
-            ) {
-                // Tambahkan take_home_pay dengan besaran penyesuaian gaji
-                $takeHomePay += $penyesuaianGaji->besaran;
-
-                // Tambahkan detail penyesuaian gaji ke array details
-                $details[] = [
-                    'penggajian_id' => $penggajian_id,
-                    'kategori_gaji_id' => $kategori_penambah,
-                    'nama_detail' => $penyesuaianGaji->nama_detail,
-                    'besaran' => $penyesuaianGaji->besaran
-                ];
-            }
-        }
-
-        return $details;
-    }
-
-    public static function calculatedPenyesuaianPengurang($kategori_pengurang, $penggajian_id, &$takeHomePay)
-    {
-        $details = [];
-
-        // Ambil data penyesuaian gaji pengurang berdasarkan penggajian_id
-        $penyesuaianGajis = DB::table('penyesuaian_gajis')
-            ->where('penggajian_id', $penggajian_id)
-            ->where('kategori_gaji_id', $kategori_pengurang)
-            ->get();
-
-        // Iterasi setiap penyesuaian gaji untuk validasi dan perhitungan
-        foreach ($penyesuaianGajis as $penyesuaianGaji) {
-            // $bulanMulai = $penyesuaianGaji->bulan_mulai ? Carbon::parse($penyesuaianGaji->bulan_mulai) : null;
-            // $bulanSelesai = $penyesuaianGaji->bulan_selesai ? Carbon::parse($penyesuaianGaji->bulan_selesai) : null;
-            $bulanMulai = $penyesuaianGaji->bulan_mulai ? Carbon::parse(RandomHelper::convertToDateString($penyesuaianGaji->bulan_mulai)) : null;
-            $bulanSelesai = $penyesuaianGaji->bulan_selesai ? Carbon::parse(RandomHelper::convertToDateString($penyesuaianGaji->bulan_selesai)) : null;
-            $currentDate = Carbon::now();
-
-            // Cek apakah saat ini berada pada rentang bulan mulai dan selesai atau jika null
-            if (
-                ($bulanMulai && $bulanSelesai && $currentDate->between($bulanMulai, $bulanSelesai)) ||
-                (!$bulanMulai && !$bulanSelesai) ||
-                ($bulanMulai && !$bulanSelesai && $currentDate->greaterThanOrEqualTo($bulanMulai)) ||
-                (!$bulanMulai && $bulanSelesai && $currentDate->lessThanOrEqualTo($bulanSelesai))
-            ) {
-                // Kurangi take_home_pay dengan besaran penyesuaian gaji
-                $takeHomePay -= $penyesuaianGaji->besaran;
-
-                // Tambahkan detail penyesuaian gaji ke array details
-                $details[] = [
-                    'penggajian_id' => $penggajian_id,
-                    'kategori_gaji_id' => $kategori_pengurang,
-                    'nama_detail' => $penyesuaianGaji->nama_detail,
-                    'besaran' => $penyesuaianGaji->besaran
-                ];
-            }
-        }
-
-        return $details;
     }
 }
