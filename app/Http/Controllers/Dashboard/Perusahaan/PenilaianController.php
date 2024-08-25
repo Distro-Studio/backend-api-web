@@ -376,22 +376,29 @@ class PenilaianController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
-        // Ambil semua filter dari request body
         $filters = $request->all();
-        // Query untuk mengambil users yang belum memiliki penilaian
+
         $karyawanBelumDinilaiQuery = User::whereDoesntHave('user_penilaian_dinilais')
             ->whereHas('data_karyawans', function ($query) use ($filters) {
-                if (isset($filters['jenis_karyawan'])) {
-                    $jenisKaryawan = $filters['jenis_karyawan'];
-                    $query->whereHas('unit_kerjas', function ($query) use ($jenisKaryawan) {
-                        if (is_array($jenisKaryawan)) {
-                            $query->whereIn('jenis_karyawan', $jenisKaryawan);
-                        } else {
-                            $query->where('jenis_karyawan', '=', $jenisKaryawan);
-                        }
-                    });
+                if (isset($filters['jabatan'])) {
+                    $jabatan = $filters['jabatan'];
+                    if (is_array($jabatan)) {
+                        $query->whereIn('jabatan_id', $jabatan);
+                    } else {
+                        $query->where('jabatan_id', '=', $jabatan);
+                    }
                 }
-            });
+
+                if (isset($filters['status_karyawan'])) {
+                    $status_karyawan = $filters['status_karyawan'];
+                    if (is_array($status_karyawan)) {
+                        $query->whereIn('status_karyawan_id', $status_karyawan);
+                    } else {
+                        $query->where('status_karyawan_id', '=', $status_karyawan);
+                    }
+                }
+            })
+            ->where('nama', '!=', 'Super Admin');
         $karyawanBelumDinilai = $karyawanBelumDinilaiQuery->get();
 
         if ($karyawanBelumDinilai->isEmpty()) {
@@ -415,7 +422,7 @@ class PenilaianController extends Controller
                     'updated_at' => $user->updated_at
                 ],
                 'status_karyawan' => $user->data_karyawans->status_karyawans ?? null,
-                'unit_kerja' => $user->data_karyawans->unit_kerjas ?? null,
+                'jabatan' => $user->data_karyawans->jabatans ?? null
             ];
         });
         return response()->json([
