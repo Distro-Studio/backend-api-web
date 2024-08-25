@@ -57,7 +57,7 @@ class PermissionsController extends Controller
         // Sync permissions: This will add/remove permissions as necessary
         $role->permissions()->sync($permissionIds);
 
-        Artisan::call('permission:cache-clear');
+        Artisan::call('permission:cache-reset');
 
         return response()->json(new WithoutDataResource(Response::HTTP_OK, "Berhasil melakukan update permission pada role '{$role->name}'."));
     }
