@@ -1003,7 +1003,7 @@ class DataJadwalController extends Controller
                 $user = User::find($userId);
                 if (!$user) {
                     DB::rollBack();
-                    return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, "Data karyawan dengan ID '{$userId}' tidak ditemukan."), Response::HTTP_NOT_FOUND);
+                    return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, "Data karyawan '{$userId->nama}' tidak ditemukan."), Response::HTTP_NOT_FOUND);
                 }
 
                 // Validasi kesamaan unit kerja antara admin dan karyawan
@@ -1053,7 +1053,7 @@ class DataJadwalController extends Controller
                         ->first();
                     if ($existingSchedule) {
                         DB::rollBack();
-                        return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Jadwal karyawan dengan ID '{$userId}' sudah tersedia pada tanggal '{$currentTanggalMulai->toDateString()}'."), Response::HTTP_BAD_REQUEST);
+                        return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Jadwal karyawan '{$userId->nama}' sudah tersedia pada tanggal '{$currentTanggalMulai->toDateString()}'."), Response::HTTP_BAD_REQUEST);
                     }
 
                     // Create the new schedule
