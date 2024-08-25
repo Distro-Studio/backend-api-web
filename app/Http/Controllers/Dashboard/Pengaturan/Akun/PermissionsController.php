@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Gate;
 use Spatie\Permission\Models\Permission;
 use Illuminate\Support\Facades\Validator;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
+use Illuminate\Support\Facades\Artisan;
 
 class PermissionsController extends Controller
 {
@@ -34,15 +35,17 @@ class PermissionsController extends Controller
         }
 
         // Validate permission IDs (optional to validate empty array for removals)
-        $validateIds = Validator::make($request->all(), [
-            'permission_ids' => 'nullable|array',
-            'permission_ids.*' => 'integer|exists:permissions,id'
-        ],
-        [
-            // 'permission_ids.required' => 'Permission tidak diperbolehkan kosong.',
-            'permission_ids.*.integer' => 'Permission harus berupa angka.',
-            'permission_ids.*.exists' => 'Terdapat permission yang tidak valid.'
-        ]
+        $validateIds = Validator::make(
+            $request->all(),
+            [
+                'permission_ids' => 'nullable|array',
+                'permission_ids.*' => 'integer|exists:permissions,id'
+            ],
+            [
+                // 'permission_ids.required' => 'Permission tidak diperbolehkan kosong.',
+                'permission_ids.*.integer' => 'Permission harus berupa angka.',
+                'permission_ids.*.exists' => 'Terdapat permission yang tidak valid.'
+            ]
         );
 
         if ($validateIds->fails()) {
@@ -53,6 +56,8 @@ class PermissionsController extends Controller
 
         // Sync permissions: This will add/remove permissions as necessary
         $role->permissions()->sync($permissionIds);
+
+        Artisan::call('permission:cache:clear');
 
         return response()->json(new WithoutDataResource(Response::HTTP_OK, "Berhasil melakukan update permission pada role '{$role->name}'."));
     }

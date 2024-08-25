@@ -16,7 +16,8 @@ return new class extends Migration
             $table->foreignId('user_dinilai')->constrained('users');
             $table->foreignId('user_penilai')->constrained('users');
             $table->foreignId('jenis_penilaian_id')->constrained('jenis_penilaians');
-            $table->string('pertanyaan_jawaban');
+            $table->text('pertanyaan_jawaban');
+            // $table->string('pertanyaan_jawaban');
             $table->integer('total_pertanyaan');
             $table->integer('rata_rata');
             $table->timestamps();

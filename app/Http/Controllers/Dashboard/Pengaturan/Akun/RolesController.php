@@ -102,7 +102,7 @@ class RolesController extends Controller
         }
 
         // Get all permissions
-        $allPermissions = Permission::all();
+        $allPermissions = Permission::where('guard_name', 'sanctum')->get();
 
         $rolePermissions = $allPermissions->map(function ($permission) use ($role) {
             if (!$permission) {
