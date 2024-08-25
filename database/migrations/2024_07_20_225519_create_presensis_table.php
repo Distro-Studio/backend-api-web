@@ -18,7 +18,7 @@ return new class extends Migration
             $table->foreignId('jadwal_id')->nullable()->constrained('jadwals');
             $table->string('jam_masuk');
             $table->string('jam_keluar')->nullable();
-            $table->integer('durasi');
+            $table->integer('durasi')->nullable();
             $table->string('lat');
             $table->string('long');
             $table->string('latkeluar')->nullable();

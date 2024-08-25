@@ -140,8 +140,6 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::post('/get-data-presensi', [DataPresensiController::class, 'index']);
             Route::post('/export', [DataPresensiController::class, 'exportPresensi']);
             Route::post('/import', [DataPresensiController::class, 'importPresensi']);
-            Route::get('/data-presensi/{id}', [DataPresensiController::class, 'detail_list']);
-            Route::get('/data-presensi/{id}/detail', [DataPresensiController::class, 'detail_data_v2']);
             Route::apiResource('/data-presensi', DataPresensiController::class);
 
             Route::get('/calculated', [DataPresensiController::class, 'calculatedPresensi']);

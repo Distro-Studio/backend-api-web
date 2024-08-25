@@ -342,150 +342,27 @@ class DataPresensiController extends Controller
         ], Response::HTTP_OK);
     }
 
-    public function detail_list($id)
+    public function show($id) // ini detail lv 1
     {
         if (!Gate::allows('view presensiKaryawan')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
-        $presensi = Presensi::find($id);
-
-        if (!$presensi) {
-            return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data presensi tidak ditemukan.'), Response::HTTP_NOT_FOUND);
-        }
-
-        $userId = $presensi->user_id;
-        $limit = request()->input('limit', 10);
-
-        if ($limit == 0) {
-            $dataPresensi = Presensi::where('user_id', $userId)
-                ->orderBy('created_at', 'desc')
-                ->get();
-            $paginationData = null;
-        } else {
-            $limit = is_numeric($limit) ? (int)$limit : 10;
-            $dataPresensi = Presensi::where('user_id', $userId)
-                ->orderBy('created_at', 'desc')
-                ->paginate($limit);
-
-            $paginationData = [
-                'links' => [
-                    'first' => $dataPresensi->url(1),
-                    'last' => $dataPresensi->url($dataPresensi->lastPage()),
-                    'prev' => $dataPresensi->previousPageUrl(),
-                    'next' => $dataPresensi->nextPageUrl(),
-                ],
-                'meta' => [
-                    'current_page' => $dataPresensi->currentPage(),
-                    'last_page' => $dataPresensi->lastPage(),
-                    'per_page' => $dataPresensi->perPage(),
-                    'total' => $dataPresensi->total(),
-                ]
-            ];
-        }
-
-        // Jika tidak ada presensi hari ini
-        if (!$dataPresensi) {
-            return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data presensi tidak ditemukan.'), Response::HTTP_NOT_FOUND);
-        }
-
-        // Memformat aktivitas presensi
-        $formattedData = $dataPresensi->map(function ($presensi) {
-            // $fotoMasukBerkas = Berkas::where('id', $presensi->foto_masuk)->first();
-            // $fotoKeluarBerkas = Berkas::where('id', $presensi->foto_keluar)->first();
-
-            // $baseUrl = env('STORAGE_SERVER_DOMAIN'); // Ganti dengan URL
-
-            // $fotoMasukExt = $fotoMasukBerkas ? StorageServerHelper::getExtensionFromMimeType($fotoMasukBerkas->ext) : null;
-            // $fotoMasukUrl = $fotoMasukBerkas ? $baseUrl . $fotoMasukBerkas->path . '.' . $fotoMasukExt : null;
-
-            // $fotoKeluarExt = $fotoKeluarBerkas ? StorageServerHelper::getExtensionFromMimeType($fotoKeluarBerkas->ext) : null;
-            // $fotoKeluarUrl = $fotoKeluarBerkas ? $baseUrl . $fotoKeluarBerkas->path . '.' . $fotoKeluarExt : null;
-
-            // // Ambil data lokasi kantor
-            // $lokasiKantor = LokasiKantor::find(1);
-
-            return [
-                'id' => $presensi->id,
-                'user' => $presensi->users,
-                'unit_kerja' => $presensi->data_karyawans->unit_kerjas,
-                'jadwal' => [
-                    'id' => $presensi->jadwals->id,
-                    'tgl_mulai' => $presensi->jadwals->tgl_mulai,
-                    'tgl_selesai' => $presensi->jadwals->tgl_selesai,
-                    'shift' => $presensi->jadwals->shifts,
-                ] ?? null,
-                'jam_masuk' => $presensi->jam_masuk,
-                'jam_keluar' => $presensi->jam_keluar,
-                'durasi' => $presensi->durasi,
-                // 'lokasi_kantor' => [
-                //     'id' => $lokasiKantor->id,
-                //     'alamat' => $lokasiKantor->alamat,
-                //     'lat' => $lokasiKantor->lat,
-                //     'long' => $lokasiKantor->long,
-                //     'radius' => $lokasiKantor->radius,
-                // ],
-                // 'lat_masuk' => $presensi->lat,
-                // 'long_masuk' => $presensi->long,
-                // 'lat_keluar' => $presensi->latkeluar,
-                // 'long_keluar' => $presensi->longkeluar,
-                // 'foto_masuk' => [
-                //     'id' => $fotoMasukBerkas->id,
-                //     'user_id' => $fotoMasukBerkas->user_id,
-                //     'file_id' => $fotoMasukBerkas->file_id,
-                //     'nama' => $fotoMasukBerkas->nama,
-                //     'nama_file' => $fotoMasukBerkas->nama_file,
-                //     'path' => $fotoMasukUrl,
-                //     'ext' => $fotoMasukBerkas->ext,
-                //     'size' => $fotoMasukBerkas->size,
-                // ],
-                // 'foto_keluar' => [
-                //     'id' => $fotoKeluarBerkas->id,
-                //     'user_id' => $fotoKeluarBerkas->user_id,
-                //     'file_id' => $fotoKeluarBerkas->file_id,
-                //     'nama' => $fotoKeluarBerkas->nama,
-                //     'nama_file' => $fotoKeluarBerkas->nama_file,
-                //     'path' => $fotoKeluarUrl,
-                //     'ext' => $fotoKeluarBerkas->ext,
-                //     'size' => $fotoKeluarBerkas->size,
-                // ],
-                'kategori_presensi' => $presensi->kategori_presensis,
-                'created_at' => $presensi->created_at,
-                'updated_at' => $presensi->updated_at
-            ];
-        });
-
-        return response()->json([
-            'status' => Response::HTTP_OK,
-            'message' => "Detail list presensi karyawan '{$presensi->users->nama}' berhasil ditampilkan.",
-            'data' => $formattedData,
-            'pagination' => $paginationData
-        ], Response::HTTP_OK);
-    }
-
-    public function detail_data_v2($data_karyawan_id) // ini detail lv 1
-    {
-        if (!Gate::allows('view dataKaryawan')) {
-            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
-        }
-
-        // Mendapatkan data presensi karyawan berdasarkan data_karyawan_id dan filter hari ini
+        // Mendapatkan data presensi karyawan berdasarkan id dan filter hari ini
         $presensiHariIni = Presensi::with([
             'users',
             'jadwals.shifts',
             'data_karyawans.unit_kerjas',
             'kategori_presensis'
         ])
-            ->where('data_karyawan_id', $data_karyawan_id)
-            ->whereDate('jam_masuk', Carbon::today())
+            ->where('id', $id)
             ->first();
 
         if (!$presensiHariIni) {
             return response()->json([
-                'status' => Response::HTTP_OK,
-                'message' => 'Data presensi karyawan tidak ditemukan.',
-                'data' => []
-            ], Response::HTTP_OK);
+                'status' => Response::HTTP_NOT_FOUND,
+                'message' => 'Data presensi karyawan tidak ditemukan.'
+            ], Response::HTTP_NOT_FOUND);
         }
 
         $fotoMasukBerkas = Berkas::where('id', $presensiHariIni->foto_masuk)->first();
@@ -494,16 +371,16 @@ class DataPresensiController extends Controller
         $baseUrl = env('STORAGE_SERVER_DOMAIN'); // Ganti dengan URL domain Anda
 
         $fotoMasukExt = $fotoMasukBerkas ? StorageServerHelper::getExtensionFromMimeType($fotoMasukBerkas->ext) : null;
-        $fotoMasukUrl = $fotoMasukBerkas ? $baseUrl . $fotoMasukBerkas->path . '.' . $fotoMasukExt : null;
+        $fotoMasukUrl = $fotoMasukBerkas ? $baseUrl . $fotoMasukBerkas->path : null;
 
         $fotoKeluarExt = $fotoKeluarBerkas ? StorageServerHelper::getExtensionFromMimeType($fotoKeluarBerkas->ext) : null;
-        $fotoKeluarUrl = $fotoKeluarBerkas ? $baseUrl . $fotoKeluarBerkas->path . '.' . $fotoKeluarExt : null;
+        $fotoKeluarUrl = $fotoKeluarBerkas ? $baseUrl . $fotoKeluarBerkas->path : null;
 
         // Ambil data lokasi kantor
         $lokasiKantor = LokasiKantor::find(1);
 
         // Ambil semua presensi bulan ini dari karyawan yang sama
-        $presensiBulanIni = Presensi::where('data_karyawan_id', $data_karyawan_id)
+        $presensiBulanIni = Presensi::where('id', $id)
             ->whereYear('created_at', Carbon::now()->year)
             ->whereMonth('created_at', Carbon::now()->month)
             ->orderBy('created_at', 'desc')
@@ -603,41 +480,6 @@ class DataPresensiController extends Controller
             ],
         ], Response::HTTP_OK);
     }
-
-    // old
-    // public function exportPresensi(Request $request)
-    // {
-    //     if (!Gate::allows('export presensiKaryawan')) {
-    //         return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
-    //     }
-
-    //     $month = $request->input('month');
-    //     $year = $request->input('year');
-
-    //     if (empty($month) || empty($year)) {
-    //         return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Periode bulan dan tahun tidak boleh kosong.'), Response::HTTP_BAD_REQUEST);
-    //     }
-
-    //     // Error
-    //     $startDate = Carbon::createFromDate($year, $month, 1)->startOfMonth();
-    //     $endDate = Carbon::createFromDate($year, $month, 1)->endOfMonth();
-
-    //     $presensiCount = Presensi::whereBetween('jam_masuk', [$startDate, $endDate])->count();
-
-    //     if ($presensiCount === 0) {
-    //         return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data presensi tidak ditemukan untuk periode yang diminta.'), Response::HTTP_NOT_FOUND);
-    //     }
-
-    //     try {
-    //         return Excel::download(new PresensiExport([$month], $year), 'presensi-karyawan.xls');
-    //     } catch (\Exception $e) {
-    //         return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya terjadi error. Message: ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
-    //     } catch (\Error $e) {
-    //         return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya terjadi error. Message: ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
-    //     }
-
-    //     return response()->json(new WithoutDataResource(Response::HTTP_OK, 'Data presensi karyawan berhasil di download.'), Response::HTTP_OK);
-    // }
 
     public function exportPresensi(Request $request)
     {
