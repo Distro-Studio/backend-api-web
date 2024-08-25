@@ -15,8 +15,8 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained('users');
             $table->foreignId('kategori_record_id')->constrained('kategori_track_records');
-            $table->date('tgl_masuk');
-            $table->date('tgl_keluar')->nullable();
+            $table->string('tgl_masuk');
+            $table->string('tgl_keluar')->nullable();
             $table->timestamps();
         });
     }
