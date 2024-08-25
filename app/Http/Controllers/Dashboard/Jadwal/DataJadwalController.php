@@ -1008,10 +1008,15 @@ class DataJadwalController extends Controller
 
                 // Validasi kesamaan unit kerja antara admin dan karyawan
                 if ($admin->nama !== 'Super Admin') {
-                    $karyawanUnitKerja = $user->data_karyawans->unit_kerjas->id ?? null;
-                    if ($adminUnitKerja !== $karyawanUnitKerja) {
-                        DB::rollBack();
-                        return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, "Terdapat beberapa karyawan yang tidak sesuai dengan unit kerja Anda. Anda hanya dapat mengatur jadwal karyawan dalam unit kerja yang sama dengan Anda."), Response::HTTP_FORBIDDEN);
+                    if (!Gate::allows('bypass jadwalKaryawan')) {
+                        $karyawanUnitKerja = $user->data_karyawans->unit_kerjas->id ?? null;
+                        if ($adminUnitKerja !== $karyawanUnitKerja) {
+                            DB::rollBack();
+                            return response()->json(new WithoutDataResource(
+                                Response::HTTP_FORBIDDEN,
+                                "Terdapat beberapa karyawan yang tidak sesuai dengan unit kerja Anda. Anda hanya dapat mengatur jadwal karyawan dalam unit kerja yang sama dengan Anda."
+                            ), Response::HTTP_FORBIDDEN);
+                        }
                     }
                 }
 
@@ -1101,8 +1106,13 @@ class DataJadwalController extends Controller
         $dataKaryawan = $user->data_karyawans;
         $karyawanUnitKerja = $dataKaryawan->unit_kerjas->id ?? null;
 
-        if ($admin->nama !== 'Super Admin' && $adminUnitKerja !== $karyawanUnitKerja) {
-            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda hanya dapat mengatur jadwal untuk karyawan dalam unit kerja yang sama dengan anda.'), Response::HTTP_FORBIDDEN);
+        if ($admin->nama !== 'Super Admin') {
+            if (!Gate::allows('bypass jadwalKaryawan') && $adminUnitKerja !== $karyawanUnitKerja) {
+                return response()->json(new WithoutDataResource(
+                    Response::HTTP_FORBIDDEN,
+                    'Anda hanya dapat mengatur jadwal untuk karyawan dalam unit kerja yang sama dengan anda.'
+                ), Response::HTTP_FORBIDDEN);
+            }
         }
 
         DB::beginTransaction();
@@ -1232,8 +1242,13 @@ class DataJadwalController extends Controller
         $karyawanUnitKerja = $dataKaryawan->unit_kerjas->id ?? null;
 
         // Validasi kesamaan unit kerja antara admin dan karyawan kecuali jika admin adalah Super Admin
-        if ($admin->nama !== 'Super Admin' && $adminUnitKerja !== $karyawanUnitKerja) {
-            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda hanya dapat memperbarui jadwal untuk karyawan dalam unit kerja yang sama dengan anda.'), Response::HTTP_FORBIDDEN);
+        if ($admin->nama !== 'Super Admin') {
+            if (!Gate::allows('bypass jadwalKaryawan') && $adminUnitKerja !== $karyawanUnitKerja) {
+                return response()->json(new WithoutDataResource(
+                    Response::HTTP_FORBIDDEN,
+                    'Anda hanya dapat mengatur jadwal untuk karyawan dalam unit kerja yang sama dengan anda.'
+                ), Response::HTTP_FORBIDDEN);
+            }
         }
 
         DB::beginTransaction();

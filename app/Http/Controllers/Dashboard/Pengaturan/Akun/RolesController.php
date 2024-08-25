@@ -253,7 +253,7 @@ class RolesController extends Controller
             return null;
         }
 
-        $permissionTypes = ['view', 'create', 'edit', 'delete', 'import', 'export', 'verifikasi1', 'verifikasi2'];
+        $permissionTypes = ['view', 'create', 'edit', 'delete', 'import', 'export', 'verifikasi1', 'verifikasi2', 'bypass'];
 
         $groupedPermissions = $permissions->groupBy('group')->map(function ($group, $groupName) use ($permissionTypes) {
             $permissionsArray = [];
