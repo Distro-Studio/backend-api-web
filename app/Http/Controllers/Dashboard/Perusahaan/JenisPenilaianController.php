@@ -20,7 +20,7 @@ class JenisPenilaianController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
-        $jenis_penilaian = JenisPenilaian::withoutTrashed()->get();
+        $jenis_penilaian = JenisPenilaian::withoutTrashed()->with(['status_karyawans', 'jabatan_penilais', 'jabatan_dinilais'])->get();
 
         return response()->json([
             'status' => Response::HTTP_OK,
@@ -77,7 +77,7 @@ class JenisPenilaianController extends Controller
     }
 
     public function show($id)
-    {
+    { 
         if (!Gate::allows('view penilaianKaryawan')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
