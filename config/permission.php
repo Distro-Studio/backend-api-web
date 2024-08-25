@@ -184,8 +184,4 @@ return [
 
         'store' => 'default',
     ],
-
-    'defaults' => [
-        'guard' => 'sanctum', // Ganti 'web' dengan 'sanctum'
-    ],
 ];

@@ -61,6 +61,8 @@ class RolesController extends Controller
 
         $data = $request->validated();
 
+        $data['guard_name'] = 'web';
+
         $role = Role::create($data);
         $successMessage = "Data Role '{$role->name}' berhasil dibuat.";
         $formattedData = $this->formatData(collect([$role]))->first();
@@ -102,7 +104,7 @@ class RolesController extends Controller
         }
 
         // Get all permissions
-        $allPermissions = Permission::where('guard_name', 'sanctum')->get();
+        $allPermissions = Permission::all();
 
         $rolePermissions = $allPermissions->map(function ($permission) use ($role) {
             if (!$permission) {
