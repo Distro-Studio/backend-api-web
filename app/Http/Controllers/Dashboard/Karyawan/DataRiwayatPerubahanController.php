@@ -10,6 +10,7 @@ use App\Helpers\RandomHelper;
 use Illuminate\Http\Response;
 use App\Models\RiwayatPerubahan;
 use App\Models\PerubahanKeluarga;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
@@ -263,23 +264,178 @@ class DataRiwayatPerubahanController extends Controller
 
             if ($data_perubahan->jenis_perubahan === 'Personal') {
                 $dataKaryawan = $data_perubahan->data_karyawans;
+                $role = $dataKaryawan->users->roles->first();
                 $originalData = [
                     [
                         'id' => $dataKaryawan->id,
+                        'user' => [
+                            'id' => $dataKaryawan->users->id,
+                            'nama' => $dataKaryawan->users->nama,
+                            'email_verified_at' => $dataKaryawan->users->email_verified_at,
+                            'data_karyawan_id' => $dataKaryawan->users->data_karyawan_id,
+                            'foto_profil' => $dataKaryawan->users->foto_profil,
+                            'data_completion_step' => $dataKaryawan->users->data_completion_step,
+                            'status_aktif' => $dataKaryawan->users->status_aktif,
+                            'created_at' => $dataKaryawan->users->created_at,
+                            'updated_at' => $dataKaryawan->users->updated_at
+                        ],
+                        'role' => [
+                            'id' => $role->id,
+                            'name' => $role->name,
+                            'deskripsi' => $role->deskripsi,
+                            'created_at' => $role->created_at,
+                            'updated_at' => $role->updated_at
+                        ],
+                        'potongan_gaji' => DB::table('pengurang_gajis')
+                            ->join('premis', 'pengurang_gajis.premi_id', '=', 'premis.id')
+                            ->where('pengurang_gajis.data_karyawan_id', $dataKaryawan->id)
+                            ->select(
+                                'premis.id',
+                                'premis.nama_premi',
+                                'premis.kategori_potongan_id',
+                                'premis.jenis_premi',
+                                'premis.besaran_premi',
+                                'premis.minimal_rate',
+                                'premis.maksimal_rate',
+                                'premis.created_at',
+                                'premis.updated_at'
+                            )
+                            ->get(),
+                        'email' => $dataKaryawan->email,
+                        'nik' => $dataKaryawan->nik,
+                        'no_rm' => $dataKaryawan->no_rm,
+                        'no_sip' => $dataKaryawan->no_sip,
+                        'masa_berlaku_sip' => $dataKaryawan->masa_berlaku_sip,
+                        'no_manulife' => $dataKaryawan->no_manulife,
+                        'tgl_masuk' => $dataKaryawan->tgl_masuk,
+                        'unit_kerja' => $dataKaryawan->unit_kerjas, // unit_kerja_id
+                        'jabatan' => $dataKaryawan->jabatans, // jabatan_id
+                        'kompetensi' => $dataKaryawan->kompetensis, // kompetensi_id
+                        'nik_ktp' => $dataKaryawan->nik_ktp,
+                        'status_karyawan' => $dataKaryawan->status_karyawans, // status_karyawan_id
                         'tempat_lahir' => $dataKaryawan->tempat_lahir,
                         'tgl_lahir' => $dataKaryawan->tgl_lahir,
-                        'no_telp' => $dataKaryawan->no_hp, // Assuming `no_hp` corresponds to `no_telp`
+                        'kelompok_gaji' => $dataKaryawan->kelompok_gajis, // kelompok_gaji_id
+                        'no_rekening' => $dataKaryawan->no_rekening,
+                        'tunjangan_jabatan' => $dataKaryawan->tunjangan_jabatan,
+                        'tunjangan_fungsional' => $dataKaryawan->tunjangan_fungsional,
+                        'tunjangan_khusus' => $dataKaryawan->tunjangan_khusus,
+                        'tunjangan_lainnya' => $dataKaryawan->tunjangan_lainnya,
+                        'uang_lembur' => $dataKaryawan->uang_lembur,
+                        'uang_makan' => $dataKaryawan->uang_makan,
+                        'ptkp' => $dataKaryawan->ptkps, // ptkp_id
+                        'tgl_keluar' => $dataKaryawan->tgl_keluar,
+                        'no_kk' => $dataKaryawan->no_kk,
+                        'alamat' => $dataKaryawan->alamat,
+                        'gelar_depan' => $dataKaryawan->gelar_depan,
+                        'no_hp' => $dataKaryawan->no_hp,
+                        'no_bpjsksh' => $dataKaryawan->no_bpjsksh,
+                        'no_bpjsktk' => $dataKaryawan->no_bpjsktk,
+                        'tgl_diangkat' => $dataKaryawan->tgl_diangkat,
+                        'masa_kerja' => $dataKaryawan->masa_kerja,
+                        'npwp' => $dataKaryawan->npwp,
+                        'jenis_kelamin' => $dataKaryawan->jenis_kelamin,
+                        'agama' => $dataKaryawan->kategori_agamas, // agama_id
+                        'golongan_darah' => $dataKaryawan->kategori_darahs, // golongan_darah_id
+                        'pendidikan_terakhir' => $dataKaryawan->kategori_pendidikans, // pendidikan_terakhir_id
+                        'tinggi_badan' => $dataKaryawan->tinggi_badan,
+                        'berat_badan' => $dataKaryawan->berat_badan,
+                        'no_ijazah' => $dataKaryawan->no_ijazah,
+                        'tahun_lulus' => $dataKaryawan->tahun_lulus,
+                        'no_str' => $dataKaryawan->no_str,
+                        'masa_berlaku_str' => $dataKaryawan->masa_berlaku_str,
+                        'tgl_berakhir_pks' => $dataKaryawan->tgl_berakhir_pks,
+                        'masa_diklat' => $dataKaryawan->masa_diklat,
+                        'created_at' => $dataKaryawan->created_at,
+                        'updated_at' => $dataKaryawan->updated_at
                     ]
                 ];
 
                 $personalChanges = $data_perubahan->perubahan_personals;
                 if ($personalChanges->isNotEmpty()) {
                     $updatedData = $personalChanges->map(function ($change) {
+                        $role = $change->riwayat_perubahans->data_karyawans->users->roles->first();
+                        $user = $change->riwayat_perubahans->data_karyawans->users;
                         return [
                             'id' => $change->id,
+                            'user' => [
+                                'id' => $user->id,
+                                'nama' => $user->nama,
+                                'email_verified_at' => $user->email_verified_at,
+                                'data_karyawan_id' => $user->data_karyawan_id,
+                                'foto_profil' => $user->foto_profil,
+                                'data_completion_step' => $user->data_completion_step,
+                                'status_aktif' => $user->status_aktif,
+                                'created_at' => $user->created_at,
+                                'updated_at' => $user->updated_at
+                            ],
+                            'role' => [
+                                'id' => $role->id,
+                                'name' => $role->name,
+                                'deskripsi' => $role->deskripsi,
+                                'created_at' => $role->created_at,
+                                'updated_at' => $role->updated_at
+                            ],
+                            'potongan_gaji' => DB::table('pengurang_gajis')
+                                ->join('premis', 'pengurang_gajis.premi_id', '=', 'premis.id')
+                                ->where('pengurang_gajis.data_karyawan_id', $change->id)
+                                ->select(
+                                    'premis.id',
+                                    'premis.nama_premi',
+                                    'premis.kategori_potongan_id',
+                                    'premis.jenis_premi',
+                                    'premis.besaran_premi',
+                                    'premis.minimal_rate',
+                                    'premis.maksimal_rate',
+                                    'premis.created_at',
+                                    'premis.updated_at'
+                                )
+                                ->get(),
+                            'email' => $change->email,
+                            'nik' => $change->nik,
+                            'no_rm' => $change->no_rm,
+                            'no_sip' => $change->no_sip,
+                            'masa_berlaku_sip' => $change->masa_berlaku_sip,
+                            'no_manulife' => $change->no_manulife,
+                            'tgl_masuk' => $change->tgl_masuk,
+                            'unit_kerja' => $change->unit_kerjas, // unit_kerja_id
+                            'jabatan' => $change->jabatans, // jabatan_id
+                            'kompetensi' => $change->kompetensis, // kompetensi_id
+                            'nik_ktp' => $change->nik_ktp,
+                            'status_karyawan' => $change->status_karyawans, // status_karyawan_id
                             'tempat_lahir' => $change->tempat_lahir,
                             'tgl_lahir' => $change->tgl_lahir,
-                            'no_telp' => $change->no_telp,
+                            'kelompok_gaji' => $change->kelompok_gajis, // kelompok_gaji_id
+                            'no_rekening' => $change->no_rekening,
+                            'tunjangan_jabatan' => $change->tunjangan_jabatan,
+                            'tunjangan_fungsional' => $change->tunjangan_fungsional,
+                            'tunjangan_khusus' => $change->tunjangan_khusus,
+                            'tunjangan_lainnya' => $change->tunjangan_lainnya,
+                            'uang_lembur' => $change->uang_lembur,
+                            'uang_makan' => $change->uang_makan,
+                            'ptkp' => $change->ptkps, // ptkp_id
+                            'tgl_keluar' => $change->tgl_keluar,
+                            'no_kk' => $change->no_kk,
+                            'alamat' => $change->alamat,
+                            'gelar_depan' => $change->gelar_depan,
+                            'no_hp' => $change->no_telp,
+                            'no_bpjsksh' => $change->no_bpjsksh,
+                            'no_bpjsktk' => $change->no_bpjsktk,
+                            'tgl_diangkat' => $change->tgl_diangkat,
+                            'masa_kerja' => $change->masa_kerja,
+                            'npwp' => $change->npwp,
+                            'jenis_kelamin' => $change->jenis_kelamin,
+                            'agama' => $change->kategori_agamas, // agama_id
+                            'golongan_darah' => $change->kategori_darahs, // golongan_darah_id
+                            'pendidikan_terakhir' => $change->kategori_pendidikans, // pendidikan_terakhir_id
+                            'tinggi_badan' => $change->tinggi_badan,
+                            'berat_badan' => $change->berat_badan,
+                            'no_ijazah' => $change->no_ijazah,
+                            'tahun_lulus' => $change->tahun_lulus,
+                            'no_str' => $change->no_str,
+                            'masa_berlaku_str' => $change->masa_berlaku_str,
+                            'tgl_berakhir_pks' => $change->tgl_berakhir_pks,
+                            'masa_diklat' => $change->masa_diklat,
                             'created_at' => $change->created_at,
                             'updated_at' => $change->updated_at
                         ];

@@ -184,14 +184,18 @@ class PenggajianController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Tidak ada tanggal penggajian yang tersedia.'), Response::HTTP_BAD_REQUEST);
         }
 
-        // Konversi integer ke format tanggal tgl_mulai
-        $currentMonth = Carbon::now()->month;
-        $currentYear = Carbon::now()->year;
-        $tgl_mulai = Carbon::create($currentYear, $currentMonth, $jadwalPenggajian->tgl_mulai);
-        $awalBulan = Carbon::now()->startOfMonth();
+        $currentMonth = Carbon::now('Asia/Jakarta')->month;
+        $currentYear = Carbon::now('Asia/Jakarta')->year;
+        $tgl_mulai = Carbon::createFromFormat('Y-m-d', "$currentYear-$currentMonth-{$jadwalPenggajian->tgl_mulai}", 'Asia/Jakarta');
+        $tgl_akhir = $tgl_mulai->copy()->endOfDay();
+        $awalBulan = Carbon::now('Asia/Jakarta')->startOfMonth();
+        $currentDateTime = Carbon::now('Asia/Jakarta');
 
-        if (Carbon::now()->lessThan($awalBulan) || Carbon::now()->greaterThan($tgl_mulai)) {
-            return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Tanggal penggajian hanya dapat dilakukan mulai tanggal 1 hingga tanggal '{$tgl_mulai->format('d-m-Y')}'."), Response::HTTP_BAD_REQUEST);
+        if ($currentDateTime->lessThan($awalBulan) || $currentDateTime->greaterThan($tgl_akhir)) {
+            return response()->json(new WithoutDataResource(
+                Response::HTTP_BAD_REQUEST,
+                "Tanggal penggajian hanya dapat dilakukan mulai tanggal 1 hingga tanggal '{$tgl_mulai->format('d-m-Y')}' sampai jam 23:59."
+            ), Response::HTTP_BAD_REQUEST);
         }
 
         // Validasi untuk memastikan penggajian belum dilakukan pada periode ini

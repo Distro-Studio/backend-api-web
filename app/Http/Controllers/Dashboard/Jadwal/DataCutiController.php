@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Dashboard\Jadwal;
 
 use Carbon\Carbon;
 use App\Models\Cuti;
+use App\Models\Jadwal;
 use App\Models\TipeCuti;
 use App\Models\Notifikasi;
 use Illuminate\Http\Request;
@@ -278,6 +279,17 @@ class DataCutiController extends Controller
 
         $data = $request->validated();
 
+        // Cek cuti sama
+        $cutiExist = Cuti::where('user_id', $data['user_id'])
+            ->where('tgl_from', Carbon::createFromFormat('d-m-Y', $data['tgl_from'])->format('d-m-Y'))
+            ->where('tgl_to', Carbon::createFromFormat('d-m-Y', $data['tgl_to'])->format('d-m-Y'))
+            ->exists();
+        // dd($cutiExist);
+
+        if ($cutiExist) {
+            return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Karyawan tersebut sudah memiliki cuti yang diajukan pada tanggal '{$data['tgl_from']}'."), Response::HTTP_BAD_REQUEST);
+        }
+
         // Mengambil informasi tipe cuti berdasarkan tipe_cuti_id
         $tipeCuti = TipeCuti::find($data['tipe_cuti_id']);
         if (!$tipeCuti) {
@@ -287,11 +299,9 @@ class DataCutiController extends Controller
         // Mengonversi tanggal dari request menggunakan helper hanya untuk perhitungan durasi
         $tglFrom = Carbon::createFromFormat('d-m-Y', $data['tgl_from'])->format('Y-m-d');
         $tglTo = Carbon::createFromFormat('d-m-Y', $data['tgl_to'])->format('Y-m-d');
-        // dd($tglFrom, $tglTo);
 
         // Menghitung durasi cuti dalam hari
         $durasi = Carbon::parse($tglFrom)->diffInDays($tglTo) + 1;
-        // dd($durasi);
 
         // Validasi durasi cuti terhadap kuota tipe cuti
         if ($durasi > $tipeCuti->kuota) {
@@ -310,7 +320,6 @@ class DataCutiController extends Controller
 
         // Hitung total durasi cuti yang sudah diambil
         $totalDurasiDiambil = $cutiRecords->sum('durasi');
-        // dd($totalDurasiDiambil);
 
         // Tambahkan durasi baru ke total durasi yang sudah diambil
         $totalDurasi = $totalDurasiDiambil + $durasi;
@@ -320,6 +329,24 @@ class DataCutiController extends Controller
             $sisaCuti = $tipeCuti->kuota - $totalDurasiDiambil;
             $message = "Durasi cuti melebihi kuota yang diizinkan untuk tipe cuti '{$tipeCuti->nama}'. Sisa kuota cuti tahun ini: {$sisaCuti} hari. Total durasi yang diajukan: {$totalDurasi} hari.";
             return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, $message), Response::HTTP_BAD_REQUEST);
+        }
+
+        // cek bentrok dengan jadwal karyawan
+        $jadwalConflict = Jadwal::where('user_id', $data['user_id'])
+            ->where(function ($query) use ($tglFrom, $tglTo) {
+                $query->whereBetween(DB::raw("DATE_FORMAT(tgl_mulai, '%Y-%m-%d')"), [$tglFrom, $tglTo])
+                    ->orWhereBetween(DB::raw("DATE_FORMAT(tgl_selesai, '%Y-%m-%d')"), [$tglFrom, $tglTo])
+                    ->orWhere(function ($query) use ($tglFrom, $tglTo) {
+                        $query->where(DB::raw("DATE_FORMAT(tgl_mulai, '%Y-%m-%d')"), '<=', $tglFrom)
+                            ->where(DB::raw("DATE_FORMAT(tgl_selesai, '%Y-%m-%d')"), '>=', $tglTo);
+                    });
+            })
+            ->first();
+
+        if ($jadwalConflict) {
+            $jadwalFrom = Carbon::parse($jadwalConflict->tgl_mulai)->format('d-m-Y');
+            $jadwalTo = Carbon::parse($jadwalConflict->tgl_selesai)->format('d-m-Y');
+            return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Tidak dapat mengajukan cuti, karena karyawan '{$jadwalConflict->users->nama}' memiliki jadwal kerja pada rentang tanggal {$jadwalFrom} hingga {$jadwalTo}."), Response::HTTP_BAD_REQUEST);
         }
 
         // Menambahkan durasi ke data sebelum menyimpan

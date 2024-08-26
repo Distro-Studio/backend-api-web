@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Dashboard\Jadwal;
 
 use Carbon\Carbon;
+use App\Models\Cuti;
 use App\Models\User;
 use App\Models\Shift;
 use App\Models\Jadwal;
@@ -1003,7 +1004,7 @@ class DataJadwalController extends Controller
                 $user = User::find($userId);
                 if (!$user) {
                     DB::rollBack();
-                    return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, "Data karyawan '{$userId->nama}' tidak ditemukan."), Response::HTTP_NOT_FOUND);
+                    return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, "Data karyawan '{$user->nama}' tidak ditemukan."), Response::HTTP_NOT_FOUND);
                 }
 
                 // Validasi kesamaan unit kerja antara admin dan karyawan
@@ -1018,6 +1019,26 @@ class DataJadwalController extends Controller
                             ), Response::HTTP_FORBIDDEN);
                         }
                     }
+                }
+
+                // Cek apakah ada cuti pada rentang tanggal ini
+                $cutiConflict = Cuti::where('user_id', $userId)
+                    ->where(function ($query) use ($tanggalMulai, $tanggalSelesai) {
+                        // Konversi tgl_from dan tgl_to ke format Y-m-d sebelum melakukan perbandingan
+                        $query->whereBetween(DB::raw("STR_TO_DATE(tgl_from, '%d-%m-%Y')"), [$tanggalMulai->format('Y-m-d'), $tanggalSelesai->format('Y-m-d')])
+                            ->orWhereBetween(DB::raw("STR_TO_DATE(tgl_to, '%d-%m-%Y')"), [$tanggalMulai->format('Y-m-d'), $tanggalSelesai->format('Y-m-d')])
+                            ->orWhere(function ($query) use ($tanggalMulai, $tanggalSelesai) {
+                                $query->where(DB::raw("STR_TO_DATE(tgl_from, '%d-%m-%Y')"), '<=', $tanggalMulai->format('Y-m-d'))
+                                    ->where(DB::raw("STR_TO_DATE(tgl_to, '%d-%m-%Y')"), '>=', $tanggalSelesai->format('Y-m-d'));
+                            });
+                    })
+                    ->first();
+
+                if ($cutiConflict) {
+                    DB::rollBack();
+                    $cutiFrom = Carbon::createFromFormat('d-m-Y', $cutiConflict->tgl_from)->format('d-m-Y');
+                    $cutiTo = Carbon::createFromFormat('d-m-Y', $cutiConflict->tgl_to)->format('d-m-Y');
+                    return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Tidak dapat membuat jadwal untuk karyawan '{$user->nama}', karena memiliki cuti pada rentang tanggal {$cutiFrom} hingga {$cutiTo}."), Response::HTTP_BAD_REQUEST);
                 }
 
                 // Reset tanggalMulai untuk setiap user
@@ -1053,7 +1074,7 @@ class DataJadwalController extends Controller
                         ->first();
                     if ($existingSchedule) {
                         DB::rollBack();
-                        return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Jadwal karyawan '{$userId->nama}' sudah tersedia pada tanggal '{$currentTanggalMulai->toDateString()}'."), Response::HTTP_BAD_REQUEST);
+                        return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Jadwal karyawan '{$user->nama}' sudah tersedia pada tanggal '{$currentTanggalMulai->toDateString()}'."), Response::HTTP_BAD_REQUEST);
                     }
 
                     // Create the new schedule

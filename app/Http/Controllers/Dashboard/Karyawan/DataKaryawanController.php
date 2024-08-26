@@ -1223,7 +1223,10 @@ class DataKaryawanController extends Controller
     }
 
     if ($dataKaryawan->isEmpty()) {
-      return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data karyawan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+      return response()->json([
+        'status' => Response::HTTP_NOT_FOUND,
+        'message' => 'Data karyawan tidak ditemukan.',
+      ], Response::HTTP_NOT_FOUND);
     }
 
     $formattedData = $dataKaryawan->map(function ($karyawan) {
@@ -1350,7 +1353,7 @@ class DataKaryawanController extends Controller
         'tgl_berakhir_pks' => $data['tgl_berakhir_pks'],
         'unit_kerja_id' => $data['unit_kerja_id'],
         'jabatan_id' => $data['jabatan_id'],
-        'kompetensi_id' => $data['kompetensi_id'],
+        'kompetensi_id' => $data['kompetensi_id'] ?? null,
         'status_karyawan_id' => $data['status_karyawan_id'],
         'kelompok_gaji_id' => $data['kelompok_gaji_id'],
         'no_rekening' => $data['no_rekening'],
@@ -1417,23 +1420,22 @@ class DataKaryawanController extends Controller
 
     if (!$karyawan) {
       return response()->json([
-        'status' => Response::HTTP_OK,
+        'status' => Response::HTTP_NOT_FOUND,
         'message' => 'Data karyawan tidak ditemukan.',
-        'data' => []
-      ], Response::HTTP_OK);
+      ], Response::HTTP_NOT_FOUND);
     }
 
     $role = $karyawan->users->roles->first();
 
-    $berkasFields = [
-      'file_ktp' => $karyawan->file_ktp ?? null,
-      'file_kk' => $karyawan->file_kk ?? null,
-      'file_sip' => $karyawan->file_sip ?? null,
-      'file_bpjs_kesehatan' => $karyawan->file_bpjsksh ?? null,
-      'file_bpjs_ketenagakerjaan' => $karyawan->file_bpjsktk ?? null,
-      'file_ijazah' => $karyawan->file_ijazah ?? null,
-      'file_sertifikat' => $karyawan->file_sertifikat ?? null,
-    ];
+    // $berkasFields = [
+    //   'file_ktp' => $karyawan->file_ktp ?? null,
+    //   'file_kk' => $karyawan->file_kk ?? null,
+    //   'file_sip' => $karyawan->file_sip ?? null,
+    //   'file_bpjs_kesehatan' => $karyawan->file_bpjsksh ?? null,
+    //   'file_bpjs_ketenagakerjaan' => $karyawan->file_bpjsktk ?? null,
+    //   'file_ijazah' => $karyawan->file_ijazah ?? null,
+    //   'file_sertifikat' => $karyawan->file_sertifikat ?? null,
+    // ];
 
     // $baseUrl = env('STORAGE_SERVER_DOMAIN');
 
@@ -1450,7 +1452,7 @@ class DataKaryawanController extends Controller
     // }
 
     // Format the karyawan data
-    $formattedData = array_merge([
+    $formattedData = [
       'id' => $karyawan->id,
       'user' => [
         'id' => $karyawan->users->id,
@@ -1532,7 +1534,7 @@ class DataKaryawanController extends Controller
       'masa_diklat' => $karyawan->masa_diklat,
       'created_at' => $karyawan->created_at,
       'updated_at' => $karyawan->updated_at
-    ], $berkasFields);
+    ];
 
     return response()->json([
       'status' => Response::HTTP_OK,
@@ -1552,23 +1554,22 @@ class DataKaryawanController extends Controller
 
     if (!$karyawan) {
       return response()->json([
-        'status' => Response::HTTP_OK,
+        'status' => Response::HTTP_NOT_FOUND,
         'message' => 'Data karyawan tidak ditemukan.',
-        'data' => []
-      ], Response::HTTP_OK);
+      ], Response::HTTP_NOT_FOUND);
     }
 
     $role = $karyawan->users->roles->first();
 
-    $berkasFields = [
-      'file_ktp' => $karyawan->file_ktp ?? null,
-      'file_kk' => $karyawan->file_kk ?? null,
-      'file_sip' => $karyawan->file_sip ?? null,
-      'file_bpjs_kesehatan' => $karyawan->file_bpjsksh ?? null,
-      'file_bpjs_ketenagakerjaan' => $karyawan->file_bpjsktk ?? null,
-      'file_ijazah' => $karyawan->file_ijazah ?? null,
-      'file_sertifikat' => $karyawan->file_sertifikat ?? null,
-    ];
+    // $berkasFields = [
+    //   'file_ktp' => $karyawan->file_ktp ?? null,
+    //   'file_kk' => $karyawan->file_kk ?? null,
+    //   'file_sip' => $karyawan->file_sip ?? null,
+    //   'file_bpjs_kesehatan' => $karyawan->file_bpjsksh ?? null,
+    //   'file_bpjs_ketenagakerjaan' => $karyawan->file_bpjsktk ?? null,
+    //   'file_ijazah' => $karyawan->file_ijazah ?? null,
+    //   'file_sertifikat' => $karyawan->file_sertifikat ?? null,
+    // ];
 
     // $baseUrl = env('STORAGE_SERVER_DOMAIN');
 
@@ -1584,7 +1585,7 @@ class DataKaryawanController extends Controller
     // }
 
     // Format the karyawan data
-    $formattedData = array_merge([
+    $formattedData = [
       'id' => $karyawan->id,
       'user' => [
         'id' => $karyawan->users->id,
@@ -1666,7 +1667,7 @@ class DataKaryawanController extends Controller
       'masa_diklat' => $karyawan->masa_diklat,
       'created_at' => $karyawan->created_at,
       'updated_at' => $karyawan->updated_at
-    ], $berkasFields);
+    ];
 
     return response()->json([
       'status' => Response::HTTP_OK,
@@ -1709,71 +1710,8 @@ class DataKaryawanController extends Controller
       AccountEmailJob::dispatch($newEmail, $generatedPassword, $data['nama']);
     }
 
-    // Menangani upload berkas
-    // $berkasFields = [
-    //   'file_ktp' => $karyawan->nik_ktp,
-    //   'file_kk' => $karyawan->no_kk,
-    //   'file_sip' => $karyawan->no_sip,
-    //   'file_bpjs_kesehatan' => $karyawan->no_bpjsksh,
-    //   'file_bpjs_ketenagakerjaan' => $karyawan->no_bpjsktk,
-    //   'file_ijazah' => $karyawan->no_ijazah,
-    //   'file_sertifikat' => $karyawan->no_str,
-    // ];
-
     DB::beginTransaction();
     try {
-      // StorageServerHelper::login();
-
-      // foreach ($berkasFields as $fieldName => $fieldValue) {
-      //   if ($request->hasFile($fieldName)) {
-      //     $file = $request->file($fieldName);
-      //     $random_filename = Str::random(20);
-      //     $dataupload = StorageServerHelper::multipleUploadToServer($file, $random_filename);
-      //     $data[$fieldName] = $dataupload['path'];
-
-      //     // Cek apakah berkas ada, jika tidak, buat baru
-      //     $berkas = Berkas::where('user_id', $karyawan->user_id)
-      //       ->where('nama', $fieldName)
-      //       ->first();
-
-      //     if ($berkas) {
-      //       // Update berkas yang ada
-      //       $berkas->update([
-      //         'file_id' => $dataupload['id_file']['id'],
-      //         'kategori_berkas_id' => $berkas->kategori_berkas_id,
-      //         'status_berkas_id' => 2,
-      //         'path' => $dataupload['path'],
-      //         'tgl_upload' => now(),
-      //         'nama_file' => $dataupload['nama_file'],
-      //         'ext' => $dataupload['ext'],
-      //         'size' => $dataupload['size'],
-      //       ]);
-      //     } else {
-      //       // Buat berkas baru jika tidak ditemukan
-      //       $kategoriBerkas = KategoriBerkas::where('label', 'System')->first();
-      //       if (!$kategoriBerkas) {
-      //         throw new Exception('Kategori berkas tidak ditemukan.');
-      //       }
-
-      //       Berkas::create([
-      //         'user_id' => $karyawan->user_id,
-      //         'file_id' => $dataupload['id_file']['id'],
-      //         'nama' => $fieldName,
-      //         'kategori_berkas_id' => $kategoriBerkas->id,
-      //         'status_berkas_id' => 2,
-      //         'path' => $dataupload['path'],
-      //         'tgl_upload' => now(),
-      //         'nama_file' => $dataupload['nama_file'],
-      //         'ext' => $dataupload['ext'],
-      //         'size' => $dataupload['size'],
-      //       ]);
-      //     }
-      //     Log::info('Berkas ' . $fieldName . ' untuk ' . $user->nama . ' berhasil di upload.');
-      //   }
-      // }
-
-      // StorageServerHelper::logout();
-
       // Update nama di tabel users
       $user->nama = $data['nama'];
       $user->save();

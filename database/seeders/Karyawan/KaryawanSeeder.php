@@ -197,33 +197,33 @@ class KaryawanSeeder extends Seeder
             ]);
 
             // Create Berkas records and associate them with DataKaryawan
-            $berkasFields = [
-                'file_ktp' => 'KTP',
-                'file_kk' => 'KK',
-                'file_sip' => 'SIP',
-                'file_bpjsksh' => 'BPJS Kesehatan',
-                'file_bpjsktk' => 'BPJS Ketenagakerjaan',
-                'file_ijazah' => 'Ijazah',
-                'file_sertifikat' => 'STR',
-            ];
+            // $berkasFields = [
+            //     'file_ktp' => 'KTP',
+            //     'file_kk' => 'KK',
+            //     'file_sip' => 'SIP',
+            //     'file_bpjsksh' => 'BPJS Kesehatan',
+            //     'file_bpjsktk' => 'BPJS Ketenagakerjaan',
+            //     'file_ijazah' => 'Ijazah',
+            //     'file_sertifikat' => 'STR',
+            // ];
 
-            foreach ($berkasFields as $field => $namaBerkas) {
-                $berkas = Berkas::create([
-                    'user_id' => $user->id,
-                    'file_id' => (string) Str::uuid(),
-                    'nama' => $namaBerkas . ' - ' . $user->nama,
-                    'kategori_berkas_id' => 1,
-                    'status_berkas_id' => 1,
-                    'path' => '/path/to/personal/berkas/' . strtolower(str_replace(' ', '_', $namaBerkas)) . '/' . $user->nama,
-                    'tgl_upload' => now(),
-                    'nama_file' => strtolower(str_replace(' ', '_', $namaBerkas)),
-                    'ext' => 'application/pdf',
-                    'size' => rand(1000, 2000),
-                ]);
-                $dataKaryawan->{$field} = $berkas->id;
-            }
+            // foreach ($berkasFields as $field => $namaBerkas) {
+            //     $berkas = Berkas::create([
+            //         'user_id' => $user->id,
+            //         'file_id' => (string) Str::uuid(),
+            //         'nama' => $namaBerkas . ' - ' . $user->nama,
+            //         'kategori_berkas_id' => 1,
+            //         'status_berkas_id' => 1,
+            //         'path' => '/path/to/personal/berkas/' . strtolower(str_replace(' ', '_', $namaBerkas)) . '/' . $user->nama,
+            //         'tgl_upload' => now(),
+            //         'nama_file' => strtolower(str_replace(' ', '_', $namaBerkas)),
+            //         'ext' => 'application/pdf',
+            //         'size' => rand(1000, 2000),
+            //     ]);
+            //     $dataKaryawan->{$field} = $berkas->id;
+            // }
 
-            $dataKaryawan->save();
+            // $dataKaryawan->save();
 
             // Perbarui user dengan data_karyawan_id
             $user->data_karyawan_id = $dataKaryawan->id;
