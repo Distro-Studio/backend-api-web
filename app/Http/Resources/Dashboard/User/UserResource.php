@@ -4,6 +4,7 @@ namespace App\Http\Resources\Dashboard\User;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Facades\Auth;
 
 class UserResource extends JsonResource
 {
@@ -95,7 +96,7 @@ class UserResource extends JsonResource
                     'updated_at' => $role ? $role->updated_at : null,
                 ],
                 // 'permissions' => $this->getAllPermissions(),
-                'permission' => $this->roles->role_has_permissions->permissions->all(),
+                'permission' => $role ? $role->permissions->pluck('id') : [],
                 'created_at' => $this->created_at,
                 'updated_at' => $this->updated_at,
             ]
