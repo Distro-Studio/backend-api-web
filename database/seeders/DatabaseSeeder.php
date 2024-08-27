@@ -139,9 +139,9 @@ class DatabaseSeeder extends Seeder
 
         /* ==== Keuangan ==== */
       TanggalGajiSeeder::class,
-      PenggajianSeeder::class,
-      RiwayatPenggajianSeeder::class,
-      THRPenggajianSeeder::class,
+      // PenggajianSeeder::class,
+      // RiwayatPenggajianSeeder::class,
+      // THRPenggajianSeeder::class,
 
         /* ==== Perusahaan ==== */
       DiklatSeeder::class,
