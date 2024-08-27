@@ -266,17 +266,15 @@ class DataKaryawanController extends Controller
       if ($presensi->jam_masuk) {
         $aktivitasPresensi[] = [
           'presensi' => 'Masuk',
-          'tanggal' => $presensi->jam_masuk,
-          'lat_masuk' => $presensi->lat,
-          'long_masuk' => $presensi->long,
+          'tanggal' => Carbon::parse($presensi->jam_masuk)->format('d-m-Y'),
+          'jam' => Carbon::parse($presensi->jam_masuk)->format('H:i:s'),
         ];
       }
       if ($presensi->jam_keluar) {
         $aktivitasPresensi[] = [
           'presensi' => 'Keluar',
-          'tanggal' => $presensi->jam_keluar,
-          'lat_keluar' => $presensi->latkeluar,
-          'long_keluar' => $presensi->longkeluar,
+          'tanggal' => Carbon::parse($presensi->jam_keluar)->format('d-m-Y'),
+          'jam' => Carbon::parse($presensi->jam_keluar)->format('H:i:s'),
         ];
       }
     }
