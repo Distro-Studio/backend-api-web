@@ -38,7 +38,7 @@ class PermissionSeeder extends Seeder
 
             // Dashboard
             'Pengumuman' => ['create pengumuman', 'edit pengumuman', 'delete pengumuman', 'view pengumuman'],
-            'Notifikasi' => ['create notifikasi', 'edit notifikasi', 'delete notifikasi', 'view notifikasi'],
+            // 'Notifikasi' => ['create notifikasi', 'edit notifikasi', 'delete notifikasi', 'view notifikasi'],
 
             // Master setting
             'Verifikasi Data' => ['verifikasi data', 'verifikasi verifikator1', 'verifikasi verifikator2'],

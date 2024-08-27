@@ -13,10 +13,6 @@ class InboxController extends Controller
 {
     public function calculatedUnread()
     {
-        if (!Gate::allows('view notifikasi')) {
-            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
-        }
-
         $user = Auth::user();
         $unreadCount = Notifikasi::where('user_id', $user->id)
             ->where('is_read', false)
@@ -31,10 +27,6 @@ class InboxController extends Controller
 
     public function index()
     {
-        if (!Gate::allows('view notifikasi')) {
-            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
-        }
-
         $user = Auth::user();
         $notifikasi = Notifikasi::where('user_id', $user->id)
             ->orderBy('is_read', 'asc')
@@ -66,10 +58,6 @@ class InboxController extends Controller
 
     public function show($id)
     {
-        if (!Gate::allows('view notifikasi')) {
-            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
-        }
-
         $user = Auth::user();
         $notifikasi = Notifikasi::where('id', $id)
             ->where('user_id', $user->id)
@@ -104,10 +92,6 @@ class InboxController extends Controller
 
     public function destroyRead()
     {
-        if (!Gate::allows('delete notifikasi')) {
-            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
-        }
-
         $user = Auth::user();
         $deletedCount = Notifikasi::where('user_id', $user->id)
             ->where('is_read', true)

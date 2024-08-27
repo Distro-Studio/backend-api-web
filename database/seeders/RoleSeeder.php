@@ -66,7 +66,7 @@ class RoleSeeder extends Seeder
 
             'verifikasi verifikator1', 'verifikasi verifikator2',
             'create pengumuman', 'edit pengumuman', 'delete pengumuman', 'view pengumuman',
-            'create notifikasi', 'edit notifikasi', 'delete notifikasi', 'view notifikasi',
+            // 'create notifikasi', 'edit notifikasi', 'delete notifikasi', 'view notifikasi',
 
             'create dataKaryawan', 'edit dataKaryawan', 'delete dataKaryawan', 'view dataKaryawan', 'import dataKaryawan', 'export dataKaryawan',
 
