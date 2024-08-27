@@ -38,7 +38,7 @@ class JenisPenilaian extends Model
      */
     public function jabatan_penilais(): BelongsTo
     {
-        return $this->belongsTo(jabatan::class, 'jabatan_penilai', 'id');
+        return $this->belongsTo(Jabatan::class, 'jabatan_penilai', 'id');
     }
 
     /**
@@ -48,7 +48,7 @@ class JenisPenilaian extends Model
      */
     public function jabatan_dinilais(): BelongsTo
     {
-        return $this->belongsTo(jabatan::class, 'jabatan_dinilai', 'id');
+        return $this->belongsTo(Jabatan::class, 'jabatan_dinilai', 'id');
     }
 
     /**

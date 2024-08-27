@@ -20,12 +20,24 @@ class JenisPenilaianController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
-        $jenis_penilaian = JenisPenilaian::withoutTrashed()->with(['status_karyawans', 'jabatan_penilais', 'jabatan_dinilais'])->get();
+        $jenis_penilaian = JenisPenilaian::withoutTrashed()->get();
+
+        $formattedData = $jenis_penilaian->map(function ($jenis_penilaian) {
+            return [
+                'id' => $jenis_penilaian->id,
+                'nama' => $jenis_penilaian->nama,
+                'status_karyawan' => $jenis_penilaian->status_karyawans,
+                'jabatan_penilai' => $jenis_penilaian->jabatan_penilais,
+                'jabatan_dinilai' => $jenis_penilaian->jabatan_dinilais,
+                'created_at' => $jenis_penilaian->created_at,
+                'updated_at' => $jenis_penilaian->updated_at
+            ];
+        });
 
         return response()->json([
             'status' => Response::HTTP_OK,
             'message' => "Data jenis penilaian karyawan berhasil ditampilkan.",
-            'data' => $jenis_penilaian,
+            'data' => $formattedData,
         ], Response::HTTP_OK);
     }
 
