@@ -94,7 +94,8 @@ class UserResource extends JsonResource
                     'created_at' => $role ? $role->created_at : null,
                     'updated_at' => $role ? $role->updated_at : null,
                 ],
-                'permissions' => $this->getAllPermissions(),
+                // 'permissions' => $this->getAllPermissions(),
+                'permission' => $this->roles->role_has_permissions->permissions->all(),
                 'created_at' => $this->created_at,
                 'updated_at' => $this->updated_at,
             ]
