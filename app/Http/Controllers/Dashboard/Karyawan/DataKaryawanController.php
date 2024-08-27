@@ -229,43 +229,29 @@ class DataKaryawanController extends Controller
   }
 
   // detail karyawan dashboard
-  public function getDataPresensi($data_karyawan_id) // ini detail lv 1
+  public function getDataPresensi($data_karyawan_id)
   {
     if (!Gate::allows('view dataKaryawan')) {
       return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
     }
 
     // Mendapatkan data presensi karyawan berdasarkan data_karyawan_id dan filter hari ini
-    $presensiHariIni = Presensi::with([
+    $presensi = Presensi::with([
       'users',
       'jadwals.shifts',
       'data_karyawans.unit_kerjas',
       'kategori_presensis'
     ])
       ->where('data_karyawan_id', $data_karyawan_id)
-      ->whereDate('jam_masuk', Carbon::today())
+      // ->whereDate('jam_masuk', Carbon::today())
       ->first();
 
-    if (!$presensiHariIni) {
+    if (!$presensi) {
       return response()->json([
         'status' => Response::HTTP_NOT_FOUND,
         'message' => 'Data presensi karyawan tidak ditemukan.'
       ], Response::HTTP_NOT_FOUND);
     }
-
-    $fotoMasukBerkas = Berkas::where('id', $presensiHariIni->foto_masuk)->first();
-    $fotoKeluarBerkas = Berkas::where('id', $presensiHariIni->foto_keluar)->first();
-
-    $baseUrl = env('STORAGE_SERVER_DOMAIN'); // Ganti dengan URL domain Anda
-
-    $fotoMasukExt = $fotoMasukBerkas ? StorageServerHelper::getExtensionFromMimeType($fotoMasukBerkas->ext) : null;
-    $fotoMasukUrl = $fotoMasukBerkas ? $baseUrl . $fotoMasukBerkas->path . '.' . $fotoMasukExt : null;
-
-    $fotoKeluarExt = $fotoKeluarBerkas ? StorageServerHelper::getExtensionFromMimeType($fotoKeluarBerkas->ext) : null;
-    $fotoKeluarUrl = $fotoKeluarBerkas ? $baseUrl . $fotoKeluarBerkas->path . '.' . $fotoKeluarExt : null;
-
-    // Ambil data lokasi kantor
-    $lokasiKantor = LokasiKantor::find(1);
 
     // Ambil semua presensi bulan ini dari karyawan yang sama
     $presensiBulanIni = Presensi::where('data_karyawan_id', $data_karyawan_id)
@@ -281,89 +267,27 @@ class DataKaryawanController extends Controller
         $aktivitasPresensi[] = [
           'presensi' => 'Masuk',
           'tanggal' => $presensi->jam_masuk,
-          'lat_masuk' => $presensiHariIni->lat,
-          'long_masuk' => $presensiHariIni->long,
-          'foto_masuk' => [
-            'id' => $fotoMasukBerkas->id,
-            'user_id' => $fotoMasukBerkas->user_id,
-            'file_id' => $fotoMasukBerkas->file_id,
-            'nama' => $fotoMasukBerkas->nama,
-            'nama_file' => $fotoMasukBerkas->nama_file,
-            'path' => $fotoMasukUrl,
-            'ext' => $fotoMasukBerkas->ext,
-            'size' => $fotoMasukBerkas->size,
-          ],
+          'lat_masuk' => $presensi->lat,
+          'long_masuk' => $presensi->long,
         ];
       }
       if ($presensi->jam_keluar) {
         $aktivitasPresensi[] = [
           'presensi' => 'Keluar',
           'tanggal' => $presensi->jam_keluar,
-          'lat_keluar' => $presensiHariIni->latkeluar,
-          'long_keluar' => $presensiHariIni->longkeluar,
-          'foto_keluar' => [
-            'id' => $fotoKeluarBerkas->id,
-            'user_id' => $fotoKeluarBerkas->user_id,
-            'file_id' => $fotoKeluarBerkas->file_id,
-            'nama' => $fotoKeluarBerkas->nama,
-            'nama_file' => $fotoKeluarBerkas->nama_file,
-            'path' => $fotoKeluarUrl,
-            'ext' => $fotoKeluarBerkas->ext,
-            'size' => $fotoKeluarBerkas->size,
-          ],
+          'lat_keluar' => $presensi->latkeluar,
+          'long_keluar' => $presensi->longkeluar,
         ];
       }
     }
 
     return response()->json([
       'status' => Response::HTTP_OK,
-      'message' => "Detail data presensi karyawan '{$presensiHariIni->users->nama}' berhasil ditampilkan.",
+      'message' => "Detail data presensi karyawan '{$presensi->users->nama}' berhasil ditampilkan.",
       'data' => [
-        'id' => $presensiHariIni->id,
-        'user' => $presensiHariIni->users,
-        'unit_kerja' => $presensiHariIni->data_karyawans->unit_kerjas,
-        'data_presensi' => [
-          'jadwal' => [
-            'id' => $presensiHariIni->jadwals->id,
-            'tgl_mulai' => $presensiHariIni->jadwals->tgl_mulai,
-            'tgl_selesai' => $presensiHariIni->jadwals->tgl_selesai,
-            'shift' => $presensiHariIni->jadwals->shifts,
-          ] ?? null,
-          'jam_masuk' => $presensiHariIni->jam_masuk,
-          'jam_keluar' => $presensiHariIni->jam_keluar,
-          'durasi' => $presensiHariIni->durasi,
-          'lokasi_kantor' => [
-            'id' => $lokasiKantor->id,
-            'alamat' => $lokasiKantor->alamat,
-            'lat' => $lokasiKantor->lat,
-            'long' => $lokasiKantor->long,
-            'radius' => $lokasiKantor->radius,
-          ],
-          'lat_masuk' => $presensiHariIni->lat,
-          'long_masuk' => $presensiHariIni->long,
-          'lat_keluar' => $presensiHariIni->latkeluar,
-          'long_keluar' => $presensiHariIni->longkeluar,
-          'foto_masuk' => [
-            'id' => $fotoMasukBerkas->id,
-            'user_id' => $fotoMasukBerkas->user_id,
-            'file_id' => $fotoMasukBerkas->file_id,
-            'nama' => $fotoMasukBerkas->nama,
-            'nama_file' => $fotoMasukBerkas->nama_file,
-            'path' => $fotoMasukUrl,
-            'ext' => $fotoMasukBerkas->ext,
-            'size' => $fotoMasukBerkas->size,
-          ],
-          'foto_keluar' => [
-            'id' => $fotoKeluarBerkas->id,
-            'user_id' => $fotoKeluarBerkas->user_id,
-            'file_id' => $fotoKeluarBerkas->file_id,
-            'nama' => $fotoKeluarBerkas->nama,
-            'nama_file' => $fotoKeluarBerkas->nama_file,
-            'path' => $fotoKeluarUrl,
-            'ext' => $fotoKeluarBerkas->ext,
-            'size' => $fotoKeluarBerkas->size,
-          ],
-        ],
+        'id' => $presensi->id,
+        'user' => $presensi->users,
+        'unit_kerja' => $presensi->data_karyawans->unit_kerjas,
         'list_presensi' => $aktivitasPresensi
       ],
     ], Response::HTTP_OK);

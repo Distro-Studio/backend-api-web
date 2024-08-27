@@ -281,7 +281,7 @@ class PenilaianController extends Controller
                 'user_dinilai' => $penilaian->user_dinilais,
                 'user_penilai' => $penilaian->user_penilais,
                 'jenis_penilaian' => $penilaian->jenis_penilaians,
-                'pertanyaan_jawaban' => json_decode($penilaian->pertanyaan_jawaban, true),
+                'pertanyaan_jawaban' => $penilaian->pertanyaan_jawaban,
                 'total_pertanyaan' => $penilaian->total_pertanyaan,
                 'rata_rata' => $penilaian->rata_rata,
                 'created_at' => $penilaian->created_at,
@@ -355,7 +355,7 @@ class PenilaianController extends Controller
             'user_dinilai' => $userDinilai->id,
             'user_penilai' => auth()->user()->id,
             'jenis_penilaian_id' => $data['jenis_penilaian_id'],
-            'pertanyaan_jawaban' => json_encode($data['pertanyaan_jawaban']),
+            'pertanyaan_jawaban' => json_decode($data['pertanyaan_jawaban']),
             'total_pertanyaan' => $data['total_pertanyaan'],
             'rata_rata' => $data['rata_rata'],
         ]);

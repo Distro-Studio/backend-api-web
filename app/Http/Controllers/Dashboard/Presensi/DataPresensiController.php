@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Dashboard\Presensi;
 use Carbon\Carbon;
 use App\Models\Berkas;
 use App\Models\Jadwal;
+use App\Models\NonShift;
 use App\Models\Presensi;
 use App\Models\HariLibur;
 use App\Models\DataKaryawan;
@@ -342,7 +343,7 @@ class DataPresensiController extends Controller
         ], Response::HTTP_OK);
     }
 
-    public function show($id) // ini detail lv 1
+    public function show($id)
     {
         if (!Gate::allows('view presensiKaryawan')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
@@ -379,52 +380,11 @@ class DataPresensiController extends Controller
         // Ambil data lokasi kantor
         $lokasiKantor = LokasiKantor::find(1);
 
-        // Ambil semua presensi bulan ini dari karyawan yang sama
-        $presensiBulanIni = Presensi::where('id', $id)
-            ->whereYear('created_at', Carbon::now()->year)
-            ->whereMonth('created_at', Carbon::now()->month)
-            ->orderBy('created_at', 'desc')
-            ->get();
-
-        // Memformat aktivitas presensi
-        $aktivitasPresensi = [];
-        foreach ($presensiBulanIni as $presensi) {
-            if ($presensi->created_at) {
-                $aktivitasPresensi[] = [
-                    'presensi' => 'Masuk',
-                    'tanggal' => $presensi->created_at,
-                    'lat_masuk' => $presensiHariIni->lat,
-                    'long_masuk' => $presensiHariIni->long,
-                    'foto_masuk' => [
-                        'id' => $fotoMasukBerkas->id,
-                        'user_id' => $fotoMasukBerkas->user_id,
-                        'file_id' => $fotoMasukBerkas->file_id,
-                        'nama' => $fotoMasukBerkas->nama,
-                        'nama_file' => $fotoMasukBerkas->nama_file,
-                        'path' => $fotoMasukUrl,
-                        'ext' => $fotoMasukBerkas->ext,
-                        'size' => $fotoMasukBerkas->size,
-                    ],
-                ];
-            }
-            if ($presensi->updated_at) {
-                $aktivitasPresensi[] = [
-                    'presensi' => 'Keluar',
-                    'tanggal' => $presensi->updated_at,
-                    'lat_keluar' => $presensiHariIni->latkeluar,
-                    'long_keluar' => $presensiHariIni->longkeluar,
-                    'foto_keluar' => [
-                        'id' => $fotoKeluarBerkas->id ?? null,
-                        'user_id' => $fotoKeluarBerkas->user_id ?? null,
-                        'file_id' => $fotoKeluarBerkas->file_id ?? null,
-                        'nama' => $fotoKeluarBerkas->nama ?? null,
-                        'nama_file' => $fotoKeluarBerkas->nama_file ?? null,
-                        'path' => $fotoKeluarUrl ?? null,
-                        'ext' => $fotoKeluarBerkas->ext ?? null,
-                        'size' => $fotoKeluarBerkas->size ?? null,
-                    ],
-                ];
-            }
+        // Ambil data jadwal non-shift jika jenis_karyawan = false
+        $jadwalNonShift = null;
+        $jenisKaryawan = $presensiHariIni->users->data_karyawans->unit_kerjas->jenis_karyawan ?? null;
+        if ($jenisKaryawan === 0) {
+            $jadwalNonShift = NonShift::first();
         }
 
         return response()->json([
@@ -432,15 +392,34 @@ class DataPresensiController extends Controller
             'message' => "Detail data presensi karyawan '{$presensiHariIni->users->nama}' berhasil ditampilkan.",
             'data' => [
                 'id' => $presensiHariIni->id,
-                'user' => $presensiHariIni->users,
+                'user' => [
+                    'id' => $presensiHariIni->users->id,
+                    'nama' => $presensiHariIni->users->nama,
+                    'email_verified_at' => $presensiHariIni->users->email_verified_at,
+                    'data_karyawan_id' => $presensiHariIni->users->data_karyawan_id,
+                    'foto_profil' => $presensiHariIni->users->foto_profil,
+                    'data_completion_step' => $presensiHariIni->users->data_completion_step,
+                    'status_aktif' => $presensiHariIni->users->status_aktif,
+                    'created_at' => $presensiHariIni->users->created_at,
+                    'updated_at' => $presensiHariIni->users->updated_at,
+                ],
                 'unit_kerja' => $presensiHariIni->data_karyawans->unit_kerjas,
                 'data_presensi' => [
-                    'jadwal' => [
-                        'id' => $presensiHariIni->jadwals->id ?? null,
-                        'tgl_mulai' => $presensiHariIni->jadwals->tgl_mulai ?? null,
-                        'tgl_selesai' => $presensiHariIni->jadwals->tgl_selesai ?? null,
-                        'shift' => $presensiHariIni->jadwals->shifts ?? null,
-                    ],
+                    'jadwal_shift' => $presensiHariIni->jadwals ? [
+                        'id' => $presensiHariIni->jadwals->id,
+                        'tgl_mulai' => $presensiHariIni->jadwals->tgl_mulai,
+                        'tgl_selesai' => $presensiHariIni->jadwals->tgl_selesai,
+                        'shift' => $presensiHariIni->jadwals->shifts,
+                    ] : null,
+                    'jadwal_non_shift' => $jadwalNonShift ? [
+                        'id' => $jadwalNonShift->id,
+                        'nama' => $jadwalNonShift->nama,
+                        'jam_from' => $jadwalNonShift->jam_from,
+                        'jam_to' => $jadwalNonShift->jam_to,
+                        'deleted_at' => $jadwalNonShift->deleted_at,
+                        'created_at' => $jadwalNonShift->created_at,
+                        'updated_at' => $jadwalNonShift->updated_at,
+                    ] : null,
                     'jam_masuk' => $presensiHariIni->jam_masuk,
                     'jam_keluar' => $presensiHariIni->jam_keluar,
                     'durasi' => $presensiHariIni->durasi,
@@ -475,8 +454,10 @@ class DataPresensiController extends Controller
                         'ext' => $fotoKeluarBerkas->ext ?? null,
                         'size' => $fotoKeluarBerkas->size ?? null,
                     ],
-                ],
-                'list_presensi' => $aktivitasPresensi
+                    'kategori_presensi' => $presensiHariIni->kategori_presensis,
+                    'created_at' => $presensiHariIni->created_at,
+                    'updated_at' => $presensiHariIni->updated_at
+                ]
             ],
         ], Response::HTTP_OK);
     }

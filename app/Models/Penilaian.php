@@ -18,7 +18,8 @@ class Penilaian extends Model
         'user_penilai' => 'integer',
         'jenis_penilaian_id' => 'integer',
         'total_pertanyaan' => 'integer',
-        'rata_rata' => 'integer'
+        'rata_rata' => 'integer',
+        'pertanyaan_jawaban' => 'array',
     ];
 
     /**
