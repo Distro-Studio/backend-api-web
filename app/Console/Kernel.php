@@ -6,9 +6,6 @@ use App\Console\Commands\UpdateAndResetReward;
 use App\Console\Commands\UpdateAutoPublishPenggajian;
 use DateTimeZone;
 use Carbon\Carbon;
-use App\Models\RiwayatPenggajian;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Console\Scheduling\Schedule;
 use App\Console\Commands\UpdateDataKaryawanTransfer;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
@@ -35,8 +32,9 @@ class Kernel extends ConsoleKernel
         // Update published payroll
         $schedule->command('app:update-auto-publish-penggajian')
             ->timezone('Asia/Jakarta')
-            ->hourly()
-            ->between('23.58', '01.00');
+            ->everyFiveSeconds();
+            // ->hourly()
+            // ->between('23.58', '01.00');
 
         // Update & reset reward presensi
         $schedule->command('app:update-and-reset-reward-presensi')

@@ -31,10 +31,9 @@ class UpdateAutoPublishPenggajian extends Command
      */
     public function handle()
     {
-        $currentDate = Carbon::now();
         $jadwalPenggajian = DB::table('jadwal_penggajians')
-            ->select('tgl_mulai')
-            ->orderBy('tgl_mulai', 'desc')
+            ->select(DB::raw("CAST(tgl_mulai AS UNSIGNED) as tgl_mulai")) // Memastikan tgl_mulai adalah integer
+            ->where('id', 1)
             ->first();
 
         if (!$jadwalPenggajian) {
@@ -46,14 +45,12 @@ class UpdateAutoPublishPenggajian extends Command
         $statusCreated = DB::table('status_gajis')->where('label', 'Belum Dipublikasi')->value('id');
         $statusPublished = DB::table('status_gajis')->where('label', 'Sudah Dipublikasi')->value('id');
 
-        if (is_null($statusCreated) || is_null($statusPublished)) {
-            Log::error('Status gaji tidak ditemukan di tabel status_gajis.');
-            return;
-        }
-
+        $currentDate = Carbon::now('Asia/Jakarta');
+        // Log::info("Tanggal sekarang {$currentDate}");
         $currentMonth = $currentDate->month;
         $currentYear = $currentDate->year;
         $tgl_mulai = Carbon::create($currentYear, $currentMonth, $jadwalPenggajian->tgl_mulai);
+        // Log::info("Tgl Mulai: {$tgl_mulai}");
         $tgl_selesai = $tgl_mulai->copy()->addDay(1);
 
         if ($currentDate->isSameDay($tgl_mulai) || $currentDate->isSameDay($tgl_selesai)) {
