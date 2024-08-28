@@ -23,7 +23,8 @@ class TransferKaryawan extends Model
         'kelompok_gaji_tujuan' => 'integer',
         'role_asal' => 'integer',
         'role_tujuan' => 'integer',
-        'kategori_transfer_id' => 'integer'
+        'kategori_transfer_id' => 'integer',
+        'is_processed' => 'integer',
     ];
 
     /**

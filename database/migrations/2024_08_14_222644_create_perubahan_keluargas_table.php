@@ -14,7 +14,6 @@ return new class extends Migration
         Schema::create('perubahan_keluargas', function (Blueprint $table) {
             $table->id();
             $table->foreignId('riwayat_perubahan_id')->constrained('riwayat_perubahans');
-            $table->boolean('jenis_perubahan'); // 1 = tambah, 0 = ubah
             $table->foreignId('data_keluarga_id')->nullable()->constrained('data_keluargas');
             $table->string('nama_keluarga');
             $table->enum('hubungan', ['Ayah', 'Ibu', 'Anak', 'Suami', 'Istri', 'Nenek', 'Kakek', 'Ayah Suami', 'Ibu Suami', 'Ayah Istri', 'Ibu Istri']);

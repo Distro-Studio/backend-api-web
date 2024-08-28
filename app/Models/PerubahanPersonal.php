@@ -13,7 +13,14 @@ class PerubahanPersonal extends Model
 
     protected $casts = [
         'id' => 'integer',
-        'riwayat_perubahan_id' => 'integer'
+        'riwayat_perubahan_id' => 'integer',
+        'jenis_kelamin' => 'integer',
+        'kategori_agama_id' => 'integer',
+        'kategori_darah_id' => 'integer',
+        'tinggi_badan' => 'integer',
+        'berat_badan' => 'integer',
+        'tahun_lulus' => 'integer',
+        'pendidikan_terakhir' => 'integer'
     ];
 
     /**

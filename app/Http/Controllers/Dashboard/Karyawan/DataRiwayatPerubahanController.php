@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Dashboard\Karyawan;
 
-use App\Models\Berkas;
 use App\Models\DataKaryawan;
 use App\Models\DataKeluarga;
 use Illuminate\Http\Request;
@@ -10,7 +9,7 @@ use App\Helpers\RandomHelper;
 use Illuminate\Http\Response;
 use App\Models\RiwayatPerubahan;
 use App\Models\PerubahanKeluarga;
-use Illuminate\Support\Facades\DB;
+use App\Models\PerubahanPersonal;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
@@ -248,6 +247,7 @@ class DataRiwayatPerubahanController extends Controller
                     $updatedData = $keluargaChanges->map(function ($change) {
                         return [
                             'id' => $change->id,
+                            'data_keluarga_id' => $change->data_keluarga_id,
                             'nama_keluarga' => $change->nama_keluarga,
                             'hubungan' => $change->hubungan,
                             'pendidikan_terakhir' => $change->pendidikan_terakhir,
@@ -264,89 +264,24 @@ class DataRiwayatPerubahanController extends Controller
 
             if ($data_perubahan->jenis_perubahan === 'Personal') {
                 $dataKaryawan = $data_perubahan->data_karyawans;
-                $role = $dataKaryawan->users->roles->first();
                 $originalData = [
                     [
                         'id' => $dataKaryawan->id,
-                        'user' => [
-                            'id' => $dataKaryawan->users->id,
-                            'nama' => $dataKaryawan->users->nama,
-                            'email_verified_at' => $dataKaryawan->users->email_verified_at,
-                            'data_karyawan_id' => $dataKaryawan->users->data_karyawan_id,
-                            'foto_profil' => $dataKaryawan->users->foto_profil,
-                            'data_completion_step' => $dataKaryawan->users->data_completion_step,
-                            'status_aktif' => $dataKaryawan->users->status_aktif,
-                            'created_at' => $dataKaryawan->users->created_at,
-                            'updated_at' => $dataKaryawan->users->updated_at
-                        ],
-                        'role' => [
-                            'id' => $role->id,
-                            'name' => $role->name,
-                            'deskripsi' => $role->deskripsi,
-                            'created_at' => $role->created_at,
-                            'updated_at' => $role->updated_at
-                        ],
-                        'potongan_gaji' => DB::table('pengurang_gajis')
-                            ->join('premis', 'pengurang_gajis.premi_id', '=', 'premis.id')
-                            ->where('pengurang_gajis.data_karyawan_id', $dataKaryawan->id)
-                            ->select(
-                                'premis.id',
-                                'premis.nama_premi',
-                                'premis.kategori_potongan_id',
-                                'premis.jenis_premi',
-                                'premis.besaran_premi',
-                                'premis.minimal_rate',
-                                'premis.maksimal_rate',
-                                'premis.created_at',
-                                'premis.updated_at'
-                            )
-                            ->get(),
-                        'email' => $dataKaryawan->email,
-                        'nik' => $dataKaryawan->nik,
-                        'no_rm' => $dataKaryawan->no_rm,
-                        'no_sip' => $dataKaryawan->no_sip,
-                        'masa_berlaku_sip' => $dataKaryawan->masa_berlaku_sip,
-                        'no_manulife' => $dataKaryawan->no_manulife,
-                        'tgl_masuk' => $dataKaryawan->tgl_masuk,
-                        'unit_kerja' => $dataKaryawan->unit_kerjas, // unit_kerja_id
-                        'jabatan' => $dataKaryawan->jabatans, // jabatan_id
-                        'kompetensi' => $dataKaryawan->kompetensis, // kompetensi_id
-                        'nik_ktp' => $dataKaryawan->nik_ktp,
-                        'status_karyawan' => $dataKaryawan->status_karyawans, // status_karyawan_id
                         'tempat_lahir' => $dataKaryawan->tempat_lahir,
                         'tgl_lahir' => $dataKaryawan->tgl_lahir,
-                        'kelompok_gaji' => $dataKaryawan->kelompok_gajis, // kelompok_gaji_id
-                        'no_rekening' => $dataKaryawan->no_rekening,
-                        'tunjangan_jabatan' => $dataKaryawan->tunjangan_jabatan,
-                        'tunjangan_fungsional' => $dataKaryawan->tunjangan_fungsional,
-                        'tunjangan_khusus' => $dataKaryawan->tunjangan_khusus,
-                        'tunjangan_lainnya' => $dataKaryawan->tunjangan_lainnya,
-                        'uang_lembur' => $dataKaryawan->uang_lembur,
-                        'uang_makan' => $dataKaryawan->uang_makan,
-                        'ptkp' => $dataKaryawan->ptkps, // ptkp_id
-                        'tgl_keluar' => $dataKaryawan->tgl_keluar,
-                        'no_kk' => $dataKaryawan->no_kk,
-                        'alamat' => $dataKaryawan->alamat,
-                        'gelar_depan' => $dataKaryawan->gelar_depan,
                         'no_hp' => $dataKaryawan->no_hp,
-                        'no_bpjsksh' => $dataKaryawan->no_bpjsksh,
-                        'no_bpjsktk' => $dataKaryawan->no_bpjsktk,
-                        'tgl_diangkat' => $dataKaryawan->tgl_diangkat,
-                        'masa_kerja' => $dataKaryawan->masa_kerja,
-                        'npwp' => $dataKaryawan->npwp,
                         'jenis_kelamin' => $dataKaryawan->jenis_kelamin,
+                        'nik_ktp' => $dataKaryawan->nik_ktp,
+                        'no_kk' => $dataKaryawan->no_kk,
                         'agama' => $dataKaryawan->kategori_agamas, // agama_id
                         'golongan_darah' => $dataKaryawan->kategori_darahs, // golongan_darah_id
-                        'pendidikan_terakhir' => $dataKaryawan->kategori_pendidikans, // pendidikan_terakhir_id
                         'tinggi_badan' => $dataKaryawan->tinggi_badan,
                         'berat_badan' => $dataKaryawan->berat_badan,
+                        'alamat' => $dataKaryawan->alamat,
                         'no_ijazah' => $dataKaryawan->no_ijazah,
                         'tahun_lulus' => $dataKaryawan->tahun_lulus,
-                        'no_str' => $dataKaryawan->no_str,
-                        'masa_berlaku_str' => $dataKaryawan->masa_berlaku_str,
-                        'tgl_berakhir_pks' => $dataKaryawan->tgl_berakhir_pks,
-                        'masa_diklat' => $dataKaryawan->masa_diklat,
-                        'created_at' => $dataKaryawan->created_at,
+                        'pendidikan_terakhir' => $dataKaryawan->kategori_pendidikans, // pendidikan_terakhir_id
+                        'gelar_depan' => $dataKaryawan->gelar_depan,
                         'updated_at' => $dataKaryawan->updated_at
                     ]
                 ];
@@ -354,134 +289,26 @@ class DataRiwayatPerubahanController extends Controller
                 $personalChanges = $data_perubahan->perubahan_personals;
                 if ($personalChanges->isNotEmpty()) {
                     $updatedData = $personalChanges->map(function ($change) {
-                        $role = $change->riwayat_perubahans->data_karyawans->users->roles->first();
-                        $user = $change->riwayat_perubahans->data_karyawans->users;
                         return [
                             'id' => $change->id,
-                            'user' => [
-                                'id' => $user->id,
-                                'nama' => $user->nama,
-                                'email_verified_at' => $user->email_verified_at,
-                                'data_karyawan_id' => $user->data_karyawan_id,
-                                'foto_profil' => $user->foto_profil,
-                                'data_completion_step' => $user->data_completion_step,
-                                'status_aktif' => $user->status_aktif,
-                                'created_at' => $user->created_at,
-                                'updated_at' => $user->updated_at
-                            ],
-                            'role' => [
-                                'id' => $role->id,
-                                'name' => $role->name,
-                                'deskripsi' => $role->deskripsi,
-                                'created_at' => $role->created_at,
-                                'updated_at' => $role->updated_at
-                            ],
-                            'potongan_gaji' => DB::table('pengurang_gajis')
-                                ->join('premis', 'pengurang_gajis.premi_id', '=', 'premis.id')
-                                ->where('pengurang_gajis.data_karyawan_id', $change->id)
-                                ->select(
-                                    'premis.id',
-                                    'premis.nama_premi',
-                                    'premis.kategori_potongan_id',
-                                    'premis.jenis_premi',
-                                    'premis.besaran_premi',
-                                    'premis.minimal_rate',
-                                    'premis.maksimal_rate',
-                                    'premis.created_at',
-                                    'premis.updated_at'
-                                )
-                                ->get(),
-                            'email' => $change->email,
-                            'nik' => $change->nik,
-                            'no_rm' => $change->no_rm,
-                            'no_sip' => $change->no_sip,
-                            'masa_berlaku_sip' => $change->masa_berlaku_sip,
-                            'no_manulife' => $change->no_manulife,
-                            'tgl_masuk' => $change->tgl_masuk,
-                            'unit_kerja' => $change->unit_kerjas, // unit_kerja_id
-                            'jabatan' => $change->jabatans, // jabatan_id
-                            'kompetensi' => $change->kompetensis, // kompetensi_id
-                            'nik_ktp' => $change->nik_ktp,
-                            'status_karyawan' => $change->status_karyawans, // status_karyawan_id
                             'tempat_lahir' => $change->tempat_lahir,
                             'tgl_lahir' => $change->tgl_lahir,
-                            'kelompok_gaji' => $change->kelompok_gajis, // kelompok_gaji_id
-                            'no_rekening' => $change->no_rekening,
-                            'tunjangan_jabatan' => $change->tunjangan_jabatan,
-                            'tunjangan_fungsional' => $change->tunjangan_fungsional,
-                            'tunjangan_khusus' => $change->tunjangan_khusus,
-                            'tunjangan_lainnya' => $change->tunjangan_lainnya,
-                            'uang_lembur' => $change->uang_lembur,
-                            'uang_makan' => $change->uang_makan,
-                            'ptkp' => $change->ptkps, // ptkp_id
-                            'tgl_keluar' => $change->tgl_keluar,
-                            'no_kk' => $change->no_kk,
-                            'alamat' => $change->alamat,
-                            'gelar_depan' => $change->gelar_depan,
-                            'no_hp' => $change->no_telp,
-                            'no_bpjsksh' => $change->no_bpjsksh,
-                            'no_bpjsktk' => $change->no_bpjsktk,
-                            'tgl_diangkat' => $change->tgl_diangkat,
-                            'masa_kerja' => $change->masa_kerja,
-                            'npwp' => $change->npwp,
+                            'no_hp' => $change->no_hp,
                             'jenis_kelamin' => $change->jenis_kelamin,
+                            'nik_ktp' => $change->nik_ktp,
+                            'no_kk' => $change->no_kk,
                             'agama' => $change->kategori_agamas, // agama_id
                             'golongan_darah' => $change->kategori_darahs, // golongan_darah_id
-                            'pendidikan_terakhir' => $change->kategori_pendidikans, // pendidikan_terakhir_id
                             'tinggi_badan' => $change->tinggi_badan,
                             'berat_badan' => $change->berat_badan,
+                            'alamat' => $change->alamat,
                             'no_ijazah' => $change->no_ijazah,
                             'tahun_lulus' => $change->tahun_lulus,
-                            'no_str' => $change->no_str,
-                            'masa_berlaku_str' => $change->masa_berlaku_str,
-                            'tgl_berakhir_pks' => $change->tgl_berakhir_pks,
-                            'masa_diklat' => $change->masa_diklat,
-                            'created_at' => $change->created_at,
+                            'pendidikan_terakhir' => $change->kategori_pendidikans, // pendidikan_terakhir_id
+                            'gelar_depan' => $change->gelar_depan,
                             'updated_at' => $change->updated_at
                         ];
                     });
-                }
-            }
-
-            if ($data_perubahan->jenis_perubahan === 'Berkas') {
-                // Fetch the original data from the related Berkas
-                $berkasChanges = $data_perubahan->perubahan_berkas;
-
-                if ($berkasChanges->isNotEmpty()) {
-                    $firstBerkasChange = $berkasChanges->first();
-                    $originalBerkas = Berkas::find($firstBerkasChange->berkas_id);
-                    $baseUrl = env('STORAGE_SERVER_DOMAIN');
-
-                    if ($originalBerkas) {
-                        $originalData = [[
-                            'id' => $originalBerkas->id,
-                            'file_id' => $originalBerkas->file_id,
-                            'nama' => $originalBerkas->nama,
-                            'path' => $originalBerkas->path,
-                            'tgl_upload' => $originalBerkas->tgl_upload,
-                            'nama_file' => $originalBerkas->nama_file,
-                            'ext' => $originalBerkas->ext,
-                            'size' => $originalBerkas->size,
-                            'url' => $baseUrl . $originalBerkas->path,
-                            'created_at' => $originalBerkas->created_at,
-                            'updated_at' => $originalBerkas->updated_at
-                        ]];
-                    }
-
-                    // Updated data reflects the new changes
-                    $updatedData = [[
-                        'id' => $firstBerkasChange->id,
-                        'file_id' => $firstBerkasChange->file_id,
-                        'nama' => $firstBerkasChange->nama,
-                        'path' => $firstBerkasChange->path,
-                        'tgl_upload' => $firstBerkasChange->tgl_upload,
-                        'nama_file' => $firstBerkasChange->nama_file,
-                        'ext' => $firstBerkasChange->ext,
-                        'size' => $firstBerkasChange->size,
-                        'url' => $baseUrl . $originalBerkas->path,
-                        'created_at' => $firstBerkasChange->created_at,
-                        'updated_at' => $firstBerkasChange->updated_at
-                    ]];
                 }
             }
 
@@ -545,11 +372,10 @@ class DataRiwayatPerubahanController extends Controller
 
         // Logika verifikasi disetujui
         if ($request->has('verifikasi_disetujui') && $request->verifikasi_disetujui == 1) {
-            // Jika status_perubahan_id = 1 (menunggu) atau 3 (ditolak sebelumnya)
             if ($status_perubahan_id == 1) {
-                $riwayat->status_perubahan_id = 2; // Update status ke diverifikasi
-                $riwayat->verifikator_1 = Auth::id(); // Set verifikator tahap 1
-                $riwayat->alasan = null; // Reset alasan penolakan
+                $riwayat->status_perubahan_id = 2;
+                $riwayat->verifikator_1 = Auth::id();
+                $riwayat->alasan = null;
                 $riwayat->save();
 
                 // Lakukan pembaruan data pada tabel asli
@@ -562,10 +388,9 @@ class DataRiwayatPerubahanController extends Controller
         }
         // Logika verifikasi ditolak
         elseif ($request->has('verifikasi_ditolak') && $request->verifikasi_ditolak == 1) {
-            // Jika status_perubahan_id = 1 (menunggu)
             if ($status_perubahan_id == 1) {
-                $riwayat->status_perubahan_id = 3; // Update status ke ditolak
-                $riwayat->verifikator_1 = Auth::id(); // Set verifikator tahap 1
+                $riwayat->status_perubahan_id = 3;
+                $riwayat->verifikator_1 = Auth::id();
                 $riwayat->alasan = $request->input('alasan', null);
                 $riwayat->save();
 
@@ -584,54 +409,64 @@ class DataRiwayatPerubahanController extends Controller
         switch ($riwayat->jenis_perubahan) {
             case 'Personal':
                 $dataKaryawan = DataKaryawan::find($riwayat->data_karyawan_id);
+                // if ($dataKaryawan) {
+                //     // $dataKaryawan->{$riwayat->kolom} = $riwayat->updated_data;
+                //     $dataKaryawan->{$riwayat->kolom} = $riwayat->updated_data[0][$riwayat->kolom];
+                //     $dataKaryawan->save();
+                // }
                 if ($dataKaryawan) {
-                    // $dataKaryawan->{$riwayat->kolom} = $riwayat->updated_data;
-                    $dataKaryawan->{$riwayat->kolom} = $riwayat->updated_data[0][$riwayat->kolom];
-                    $dataKaryawan->save();
-                }
-                break;
+                    $perubahanPersonal = PerubahanPersonal::where('riwayat_perubahan_id', $riwayat->id)->get();
+                    foreach ($perubahanPersonal as $perubahan) {
+                        $updateData = [];
+                        if (!is_null($perubahan->tempat_lahir)) $updateData['tempat_lahir'] = $perubahan->tempat_lahir;
+                        if (!is_null($perubahan->tgl_lahir)) $updateData['tgl_lahir'] = $perubahan->tgl_lahir;
+                        if (!is_null($perubahan->no_hp)) $updateData['no_hp'] = $perubahan->no_hp;
+                        if (!is_null($perubahan->jenis_kelamin)) $updateData['jenis_kelamin'] = $perubahan->jenis_kelamin;
+                        if (!is_null($perubahan->nik_ktp)) $updateData['nik_ktp'] = $perubahan->nik_ktp;
+                        if (!is_null($perubahan->no_kk)) $updateData['no_kk'] = $perubahan->no_kk;
+                        if (!is_null($perubahan->kategori_agama_id)) $updateData['agama'] = $perubahan->kategori_agama_id;
+                        if (!is_null($perubahan->kategori_darah_id)) $updateData['golongan_darah'] = $perubahan->kategori_darah_id;
+                        if (!is_null($perubahan->tinggi_badan)) $updateData['tinggi_badan'] = $perubahan->tinggi_badan;
+                        if (!is_null($perubahan->berat_badan)) $updateData['berat_badan'] = $perubahan->berat_badan;
+                        if (!is_null($perubahan->alamat)) $updateData['alamat'] = $perubahan->alamat;
+                        if (!is_null($perubahan->no_ijazah)) $updateData['no_ijazah'] = $perubahan->no_ijazah;
+                        if (!is_null($perubahan->tahun_lulus)) $updateData['tahun_lulus'] = $perubahan->tahun_lulus;
+                        if (!is_null($perubahan->pendidikan_terakhir)) $updateData['pendidikan_terakhir'] = $perubahan->pendidikan_terakhir;
+                        if (!is_null($perubahan->gelar_depan)) $updateData['gelar_depan'] = $perubahan->gelar_depan;
 
-            case 'Berkas':
-                $berkas = Berkas::where('id', function ($query) use ($riwayat) {
-                    $query->select('berkas_id')
-                        ->from('perubahan_berkas')
-                        ->where('riwayat_perubahan_id', $riwayat->id);
-                })->whereHas('users', function ($query) use ($riwayat) {
-                    $query->where('data_karyawan_id', $riwayat->data_karyawan_id);
-                })->first();
-
-                if ($berkas) {
-                    // Update kolom yang sesuai di tabel berkas
-                    // $berkas->{$riwayat->kolom} = $riwayat->updated_data;
-                    $berkas->{$riwayat->kolom} = $riwayat->updated_data[0][$riwayat->kolom];
-                    $berkas->save();
+                        // Lakukan update jika ada data yang berubah
+                        if (!empty($updateData)) {
+                            $dataKaryawan->update($updateData);
+                        }
+                    }
                 }
                 break;
 
             case 'Keluarga':
                 $perubahanKeluarga = PerubahanKeluarga::where('riwayat_perubahan_id', $riwayat->id)->first();
+                foreach ($perubahanKeluarga as $perubahan) {
+                    $dataKeluarga = DataKeluarga::where('id', $perubahanKeluarga->data_keluarga_id)
+                        ->where('data_karyawan_id', $riwayat->data_karyawan_id)
+                        ->first();
 
-                if ($perubahanKeluarga) {
-                    if ($perubahanKeluarga->jenis_perubahan == 1) {
-                        DataKeluarga::create([
-                            'data_karyawan_id' => $riwayat->data_karyawan_id,
-                            'nama_keluarga' => $perubahanKeluarga->nama_keluarga,
-                            'hubungan' => $perubahanKeluarga->hubungan,
-                            'pendidikan_terakhir' => $perubahanKeluarga->pendidikan_terakhir,
-                            'status_hidup' => $perubahanKeluarga->status_hidup,
-                            'pekerjaan' => $perubahanKeluarga->pekerjaan,
-                            'no_hp' => $perubahanKeluarga->no_hp,
-                            'email' => $perubahanKeluarga->email,
-                        ]);
-                    } else {
-                        $dataKeluarga = DataKeluarga::where('id', $perubahanKeluarga->data_keluarga_id)
-                            ->where('data_karyawan_id', $riwayat->data_karyawan_id)
-                            ->first();
+                    // if ($dataKeluarga) {
+                    //     // $dataKeluarga->{$riwayat->kolom} = $riwayat->updated_data;
+                    //     $dataKeluarga->{$riwayat->kolom} = $riwayat->updated_data[0][$riwayat->kolom];
+                    //     $dataKeluarga->save();
+                    // }
+                    if ($dataKeluarga) {
+                        $updateData = [];
+                        if (!is_null($perubahan->nama_keluarga)) $updateData['nama_keluarga'] = $perubahan->nama_keluarga;
+                        if (!is_null($perubahan->hubungan)) $updateData['hubungan'] = $perubahan->hubungan;
+                        if (!is_null($perubahan->pendidikan_terakhir)) $updateData['pendidikan_terakhir'] = $perubahan->pendidikan_terakhir;
+                        if (!is_null($perubahan->status_hidup)) $updateData['status_hidup'] = $perubahan->status_hidup;
+                        if (!is_null($perubahan->pekerjaan)) $updateData['pekerjaan'] = $perubahan->pekerjaan;
+                        if (!is_null($perubahan->no_hp)) $updateData['no_hp'] = $perubahan->no_hp;
+                        if (!is_null($perubahan->email)) $updateData['email'] = $perubahan->email;
 
-                        if ($dataKeluarga) {
-                            // $dataKeluarga->{$riwayat->kolom} = $riwayat->updated_data;
-                            $dataKeluarga->{$riwayat->kolom} = $riwayat->updated_data[0][$riwayat->kolom];
-                            $dataKeluarga->save();
+                        // Lakukan update jika ada data yang berubah
+                        if (!empty($updateData)) {
+                            $dataKeluarga->update($updateData);
                         }
                     }
                 }

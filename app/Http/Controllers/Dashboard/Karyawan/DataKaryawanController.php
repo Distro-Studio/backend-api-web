@@ -422,15 +422,18 @@ class DataKaryawanController extends Controller
           'kategori_transfer' => $transfer->kategori_transfer_karyawans,
           'tgl_masuk' => $item->tgl_masuk,
           'tgl_keluar' => $item->tgl_keluar,
+          'tgl_mulai' => $transfer->tgl_mulai,
           'unit_kerja_asal' => $transfer->unit_kerja_asals,
           'unit_kerja_tujuan' => $transfer->unit_kerja_tujuans,
           'jabatan_asal' => $transfer->jabatan_asals,
           'jabatan_tujuan' => $transfer->jabatan_tujuans,
           'alasan' => $transfer->alasan,
-          'dokumen' => $transfer->dokumen,
+          'dokumen' => env('STORAGE_SERVER_DOMAIN') . $transfer->dokumen,
           'created_at' => $item->created_at,
           'updated_at' => $item->updated_at
-        ]
+        ],
+        'created_at' => $item->created_at,
+        'updated_at' => $item->updated_at
       ];
     });
 

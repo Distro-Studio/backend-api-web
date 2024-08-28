@@ -123,7 +123,6 @@ class DatabaseSeeder extends Seeder
       KaryawanSeeder::class,
       KeluargaKaryawanSeeder::class,
       TransferKaryawanSeeder::class,
-      PerubahanBerkasSeeder::class,
       PerubahanKeluargaSeeder::class,
       PerubahanPersonalSeeder::class,
 

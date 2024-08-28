@@ -17,7 +17,7 @@ class Ter extends Model
         'kategori_ter_id' => 'integer',
         'from_ter' => 'integer',
         'to_ter' => 'integer',
-        'percentage' => 'decimal:4,2'
+        'percentage' => 'decimal:2'
     ];
 
     /**

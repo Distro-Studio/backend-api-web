@@ -16,7 +16,19 @@ return new class extends Migration
             $table->foreignId('riwayat_perubahan_id')->constrained('riwayat_perubahans');
             $table->string('tempat_lahir');
             $table->string('tgl_lahir');
-            $table->string('no_telp');
+            $table->string('no_hp');
+            $table->boolean('jenis_kelamin');
+            $table->string('nik_ktp');
+            $table->string('no_kk');
+            $table->foreignId('kategori_agama_id');
+            $table->foreignId('kategori_darah_id');
+            $table->integer('tinggi_badan');
+            $table->integer('berat_badan');
+            $table->string('alamat');
+            $table->string('no_ijasah');
+            $table->integer('tahun_lulus');
+            $table->foreignId('pendidikan_terakhir');
+            $table->string('gelar_depan');
             $table->timestamps();
         });
     }

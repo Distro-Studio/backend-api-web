@@ -37,7 +37,6 @@ class PerubahanKeluargaSeeder extends Seeder
 
             PerubahanKeluarga::create([
                 'riwayat_perubahan_id' => $riwayatPerubahan->id,
-                'jenis_perubahan' => rand(0, 1), // 0 = ubah, 1 = tambah
                 'data_keluarga_id' => $dataKeluargaId,
                 'nama_keluarga' => 'Nama Keluarga ' . $i,
                 'hubungan' => ['Ayah', 'Ibu', 'Anak', 'Suami', 'Istri', 'Nenek', 'Kakek', 'Ayah Suami', 'Ibu Suami', 'Ayah Istri', 'Ibu Istri'][array_rand(['Ayah', 'Ibu', 'Anak', 'Suami', 'Istri', 'Nenek', 'Kakek', 'Ayah Suami', 'Ibu Suami', 'Ayah Istri', 'Ibu Istri'])],

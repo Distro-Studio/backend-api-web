@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('riwayat_perubahans', function (Blueprint $table) {
             $table->id();
             $table->foreignId('data_karyawan_id')->constrained('data_karyawans');
-            $table->enum('jenis_perubahan', ['Keluarga', 'Berkas', 'Personal']);
+            $table->enum('jenis_perubahan', ['Keluarga', 'Personal']);
             $table->string('kolom');
             $table->string('original_data');
             $table->string('updated_data');

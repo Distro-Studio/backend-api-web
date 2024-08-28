@@ -64,13 +64,6 @@ return new class extends Migration
             $table->integer('masa_diklat')->nullable();
             $table->foreignId('verifikator_1')->nullable()->constrained('users');
             $table->boolean('status_reward_presensi')->default(true);
-            // $table->foreignId('file_ktp')->nullable()->constrained('berkas')->onDelete('cascade');
-            // $table->foreignId('file_kk')->nullable()->constrained('berkas')->onDelete('cascade');
-            // $table->foreignId('file_sip')->nullable()->constrained('berkas')->onDelete('cascade');
-            // $table->foreignId('file_bpjsksh')->nullable()->constrained('berkas')->onDelete('cascade');
-            // $table->foreignId('file_bpjsktk')->nullable()->constrained('berkas')->onDelete('cascade');
-            // $table->foreignId('file_ijazah')->nullable()->constrained('berkas')->onDelete('cascade');
-            // $table->foreignId('file_sertifikat')->nullable()->constrained('berkas')->onDelete('cascade');
             $table->timestamps();
         });
     }

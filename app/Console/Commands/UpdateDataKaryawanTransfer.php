@@ -38,7 +38,9 @@ class UpdateDataKaryawanTransfer extends Command
         $transfers = TransferKaryawan::where(function ($query) use ($today, $tomorrow) {
             $query->whereDate('tgl_mulai', '<', $today->format('d-m-Y'))
                 ->orWhereDate('tgl_mulai', '=', $tomorrow->format('d-m-Y'));
-        })->get();
+        })
+            ->where('is_processed', 0) // Hanya ambil yang belum diproses
+            ->get();
         Log::info("Ada {$transfers->count()} transfer yang harus diperbarui.");
 
         foreach ($transfers as $transfer) {
@@ -79,6 +81,7 @@ class UpdateDataKaryawanTransfer extends Command
                     Log::warning("User dengan ID {$transfer->user_id} tidak ditemukan saat mencoba memperbarui role.");
                 }
             }
+            $transfer->update(['is_processed' => 1]);
         }
 
         $this->info('Data karyawan berhasil diperbarui pada tanggal mulainya H-1 atau sudah terlewat.');
