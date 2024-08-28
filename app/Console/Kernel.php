@@ -26,20 +26,17 @@ class Kernel extends ConsoleKernel
         // Update transfer karyawan
         $schedule->command('app:update-data-karyawan-transfer')
             ->timezone('Asia/Jakarta')
-            ->hourly()
-            ->between('01.00', '03.00');
+            ->dailyAt('01:00');
 
         // Update published payroll
         $schedule->command('app:update-auto-publish-penggajian')
             ->timezone('Asia/Jakarta')
-            ->everyFiveSeconds();
-            // ->hourly()
-            // ->between('23.58', '01.00');
+            ->dailyAt('23:59');
 
         // Update & reset reward presensi
         $schedule->command('app:update-and-reset-reward-presensi')
-            ->monthlyOn(Carbon::now()->endOfMonth()->day, '00:00')
-            ->timezone('Asia/Jakarta');
+            ->timezone('Asia/Jakarta')
+            ->monthlyOn(Carbon::now()->endOfMonth()->day, '00:00');
     }
 
     /**
