@@ -3,49 +3,23 @@
 namespace App\Http\Controllers\Dashboard\Pengaturan\Karyawan;
 
 use App\Models\UnitKerja;
-use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Collection;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Gate;
-use Maatwebsite\Excel\Facades\Excel;
-use Illuminate\Support\Facades\Validator;
 use App\Http\Requests\StoreUnitKerjaRequest;
 use App\Http\Requests\UpdateUnitKerjaRequest;
-use Spatie\Permission\Middleware\RoleMiddleware;
-use App\Exports\Pengaturan\Karyawan\UnitKerjaExport;
-use App\Imports\Pengaturan\Karyawan\UnitKerjaImport;
-use App\Http\Requests\Excel_Import\ImportUnitKerjaRequest;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
 
 class UnitKerjaController extends Controller
 {
-    public function index(Request $request)
+    public function index()
     {
         if (!Gate::allows('view unitKerja')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
         $unit_kerja = UnitKerja::withTrashed()->orderBy('created_at', 'desc');
-
-        // Filter
-        // if ($request->has('delete_data')) {
-        //     $softDeleteFilters = $request->delete_data;
-        //     $unit_kerja->when(in_array('dihapus', $softDeleteFilters) && !in_array('belum_dihapus', $softDeleteFilters), function ($query) {
-        //         return $query->onlyTrashed();
-        //     })->when(!in_array('dihapus', $softDeleteFilters) && in_array('belum_dihapus', $softDeleteFilters), function ($query) {
-        //         return $query->withoutTrashed();
-        //     });
-        // }
-
-        // Search
-        // if ($request->has('search')) {
-        //     $unit_kerja = $unit_kerja->where(function ($query) use ($request) {
-        //         $searchTerm = '%' . $request->search . '%';
-
-        //         $query->orWhere('nama_unit', 'like', $searchTerm);
-        //     });
-        // }
 
         $dataUnitKerja = $unit_kerja->get();
         if ($dataUnitKerja->isEmpty()) {

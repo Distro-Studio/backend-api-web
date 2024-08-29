@@ -10,7 +10,6 @@ use Illuminate\Support\Facades\Gate;
 use App\Http\Requests\StorePertanyaanRequest;
 use App\Http\Requests\UpdatePertanyaanRequest;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
-use Spatie\Permission\Models\Role;
 
 class PertanyaanController extends Controller
 {

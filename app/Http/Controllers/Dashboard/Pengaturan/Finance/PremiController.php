@@ -8,47 +8,19 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Collection;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Gate;
-use Maatwebsite\Excel\Facades\Excel;
 use App\Http\Requests\StorePremiRequest;
 use App\Http\Requests\UpdatePremiRequest;
-use App\Exports\Pengaturan\Finance\PremiExport;
-use App\Imports\Pengaturan\Finance\PremiImport;
-use App\Http\Requests\Excel_Import\ImportPremiRequest;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
 
 class PremiController extends Controller
 {
-    public function index(Request $request)
+    public function index()
     {
         if (!Gate::allows('view premi')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
         $premi = Premi::withTrashed()->orderBy('created_at', 'desc');
-
-        // Filter
-        // if ($request->has('delete_data')) {
-        //     $softDeleteFilters = $request->delete_data;
-        //     $premi->when(in_array('dihapus', $softDeleteFilters) && !in_array('belum_dihapus', $softDeleteFilters), function ($query) {
-        //         return $query->onlyTrashed();
-        //     })->when(!in_array('dihapus', $softDeleteFilters) && in_array('belum_dihapus', $softDeleteFilters), function ($query) {
-        //         return $query->withoutTrashed();
-        //     });
-        // }
-
-        // $jenisPremiFilters = $request->input('jenis_premi', []);
-        // if (!empty($jenisPremiFilters)) {
-        //     $premi->whereIn('jenis_premi', $jenisPremiFilters);
-        // }
-
-        // Search
-        // if ($request->has('search')) {
-        //     $premi = $premi->where(function ($query) use ($request) {
-        //         $searchTerm = '%' . $request->search . '%';
-
-        //         $query->orWhere('nama_premi', 'like', $searchTerm);
-        //     });
-        // }
 
         $dataPremi = $premi->get();
         if ($dataPremi->isEmpty()) {

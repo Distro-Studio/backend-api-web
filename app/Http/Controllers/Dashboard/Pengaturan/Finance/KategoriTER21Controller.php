@@ -14,7 +14,7 @@ use App\Models\KategoriTer;
 
 class KategoriTER21Controller extends Controller
 {
-    public function index(Request $request)
+    public function index()
     {
         if (!Gate::allows('view ter21')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);

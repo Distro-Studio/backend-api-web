@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Dashboard\Pengaturan\Karyawan;
 
 use App\Models\KelompokGaji;
-use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Collection;
 use App\Http\Controllers\Controller;
@@ -14,7 +13,7 @@ use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
 
 class KelompokGajiController extends Controller
 {
-    public function index(Request $request)
+    public function index()
     {
         if (!Gate::allows('view kelompokGaji')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);

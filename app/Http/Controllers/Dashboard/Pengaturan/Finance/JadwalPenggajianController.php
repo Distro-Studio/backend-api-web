@@ -6,7 +6,6 @@ use Illuminate\Http\Response;
 use App\Models\JadwalPenggajian;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Gate;
-
 use App\Http\Requests\StoreJadwalPenggajianRequest;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
 
@@ -39,7 +38,7 @@ class JadwalPenggajianController extends Controller
 
     public function createJadwalPenggajian(StoreJadwalPenggajianRequest $request)
     {
-        if (!Gate::allows('create jadwalGaji')) {
+        if (!Gate::allows('edit jadwalGaji')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 

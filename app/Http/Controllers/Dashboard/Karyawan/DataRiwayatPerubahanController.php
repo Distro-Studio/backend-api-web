@@ -20,7 +20,7 @@ class DataRiwayatPerubahanController extends Controller
 {
     public function index(Request $request)
     {
-        if (!Gate::allows('view dataKaryawan')) {
+        if (!Gate::allows('view riwayatPerubahan')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 

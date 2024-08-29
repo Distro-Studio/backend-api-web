@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Dashboard\Pengaturan\Karyawan;
 
 use App\Models\Jabatan;
-use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Collection;
 use App\Http\Controllers\Controller;

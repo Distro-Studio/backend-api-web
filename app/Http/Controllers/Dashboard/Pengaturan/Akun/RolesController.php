@@ -217,36 +217,6 @@ class RolesController extends Controller
         });
     }
 
-    // protected function formatPermissions($permissions)
-    // {
-    //     if ($permissions->isEmpty()) {
-    //         return null;
-    //     }
-
-    //     $permissionTypes = ['view', 'create', 'edit', 'delete', 'import', 'export', 'verifikasi1', 'verifikasi2'];
-
-    //     $groupedPermissions = $permissions->groupBy('group')->map(function ($group, $groupName) use ($permissionTypes) {
-    //         $permissionsArray = [];
-    //         foreach ($permissionTypes as $type) {
-    //             $permissionItem = $group->first(function ($item) use ($type) {
-    //                 return str_contains($item['name'], $type);
-    //             });
-
-    //             if ($permissionItem) {
-    //                 $permissionsArray[$type] = $permissionItem['has_permission'];
-    //             } else {
-    //                 $permissionsArray[$type] = null; // Jika tidak ada permission di DB
-    //             }
-    //         }
-    //         return [
-    //             'name' => $groupName,
-    //             'permissions' => $permissionsArray,
-    //         ];
-    //     });
-
-    //     return $groupedPermissions->values()->toArray();
-    // }
-
     protected function formatPermissions($permissions)
     {
         if ($permissions->isEmpty()) {

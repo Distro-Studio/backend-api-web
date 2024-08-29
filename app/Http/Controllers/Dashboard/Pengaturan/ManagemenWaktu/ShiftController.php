@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Dashboard\Pengaturan\ManagemenWaktu;
 
 use App\Models\Shift;
-use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Collection;
 use App\Http\Controllers\Controller;
@@ -28,7 +27,7 @@ class ShiftController extends Controller
         ], Response::HTTP_OK);
     }
 
-    public function index(Request $request)
+    public function index()
     {
         if (!Gate::allows('view shift')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);

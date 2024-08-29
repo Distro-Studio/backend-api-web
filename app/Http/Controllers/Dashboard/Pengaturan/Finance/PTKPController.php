@@ -144,8 +144,7 @@ class PTKPController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_INTERNAL_SERVER_ERROR, $successMessage), Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
-
-    // a
+    
     protected function formatData(Collection $collection)
     {
         return $collection->transform(function ($ptkp) {
