@@ -19,6 +19,16 @@ class RiwayatPerubahan extends Model
         'verifikator_1' => 'integer'
     ];
 
+    public function getOriginalDataAttribute($value)
+    {
+        return $this->jenis_perubahan === 'Keluarga' ? json_decode($value, true) : $value;
+    }
+
+    public function getUpdatedDataAttribute($value)
+    {
+        return $this->jenis_perubahan === 'Keluarga' ? json_decode($value, true) : $value;
+    }
+
     /**
      * Get the data_karyawans that owns the RiwayatPerubahan
      *

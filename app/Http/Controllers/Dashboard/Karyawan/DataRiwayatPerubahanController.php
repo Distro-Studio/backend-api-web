@@ -221,97 +221,6 @@ class DataRiwayatPerubahanController extends Controller
             $originalData = $data_perubahan->original_data;
             $updatedData = $data_perubahan->updated_data;
 
-            if ($data_perubahan->jenis_perubahan === 'Keluarga') {
-                $keluargaChanges = $data_perubahan->perubahan_keluargas;
-
-                if ($keluargaChanges->isNotEmpty()) {
-                    $firstKeluargaChange = $keluargaChanges->first();
-                    $dataKeluarga = DataKeluarga::find($firstKeluargaChange->data_keluarga_id);
-
-                    if ($dataKeluarga) {
-                        $originalData = [[
-                            'id' => $dataKeluarga->id,
-                            'nama_keluarga' => $dataKeluarga->nama_keluarga ?? $data_perubahan->original_data,
-                            'hubungan' => $dataKeluarga->hubungan ?? null,
-                            'pendidikan_terakhir' => $dataKeluarga->pendidikan_terakhir ?? null,
-                            'status_hidup' => $dataKeluarga->status_hidup ?? null,
-                            'pekerjaan' => $dataKeluarga->pekerjaan ?? null,
-                            'no_hp' => $dataKeluarga->no_hp ?? null,
-                            'email' => $dataKeluarga->email ?? null,
-                            'created_at' => $dataKeluarga->created_at,
-                            'updated_at' => $dataKeluarga->updated_at
-                        ]];
-                    }
-
-                    // Updated data might be a collection of changes
-                    $updatedData = $keluargaChanges->map(function ($change) {
-                        return [
-                            'id' => $change->id,
-                            'data_keluarga_id' => $change->data_keluarga_id,
-                            'nama_keluarga' => $change->nama_keluarga,
-                            'hubungan' => $change->hubungan,
-                            'pendidikan_terakhir' => $change->pendidikan_terakhir,
-                            'status_hidup' => $change->status_hidup,
-                            'pekerjaan' => $change->pekerjaan,
-                            'no_hp' => $change->no_hp,
-                            'email' => $change->email,
-                            'created_at' => $change->created_at,
-                            'updated_at' => $change->updated_at
-                        ];
-                    });
-                }
-            }
-
-            if ($data_perubahan->jenis_perubahan === 'Personal') {
-                $dataKaryawan = $data_perubahan->data_karyawans;
-                $originalData = [
-                    [
-                        'id' => $dataKaryawan->id,
-                        'tempat_lahir' => $dataKaryawan->tempat_lahir,
-                        'tgl_lahir' => $dataKaryawan->tgl_lahir,
-                        'no_hp' => $dataKaryawan->no_hp,
-                        'jenis_kelamin' => $dataKaryawan->jenis_kelamin,
-                        'nik_ktp' => $dataKaryawan->nik_ktp,
-                        'no_kk' => $dataKaryawan->no_kk,
-                        'agama' => $dataKaryawan->kategori_agamas, // agama_id
-                        'golongan_darah' => $dataKaryawan->kategori_darahs, // golongan_darah_id
-                        'tinggi_badan' => $dataKaryawan->tinggi_badan,
-                        'berat_badan' => $dataKaryawan->berat_badan,
-                        'alamat' => $dataKaryawan->alamat,
-                        'no_ijazah' => $dataKaryawan->no_ijazah,
-                        'tahun_lulus' => $dataKaryawan->tahun_lulus,
-                        'pendidikan_terakhir' => $dataKaryawan->kategori_pendidikans, // pendidikan_terakhir_id
-                        'gelar_depan' => $dataKaryawan->gelar_depan,
-                        'updated_at' => $dataKaryawan->updated_at
-                    ]
-                ];
-
-                $personalChanges = $data_perubahan->perubahan_personals;
-                if ($personalChanges->isNotEmpty()) {
-                    $updatedData = $personalChanges->map(function ($change) {
-                        return [
-                            'id' => $change->id,
-                            'tempat_lahir' => $change->tempat_lahir,
-                            'tgl_lahir' => $change->tgl_lahir,
-                            'no_hp' => $change->no_hp,
-                            'jenis_kelamin' => $change->jenis_kelamin,
-                            'nik_ktp' => $change->nik_ktp,
-                            'no_kk' => $change->no_kk,
-                            'agama' => $change->kategori_agamas, // agama_id
-                            'golongan_darah' => $change->kategori_darahs, // golongan_darah_id
-                            'tinggi_badan' => $change->tinggi_badan,
-                            'berat_badan' => $change->berat_badan,
-                            'alamat' => $change->alamat,
-                            'no_ijazah' => $change->no_ijazah,
-                            'tahun_lulus' => $change->tahun_lulus,
-                            'pendidikan_terakhir' => $change->kategori_pendidikans, // pendidikan_terakhir_id
-                            'gelar_depan' => $change->gelar_depan,
-                            'updated_at' => $change->updated_at
-                        ];
-                    });
-                }
-            }
-
             return [
                 'id' => $data_perubahan->id,
                 'user' => $relasiUser ? [
@@ -409,64 +318,35 @@ class DataRiwayatPerubahanController extends Controller
         switch ($riwayat->jenis_perubahan) {
             case 'Personal':
                 $dataKaryawan = DataKaryawan::find($riwayat->data_karyawan_id);
-                // if ($dataKaryawan) {
-                //     // $dataKaryawan->{$riwayat->kolom} = $riwayat->updated_data;
-                //     $dataKaryawan->{$riwayat->kolom} = $riwayat->updated_data[0][$riwayat->kolom];
-                //     $dataKaryawan->save();
-                // }
                 if ($dataKaryawan) {
-                    $perubahanPersonal = PerubahanPersonal::where('riwayat_perubahan_id', $riwayat->id)->get();
-                    foreach ($perubahanPersonal as $perubahan) {
-                        $updateData = [];
-                        if (!is_null($perubahan->tempat_lahir)) $updateData['tempat_lahir'] = $perubahan->tempat_lahir;
-                        if (!is_null($perubahan->tgl_lahir)) $updateData['tgl_lahir'] = $perubahan->tgl_lahir;
-                        if (!is_null($perubahan->no_hp)) $updateData['no_hp'] = $perubahan->no_hp;
-                        if (!is_null($perubahan->jenis_kelamin)) $updateData['jenis_kelamin'] = $perubahan->jenis_kelamin;
-                        if (!is_null($perubahan->nik_ktp)) $updateData['nik_ktp'] = $perubahan->nik_ktp;
-                        if (!is_null($perubahan->no_kk)) $updateData['no_kk'] = $perubahan->no_kk;
-                        if (!is_null($perubahan->kategori_agama_id)) $updateData['agama'] = $perubahan->kategori_agama_id;
-                        if (!is_null($perubahan->kategori_darah_id)) $updateData['golongan_darah'] = $perubahan->kategori_darah_id;
-                        if (!is_null($perubahan->tinggi_badan)) $updateData['tinggi_badan'] = $perubahan->tinggi_badan;
-                        if (!is_null($perubahan->berat_badan)) $updateData['berat_badan'] = $perubahan->berat_badan;
-                        if (!is_null($perubahan->alamat)) $updateData['alamat'] = $perubahan->alamat;
-                        if (!is_null($perubahan->no_ijazah)) $updateData['no_ijazah'] = $perubahan->no_ijazah;
-                        if (!is_null($perubahan->tahun_lulus)) $updateData['tahun_lulus'] = $perubahan->tahun_lulus;
-                        if (!is_null($perubahan->pendidikan_terakhir)) $updateData['pendidikan_terakhir'] = $perubahan->pendidikan_terakhir;
-                        if (!is_null($perubahan->gelar_depan)) $updateData['gelar_depan'] = $perubahan->gelar_depan;
-
-                        // Lakukan update jika ada data yang berubah
-                        if (!empty($updateData)) {
-                            $dataKaryawan->update($updateData);
-                        }
-                    }
+                    $dataKaryawan->{$riwayat->kolom} = $riwayat->updated_data;
+                    $dataKaryawan->save();
                 }
                 break;
 
             case 'Keluarga':
-                $perubahanKeluarga = PerubahanKeluarga::where('riwayat_perubahan_id', $riwayat->id)->first();
-                foreach ($perubahanKeluarga as $perubahan) {
-                    $dataKeluarga = DataKeluarga::where('id', $perubahanKeluarga->data_keluarga_id)
-                        ->where('data_karyawan_id', $riwayat->data_karyawan_id)
-                        ->first();
+                // Decode first
+                $updatedFamilyData = is_string($riwayat->updated_data) ? json_decode($riwayat->updated_data, true) : $riwayat->updated_data;
 
-                    // if ($dataKeluarga) {
-                    //     // $dataKeluarga->{$riwayat->kolom} = $riwayat->updated_data;
-                    //     $dataKeluarga->{$riwayat->kolom} = $riwayat->updated_data[0][$riwayat->kolom];
-                    //     $dataKeluarga->save();
-                    // }
-                    if ($dataKeluarga) {
-                        $updateData = [];
-                        if (!is_null($perubahan->nama_keluarga)) $updateData['nama_keluarga'] = $perubahan->nama_keluarga;
-                        if (!is_null($perubahan->hubungan)) $updateData['hubungan'] = $perubahan->hubungan;
-                        if (!is_null($perubahan->pendidikan_terakhir)) $updateData['pendidikan_terakhir'] = $perubahan->pendidikan_terakhir;
-                        if (!is_null($perubahan->status_hidup)) $updateData['status_hidup'] = $perubahan->status_hidup;
-                        if (!is_null($perubahan->pekerjaan)) $updateData['pekerjaan'] = $perubahan->pekerjaan;
-                        if (!is_null($perubahan->no_hp)) $updateData['no_hp'] = $perubahan->no_hp;
-                        if (!is_null($perubahan->email)) $updateData['email'] = $perubahan->email;
+                if (is_array($updatedFamilyData)) {
+                    foreach ($updatedFamilyData as $update) {
+                        $dataKeluarga = DataKeluarga::where('id', $update['data_keluarga_id'])
+                            ->first();
 
-                        // Lakukan update jika ada data yang berubah
-                        if (!empty($updateData)) {
-                            $dataKeluarga->update($updateData);
+                        if ($dataKeluarga) {
+                            $updateData = [];
+
+                            if (!is_null($update['nama_keluarga'])) $updateData['nama_keluarga'] = $update['nama_keluarga'];
+                            if (!is_null($update['hubungan'])) $updateData['hubungan'] = $update['hubungan'];
+                            if (!is_null($update['pendidikan_terakhir'])) $updateData['pendidikan_terakhir'] = $update['pendidikan_terakhir'];
+                            if (!is_null($update['status_hidup'])) $updateData['status_hidup'] = $update['status_hidup'];
+                            if (!is_null($update['pekerjaan'])) $updateData['pekerjaan'] = $update['pekerjaan'];
+                            if (!is_null($update['no_hp'])) $updateData['no_hp'] = $update['no_hp'];
+                            if (!is_null($update['email'])) $updateData['email'] = $update['email'];
+
+                            if (!empty($updateData)) {
+                                $dataKeluarga->update($updateData);
+                            }
                         }
                     }
                 }

@@ -52,7 +52,7 @@ class RoleSeeder extends Seeder
             'view riwayatPerizinan', 'export riwayatPerizinan', 'verifikasi1 riwayatPerizinan',
             
             'create diklat', 'view diklat', 'export diklat', 'verifikasi1 diklat', 'verifikasi2 diklat',
-            'view pelaporanKaryawan', 'export pelaporanKaryawan',
+            // 'view pelaporanKaryawan', 'export pelaporanKaryawan',
 
             'create penggajianKaryawan', 'edit penggajianKaryawan', 'view penggajianKaryawan', 'delete penggajianKaryawan', 'import penggajianKaryawan', 'export penggajianKaryawan',
             'create thrKaryawan', 'view thrKaryawan', 'export thrKaryawan',

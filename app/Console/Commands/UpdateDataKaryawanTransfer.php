@@ -41,7 +41,7 @@ class UpdateDataKaryawanTransfer extends Command
         })
             ->where('is_processed', 0) // Hanya ambil yang belum diproses
             ->get();
-        Log::info("Ada {$transfers->count()} transfer yang harus diperbarui.");
+        // Log::info("Ada {$transfers->count()} transfer yang harus diperbarui.");
 
         foreach ($transfers as $transfer) {
             $updateData = [];

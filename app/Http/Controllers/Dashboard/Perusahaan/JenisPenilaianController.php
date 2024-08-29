@@ -133,7 +133,7 @@ class JenisPenilaianController extends Controller
 
     public function update(UpdateJenisPenilaianRequest $request, $id)
     {
-        if (!Gate::allows('edit lemburKaryawan')) {
+        if (!Gate::allows('edit penilaianKaryawan')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 

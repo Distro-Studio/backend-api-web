@@ -16,8 +16,8 @@ return new class extends Migration
             $table->foreignId('data_karyawan_id')->constrained('data_karyawans');
             $table->enum('jenis_perubahan', ['Keluarga', 'Personal']);
             $table->string('kolom');
-            $table->string('original_data');
-            $table->string('updated_data');
+            $table->text('original_data');
+            $table->text('updated_data');
             $table->foreignId('status_perubahan_id')->constrained('status_perubahans'); // 1 = menunggu 2 = diverifikasi 3 = ditolak
             $table->foreignId('verifikator_1')->nullable()->constrained('users');
             $table->text('alasan')->nullable();
