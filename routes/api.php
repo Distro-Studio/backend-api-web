@@ -37,6 +37,7 @@ use App\Http\Controllers\Dashboard\Perusahaan\JenisPenilaianController;
 use App\Http\Controllers\Dashboard\Perusahaan\PelaporanController;
 use App\Http\Controllers\Dashboard\Perusahaan\PenilaianController;
 use App\Http\Controllers\Dashboard\Presensi\DataPresensiController;
+use App\Http\Controllers\Publik\Auth\ForgotPasswordController;
 use App\Http\Controllers\Publik\Auth\LoginController;
 use App\Models\JenisPenilaian;
 use App\Models\NonShift;
@@ -54,6 +55,8 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::post('/login', [LoginController::class, 'login']);
+Route::post('/forgot-password-sendOtp', [ForgotPasswordController::class, 'sendOtp']);
+Route::post('/forgot-password-resetPassword', [ForgotPasswordController::class, 'verifyOtp']);
 
 Route::middleware(['auth:sanctum'])->group(function () {
     // ! Global Request ===========>
@@ -98,7 +101,6 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('/download-template-karyawan', [DataKaryawanController::class, 'downloadKaryawanTemplate']);
         Route::get('/download-template-presensi', [DataPresensiController::class, 'downloadPresensiTemplate']);
 
-        // TODO: aktifkan send email di create & transfer karyawan
         // TODO: ganti email di create & transfer karyawan
         // TODO: ganti send email dengan email create akun pada validasi jika email berubah
         Route::group(['prefix' => '/karyawan'], function () {
