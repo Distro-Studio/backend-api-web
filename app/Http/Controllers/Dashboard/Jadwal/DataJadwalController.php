@@ -1034,7 +1034,7 @@ class DataJadwalController extends Controller
                     })
                     ->first();
 
-                if ($cutiConflict) {
+                if ($cutiConflict && $cutiConflict->status_cuti_id > 1) {
                     DB::rollBack();
                     $cutiFrom = Carbon::createFromFormat('d-m-Y', $cutiConflict->tgl_from)->format('d-m-Y');
                     $cutiTo = Carbon::createFromFormat('d-m-Y', $cutiConflict->tgl_to)->format('d-m-Y');
