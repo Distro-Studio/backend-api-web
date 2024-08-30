@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Dashboard\Jadwal;
 
+use Carbon\Carbon;
+use App\Models\Notifikasi;
 use App\Models\RiwayatIzin;
 use Illuminate\Http\Request;
 use App\Helpers\RandomHelper;
@@ -340,5 +342,22 @@ class DataRiwayatPerizinanController extends Controller
         } else {
             return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Aksi tidak valid.'), Response::HTTP_BAD_REQUEST);
         }
+    }
+
+
+    private function createNotifikasiIzin($riwayat_izin, $status)
+    {
+        $statusText = $status === 'Disetujui' ? 'Disetujui' : 'Ditolak';
+        $verifikator = Auth::user()->nama;
+        $konversiTgl = Carbon::parse(RandomHelper::convertToDateString($riwayat_izin->created_at))->locale('id')->isoFormat('D MMMM YYYY');
+        $message = "Pengajuan perizinan Anda pada tanggal '{$konversiTgl}' telah '{$statusText}' oleh '{$verifikator}'.";
+
+        // Buat notifikasi untuk user yang mengajukan cuti
+        Notifikasi::create([
+            'kategori_notifikasi_id' => 10,
+            'user_id' => $riwayat_izin->user_id, // Penerima notifikasi
+            'message' => $message,
+            'is_read' => false,
+        ]);
     }
 }

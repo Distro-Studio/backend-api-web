@@ -32,6 +32,11 @@ class LoginController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, "Kami mendeteksi bahwa akun anda sudah tidak aktif sejak {$user->updated_at}."), Response::HTTP_FORBIDDEN);
         }
 
+        // karyawan gabole login
+        // if ($user->roles->isEmpty() || $user->roles->first()->permissions->isEmpty()) {
+        //     return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk membuka halaman admin, jika anda bukan karyawan silahkan hubungi Admin Personalia.'), Response::HTTP_FORBIDDEN);
+        // }
+
         $token = $user->createToken('create_token_' . Str::uuid())->plainTextToken;
 
         return response()->json([

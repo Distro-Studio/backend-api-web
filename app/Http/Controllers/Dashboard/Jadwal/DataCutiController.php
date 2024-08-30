@@ -5,8 +5,10 @@ namespace App\Http\Controllers\Dashboard\Jadwal;
 use Carbon\Carbon;
 use App\Models\Cuti;
 use App\Models\Jadwal;
+use App\Models\Lembur;
 use App\Models\TipeCuti;
 use App\Models\Notifikasi;
+use App\Models\TukarJadwal;
 use Illuminate\Http\Request;
 use App\Helpers\RandomHelper;
 use Illuminate\Http\Response;
@@ -332,22 +334,22 @@ class DataCutiController extends Controller
         }
 
         // cek bentrok dengan jadwal karyawan
-        $jadwalConflict = Jadwal::where('user_id', $data['user_id'])
-            ->where(function ($query) use ($tglFrom, $tglTo) {
-                $query->whereBetween(DB::raw("DATE_FORMAT(tgl_mulai, '%Y-%m-%d')"), [$tglFrom, $tglTo])
-                    ->orWhereBetween(DB::raw("DATE_FORMAT(tgl_selesai, '%Y-%m-%d')"), [$tglFrom, $tglTo])
-                    ->orWhere(function ($query) use ($tglFrom, $tglTo) {
-                        $query->where(DB::raw("DATE_FORMAT(tgl_mulai, '%Y-%m-%d')"), '<=', $tglFrom)
-                            ->where(DB::raw("DATE_FORMAT(tgl_selesai, '%Y-%m-%d')"), '>=', $tglTo);
-                    });
-            })
-            ->first();
+        // $jadwalConflict = Jadwal::where('user_id', $data['user_id'])
+        //     ->where(function ($query) use ($tglFrom, $tglTo) {
+        //         $query->whereBetween(DB::raw("DATE_FORMAT(tgl_mulai, '%Y-%m-%d')"), [$tglFrom, $tglTo])
+        //             ->orWhereBetween(DB::raw("DATE_FORMAT(tgl_selesai, '%Y-%m-%d')"), [$tglFrom, $tglTo])
+        //             ->orWhere(function ($query) use ($tglFrom, $tglTo) {
+        //                 $query->where(DB::raw("DATE_FORMAT(tgl_mulai, '%Y-%m-%d')"), '<=', $tglFrom)
+        //                     ->where(DB::raw("DATE_FORMAT(tgl_selesai, '%Y-%m-%d')"), '>=', $tglTo);
+        //             });
+        //     })
+        //     ->first();
 
-        if ($jadwalConflict) {
-            $jadwalFrom = Carbon::parse($jadwalConflict->tgl_mulai)->format('d-m-Y');
-            $jadwalTo = Carbon::parse($jadwalConflict->tgl_selesai)->format('d-m-Y');
-            return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Tidak dapat mengajukan cuti, karena karyawan '{$jadwalConflict->users->nama}' memiliki jadwal kerja pada rentang tanggal {$jadwalFrom} hingga {$jadwalTo}."), Response::HTTP_BAD_REQUEST);
-        }
+        // if ($jadwalConflict) {
+        //     $jadwalFrom = Carbon::parse($jadwalConflict->tgl_mulai)->format('d-m-Y');
+        //     $jadwalTo = Carbon::parse($jadwalConflict->tgl_selesai)->format('d-m-Y');
+        //     return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Tidak dapat mengajukan cuti, karena karyawan '{$jadwalConflict->users->nama}' memiliki jadwal kerja pada rentang tanggal {$jadwalFrom} hingga {$jadwalTo}."), Response::HTTP_BAD_REQUEST);
+        // }
 
         // Menambahkan durasi ke data sebelum menyimpan
         $data['durasi'] = $durasi;
@@ -595,12 +597,59 @@ class DataCutiController extends Controller
         $status_cuti_id = $cuti->status_cuti_id;
 
         if ($request->has('verifikasi_kedua_disetujui') && $request->verifikasi_kedua_disetujui == 1) {
-            // Jika status_cuti_id = 2, maka bisa disetujui
             if ($status_cuti_id == 2) {
-                $cuti->status_cuti_id = 4; // Update status ke tahap 2 disetujui
+                $cuti->status_cuti_id = 4;
                 $cuti->verifikator_2 = Auth::id();
                 $cuti->alasan = null;
                 $cuti->save();
+
+                // Step 1: Cek Hapus jadwal kerja shift jika ada yang cuti mendadak dan jika masih ada jadwal
+                $tglFrom = Carbon::createFromFormat('d-m-Y', $cuti->tgl_from)->format('Y-m-d');
+                $tglTo = Carbon::createFromFormat('d-m-Y', $cuti->tgl_to)->format('Y-m-d');
+
+                $jadwalConflicts = Jadwal::where('user_id', $cuti->user_id)
+                    ->where(function ($query) use ($tglFrom, $tglTo) {
+                        $query->whereBetween('tgl_mulai', [$tglFrom, $tglTo])
+                            ->orWhereBetween('tgl_selesai', [$tglFrom, $tglTo])
+                            ->orWhere(function ($query) use ($tglFrom, $tglTo) {
+                                $query->where('tgl_mulai', '<=', $tglFrom)
+                                    ->where('tgl_selesai', '>=', $tglTo);
+                            });
+                    })->get();
+
+                if ($jadwalConflicts->isNotEmpty()) {
+                    foreach ($jadwalConflicts as $jadwal) {
+                        $tukarJadwalPengajuan = TukarJadwal::where('jadwal_pengajuan', $jadwal->id)->first();
+                        $tukarJadwalDitukar = TukarJadwal::where('jadwal_ditukar', $jadwal->id)->first();
+
+                        // Step 1: Hapus tukar jadwal & kembalikan jadwal
+                        if ($tukarJadwalPengajuan) {
+                            // Kembalikan user_id dari jadwal_pengajuan ke user_pengajuan
+                            $jadwalPengajuan = Jadwal::find($tukarJadwalPengajuan->jadwal_pengajuan);
+                            if ($jadwalPengajuan) {
+                                $jadwalPengajuan->user_id = $tukarJadwalPengajuan->user_pengajuan;
+                                $jadwalPengajuan->save();
+                            }
+                            $tukarJadwalPengajuan->delete();
+                        }
+
+                        if ($tukarJadwalDitukar) {
+                            // Kembalikan user_id dari jadwal_ditukar ke user_ditukar
+                            $jadwalDitukar = Jadwal::find($tukarJadwalDitukar->jadwal_ditukar);
+                            if ($jadwalDitukar) {
+                                $jadwalDitukar->user_id = $tukarJadwalDitukar->user_ditukar;
+                                $jadwalDitukar->save();
+                            }
+                            $tukarJadwalDitukar->delete();
+                        }
+
+                        // Step 2: Hapus lembur
+                        Lembur::where('jadwal_id', $jadwal->id)->delete();
+
+                        // Step 3: Hapus jadwal
+                        $jadwal->delete();
+                    }
+                }
 
                 $this->createNotifikasiCutiTahap2($cuti, 'Disetujui');
 
@@ -654,22 +703,6 @@ class DataCutiController extends Controller
         Notifikasi::create([
             'kategori_notifikasi_id' => 1,
             'user_id' => $cuti->user_id, // Penerima notifikasi
-            'message' => $message,
-            'is_read' => false,
-        ]);
-    }
-
-    private function createNotifikasiIzin($riwayat_izin, $status)
-    {
-        $statusText = $status === 'Disetujui' ? 'Disetujui' : 'Ditolak';
-        $verifikator = Auth::user()->nama;
-        $konversiTgl = Carbon::parse(RandomHelper::convertToDateString($riwayat_izin->created_at))->locale('id')->isoFormat('D MMMM YYYY');
-        $message = "Pengajuan perizinan Anda pada tanggal '{$konversiTgl}' telah '{$statusText}' oleh '{$verifikator}'.";
-
-        // Buat notifikasi untuk user yang mengajukan cuti
-        Notifikasi::create([
-            'kategori_notifikasi_id' => 10,
-            'user_id' => $riwayat_izin->user_id, // Penerima notifikasi
             'message' => $message,
             'is_read' => false,
         ]);

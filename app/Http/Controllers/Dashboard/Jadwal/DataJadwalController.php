@@ -1136,6 +1136,19 @@ class DataJadwalController extends Controller
             }
         }
 
+        $cutiConflict = Cuti::where('user_id', $userId)
+            ->where(function ($query) use ($tanggalMulai) {
+                $query->where(DB::raw("STR_TO_DATE(tgl_from, '%d-%m-%Y')"), '<=', $tanggalMulai->format('Y-m-d'))
+                    ->where(DB::raw("STR_TO_DATE(tgl_to, '%d-%m-%Y')"), '>=', $tanggalMulai->format('Y-m-d'));
+            })
+            ->first();
+
+        if ($cutiConflict && $cutiConflict->status_cuti_id > 1) {
+            $cutiFrom = Carbon::createFromFormat('d-m-Y', $cutiConflict->tgl_from)->format('d-m-Y');
+            $cutiTo = Carbon::createFromFormat('d-m-Y', $cutiConflict->tgl_to)->format('d-m-Y');
+            return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Tidak dapat membuat jadwal untuk karyawan '{$user->nama}', karena memiliki cuti pada rentang tanggal {$cutiFrom} hingga {$cutiTo}."), Response::HTTP_BAD_REQUEST);
+        }
+
         DB::beginTransaction();
 
         try {
