@@ -34,15 +34,11 @@ use App\Http\Controllers\Dashboard\Pengaturan\ManagemenWaktu\ShiftController;
 use App\Http\Controllers\Dashboard\PengumumanController;
 use App\Http\Controllers\Dashboard\Perusahaan\DiklatController;
 use App\Http\Controllers\Dashboard\Perusahaan\JenisPenilaianController;
-use App\Http\Controllers\Dashboard\Perusahaan\PelaporanController;
 use App\Http\Controllers\Dashboard\Perusahaan\PenilaianController;
 use App\Http\Controllers\Dashboard\Presensi\DataPresensiController;
 use App\Http\Controllers\Publik\Auth\ForgotPasswordController;
 use App\Http\Controllers\Publik\Auth\LoginController;
 use App\Http\Controllers\Publik\Auth\ResetPasswordController;
-use App\Models\JenisPenilaian;
-use App\Models\NonShift;
-use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Route;
 
 /*
