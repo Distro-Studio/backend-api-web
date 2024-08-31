@@ -102,7 +102,7 @@ class DataPresensiController extends Controller
 
         // Hitung total hadir dan total tidak hadir
         $totalHadir = $countTepatWaktu + $countTerlambat;
-        $totalTidakHadir = $countCuti + $countAbsen;
+        $totalTidakHadir = $countCuti + $countAbsen + $countLibur;
 
         return response()->json([
             'status' => Response::HTTP_OK,
