@@ -39,8 +39,10 @@ use App\Http\Controllers\Dashboard\Perusahaan\PenilaianController;
 use App\Http\Controllers\Dashboard\Presensi\DataPresensiController;
 use App\Http\Controllers\Publik\Auth\ForgotPasswordController;
 use App\Http\Controllers\Publik\Auth\LoginController;
+use App\Http\Controllers\Publik\Auth\ResetPasswordController;
 use App\Models\JenisPenilaian;
 use App\Models\NonShift;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -56,7 +58,8 @@ use Illuminate\Support\Facades\Route;
 
 Route::post('/login', [LoginController::class, 'login']);
 Route::post('/forgot-password-sendOtp', [ForgotPasswordController::class, 'sendOtp']);
-Route::post('/forgot-password-resetPassword', [ForgotPasswordController::class, 'verifyOtp']);
+Route::post('/forgot-password-verifyOtp', [ForgotPasswordController::class, 'verifyOtp']);
+Route::post('/reset-password', [ResetPasswordController::class, 'resetPassword']);
 
 Route::middleware(['auth:sanctum'])->group(function () {
     // ! Global Request ===========>

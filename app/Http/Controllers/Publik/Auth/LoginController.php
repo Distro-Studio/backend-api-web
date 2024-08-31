@@ -23,7 +23,7 @@ class LoginController extends Controller
         })->first();
 
         if (!$user || !Hash::check($credentials['password'], $user->password)) {
-            return response()->json(new WithoutDataResource(Response::HTTP_UNAUTHORIZED, 'Password atau email anda tidak valid, silahkan cek kembali dan pastikan akun anda aktif'), Response::HTTP_UNAUTHORIZED);
+            return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Password atau email anda tidak valid, silahkan cek kembali dan pastikan akun anda aktif'), Response::HTTP_BAD_REQUEST);
         }
 
         // Cek status_aktif

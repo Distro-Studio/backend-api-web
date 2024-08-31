@@ -117,7 +117,7 @@
 				padding: 5px 15px !important;
 			}
 		}
-	</style><!--[if mso ]><style>sup, sub { font-size: 100% !important; } sup { mso-text-raise:10% } sub { mso-text-raise:-10% }</style> <![endif]-->
+	</style>
 </head>
 
 <body class="body" style="background-color: #f6f6f6; margin: 0; padding: 0; -webkit-text-size-adjust: none; text-size-adjust: none;">
@@ -154,7 +154,7 @@
 														<tr>
 															<td class="pad">
 																<div align="center" class="alignment" style="line-height:10px">
-																	<div style="max-width: 84px;"><a href="https://rskasihibu.com/" style="outline:none" tabindex="-1" target="_blank"><img height="auto" src="images/image_2.png" style="display: block; height: auto; border: 0; width: 100%;" width="84" /></a></div>
+																	<div style="max-width: 84px;"><a href="https://rskasihibu.com/" style="outline:none" tabindex="-1" target="_blank"><img height="auto" src={{ asset('mails/images/image_2.png') }} style="display: block; height: auto; border: 0; width: 100%;" width="84" /></a></div>
 																</div>
 															</td>
 														</tr>
@@ -186,7 +186,7 @@
 														<tr>
 															<td class="pad" style="padding-top:20px;width:100%;padding-right:0px;padding-left:0px;">
 																<div align="center" class="alignment" style="line-height:10px">
-																	<div style="max-width: 248px;"><img height="auto" src="images/Enter_OTP-cuate.png" style="display: block; height: auto; border: 0; width: 100%;" width="248" /></div>
+																	<div style="max-width: 248px;"><img height="auto" src={{ asset('mails/images/Enter_OTP-cuate.png') }} style="display: block; height: auto; border: 0; width: 100%;" width="248" /></div>
 																</div>
 															</td>
 														</tr>
@@ -211,7 +211,7 @@
 														<tr>
 															<td class="pad">
 																<div style="color:#201f42;direction:ltr;font-family:Arial, Helvetica Neue, Helvetica, sans-serif;font-size:17px;font-weight:400;letter-spacing:0px;line-height:180%;text-align:left;mso-line-height-alt:30.6px;">
-																	<p style="margin: 0; margin-bottom: 15px;">Hai, <strong>{{ $nama }}</strong>,</p>
+																	<p style="margin: 0; margin-bottom: 15px;">Hai <strong>{{ $nama }}</strong>,</p>
 																	<p style="margin: 0;">Terima kasih telah menggunakan RSKI Personalia. Gunakan OTP berikut ini untuk menyetel ulang kata sandi anda. OTP berlaku selama 10 menit. Jangan bagikan kode OTP ini kepada siapapun termasuk Admin Personalia.</p>
 																</div>
 															</td>
@@ -270,7 +270,7 @@
 														<tr>
 															<td class="pad" style="width:100%;">
 																<div align="center" class="alignment" style="line-height:10px">
-																	<div style="max-width: 600px;"><img height="auto" src="images/HR-divider-image_bottom.png" style="display: block; height: auto; border: 0; width: 100%;" width="600" /></div>
+																	<div style="max-width: 600px;"><img height="auto" src={{ asset('mails/images/HR-divider-image_bottom.png') }} style="display: block; height: auto; border: 0; width: 100%;" width="600" /></div>
 																</div>
 															</td>
 														</tr>

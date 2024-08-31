@@ -21,6 +21,7 @@ return new class extends Migration
             $table->integer('data_completion_step')->default(1); // 1 = not complete, 0 = complete
             $table->foreignId('status_aktif')->constrained('status_aktifs'); // 1 = tidak aktif, 2 = aktif, 3 = dinonaktifkan
             $table->rememberToken();
+            $table->timestamp('remember_token_expired_at')->nullable();
             $table->timestamps();
         });
     }

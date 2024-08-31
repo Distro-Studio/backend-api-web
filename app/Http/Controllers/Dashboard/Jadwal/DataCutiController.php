@@ -533,7 +533,6 @@ class DataCutiController extends Controller
         $status_cuti_id = $cuti->status_cuti_id;
 
         if ($request->has('verifikasi_pertama_disetujui') && $request->verifikasi_pertama_disetujui == 1) {
-            // Jika status_cuti_id = 1, maka bisa disetujui
             if ($status_cuti_id == 1) {
                 $cuti->status_cuti_id = 2; // Update status ke tahap 1 disetujui
                 $cuti->verifikator_1 = Auth::id();
@@ -561,7 +560,6 @@ class DataCutiController extends Controller
                 return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Cuti '{$cuti->tipe_cutis->nama}' tidak dalam status untuk disetujui pada tahap 1."), Response::HTTP_BAD_REQUEST);
             }
         } elseif ($request->has('verifikasi_pertama_ditolak') && $request->verifikasi_pertama_ditolak == 1) {
-            // Jika status_cuti_id = 1, maka bisa ditolak
             if ($status_cuti_id == 1) {
                 $cuti->status_cuti_id = 3; // Update status ke tahap 1 ditolak
                 $cuti->verifikator_1 = Auth::id();
@@ -658,9 +656,8 @@ class DataCutiController extends Controller
                 return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Cuti '{$cuti->tipe_cutis->nama}' tidak dalam status untuk disetujui pada tahap 1."), Response::HTTP_BAD_REQUEST);
             }
         } elseif ($request->has('verifikasi_kedua_ditolak') && $request->verifikasi_kedua_ditolak == 1) {
-            // Jika status_cuti_id = 1, maka bisa ditolak
             if ($status_cuti_id == 2) {
-                $cuti->status_cuti_id = 5; // Update status ke tahap 1 ditolak
+                $cuti->status_cuti_id = 5;
                 $cuti->verifikator_2 = Auth::id();
                 $cuti->alasan = $request->input('alasan', null);
                 $cuti->save();
