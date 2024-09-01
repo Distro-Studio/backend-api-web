@@ -16,7 +16,6 @@ use Illuminate\Support\Facades\Gate;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\Jadwal\LemburJadwalExport;
 use App\Http\Requests\StoreLemburKaryawanRequest;
-use App\Http\Requests\UpdateLemburKaryawanRequest;
 use App\Http\Resources\Dashboard\Jadwal\LemburJadwalResource;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
 
@@ -320,8 +319,7 @@ class DataLemburController extends Controller
         }
 
         $formattedData = $dataLembur->map(function ($lembur) {
-            $timeString = RandomHelper::convertToTimeString($lembur->durasi);
-            $durasi = RandomHelper::convertTimeStringToSeconds($timeString);
+            $unitKerja = $lembur->users->data_karyawans->unit_kerjas ?? null;
             return [
                 'id' => $lembur->id,
                 'user' => [
@@ -335,6 +333,11 @@ class DataLemburController extends Controller
                     'created_at' => $lembur->users->created_at,
                     'updated_at' => $lembur->users->updated_at
                 ],
+                'unit_kerja' => $unitKerja ? [
+                    'id' => $unitKerja->id,
+                    'nama_unit' => $unitKerja->nama_unit,
+                    'jenis_karyawan' => $unitKerja->jenis_karyawan,
+                ] : null,
                 'jadwal' => [
                     'id' => $lembur->jadwals->id,
                     'user_id' => $lembur->jadwals->user_id,
@@ -344,7 +347,8 @@ class DataLemburController extends Controller
                     'created_at' => $lembur->jadwals->created_at,
                     'updated_at' => $lembur->jadwals->updated_at
                 ],
-                'durasi' => $durasi,
+                'tgl_pengajuan' => $lembur->tgl_pengajuan,
+                'durasi' => $lembur->durasi,
                 'catatan' => $lembur->catatan,
                 'created_at' => $lembur->created_at,
                 'updated_at' => $lembur->updated_at
@@ -367,13 +371,39 @@ class DataLemburController extends Controller
 
         $data = $request->validated();
 
-        // Validasi tanggal mulai tidak boleh hari ini, H+1, atau hari yang sudah terlewat
-        // $tgl_mulai = Carbon::parse($data['tgl_pengajuan'])->startOfDay();
-        // $today = Carbon::today();
-        // if ($tgl_mulai->lte($today->addDay(1))) {
-        //     return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Tanggal pengajuan tidak boleh hari ini, atau hari yang sudah terlewat.'), Response::HTTP_BAD_REQUEST);
-        // }
+        $user = User::find($data['user_id']);
+        if (!$user) {
+            return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Karyawan tidak valid.'), Response::HTTP_NOT_FOUND);
+        }
 
+        $jenisKaryawan = $user->data_karyawans->unit_kerjas->jenis_karyawan ?? null;
+
+        if ($jenisKaryawan === 1) { // Jika jenis karyawan shift
+            $jadwal = Jadwal::find($data['jadwal_id']);
+            if (!$jadwal) {
+                return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Jadwal tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+            }
+
+            $data['tgl_pengajuan'] = Carbon::parse($jadwal->tgl_mulai)->format('d-m-Y');
+        } elseif ($jenisKaryawan === 0) { // Jika jenis karyawan non-shift
+            if (empty($data['tgl_pengajuan'])) {
+                return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Tanggal pengajuan harus diisi untuk karyawan non-shift.'), Response::HTTP_BAD_REQUEST);
+            }
+            // Validasi tanggal mulai tidak boleh hari ini, atau hari yang sudah terlewat
+            $tgl_mulai = Carbon::createFromFormat('d-m-Y', $data['tgl_pengajuan'])->startOfDay();
+            $today = Carbon::today();
+            if ($tgl_mulai->lte($today)) {
+                return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Tanggal pengajuan tidak boleh hari ini, atau hari yang sudah terlewat.'), Response::HTTP_BAD_REQUEST);
+            }
+        } else {
+            return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Jenis karyawan tidak valid.'), Response::HTTP_BAD_REQUEST);
+        }
+
+        $timeParts = explode(':', $data['durasi']);
+        $hours = (int)$timeParts[0];
+        $minutes = (int)$timeParts[1];
+        $seconds = (int)$timeParts[2];
+        $data['durasi'] = ($hours * 3600) + ($minutes * 60) + $seconds;
         $data['status_lembur_id'] = 1;
 
         $dataLembur = Lembur::create($data);
@@ -418,6 +448,7 @@ class DataLemburController extends Controller
                 'updated_at' => $dataLembur->users->updated_at
             ],
             'jadwal' => $dataLembur->jadwals,
+            'tgl_pengajuan' => $dataLembur->tgl_pengajuan,
             'durasi' => $durasi,
             'catatan' => $dataLembur->catatan,
             'created_at' => $dataLembur->created_at,
@@ -433,23 +464,23 @@ class DataLemburController extends Controller
         ], Response::HTTP_OK);
     }
 
-    public function update(UpdateLemburKaryawanRequest $request, $id)
-    {
-        if (!Gate::allows('edit lemburKaryawan')) {
-            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
-        }
+    // public function update(UpdateLemburKaryawanRequest $request, $id)
+    // {
+    //     if (!Gate::allows('edit lemburKaryawan')) {
+    //         return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+    //     }
 
-        $data = $request->validated();
-        $dataLembur = Lembur::find($id);
-        if (!$dataLembur) {
-            return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data lembur karyawan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
-        }
+    //     $data = $request->validated();
+    //     $dataLembur = Lembur::find($id);
+    //     if (!$dataLembur) {
+    //         return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data lembur karyawan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+    //     }
 
-        $dataLembur->update($data);
-        $message = "Lembur karyawan '{$dataLembur->users->nama}' berhasil diperbarui.";
+    //     $dataLembur->update($data);
+    //     $message = "Lembur karyawan '{$dataLembur->users->nama}' berhasil diperbarui.";
 
-        return response()->json(new LemburJadwalResource(Response::HTTP_OK, $message, $dataLembur), Response::HTTP_OK);
-    }
+    //     return response()->json(new LemburJadwalResource(Response::HTTP_OK, $message, $dataLembur), Response::HTTP_OK);
+    // }
 
     public function exportJadwalLembur()
     {

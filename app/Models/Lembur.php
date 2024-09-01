@@ -14,7 +14,8 @@ class Lembur extends Model
     protected $casts = [
         'id' => 'integer',
         'user_id' => 'integer',
-        'jadwal_id' => 'integer'
+        'jadwal_id' => 'integer',
+        'durasi' => 'integer'
     ];
 
     /**

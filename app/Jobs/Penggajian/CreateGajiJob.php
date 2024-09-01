@@ -568,11 +568,11 @@ class CreateGajiJob implements ShouldQueue
 
         // Loop melalui setiap record lembur
         foreach ($lemburRecords as $lembur) {
-            // Cek apakah durasi lembur null
             if (!is_null($lembur->durasi)) {
                 // Konversi durasi menjadi menit
-                $durasiLembur = Carbon::parse($lembur->durasi);
-                $durasiMenit = ($durasiLembur->hour * 60) + $durasiLembur->minute;
+                // $durasiLembur = Carbon::parse($lembur->durasi);
+                // $durasiMenit = ($durasiLembur->hour * 60) + $durasiLembur->minute;
+                $durasiMenit = $lembur->durasi / 60;
 
                 // Hitung bonus lembur untuk lembur ini dan tambahkan ke total
                 $bonusLembur = ($rate_lembur / 60) * $durasiMenit;

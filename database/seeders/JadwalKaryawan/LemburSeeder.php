@@ -33,7 +33,7 @@ class LemburSeeder extends Seeder
             $lembur = new Lembur([
                 'user_id' => $user_id,
                 'jadwal_id' => $jadwal_id,
-                'durasi' => '05:00:00',
+                'durasi' => rand(1500, 6000),
                 'catatan' => 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'
             ]);
             $lembur->save();

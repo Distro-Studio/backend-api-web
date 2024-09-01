@@ -68,6 +68,7 @@ class LemburJadwalResource extends JsonResource
                     'updated_at' => $lembur->users->updated_at
                 ],
                 'jadwal' => $lembur->jadwals,
+                'tgl_pengajuan' => $lembur->tgl_pengajuan,
                 'durasi' => $lembur->durasi,
                 'catatan' => $lembur->catatan,
                 // 'status' => $lembur->status_lemburs,

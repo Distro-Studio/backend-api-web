@@ -32,6 +32,7 @@ class LemburJadwalExport implements FromCollection, WithHeadings, WithMapping
             'tanggal_mulai',
             'tanggal_selesai',
             'shift',
+            'tanggal_pengajuan',
             'durasi',
             'catatan',
             'created_at',
@@ -59,6 +60,7 @@ class LemburJadwalExport implements FromCollection, WithHeadings, WithMapping
             $tgl_mulai,
             $tgl_selesai,
             $lembur->jadwals->shifts->nama,
+            $lembur->tgl_pengajuan,
             $duration, // Ubah durasi menjadi jam dan menit
             $lembur->catatan,
             Carbon::parse($lembur->created_at)->format('d-m-Y H:i:s'),

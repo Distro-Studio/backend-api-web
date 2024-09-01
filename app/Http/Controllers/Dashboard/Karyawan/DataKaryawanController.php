@@ -54,13 +54,38 @@ class DataKaryawanController extends Controller
       return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
     }
 
-    $userShift = User::whereHas('data_karyawans.unit_kerjas', function ($query) {
+    $userNonShift = User::whereHas('data_karyawans.unit_kerjas', function ($query) {
       $query->where('jenis_karyawan', 0); // 0 = non shift
     })->where('nama', '!=', 'Super Admin')->where('status_aktif', 2)->get();
+
+    $formattedData = $userNonShift->map(function ($user) {
+      $unitKerja = $user->data_karyawans->unit_kerjas ?? null;
+
+      return [
+        'id' => $user->id,
+        'user' => [
+          'id' => $user->id,
+          'nama' => $user->nama,
+          'email_verified_at' => $user->email_verified_at,
+          'data_karyawan_id' => $user->data_karyawan_id,
+          'foto_profil' => $user->foto_profil,
+          'data_completion_step' => $user->data_completion_step,
+          'status_aktif' => $user->status_aktif,
+          'created_at' => $user->created_at,
+          'updated_at' => $user->updated_at
+        ],
+        'unit_kerja' => $unitKerja ? [
+          'id' => $unitKerja->id,
+          'nama_unit' => $unitKerja->nama_unit,
+          'jenis_karyawan' => $unitKerja->jenis_karyawan
+        ] : null,
+      ];
+    });
+
     return response()->json([
       'status' => Response::HTTP_OK,
-      'message' => 'Retrieving all user shift for dropdown',
-      'data' => $userShift
+      'message' => 'Retrieving all user non-shift for dropdown',
+      'data' => $formattedData
     ], Response::HTTP_OK);
   }
 
@@ -73,10 +98,35 @@ class DataKaryawanController extends Controller
     $userShift = User::whereHas('data_karyawans.unit_kerjas', function ($query) {
       $query->where('jenis_karyawan', 1); // 1 = shift
     })->where('nama', '!=', 'Super Admin')->where('status_aktif', 2)->get();
+
+    $formattedData = $userShift->map(function ($user) {
+      $unitKerja = $user->data_karyawans->unit_kerjas ?? null;
+
+      return [
+        'id' => $user->id,
+        'user' => [
+          'id' => $user->id,
+          'nama' => $user->nama,
+          'email_verified_at' => $user->email_verified_at,
+          'data_karyawan_id' => $user->data_karyawan_id,
+          'foto_profil' => $user->foto_profil,
+          'data_completion_step' => $user->data_completion_step,
+          'status_aktif' => $user->status_aktif,
+          'created_at' => $user->created_at,
+          'updated_at' => $user->updated_at
+        ],
+        'unit_kerja' => $unitKerja ? [
+          'id' => $unitKerja->id,
+          'nama_unit' => $unitKerja->nama_unit,
+          'jenis_karyawan' => $unitKerja->jenis_karyawan
+        ] : null,
+      ];
+    });
+
     return response()->json([
       'status' => Response::HTTP_OK,
       'message' => 'Retrieving all user shift for dropdown',
-      'data' => $userShift
+      'data' => $formattedData
     ], Response::HTTP_OK);
   }
 
@@ -86,11 +136,36 @@ class DataKaryawanController extends Controller
       return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
     }
 
-    $user = User::where('nama', '!=', 'Super Admin')->where('status_aktif', 2)->get();
+    $users = User::where('nama', '!=', 'Super Admin')->where('status_aktif', 2)->get();
+
+    $formattedData = $users->map(function ($user) {
+      $unitKerja = $user->data_karyawans->unit_kerjas ?? null;
+
+      return [
+        'id' => $user->id,
+        'user' => [
+          'id' => $user->id,
+          'nama' => $user->nama,
+          'email_verified_at' => $user->email_verified_at,
+          'data_karyawan_id' => $user->data_karyawan_id,
+          'foto_profil' => $user->foto_profil,
+          'data_completion_step' => $user->data_completion_step,
+          'status_aktif' => $user->status_aktif,
+          'created_at' => $user->created_at,
+          'updated_at' => $user->updated_at
+        ],
+        'unit_kerja' => $unitKerja ? [
+          'id' => $unitKerja->id,
+          'nama_unit' => $unitKerja->nama_unit,
+          'jenis_karyawan' => $unitKerja->jenis_karyawan
+        ] : null,
+      ];
+    });
+
     return response()->json([
       'status' => Response::HTTP_OK,
       'message' => 'Retrieving all user for dropdown',
-      'data' => $user
+      'data' => $formattedData
     ], Response::HTTP_OK);
   }
 
