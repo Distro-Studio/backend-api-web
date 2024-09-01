@@ -424,6 +424,15 @@ class DataTukarJadwalController extends Controller
 
         if (Gate::allows('verifikasi2 tukarJadwal')) {
             $statusPenukaranId = 4;
+            $lemburPengajuan = Lembur::where('user_id', $data['user_pengajuan'])->exists();
+            $lemburDitukar = Lembur::where('user_id', $data['user_ditukar'])->exists();
+
+            // Hapus lembur jika ada
+            if ($lemburPengajuan || $lemburDitukar) {
+                Lembur::where('user_id', $data['user_pengajuan'])
+                    ->orWhere('user_id', $data['user_ditukar'])
+                    ->delete();
+            }
         } elseif (Gate::allows('verifikasi1 tukarJadwal')) {
             $statusPenukaranId = 2;
         } else {
@@ -735,10 +744,15 @@ class DataTukarJadwalController extends Controller
                 $tukar_jadwal->alasan = null;
                 $tukar_jadwal->save();
 
-                Lembur::where('user_id', $tukar_jadwal->user_pengajuan)
-                    ->orWhere('user_id', $tukar_jadwal->user_ditukar)
-                    ->delete();
+                $lemburPengajuan = Lembur::where('user_id', $tukar_jadwal->user_pengajuan)->exists();
+                $lemburDitukar = Lembur::where('user_id', $tukar_jadwal->user_ditukar)->exists();
 
+                // Hapus lembur jika ada
+                if ($lemburPengajuan || $lemburDitukar) {
+                    Lembur::where('user_id', $tukar_jadwal->user_pengajuan)
+                        ->orWhere('user_id', $tukar_jadwal->user_ditukar)
+                        ->delete();
+                }
                 $this->createNotifikasiVerifikasiTahap2($tukar_jadwal, true);
 
                 return response()->json(new WithoutDataResource(Response::HTTP_OK, "Verifikasi tahap 2 pertukaran jadwal dari '{$tukar_jadwal->user_pengajuans->nama}' telah disetujui."), Response::HTTP_OK);

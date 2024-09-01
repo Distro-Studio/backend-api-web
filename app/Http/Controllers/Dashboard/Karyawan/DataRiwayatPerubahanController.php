@@ -8,8 +8,6 @@ use Illuminate\Http\Request;
 use App\Helpers\RandomHelper;
 use Illuminate\Http\Response;
 use App\Models\RiwayatPerubahan;
-use App\Models\PerubahanKeluarga;
-use App\Models\PerubahanPersonal;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
@@ -328,24 +326,63 @@ class DataRiwayatPerubahanController extends Controller
                 // Decode first
                 $updatedFamilyData = is_string($riwayat->updated_data) ? json_decode($riwayat->updated_data, true) : $riwayat->updated_data;
 
+                // if (is_array($updatedFamilyData)) {
+                //     foreach ($updatedFamilyData as $update) {
+                //         $dataKeluarga = DataKeluarga::where('id', $update['data_keluarga_id'])
+                //             ->first();
+
+                //         if ($dataKeluarga) {
+                //             $updateData = [];
+
+                //             if (!is_null($update['nama_keluarga'])) $updateData['nama_keluarga'] = $update['nama_keluarga'];
+                //             if (!is_null($update['hubungan'])) $updateData['hubungan'] = $update['hubungan'];
+                //             if (!is_null($update['pendidikan_terakhir'])) $updateData['pendidikan_terakhir'] = $update['pendidikan_terakhir'];
+                //             if (!is_null($update['status_hidup'])) $updateData['status_hidup'] = $update['status_hidup'];
+                //             if (!is_null($update['pekerjaan'])) $updateData['pekerjaan'] = $update['pekerjaan'];
+                //             if (!is_null($update['no_hp'])) $updateData['no_hp'] = $update['no_hp'];
+                //             if (!is_null($update['email'])) $updateData['email'] = $update['email'];
+
+                //             if (!empty($updateData)) {
+                //                 $dataKeluarga->update($updateData);
+                //             }
+                //         }
+                //     }
+                // }
                 if (is_array($updatedFamilyData)) {
                     foreach ($updatedFamilyData as $update) {
-                        $dataKeluarga = DataKeluarga::where('id', $update['data_keluarga_id'])
-                            ->first();
+                        if (!is_null($update['data_keluarga_id'])) {
+                            // Update existing family data
+                            $dataKeluarga = DataKeluarga::find($update['data_keluarga_id']);
+                            if ($dataKeluarga) {
+                                $updateData = [];
 
-                        if ($dataKeluarga) {
-                            $updateData = [];
+                                if (!is_null($update['nama_keluarga'])) $updateData['nama_keluarga'] = $update['nama_keluarga'];
+                                if (!is_null($update['hubungan'])) $updateData['hubungan'] = $update['hubungan'];
+                                if (!is_null($update['pendidikan_terakhir'])) $updateData['pendidikan_terakhir'] = $update['pendidikan_terakhir'];
+                                if (!is_null($update['status_hidup'])) $updateData['status_hidup'] = $update['status_hidup'];
+                                if (!is_null($update['pekerjaan'])) $updateData['pekerjaan'] = $update['pekerjaan'];
+                                if (!is_null($update['no_hp'])) $updateData['no_hp'] = $update['no_hp'];
+                                if (!is_null($update['email'])) $updateData['email'] = $update['email'];
 
-                            if (!is_null($update['nama_keluarga'])) $updateData['nama_keluarga'] = $update['nama_keluarga'];
-                            if (!is_null($update['hubungan'])) $updateData['hubungan'] = $update['hubungan'];
-                            if (!is_null($update['pendidikan_terakhir'])) $updateData['pendidikan_terakhir'] = $update['pendidikan_terakhir'];
-                            if (!is_null($update['status_hidup'])) $updateData['status_hidup'] = $update['status_hidup'];
-                            if (!is_null($update['pekerjaan'])) $updateData['pekerjaan'] = $update['pekerjaan'];
-                            if (!is_null($update['no_hp'])) $updateData['no_hp'] = $update['no_hp'];
-                            if (!is_null($update['email'])) $updateData['email'] = $update['email'];
+                                if (!empty($updateData)) {
+                                    $dataKeluarga->update($updateData);
+                                }
+                            }
+                        } else {
+                            // Create new family data if data_keluarga_id is null
+                            if (!is_null($update['data_karyawan_id'])) {
+                                $newFamilyData = [
+                                    'data_karyawan_id' => $update['data_karyawan_id'],
+                                    'nama_keluarga' => $update['nama_keluarga'] ?? null,
+                                    'hubungan' => $update['hubungan'] ?? null,
+                                    'pendidikan_terakhir' => $update['pendidikan_terakhir'] ?? null,
+                                    'status_hidup' => $update['status_hidup'] ?? null,
+                                    'pekerjaan' => $update['pekerjaan'] ?? null,
+                                    'no_hp' => $update['no_hp'] ?? null,
+                                    'email' => $update['email'] ?? null,
+                                ];
 
-                            if (!empty($updateData)) {
-                                $dataKeluarga->update($updateData);
+                                DataKeluarga::create($newFamilyData);
                             }
                         }
                     }
