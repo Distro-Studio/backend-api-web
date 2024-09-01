@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Dashboard\Jadwal;
 use Carbon\Carbon;
 use App\Models\User;
 use App\Models\Jadwal;
+use App\Models\Lembur;
 use App\Models\Notifikasi;
 use App\Models\TukarJadwal;
 use Illuminate\Http\Request;
@@ -423,8 +424,6 @@ class DataTukarJadwalController extends Controller
 
         if (Gate::allows('verifikasi2 tukarJadwal')) {
             $statusPenukaranId = 4;
-
-            
         } elseif (Gate::allows('verifikasi1 tukarJadwal')) {
             $statusPenukaranId = 2;
         } else {
@@ -735,6 +734,10 @@ class DataTukarJadwalController extends Controller
                 $tukar_jadwal->verifikator_2 = Auth::id();
                 $tukar_jadwal->alasan = null;
                 $tukar_jadwal->save();
+
+                Lembur::where('user_id', $tukar_jadwal->user_pengajuan)
+                    ->orWhere('user_id', $tukar_jadwal->user_ditukar)
+                    ->delete();
 
                 $this->createNotifikasiVerifikasiTahap2($tukar_jadwal, true);
 
