@@ -351,9 +351,65 @@ class DataCutiController extends Controller
         //     return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Tidak dapat mengajukan cuti, karena karyawan '{$jadwalConflict->users->nama}' memiliki jadwal kerja pada rentang tanggal {$jadwalFrom} hingga {$jadwalTo}."), Response::HTTP_BAD_REQUEST);
         // }
 
+        if (Gate::allows('verifikasi2 cutiKaryawan')) {
+            $statusCutiId = 4;
+
+            // Step 1: Cek jadwal kerja shift, jika ada yang cuti mendadak dan jika masih ada jadwal
+            $jadwalConflicts = Jadwal::where('user_id', $data['user_id'])
+                ->where(function ($query) use ($tglFrom, $tglTo) {
+                    $query->whereBetween('tgl_mulai', [$tglFrom, $tglTo])
+                        ->orWhereBetween('tgl_selesai', [$tglFrom, $tglTo])
+                        ->orWhere(function ($query) use ($tglFrom, $tglTo) {
+                            $query->where('tgl_mulai', '<=', $tglFrom)
+                                ->where('tgl_selesai', '>=', $tglTo);
+                        });
+                })->get();
+
+            if ($jadwalConflicts->isNotEmpty()) {
+                foreach ($jadwalConflicts as $jadwal) {
+                    $tukarJadwal = TukarJadwal::where('jadwal_pengajuan', $jadwal->id)
+                        ->orWhere('jadwal_ditukar', $jadwal->id)
+                        ->first();
+
+                    if ($tukarJadwal) {
+                        // Kembalikan user_id dari jadwal_pengajuan ke user_pengajuan
+                        $jadwalPengajuan = Jadwal::find($tukarJadwal->jadwal_pengajuan);
+                        if ($jadwalPengajuan) {
+                            $jadwalPengajuan->user_id = $tukarJadwal->user_pengajuan;
+                            $jadwalPengajuan->save();
+
+                            $this->createNotifikasiJadwalKembali($jadwalPengajuan->user_id, $jadwalPengajuan->id);
+                        }
+
+                        // Kembalikan user_id dari jadwal_ditukar ke user_ditukar
+                        $jadwalDitukar = Jadwal::find($tukarJadwal->jadwal_ditukar);
+                        if ($jadwalDitukar) {
+                            $jadwalDitukar->user_id = $tukarJadwal->user_ditukar;
+                            $jadwalDitukar->save();
+
+                            $this->createNotifikasiJadwalKembali($jadwalDitukar->user_id, $jadwalDitukar->id);
+                        }
+
+                        // Hapus tukar jadwal setelah dikembalikan
+                        $tukarJadwal->delete();
+                    }
+
+                    // Hapus lembur
+                    Lembur::where('jadwal_id', $jadwal->id)->delete();
+
+                    // Hapus jadwal
+                    Jadwal::where('user_id', $data['user_id'])->delete();
+                }
+            }
+        } elseif (Gate::allows('verifikasi1 cutiKaryawan')) {
+            $statusCutiId = 2;
+        } else {
+            $statusCutiId = 1;
+        }
+
         // Menambahkan durasi ke data sebelum menyimpan
         $data['durasi'] = $durasi;
-        $data['status_cuti_id'] = 1;
+        $data['status_cuti_id'] = $statusCutiId;
         $dataCuti = Cuti::create($data);
 
         $message = "Data cuti karyawan '{$dataCuti->users->nama}' berhasil dibuat untuk tipe cuti '{$dataCuti->tipe_cutis->nama}' dengan durasi {$dataCuti->durasi} hari.";
@@ -617,35 +673,38 @@ class DataCutiController extends Controller
 
                 if ($jadwalConflicts->isNotEmpty()) {
                     foreach ($jadwalConflicts as $jadwal) {
-                        $tukarJadwalPengajuan = TukarJadwal::where('jadwal_pengajuan', $jadwal->id)->first();
-                        $tukarJadwalDitukar = TukarJadwal::where('jadwal_ditukar', $jadwal->id)->first();
+                        $tukarJadwal = TukarJadwal::where('jadwal_pengajuan', $jadwal->id)
+                            ->orWhere('jadwal_ditukar', $jadwal->id)
+                            ->first();
 
-                        // Step 1: Hapus tukar jadwal & kembalikan jadwal
-                        if ($tukarJadwalPengajuan) {
+                        if ($tukarJadwal) {
                             // Kembalikan user_id dari jadwal_pengajuan ke user_pengajuan
-                            $jadwalPengajuan = Jadwal::find($tukarJadwalPengajuan->jadwal_pengajuan);
+                            $jadwalPengajuan = Jadwal::find($tukarJadwal->jadwal_pengajuan);
                             if ($jadwalPengajuan) {
-                                $jadwalPengajuan->user_id = $tukarJadwalPengajuan->user_pengajuan;
+                                $jadwalPengajuan->user_id = $tukarJadwal->user_pengajuan;
                                 $jadwalPengajuan->save();
-                            }
-                            $tukarJadwalPengajuan->delete();
-                        }
 
-                        if ($tukarJadwalDitukar) {
+                                $this->createNotifikasiJadwalKembali($jadwalPengajuan->user_id, $jadwalPengajuan->id);
+                            }
+
                             // Kembalikan user_id dari jadwal_ditukar ke user_ditukar
-                            $jadwalDitukar = Jadwal::find($tukarJadwalDitukar->jadwal_ditukar);
+                            $jadwalDitukar = Jadwal::find($tukarJadwal->jadwal_ditukar);
                             if ($jadwalDitukar) {
-                                $jadwalDitukar->user_id = $tukarJadwalDitukar->user_ditukar;
+                                $jadwalDitukar->user_id = $tukarJadwal->user_ditukar;
                                 $jadwalDitukar->save();
+
+                                $this->createNotifikasiJadwalKembali($jadwalDitukar->user_id, $jadwalDitukar->id);
                             }
-                            $tukarJadwalDitukar->delete();
+
+                            // Hapus tukar jadwal setelah dikembalikan
+                            $tukarJadwal->delete();
                         }
 
-                        // Step 2: Hapus lembur
+                        // Hapus lembur
                         Lembur::where('jadwal_id', $jadwal->id)->delete();
 
-                        // Step 3: Hapus jadwal
-                        $jadwal->delete();
+                        // Hapus jadwal
+                        Jadwal::where('user_id', $cuti->user_id)->delete();
                     }
                 }
 
@@ -703,5 +762,23 @@ class DataCutiController extends Controller
             'message' => $message,
             'is_read' => false,
         ]);
+    }
+
+    private function createNotifikasiJadwalKembali($userId, $jadwalId)
+    {
+        $jadwal = Jadwal::find($jadwalId);
+
+        if ($jadwal) {
+            $tglMulai = Carbon::createFromFormat('Y-m-d', $jadwal->tgl_mulai)->locale('id')->isoFormat('D MMMM YYYY');
+            $tglSelesai = Carbon::createFromFormat('Y-m-d', $jadwal->tgl_selesai)->locale('id')->isoFormat('D MMMM YYYY');
+            $message = "Jadwal anda dari tanggal {$tglMulai} hingga {$tglSelesai} telah dikembalikan ke status semula.";
+
+            Notifikasi::create([
+                'kategori_notifikasi_id' => 2,
+                'user_id' => $userId,
+                'message' => $message,
+                'is_read' => false,
+            ]);
+        }
     }
 }

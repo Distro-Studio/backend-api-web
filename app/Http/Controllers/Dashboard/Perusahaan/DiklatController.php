@@ -190,11 +190,20 @@ class DiklatController extends Controller
             $jamMulai = Carbon::parse(RandomHelper::convertToTimeString($data['jam_mulai']));
             $jamSelesai = Carbon::parse(RandomHelper::convertToTimeString($data['jam_selesai']));
             $durasi = $jamMulai->diffInSeconds($jamSelesai);
+
+            if (Gate::allows('verifikasi2 diklat')) {
+                $statusDiklatId = 4;
+            } elseif (Gate::allows('verifikasi1 diklat')) {
+                $statusDiklatId = 2;
+            } else {
+                $statusDiklatId = 1;
+            }
+
             $diklat = Diklat::create([
                 'gambar' => $gambarId,
                 'nama' => $data['nama'],
                 'kategori_diklat_id' => 1,
-                'status_diklat_id' => 1,
+                'status_diklat_id' => $statusDiklatId,
                 'deskripsi' => $data['deskripsi'],
                 'kuota' => $data['kuota'],
                 'tgl_mulai' => $data['tgl_mulai'],

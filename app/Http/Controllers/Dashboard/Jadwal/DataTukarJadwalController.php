@@ -421,6 +421,16 @@ class DataTukarJadwalController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Karyawan harus berada di unit kerja yang sama untuk menukar jadwal.'), Response::HTTP_BAD_REQUEST);
         }
 
+        if (Gate::allows('verifikasi2 tukarJadwal')) {
+            $statusPenukaranId = 4;
+
+            
+        } elseif (Gate::allows('verifikasi1 tukarJadwal')) {
+            $statusPenukaranId = 2;
+        } else {
+            $statusPenukaranId = 1;
+        }
+
         if (!is_null($jadwalPengajuan->shift_id) && !is_null($jadwalDitukar->shift_id)) {
             // Verifikasi tanggal
             if ($tglMulaiPengajuan !== $tglMulaiDitukar) {
@@ -442,7 +452,7 @@ class DataTukarJadwalController extends Controller
                 'jadwal_pengajuan' => $jadwalPengajuan->id,
                 'user_ditukar' => $userDitukar->id,
                 'jadwal_ditukar' => $jadwalDitukar->id,
-                'status_penukaran_id' => 4, // Disetujui
+                'status_penukaran_id' => $statusPenukaranId, // Disetujui
                 'kategori_penukaran_id' => 1, // Tukar Shift
             ]);
             $tukarJadwal->save();
@@ -486,7 +496,7 @@ class DataTukarJadwalController extends Controller
                 'jadwal_pengajuan' => $jadwalPengajuan->id,
                 'user_ditukar' => $userDitukar->id,
                 'jadwal_ditukar' => $jadwalDitukar->id,
-                'status_penukaran_id' => 4, // Disetujui
+                'status_penukaran_id' => $statusPenukaranId, // Disetujui
                 'kategori_penukaran_id' => 2, // Tukar Libur
             ]);
             $tukarJadwal->save();
