@@ -19,6 +19,8 @@ return new class extends Migration
             // $table->foreignId('verifikator_1')->nullable()->constrained('users');
             // $table->foreignId('verifikator_2')->nullable()->constrained('users');
             $table->foreignId('status_gaji_id')->constrained('status_gajis'); // 1 = created 2 = published
+            $table->foreignId('created_by')->constrained('users');
+            $table->foreignId('submitted_by')->nullable()->constrained('users');
             $table->timestamps();
         });
     }

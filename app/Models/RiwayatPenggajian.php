@@ -17,7 +17,9 @@ class RiwayatPenggajian extends Model
         'id' => 'integer',
         'karyawan_verifikasi' => 'integer',
         'jenis_riwayat' => 'integer',
-        'status_gaji_id' => 'integer'
+        'status_gaji_id' => 'integer',
+        'created_by' => 'integer',
+        'submitted_by' => 'integer'
     ];
 
     /**
@@ -30,26 +32,6 @@ class RiwayatPenggajian extends Model
         return $this->hasMany(Penggajian::class, 'riwayat_penggajian_id', 'id');
     }
 
-    // /**
-    //  * Get the verifikator_1 that owns the RiwayatPenggajian
-    //  *
-    //  * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
-    //  */
-    // public function verifikator_1(): BelongsTo
-    // {
-    //     return $this->belongsTo(User::class, 'verifikator_1', 'id');
-    // }
-
-    // /**
-    //  * Get the verifikator_2 that owns the RiwayatPenggajian
-    //  *
-    //  * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
-    //  */
-    // public function verifikator_2(): BelongsTo
-    // {
-    //     return $this->belongsTo(User::class, 'verifikator_2', 'id');
-    // }
-
     /**
      * Get the status_gajis that owns the RiwayatPenggajian
      *
@@ -58,5 +40,25 @@ class RiwayatPenggajian extends Model
     public function status_gajis(): BelongsTo
     {
         return $this->belongsTo(StatusGaji::class, 'status_gaji_id', 'id');
+    }
+
+    /**
+     * Get the created_users that owns the Penggajian
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function created_users(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by', 'id');
+    }
+
+    /**
+     * Get the submitted_users that owns the Penggajian
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function submitted_users(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'submitted_by', 'id');
     }
 }

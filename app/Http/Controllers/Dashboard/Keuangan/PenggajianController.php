@@ -12,6 +12,7 @@ use Illuminate\Http\Response;
 use App\Models\RiwayatPenggajian;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Jobs\Penggajian\CreateGajiJob;
@@ -75,6 +76,7 @@ class PenggajianController extends Controller
                     ];
                     if ($riwayatPenggajian->status_gaji_id != 2) {
                         $riwayatPenggajian->status_gaji_id = 2;
+                        $riwayatPenggajian->submitted_by = Auth::id();
                         $riwayatPenggajian->save();
                         $riwayatPenggajians[] = [
                             'riwayat_penggajian_id' => $riwayatPenggajian->id,
@@ -148,6 +150,28 @@ class PenggajianController extends Controller
                 'pembaruan_terakhir' => $riwayatPenggajian->updated_at,
                 'karyawan_digaji' => $riwayatPenggajian->karyawan_verifikasi,
                 'status_riwayat_gaji' => $riwayatPenggajian->status_gajis,
+                'created_by' => $riwayatPenggajian->created_users ? [
+                    'id' => $riwayatPenggajian->created_users->id,
+                    'nama' => $riwayatPenggajian->created_users->nama,
+                    'email_verified_at' => $riwayatPenggajian->created_users->email_verified_at,
+                    'data_karyawan_id' => $riwayatPenggajian->created_users->data_karyawan_id,
+                    'foto_profil' => $riwayatPenggajian->created_users->foto_profil,
+                    'data_completion_step' => $riwayatPenggajian->created_users->data_completion_step,
+                    'status_aktif' => $riwayatPenggajian->created_users->status_aktif,
+                    'created_at' => $riwayatPenggajian->created_users->created_at,
+                    'updated_at' => $riwayatPenggajian->created_users->updated_at
+                ] : null,
+                'submitted_by' => $riwayatPenggajian->submitted_users ? [
+                    'id' => $riwayatPenggajian->submitted_users->id,
+                    'nama' => $riwayatPenggajian->submitted_users->nama,
+                    'email_verified_at' => $riwayatPenggajian->submitted_users->email_verified_at,
+                    'data_karyawan_id' => $riwayatPenggajian->submitted_users->data_karyawan_id,
+                    'foto_profil' => $riwayatPenggajian->submitted_users->foto_profil,
+                    'data_completion_step' => $riwayatPenggajian->submitted_users->data_completion_step,
+                    'status_aktif' => $riwayatPenggajian->submitted_users->status_aktif,
+                    'created_at' => $riwayatPenggajian->submitted_users->created_at,
+                    'updated_at' => $riwayatPenggajian->submitted_users->updated_at
+                ] : null,
                 'created_at' => $riwayatPenggajian->created_at,
                 'updated_at' => $riwayatPenggajian->updated_at
             ];
@@ -234,6 +258,8 @@ class PenggajianController extends Controller
                 'karyawan_verifikasi' => $verifikasiKaryawan,
                 'status_gaji_id' => $status_riwayat_gaji,
                 'jenis_riwayat' => $jenisRiwayat,
+                'created_by' => Auth::id(),
+                'submitted_by' => null
             ]);
 
             // Dispatch the job to handle the calculation in the background
@@ -276,11 +302,32 @@ class PenggajianController extends Controller
             'periode' => $riwayatPenggajian->periode,
             'pembaruan_terakhir' => $riwayatPenggajian->updated_at,
             'karyawan_digaji' => $riwayatPenggajian->karyawan_verifikasi,
-            'status_riwayat_gaji' => $riwayatPenggajian->status_gajis
+            'status_riwayat_gaji' => $riwayatPenggajian->status_gajis,
+            'created_by' => $riwayatPenggajian->created_users ? [
+                'id' => $riwayatPenggajian->created_users->id,
+                'nama' => $riwayatPenggajian->created_users->nama,
+                'email_verified_at' => $riwayatPenggajian->created_users->email_verified_at,
+                'data_karyawan_id' => $riwayatPenggajian->created_users->data_karyawan_id,
+                'foto_profil' => $riwayatPenggajian->created_users->foto_profil,
+                'data_completion_step' => $riwayatPenggajian->created_users->data_completion_step,
+                'status_aktif' => $riwayatPenggajian->created_users->status_aktif,
+                'created_at' => $riwayatPenggajian->created_users->created_at,
+                'updated_at' => $riwayatPenggajian->created_users->updated_at
+            ] : null,
+            'submitted_by' => $riwayatPenggajian->submitted_users ? [
+                'id' => $riwayatPenggajian->submitted_users->id,
+                'nama' => $riwayatPenggajian->submitted_users->nama,
+                'email_verified_at' => $riwayatPenggajian->submitted_users->email_verified_at,
+                'data_karyawan_id' => $riwayatPenggajian->submitted_users->data_karyawan_id,
+                'foto_profil' => $riwayatPenggajian->submitted_users->foto_profil,
+                'data_completion_step' => $riwayatPenggajian->submitted_users->data_completion_step,
+                'status_aktif' => $riwayatPenggajian->submitted_users->status_aktif,
+                'created_at' => $riwayatPenggajian->submitted_users->created_at,
+                'updated_at' => $riwayatPenggajian->submitted_users->updated_at
+            ] : null,
         ];
 
         $penggajians = $riwayatPenggajian->penggajians;
-
         $formattedData = $penggajians->map(function ($penggajian) {
             $dataKaryawan = $penggajian->data_karyawans;
             $user = $dataKaryawan->users;
