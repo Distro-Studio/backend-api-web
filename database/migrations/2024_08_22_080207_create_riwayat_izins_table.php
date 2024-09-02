@@ -14,6 +14,8 @@ return new class extends Migration
         Schema::create('riwayat_izins', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained('users');
+            $table->string('tgl_izin');
+            $table->string('waktu_izin');
             $table->integer('durasi');
             $table->text('keterangan');
             $table->foreignId('status_izin_id')->nullable()->constrained('status_riwayat_izins');

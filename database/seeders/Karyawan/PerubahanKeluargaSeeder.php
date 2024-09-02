@@ -19,9 +19,9 @@ class PerubahanKeluargaSeeder extends Seeder
         $dataKaryawans = DataKaryawan::pluck('id')->all();
         $statusPerubahans = StatusPerubahan::pluck('id')->all();
         $dataKeluargas = DataKeluarga::pluck('id')->all();
-        $kategoriPendidikans = KategoriPendidikan::pluck('label')->all();
+        $kategoriPendidikans = KategoriPendidikan::pluck('id')->all();
 
-        for ($i = 0; $i < 15; $i++) {
+        for ($i = 0; $i < 10; $i++) {
             // Pilih data_karyawan_id, data_keluarga_id, dan pendidikan_terakhir secara acak
             $dataKaryawanId = $dataKaryawans[array_rand($dataKaryawans)];
             $dataKeluargaId1 = $dataKeluargas[array_rand($dataKeluargas)];

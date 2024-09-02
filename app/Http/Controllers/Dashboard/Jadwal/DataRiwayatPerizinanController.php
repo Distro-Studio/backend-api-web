@@ -232,6 +232,8 @@ class DataRiwayatPerizinanController extends Controller
                     'created_at' => $dataPerizinan->users->created_at,
                     'updated_at' => $dataPerizinan->users->updated_at
                 ],
+                'tgl_izin' => $dataPerizinan->tgl_izin,
+                'waktu_izin' => $dataPerizinan->waktu_izin,
                 'durasi' => $dataPerizinan->durasi,
                 'keterangan' => $dataPerizinan->keterangan,
                 'status_izin' => $dataPerizinan->status_izins,
@@ -272,6 +274,8 @@ class DataRiwayatPerizinanController extends Controller
                 'created_at' => $dataIzin->users->created_at,
                 'updated_at' => $dataIzin->users->updated_at
             ],
+            'tgl_izin' => $dataIzin->tgl_izin,
+            'waktu_izin' => $dataIzin->waktu_izin,
             'durasi' => $dataIzin->durasi,
             'keterangan' => $dataIzin->keterangan,
             'status_izin' => $dataIzin->status_izins,

@@ -45,12 +45,13 @@ class LemburJadwalExport implements FromCollection, WithHeadings, WithMapping
         static $no = 1;
 
         // Konversikan durasi ke time string, kemudian ke detik, lalu ke jam dan menit
-        $timeString = RandomHelper::convertToTimeString($lembur->durasi);
-        $seconds = RandomHelper::convertTimeStringToSeconds($timeString);
-        $duration = RandomHelper::convertToHoursMinutes($seconds);
+        $totalSeconds = $lembur->durasi;
+        $hours = floor($totalSeconds / 3600);
+        $minutes = floor(($totalSeconds % 3600) / 60);
+        $formattedDuration = "{$hours} Jam {$minutes} Menit";
 
-        $convertTgl_Mulai = RandomHelper::convertToDateString($lembur->jadwals->tgl_mulai);
-        $convertTgl_Selesai = RandomHelper::convertToDateString($lembur->jadwals->tgl_selesai);
+        $convertTgl_Mulai = RandomHelper::convertToDateString($lembur->jadwals->tgl_mulai) ?? 'N/A';
+        $convertTgl_Selesai = RandomHelper::convertToDateString($lembur->jadwals->tgl_selesai) ?? 'N/A';
         $tgl_mulai = Carbon::parse($convertTgl_Mulai)->format('d-m-Y');
         $tgl_selesai = Carbon::parse($convertTgl_Selesai)->format('d-m-Y');
 
@@ -59,9 +60,9 @@ class LemburJadwalExport implements FromCollection, WithHeadings, WithMapping
             $lembur->users->nama,
             $tgl_mulai,
             $tgl_selesai,
-            $lembur->jadwals->shifts->nama,
-            $lembur->tgl_pengajuan,
-            $duration, // Ubah durasi menjadi jam dan menit
+            $lembur->jadwals->shifts->nama ?? 'N/A',
+            $lembur->tgl_pengajuan ?? 'N/A',
+            $formattedDuration,
             $lembur->catatan,
             Carbon::parse($lembur->created_at)->format('d-m-Y H:i:s'),
             Carbon::parse($lembur->updated_at)->format('d-m-Y H:i:s')

@@ -6,8 +6,11 @@ use App\Models\DataKaryawan;
 use App\Models\DataKeluarga;
 use Illuminate\Http\Request;
 use App\Helpers\RandomHelper;
+use App\Models\KategoriAgama;
+use App\Models\KategoriDarah;
 use Illuminate\Http\Response;
 use App\Models\RiwayatPerubahan;
+use App\Models\KategoriPendidikan;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
@@ -218,6 +221,39 @@ class DataRiwayatPerubahanController extends Controller
 
             $originalData = $data_perubahan->original_data;
             $updatedData = $data_perubahan->updated_data;
+
+            if ($data_perubahan->jenis_perubahan === 'Keluarga') {
+                if (is_array($originalData)) {
+                    foreach ($originalData as &$item) {
+                        if (isset($item['pendidikan_terakhir'])) {
+                            $item['pendidikan_terakhir'] = KategoriPendidikan::find($item['pendidikan_terakhir']) ?? null;
+                        }
+                    }
+                }
+
+                if (is_array($updatedData)) {
+                    foreach ($updatedData as &$item) {
+                        if (isset($item['pendidikan_terakhir'])) {
+                            $item['pendidikan_terakhir'] = KategoriPendidikan::find($item['pendidikan_terakhir']) ?? null;
+                        }
+                    }
+                }
+            }
+
+            if ($data_perubahan->jenis_perubahan === 'Personal') {
+                if (in_array($data_perubahan->kolom, ['kategori_agama_id', 'kategori_darah_id', 'pendidikan_terakhir'])) {
+                    if ($data_perubahan->kolom === 'kategori_agama_id') {
+                        $originalData = KategoriAgama::find($originalData) ?? $originalData;
+                        $updatedData = KategoriAgama::find($updatedData) ?? $updatedData;
+                    } elseif ($data_perubahan->kolom === 'kategori_darah_id') {
+                        $originalData = KategoriDarah::find($originalData) ?? $originalData;
+                        $updatedData = KategoriDarah::find($updatedData) ?? $updatedData;
+                    } elseif ($data_perubahan->kolom === 'pendidikan_terakhir') {
+                        $originalData = KategoriPendidikan::find($originalData) ?? $originalData;
+                        $updatedData = KategoriPendidikan::find($updatedData) ?? $updatedData;
+                    }
+                }
+            }
 
             return [
                 'id' => $data_perubahan->id,

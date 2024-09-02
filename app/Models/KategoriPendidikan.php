@@ -25,4 +25,24 @@ class KategoriPendidikan extends Model
     {
         return $this->hasMany(DataKaryawan::class, 'pendidikan_terakhir', 'id');
     }
+
+    /**
+     * Get all of the perubahan_personal_pendidikan for the KategoriPendidikan
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function perubahan_personal_pendidikans(): HasMany
+    {
+        return $this->hasMany(PerubahanPersonal::class, 'pendidikan_terakhir', 'id');
+    }
+
+        /**
+     * Get all of the perubahan_personal_pendidikan for the KategoriPendidikan
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function perubahan_keluarga_pendidikans(): HasMany
+    {
+        return $this->hasMany(PerubahanKeluarga::class, 'pendidikan_terakhir', 'id');
+    }
 }

@@ -19,14 +19,34 @@ class RiwayatPerubahan extends Model
         'verifikator_1' => 'integer'
     ];
 
+    protected $integerColumns = [
+        'kategori_agama_id',
+        'kategori_darah_id',
+        'jenis_kelamin',
+        'tinggi_badan',
+        'berat_badan',
+        'tahun_lulus',
+        'pendidikan_terakhir'
+    ];
+
     public function getOriginalDataAttribute($value)
     {
-        return $this->jenis_perubahan === 'Keluarga' ? json_decode($value, true) : $value;
+        if ($this->jenis_perubahan === 'Keluarga') {
+            return json_decode($value, true);
+        } elseif (in_array($this->kolom, $this->integerColumns)) {
+            return (int)$value; // Convert to integer if column is in integerColumns
+        }
+        return $value;
     }
 
     public function getUpdatedDataAttribute($value)
     {
-        return $this->jenis_perubahan === 'Keluarga' ? json_decode($value, true) : $value;
+        if ($this->jenis_perubahan === 'Keluarga') {
+            return json_decode($value, true);
+        } elseif (in_array($this->kolom, $this->integerColumns)) {
+            return (int)$value; // Convert to integer if column is in integerColumns
+        }
+        return $value;
     }
 
     /**
@@ -77,15 +97,5 @@ class RiwayatPerubahan extends Model
     public function perubahan_personals(): HasMany
     {
         return $this->hasMany(PerubahanPersonal::class, 'riwayat_perubahan_id', 'id');
-    }
-
-    /**
-     * Get all of the perubahan_berkas for the RiwayatPerubahan
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
-     */
-    public function perubahan_berkas(): HasMany
-    {
-        return $this->hasMany(PerubahanBerkas::class, 'riwayat_perubahan_id', 'id');
     }
 }

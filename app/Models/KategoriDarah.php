@@ -25,4 +25,14 @@ class KategoriDarah extends Model
     {
         return $this->hasMany(DataKaryawan::class, 'kategori_darah_id', 'id');
     }
+
+    /**
+     * Get all of the perubahan_personals for the KategoriDarah
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function perubahan_personal_darahs(): HasMany
+    {
+        return $this->hasMany(PerubahanPersonal::class, 'kategori_darah_id', 'id');
+    }
 }

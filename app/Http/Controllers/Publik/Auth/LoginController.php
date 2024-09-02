@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Cookie;
 use App\Http\Requests\LoginDashboardRequest;
 use App\Http\Resources\Dashboard\User\UserResource;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
+use Illuminate\Support\Facades\Log;
 
 class LoginController extends Controller
 {
@@ -23,12 +24,14 @@ class LoginController extends Controller
         })->first();
 
         if (!$user || !Hash::check($credentials['password'], $user->password)) {
+            Log::error("Login failed for email: {$credentials['email']} - Invalid credentials or account inactive.");
             return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Password atau email anda tidak valid, silahkan cek kembali dan pastikan akun anda aktif'), Response::HTTP_BAD_REQUEST);
         }
 
         // Cek status_aktif
         if ($user->status_aktif == 1) {
             auth()->logout(); // Logout user jika status_aktif bernilai 1
+            Log::error("Login failed for user ID: {$user->id} - Account inactive since {$user->updated_at}.");
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, "Kami mendeteksi bahwa akun anda sudah tidak aktif sejak {$user->updated_at}."), Response::HTTP_FORBIDDEN);
         }
 
@@ -36,6 +39,8 @@ class LoginController extends Controller
         // if ($user->roles->isEmpty() || $user->roles->first()->permissions->isEmpty()) {
         //     return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk membuka halaman admin, jika anda bukan karyawan silahkan hubungi Admin Personalia.'), Response::HTTP_FORBIDDEN);
         // }
+
+        Log::info("Login successful for user ID: {$user->id}, Name: {$user->nama}.");
 
         $token = $user->createToken('create_token_' . Str::uuid())->plainTextToken;
 
@@ -59,6 +64,10 @@ class LoginController extends Controller
 
         auth()->guard('web')->logout();
         $deleteCookie = Cookie::forget('authToken');
+
+        $userId = auth()->user();
+        Log::info("Logout successful for user ID: {$userId->id}, Name: {$userId->nama}.");
+
         return response()->json(new WithoutDataResource(Response::HTTP_OK, 'Anda berhasil melakukan logout.'), Response::HTTP_OK)->withCookie($deleteCookie);
     }
 }

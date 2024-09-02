@@ -51,7 +51,6 @@ class RoleSeeder extends Seeder
             'view riwayatPerubahan',
             'verifikasi1 riwayatPerubahan',
             'view riwayatPerizinan',
-            'export riwayatPerizinan',
             'verifikasi1 riwayatPerizinan',
 
             'create diklat',

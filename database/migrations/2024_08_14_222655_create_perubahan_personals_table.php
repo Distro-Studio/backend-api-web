@@ -20,14 +20,14 @@ return new class extends Migration
             $table->boolean('jenis_kelamin');
             $table->string('nik_ktp');
             $table->string('no_kk');
-            $table->foreignId('kategori_agama_id');
-            $table->foreignId('kategori_darah_id');
+            $table->foreignId('kategori_agama_id')->constrained('kategori_agamas');
+            $table->foreignId('kategori_darah_id')->constrained('kategori_darahs');
             $table->integer('tinggi_badan');
             $table->integer('berat_badan');
             $table->string('alamat');
             $table->string('no_ijasah');
             $table->integer('tahun_lulus');
-            $table->foreignId('pendidikan_terakhir');
+            $table->foreignId('pendidikan_terakhir')->constrained('kategori_pendidikans');
             $table->string('gelar_depan');
             $table->timestamps();
         });

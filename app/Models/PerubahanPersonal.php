@@ -32,4 +32,34 @@ class PerubahanPersonal extends Model
     {
         return $this->belongsTo(RiwayatPerubahan::class, 'riwayat_perubahan_id', 'id');
     }
+
+    /**
+     * Get the kategori_agamas that owns the PerubahanPersonal
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function kategori_agamas(): BelongsTo
+    {
+        return $this->belongsTo(KategoriAgama::class, 'kategori_agama_id', 'id');
+    }
+
+    /**
+     * Get the kategori_darahs that owns the PerubahanPersonal
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function kategori_darahs(): BelongsTo
+    {
+        return $this->belongsTo(KategoriDarah::class, 'kategori_darah_id', 'id');
+    }
+
+    /**
+     * Get the kategori_pendidikans that owns the PerubahanPersonal
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function kategori_pendidikans(): BelongsTo
+    {
+        return $this->belongsTo(KategoriPendidikan::class, 'pendidikan_terakhir', 'id');
+    }
 }

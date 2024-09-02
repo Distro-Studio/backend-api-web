@@ -338,7 +338,7 @@ class DataLemburController extends Controller
                     'nama_unit' => $unitKerja->nama_unit,
                     'jenis_karyawan' => $unitKerja->jenis_karyawan,
                 ] : null,
-                'jadwal' => [
+                'jadwal' => $lembur->jadwals ? [
                     'id' => $lembur->jadwals->id,
                     'user_id' => $lembur->jadwals->user_id,
                     'tgl_mulai' => $lembur->jadwals->tgl_mulai,
@@ -346,7 +346,7 @@ class DataLemburController extends Controller
                     'shift' => $lembur->jadwals->shifts,
                     'created_at' => $lembur->jadwals->created_at,
                     'updated_at' => $lembur->jadwals->updated_at
-                ],
+                ] : null,
                 'tgl_pengajuan' => $lembur->tgl_pengajuan,
                 'durasi' => $lembur->durasi,
                 'catatan' => $lembur->catatan,
