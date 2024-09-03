@@ -8,6 +8,7 @@ use DateTimeZone;
 use Carbon\Carbon;
 use Illuminate\Console\Scheduling\Schedule;
 use App\Console\Commands\UpdateDataKaryawanTransfer;
+use App\Console\Commands\UpdateMasaDiklatKaryawan;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 
 class Kernel extends ConsoleKernel
@@ -16,6 +17,7 @@ class Kernel extends ConsoleKernel
         UpdateDataKaryawanTransfer::class,
         UpdateAutoPublishPenggajian::class,
         UpdateAndResetReward::class,
+        UpdateMasaDiklatKaryawan::class
     ];
 
     /**
@@ -37,6 +39,11 @@ class Kernel extends ConsoleKernel
         $schedule->command('app:update-and-reset-reward-presensi')
             ->timezone('Asia/Jakarta')
             ->monthlyOn(Carbon::now()->endOfMonth()->day, '00:00');
+
+        // Update masa diklat karyawan
+        // $schedule->command('app:update-data-karyawan-transfer')
+        //     ->timezone('Asia/Jakarta')
+        //     ->dailyAt('23:00');
     }
 
     /**

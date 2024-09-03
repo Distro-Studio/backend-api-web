@@ -187,14 +187,17 @@ class DiklatController extends Controller
                 StorageServerHelper::logout();
             }
 
-            $jamMulai = Carbon::parse(RandomHelper::convertToTimeString($data['jam_mulai']));
-            $jamSelesai = Carbon::parse(RandomHelper::convertToTimeString($data['jam_selesai']));
-            $durasi = $jamMulai->diffInSeconds($jamSelesai);
+            $tglJamMulai = Carbon::createFromFormat('d-m-Y H:i:s', $data['tgl_mulai'] . ' ' . $data['jam_mulai']);
+            $tglJamSelesai = Carbon::createFromFormat('d-m-Y H:i:s', $data['tgl_selesai'] . ' ' . $data['jam_selesai']);
+            $durasi = $tglJamMulai->diffInSeconds($tglJamSelesai);
 
             if (Gate::allows('verifikasi2 diklat')) {
                 $statusDiklatId = 4;
+                $data['verifikator_1'] = Auth::id();
+                $data['verifikator_2'] = Auth::id();
             } elseif (Gate::allows('verifikasi1 diklat')) {
                 $statusDiklatId = 2;
+                $data['verifikator_1'] = Auth::id();
             } else {
                 $statusDiklatId = 1;
             }

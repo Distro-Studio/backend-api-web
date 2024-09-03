@@ -401,8 +401,12 @@ class DataCutiController extends Controller
                     Jadwal::where('user_id', $data['user_id'])->delete();
                 }
             }
+
+            $data['verifikator_1'] = Auth::id();
+            $data['verifikator_2'] = Auth::id();
         } elseif (Gate::allows('verifikasi1 cutiKaryawan')) {
             $statusCutiId = 2;
+            $data['verifikator_1'] = Auth::id();
         } else {
             $statusCutiId = 1;
         }
@@ -411,6 +415,15 @@ class DataCutiController extends Controller
         $data['durasi'] = $durasi;
         $data['status_cuti_id'] = $statusCutiId;
         $dataCuti = Cuti::create($data);
+
+        // Setelah pembuatan cuti, cari cuti yang baru dibuat dan periksa cuti_administratif
+        $cutiTerbaru = Cuti::where('user_id', $data['user_id'])->latest()->first();
+
+        if ($cutiTerbaru && !$cutiTerbaru->tipe_cutis->cuti_administratif) {
+            DB::table('data_karyawans')
+                ->where('user_id', $data['user_id'])
+                ->update(['status_reward_presensi' => false]);
+        }
 
         $message = "Data cuti karyawan '{$dataCuti->users->nama}' berhasil dibuat untuk tipe cuti '{$dataCuti->tipe_cutis->nama}' dengan durasi {$dataCuti->durasi} hari.";
 

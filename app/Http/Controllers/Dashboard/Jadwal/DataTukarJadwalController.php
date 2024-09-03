@@ -433,8 +433,11 @@ class DataTukarJadwalController extends Controller
                     ->orWhere('user_id', $data['user_ditukar'])
                     ->delete();
             }
+            $data['verifikator_1'] = Auth::id();
+            $data['verifikator_2'] = Auth::id();
         } elseif (Gate::allows('verifikasi1 tukarJadwal')) {
             $statusPenukaranId = 2;
+            $data['verifikator_1'] = Auth::id();
         } else {
             $statusPenukaranId = 1;
         }
