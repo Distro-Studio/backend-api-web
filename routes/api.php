@@ -218,6 +218,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::post('/diklat', [DiklatController::class, 'store']);
             Route::get('/diklat/{diklatId}', [DiklatController::class, 'show']);
             Route::get('/diklat/export', [DiklatController::class, 'exportDiklat']);
+            Route::delete('/diklat/{diklatId}/delete-peserta-diklat/{userId}', [DiklatController::class, 'fakeAssignDiklat']);
             Route::post('/diklat/{diklatId}/verifikasi-step-1', [DiklatController::class, 'verifikasiTahap1']);
             Route::post('/diklat/{diklatId}/verifikasi-step-2', [DiklatController::class, 'verifikasiTahap2']);
             Route::post('/diklat/{diklatId}/verifikasi-diklat-eksternal', [DiklatController::class, 'verifikasiDiklatExternal']);

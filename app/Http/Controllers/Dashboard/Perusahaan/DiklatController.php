@@ -22,6 +22,7 @@ use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\Perusahaan\DiklatExport;
 use App\Http\Requests\StoreDiklatRequest;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
+use App\Models\PesertaDiklat;
 
 class DiklatController extends Controller
 {
@@ -194,7 +195,6 @@ class DiklatController extends Controller
             if (Gate::allows('verifikasi2 diklat')) {
                 $statusDiklatId = 4;
                 $data['verifikator_1'] = Auth::id();
-                $data['verifikator_2'] = Auth::id();
             } elseif (Gate::allows('verifikasi1 diklat')) {
                 $statusDiklatId = 2;
                 $data['verifikator_1'] = Auth::id();
@@ -365,10 +365,9 @@ class DiklatController extends Controller
         $status_diklat_id = $diklat->status_diklat_id;
 
         if ($request->has('verifikasi_pertama_disetujui') && $request->verifikasi_pertama_disetujui == 1) {
-            // Jika status_diklat_id = 1 atau 3 (setelah ditolak), maka bisa disetujui
             if ($status_diklat_id == 1) {
-                $diklat->status_diklat_id = 2; // Update status ke tahap 1 disetujui
-                $diklat->verifikator_1 = Auth::id(); // Set verifikator tahap 1
+                $diklat->status_diklat_id = 2;
+                $diklat->verifikator_1 = Auth::id();
                 $diklat->alasan = null;
                 $diklat->save();
                 return response()->json(new WithoutDataResource(Response::HTTP_OK, "Verifikasi tahap 1 untuk Diklat '{$diklat->nama}' telah disetujui."), Response::HTTP_OK);
@@ -376,10 +375,9 @@ class DiklatController extends Controller
                 return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Diklat '{$diklat->nama}' tidak dalam status untuk disetujui pada tahap 1."), Response::HTTP_BAD_REQUEST);
             }
         } elseif ($request->has('verifikasi_pertama_ditolak') && $request->verifikasi_pertama_ditolak == 1) {
-            // Jika status_diklat_id = 1, maka bisa ditolak
             if ($status_diklat_id == 1) {
-                $diklat->status_diklat_id = 3; // Update status ke tahap 1 ditolak
-                $diklat->verifikator_1 = Auth::id(); // Set verifikator tahap 1
+                $diklat->status_diklat_id = 3;
+                $diklat->verifikator_1 = Auth::id();
                 $diklat->alasan = $request->input('alasan', null);
                 $diklat->save();
                 return response()->json(new WithoutDataResource(Response::HTTP_OK, "Verifikasi tahap 1 untuk Diklat '{$diklat->nama}' telah ditolak."), Response::HTTP_OK);
@@ -407,10 +405,9 @@ class DiklatController extends Controller
         $status_diklat_id = $diklat->status_diklat_id;
 
         if ($request->has('verifikasi_kedua_disetujui') && $request->verifikasi_kedua_disetujui == 1) {
-            // Jika status_diklat_id = 2, maka bisa disetujui
             if ($status_diklat_id == 2) {
-                $diklat->status_diklat_id = 4; // Update status ke tahap 2 disetujui
-                $diklat->verifikator_2 = Auth::id(); // Set verifikator tahap 2
+                $diklat->status_diklat_id = 4;
+                $diklat->verifikator_2 = Auth::id();
                 $diklat->alasan = null;
                 $diklat->save();
                 return response()->json(new WithoutDataResource(Response::HTTP_OK, "Verifikasi tahap 2 untuk Diklat '{$diklat->nama}' telah disetujui."), Response::HTTP_OK);
@@ -471,6 +468,47 @@ class DiklatController extends Controller
         } else {
             return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Aksi tidak valid.'), Response::HTTP_BAD_REQUEST);
         }
+    }
+
+    // Untuk verifikasi apakah karyawan benar" ikut diklat (dari absensi manual)
+    public function fakeAssignDiklat($diklatId, $userId)
+    {
+        // Hanya bisa dilakukan untuk permission verif 2
+        if (!Gate::allows('verifikasi2 diklat')) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
+
+        $diklat = Diklat::find($diklatId);
+        if (!$diklat) {
+            return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data diklat tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+        }
+
+        if ($diklat->kategori_diklat_id != 1) {
+            return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Tidak dapat menghapus peserta dari diklat eksternal. Silakan lakukan penolakan verifikasi untuk memungkinkan pengajuan ulang.'), Response::HTTP_BAD_REQUEST);
+        }
+
+        $peserta_diklat = PesertaDiklat::where('diklat_id', $diklatId)->where('peserta', $userId)->first();
+        if (!$peserta_diklat) {
+            return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data peserta diklat tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+        }
+
+        $user = User::find($userId);
+        $userName = $user ? $user->nama : $userId;
+
+        // Delete karyawan
+        $peserta_diklat->delete();
+
+        // Hitung kembali jumlah peserta
+        $jumlahPesertaTersisa = PesertaDiklat::where('diklat_id', $diklatId)->count();
+
+        // Update kuota
+        $diklat->kuota = $jumlahPesertaTersisa;
+        $diklat->save();
+
+        return response()->json([
+            'status' => Response::HTTP_OK,
+            'message' => "Peserta diklat '{$userName}' berhasil dihapus dari diklat '{$diklat->nama}'."
+        ], Response::HTTP_OK);
     }
 
     private function createNotifikasiDiklat($diklat)

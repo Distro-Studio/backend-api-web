@@ -9,6 +9,7 @@ use App\Models\Diklat;
 use Illuminate\Support\Str;
 use App\Models\StatusBerkas;
 use App\Models\StatusDiklat;
+use App\Models\PesertaDiklat;
 use App\Models\KategoriBerkas;
 use App\Models\KategoriDiklat;
 use Illuminate\Database\Seeder;
@@ -40,7 +41,7 @@ class DiklatSeeder extends Seeder
                 $gambarUrl = '/path/to/diklat/berkas/Diklat_Thumbnail_' . $i;
                 $berkas_gambar = $this->createBerkas($user_id, 'Berkas Diklat - ' . User::find($user_id)->nama, $gambarUrl);
                 $dokumen_eksternal = null;
-                $kuota = rand(10, 50);
+                $kuota = rand(10, 25);
             } else {
                 // Jika kategori diklat adalah Eksternal
                 $gambarUrl = '/path/to/diklat/berkas/Diklat_Eksternal_' . $i;
@@ -49,7 +50,8 @@ class DiklatSeeder extends Seeder
                 $kuota = 1;
             }
 
-            Diklat::create([
+            // Buat diklat baru
+            $diklat = Diklat::create([
                 'gambar' => $berkas_gambar ? $berkas_gambar->id : null,
                 'dokumen_eksternal' => $dokumen_eksternal ? $dokumen_eksternal->id : null,
                 'nama' => 'Diklat ' . ($i + 1),
@@ -64,6 +66,24 @@ class DiklatSeeder extends Seeder
                 'durasi' => $duration,
                 'lokasi' => 'Lokasi ' . ($i + 1),
             ]);
+
+            // Tambahkan peserta berdasarkan kategori diklat
+            if ($kategori_diklat_id == 1) {
+                // Jika internal, tambahkan sejumlah kuota
+                $selectedUsers = array_slice($user_ids, 0, $kuota);
+                foreach ($selectedUsers as $selectedUserId) {
+                    PesertaDiklat::create([
+                        'diklat_id' => $diklat->id,
+                        'peserta' => $selectedUserId,
+                    ]);
+                }
+            } else {
+                // Jika eksternal, tambahkan satu peserta
+                PesertaDiklat::create([
+                    'diklat_id' => $diklat->id,
+                    'peserta' => $user_id,
+                ]);
+            }
         }
     }
 
