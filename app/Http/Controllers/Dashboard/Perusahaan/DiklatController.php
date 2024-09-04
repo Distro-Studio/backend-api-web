@@ -509,6 +509,10 @@ class DiklatController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Tidak dapat menghapus peserta dari diklat eksternal. Silakan lakukan penolakan verifikasi untuk memungkinkan pengajuan ulang.'), Response::HTTP_BAD_REQUEST);
         }
 
+        if ($diklat->status_diklat_id == 4) {
+            return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Tidak dapat menghapus peserta dari diklat yang sudah disetujui.'), Response::HTTP_BAD_REQUEST);
+        }
+
         $peserta_diklat = PesertaDiklat::where('diklat_id', $diklatId)->where('peserta', $userId)->first();
         if (!$peserta_diklat) {
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data peserta diklat tidak ditemukan.'), Response::HTTP_NOT_FOUND);

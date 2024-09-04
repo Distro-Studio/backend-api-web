@@ -119,11 +119,7 @@ class DataTukarJadwalController extends Controller
             'message' => "Karyawan ditukar berhasil didapatkan.",
             'data' => [
                 'user' => $users,
-                'unit_kerja' => [
-                    'id' => $unitKerja->id,
-                    'nama_unit' => $unitKerja->nama_unit,
-                    'jenis_karyawan' => $unitKerja->jenis_karyawan
-                ]
+                'unit_kerja' => $unitKerja
             ]
         ]);
     }
