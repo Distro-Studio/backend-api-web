@@ -9,11 +9,14 @@ use App\Models\Berkas;
 use App\Models\Diklat;
 use App\Models\Notifikasi;
 use Illuminate\Support\Str;
+use App\Models\DataKaryawan;
 use Illuminate\Http\Request;
 use App\Helpers\RandomHelper;
+use App\Models\PesertaDiklat;
 use Illuminate\Http\Response;
 use App\Models\KategoriBerkas;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use App\Helpers\StorageServerHelper;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
@@ -22,7 +25,6 @@ use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\Perusahaan\DiklatExport;
 use App\Http\Requests\StoreDiklatRequest;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
-use App\Models\PesertaDiklat;
 
 class DiklatController extends Controller
 {
@@ -389,6 +391,7 @@ class DiklatController extends Controller
         }
     }
 
+    // TODO: Update masa diklat karyawan disini aja
     public function verifikasiTahap2(Request $request, $diklatId)
     {
         if (!Gate::allows('verifikasi2 diklat')) {
@@ -410,6 +413,26 @@ class DiklatController extends Controller
                 $diklat->verifikator_2 = Auth::id();
                 $diklat->alasan = null;
                 $diklat->save();
+
+                // Update masa diklat karyawan
+                $pesertaDiklat = PesertaDiklat::where('diklat_id', $diklatId)->pluck('peserta');
+                if ($pesertaDiklat->isNotEmpty()) {
+                    foreach ($pesertaDiklat as $userId) {
+                        $dataKaryawan = DataKaryawan::where('user_id', $userId)->first();
+                        if ($dataKaryawan) {
+                            $dataKaryawan->masa_diklat = $diklat->durasi;
+                            $dataKaryawan->save();
+
+                            Log::info("Masa diklat dengan user_id {$userId} telah diupdate untuk diklat ID {$diklat->id}.");
+                        } else {
+                            Log::error("Data karyawan dengan user_id {$userId} tidak ditemukan saat mencoba update masa diklat untuk diklat ID {$diklat->id}.");
+                        }
+                    }
+                    Log::info("Proses update masa diklat selesai untuk diklat ID {$diklat->id} dengan jumlah peserta {$pesertaDiklat->count()}.");
+                } else {
+                    Log::info("Tidak ada peserta untuk diklat ID {$diklat->id} saat melakukan update masa diklat.");
+                }
+
                 return response()->json(new WithoutDataResource(Response::HTTP_OK, "Verifikasi tahap 2 untuk Diklat '{$diklat->nama}' telah disetujui."), Response::HTTP_OK);
             } else {
                 return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Diklat '{$diklat->nama}' tidak dalam status untuk disetujui pada tahap 2."), Response::HTTP_BAD_REQUEST);

@@ -2,17 +2,12 @@
 
 namespace Database\Seeders\Karyawan;
 
-use Carbon\Carbon;
 use App\Models\Ptkp;
 use App\Models\User;
-use App\Models\Berkas;
 use App\Models\Jabatan;
 use App\Models\UnitKerja;
 use App\Models\Kompetensi;
-use App\Models\TrackRecord;
-use Illuminate\Support\Str;
 use App\Models\DataKaryawan;
-use App\Models\DataKeluarga;
 use App\Models\KelompokGaji;
 use App\Models\KategoriAgama;
 use App\Models\KategoriDarah;
@@ -193,7 +188,7 @@ class KaryawanSeeder extends Seeder
                 "no_sip" => "SIP/01/VI/" . rand(1214, 500000),
                 "masa_berlaku_sip" => $tgl_str,
                 "tgl_berakhir_pks" => $tgl_keluar,
-                "masa_diklat" => rand(1, 10),
+                "masa_diklat" => null,
             ]);
 
             // Create Berkas records and associate them with DataKaryawan

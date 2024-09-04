@@ -8,12 +8,9 @@ use App\Models\Berkas;
 use App\Models\Diklat;
 use Illuminate\Support\Str;
 use App\Models\StatusBerkas;
-use App\Models\StatusDiklat;
 use App\Models\PesertaDiklat;
 use App\Models\KategoriBerkas;
-use App\Models\KategoriDiklat;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 
 class DiklatSeeder extends Seeder
@@ -41,7 +38,7 @@ class DiklatSeeder extends Seeder
                 $gambarUrl = '/path/to/diklat/berkas/Diklat_Thumbnail_' . $i;
                 $berkas_gambar = $this->createBerkas($user_id, 'Berkas Diklat - ' . User::find($user_id)->nama, $gambarUrl);
                 $dokumen_eksternal = null;
-                $kuota = rand(10, 25);
+                $kuota = rand(2, 3);
             } else {
                 // Jika kategori diklat adalah Eksternal
                 $gambarUrl = '/path/to/diklat/berkas/Diklat_Eksternal_' . $i;
