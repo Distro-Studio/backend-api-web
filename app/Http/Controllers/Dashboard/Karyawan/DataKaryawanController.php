@@ -502,6 +502,10 @@ class DataKaryawanController extends Controller
           'unit_kerja_tujuan' => $transfer->unit_kerja_tujuans,
           'jabatan_asal' => $transfer->jabatan_asals,
           'jabatan_tujuan' => $transfer->jabatan_tujuans,
+          'kelompok_gaji_asal' => $transfer->kelompok_gaji_asals,
+          'kelompok_gaji_tujuan' => $transfer->kelompok_gaji_tujuans,
+          'role_asal' => $transfer->role_asals,
+          'role_tujuan' => $transfer->role_tujuans,
           'alasan' => $transfer->alasan,
           'dokumen' => env('STORAGE_SERVER_DOMAIN') . $transfer->dokumen,
           'created_at' => $item->created_at,
@@ -558,11 +562,6 @@ class DataKaryawanController extends Controller
       ], Response::HTTP_NOT_FOUND);
     }
 
-    // Menghitung masa kerja dengan helper
-    $tglMasuk = RandomHelper::convertToDateString($karyawan->tgl_masuk);
-    $tglKeluar = $user->tgl_keluar ? RandomHelper::convertToDateString($karyawan->tgl_keluar) : null;
-    $masaKerja = $this->calculateTrackRecordMasaKerja($tglMasuk, $tglKeluar);
-
     return response()->json([
       'status' => Response::HTTP_OK,
       'message' => "Data rekam jejak karyawan '{$user->nama}' berhasil ditampilkan.",
@@ -571,7 +570,7 @@ class DataKaryawanController extends Controller
         'user' => $user,
         'tgl_masuk_karyawan' => $karyawan->tgl_masuk,
         'tgl_keluar_karyawan' => $karyawan->tgl_keluar,
-        'masa_kerja_karyawan' => $masaKerja,
+        // 'masa_kerja_karyawan' => $masaKerja,
         'list_rekam_jejak' => $allFormattedData
       ]
     ], Response::HTTP_OK);

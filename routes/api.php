@@ -214,7 +214,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
         Route::group(['prefix' => '/perusahaan'], function () {
             // ! Diklat ===========>
-            Route::post('/get-data-diklat', [DiklatController::class, 'index']);
+            Route::post('/get-diklat-internal', [DiklatController::class, 'indexInternal']);
+            Route::post('/get-diklat-eksternal', [DiklatController::class, 'indexEksternal']);
             Route::post('/diklat', [DiklatController::class, 'store']);
             Route::get('/diklat/{diklatId}', [DiklatController::class, 'show']);
             Route::get('/diklat/export', [DiklatController::class, 'exportDiklat']);

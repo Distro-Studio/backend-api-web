@@ -28,7 +28,7 @@ use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
 
 class DiklatController extends Controller
 {
-    public function index(Request $request)
+    public function indexInternal(Request $request)
     {
         if (! Gate::allows('view diklat')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
@@ -36,9 +36,7 @@ class DiklatController extends Controller
 
         // Per page
         $limit = $request->input('limit', 10); // Default per page is 10
-
-        $diklat = Diklat::query()->orderBy('created_at', 'desc');
-
+        $diklat = Diklat::where('kategori_diklat_id', 1)->orderBy('created_at', 'desc');
         $filters = $request->all();
 
         // Filter periode tahun jika ada
@@ -58,17 +56,6 @@ class DiklatController extends Controller
                     $query->whereIn('id', $statusDiklat);
                 } else {
                     $query->where('id', '=', $statusDiklat);
-                }
-            });
-        }
-
-        if (isset($filters['kategori_diklat'])) {
-            $kategoriDiklat = $filters['kategori_diklat'];
-            $diklat->whereHas('kategori_diklats', function ($query) use ($kategoriDiklat) {
-                if (is_array($kategoriDiklat)) {
-                    $query->whereIn('id', $kategoriDiklat);
-                } else {
-                    $query->where('id', '=', $kategoriDiklat);
                 }
             });
         }
@@ -144,7 +131,116 @@ class DiklatController extends Controller
 
         return response()->json([
             'status' => Response::HTTP_OK,
-            'message' => 'Data diklat berhasil ditampilkan.',
+            'message' => 'Data diklat internal berhasil ditampilkan.',
+            'data' => $formattedData,
+            'pagination' => $paginationData
+        ], Response::HTTP_OK);
+    }
+
+    public function indexEksternal(Request $request)
+    {
+        if (! Gate::allows('view diklat')) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
+
+        // Per page
+        $limit = $request->input('limit', 10); // Default per page is 10
+        $diklat = Diklat::where('kategori_diklat_id', 2)->orderBy('created_at', 'desc');
+        $filters = $request->all();
+
+        // Filter periode tahun jika ada
+        if ($request->has('periode_tahun')) {
+            $periode_tahun = $filters['periode_tahun'];
+            if (is_array($periode_tahun)) {
+                $diklat->whereIn(DB::raw('YEAR(created_at)'), $periode_tahun);
+            } else {
+                $diklat->whereYear('created_at', $periode_tahun);
+            }
+        }
+
+        if (isset($filters['status_diklat'])) {
+            $statusDiklat = $filters['status_diklat'];
+            $diklat->whereHas('status_diklats', function ($query) use ($statusDiklat) {
+                if (is_array($statusDiklat)) {
+                    $query->whereIn('id', $statusDiklat);
+                } else {
+                    $query->where('id', '=', $statusDiklat);
+                }
+            });
+        }
+
+        // Search
+        if ($request->has('search')) {
+            $searchTerm = '%' . $request->input('search') . '%';
+            $diklat->where(function ($query) use ($searchTerm) {
+                $query->where('nama', 'like', $searchTerm)
+                    ->orWhere('lokasi', 'like', $searchTerm)
+                    ->orWhereHas('kategori_diklats', function ($query) use ($searchTerm) {
+                        $query->where('label', 'like', $searchTerm);
+                    })->orWhereHas('status_diklats', function ($query) use ($searchTerm) {
+                        $query->where('label', 'like', $searchTerm);
+                    });
+            });
+        }
+
+        if ($limit == 0) {
+            $dataDiklat = $diklat->with('kategori_diklats', 'status_diklats', 'peserta_diklat.users')->get();
+            $paginationData = null;
+        } else {
+            $limit = is_numeric($limit) ? (int)$limit : 10;
+            $dataDiklat = $diklat->with('kategori_diklats', 'status_diklats', 'peserta_diklat.users')->paginate($limit);
+
+            $paginationData = [
+                'links' => [
+                    'first' => $dataDiklat->url(1),
+                    'last' => $dataDiklat->url($dataDiklat->lastPage()),
+                    'prev' => $dataDiklat->previousPageUrl(),
+                    'next' => $dataDiklat->nextPageUrl(),
+                ],
+                'meta' => [
+                    'current_page' => $dataDiklat->currentPage(),
+                    'last_page' => $dataDiklat->lastPage(),
+                    'per_page' => $dataDiklat->perPage(),
+                    'total' => $dataDiklat->total(),
+                ]
+            ];
+        }
+
+        if ($dataDiklat->isEmpty()) {
+            return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data diklat tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+        }
+
+        // Format data untuk output
+        $formattedData = $dataDiklat->map(function ($diklat) {
+            $pesertaList = $diklat->peserta_diklat->map(function ($peserta) {
+                return [
+                    'user' => $peserta->users,
+                ];
+            });
+
+            return [
+                'id' => $diklat->id,
+                'nama_diklat' => $diklat->nama,
+                'kategori_diklat' => $diklat->kategori_diklats,
+                'status_diklat' => $diklat->status_diklats,
+                'deskripsi' => $diklat->deskripsi,
+                'kuota' => $diklat->kuota ?? null,
+                'tgl_mulai' => $diklat->tgl_mulai,
+                'tgl_selesai' => $diklat->tgl_selesai,
+                'jam_mulai' => $diklat->jam_mulai,
+                'jam_selesai' => $diklat->jam_selesai,
+                'durasi' => $diklat->durasi,
+                'lokasi' => $diklat->lokasi,
+                'list_peserta' => $pesertaList,
+                'alasan' => $diklat->alasan ?? null,
+                'created_at' => $diklat->created_at,
+                'updated_at' => $diklat->updated_at
+            ];
+        });
+
+        return response()->json([
+            'status' => Response::HTTP_OK,
+            'message' => 'Data diklat eksternal berhasil ditampilkan.',
             'data' => $formattedData,
             'pagination' => $paginationData
         ], Response::HTTP_OK);
