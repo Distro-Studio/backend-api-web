@@ -391,7 +391,6 @@ class DiklatController extends Controller
         }
     }
 
-    // TODO: Update masa diklat karyawan disini aja
     public function verifikasiTahap2(Request $request, $diklatId)
     {
         if (!Gate::allows('verifikasi2 diklat')) {

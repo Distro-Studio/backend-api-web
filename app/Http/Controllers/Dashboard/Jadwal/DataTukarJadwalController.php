@@ -105,7 +105,14 @@ class DataTukarJadwalController extends Controller
         return response()->json([
             'status' => Response::HTTP_OK,
             'message' => "Karyawan ditukar berhasil didapatkan.",
-            'data' => $users
+            'data' => [
+                'user' => $users,
+                'unit_kerja' => $users->data_karyawans->unit_kerjas ? [
+                    'id' => $users->data_karyawans->unit_kerjas->id,
+                    'nama_unit' => $users->data_karyawans->unit_kerjas->nama_unit,
+                    'jenis_karyawan' => $users->data_karyawans->unit_kerjas->jenis_karyawan
+                ] : null
+            ]
         ]);
     }
 
@@ -345,7 +352,7 @@ class DataTukarJadwalController extends Controller
                 'status_penukaran' => $tukar_jadwal->status_tukar_jadwals,
                 'kategori_penukaran' => $tukar_jadwal->kategori_tukar_jadwals,
                 'unit_kerja' => $tukar_jadwal->user_pengajuans->data_karyawans->unit_kerjas,
-                'karyawan_pengajuan' => [
+                'karyawan_pengajuan' => $tukar_jadwal->user_pengajuans ? [
                     'id' => $tukar_jadwal->user_pengajuans->id,
                     'nama' => $tukar_jadwal->user_pengajuans->nama,
                     'email_verified_at' => $tukar_jadwal->user_pengajuans->email_verified_at,
@@ -355,8 +362,8 @@ class DataTukarJadwalController extends Controller
                     'status_aktif' => $tukar_jadwal->user_pengajuans->status_aktif,
                     'created_at' => $tukar_jadwal->user_pengajuans->created_at,
                     'updated_at' => $tukar_jadwal->user_pengajuans->updated_at
-                ],
-                'karyawan_ditukar' => [
+                ] : null,
+                'karyawan_ditukar' => $tukar_jadwal->user_ditukars ? [
                     'id' => $tukar_jadwal->user_ditukars->id,
                     'nama' => $tukar_jadwal->user_ditukars->nama,
                     'email_verified_at' => $tukar_jadwal->user_ditukars->email_verified_at,
@@ -366,25 +373,25 @@ class DataTukarJadwalController extends Controller
                     'status_aktif' => $tukar_jadwal->user_ditukars->status_aktif,
                     'created_at' => $tukar_jadwal->user_ditukars->created_at,
                     'updated_at' => $tukar_jadwal->user_ditukars->updated_at
-                ],
+                ] : null,
                 'pertukaran_jadwal' => [
                     [
-                        'jadwal_karyawan_pengajuan' => [
+                        'jadwal_karyawan_pengajuan' => $tukar_jadwal->jadwal_pengajuans ? [
                             'id' => $tukar_jadwal->jadwal_pengajuans->id,
                             'tgl_mulai' => $tukar_jadwal->jadwal_pengajuans->tgl_mulai,
                             'tgl_selesai' => $tukar_jadwal->jadwal_pengajuans->tgl_selesai,
                             'shift' => $tukar_jadwal->jadwal_pengajuans->shifts,
                             'created_at' => $tukar_jadwal->jadwal_pengajuans->created_at,
                             'updated_at' => $tukar_jadwal->jadwal_pengajuans->updated_at
-                        ],
-                        'jadwal_karyawan_ditukar' => [
+                        ] : null,
+                        'jadwal_karyawan_ditukar' => $tukar_jadwal->jadwal_ditukars ? [
                             'id' => $tukar_jadwal->jadwal_ditukars->id,
                             'tgl_mulai' => $tukar_jadwal->jadwal_ditukars->tgl_mulai,
                             'tgl_selesai' => $tukar_jadwal->jadwal_ditukars->tgl_selesai,
                             'shift' => $tukar_jadwal->jadwal_ditukars->shifts,
                             'created_at' => $tukar_jadwal->jadwal_ditukars->created_at,
                             'updated_at' => $tukar_jadwal->jadwal_ditukars->updated_at
-                        ]
+                        ] : null
                     ]
                 ],
                 'created_at' => $tukar_jadwal->created_at,
