@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Sep 03, 2024 at 07:14 PM
+-- Generation Time: Sep 04, 2024 at 10:15 AM
 -- Server version: 10.5.22-MariaDB-cll-lve
 -- PHP Version: 8.3.9
 
@@ -323,8 +323,8 @@ INSERT INTO `data_karyawans` (`id`, `user_id`, `email`, `no_rm`, `no_manulife`, 
 (48, 48, 'user46@example.com', '4241828', '3229182', '2014-05-22', '2023-11-07', 8, 6, 8, 76433, 95394, 937079, 62152, 38696, '46254097', '29224274', 'Adv.', 'Magetan', '1956-09-18', 'be former rear pool driver porch meal bottle meet cloud same', '73438538', '481515518', '268708105', '2023-11-07', 29, '211426986', '318608031', 0, 3, 11, 142, 40, 12, 'IJ/VII/136799562', 1942, '57878737', 1, 1, 'STR/01/RA/289426', '2028-04-06', 'SIP/01/VI/471345', '2028-04-06', 6, '2023-11-07', 8, NULL, 1, '2024-08-29 08:10:34', '2024-08-29 08:10:34'),
 (49, 49, 'user47@example.com', '3216531', '3297626', '2013-10-02', '2023-02-17', 9, 10, 6, 175024, 88555, 463654, 38684, 83578, '9435341', '22180808', 'Adv.', 'Bogor', '1910-01-14', 'be former rear pool driver porch meal bottle meet cloud same', '293728240', '5064815', '144700112', '2023-02-17', 22, '267393991', '29802647', 0, 5, 11, 79, 36, 8, 'IJ/VII/216004364', 1822, '495331637', 3, 7, 'STR/01/RA/101769', '2024-01-17', 'SIP/01/VI/265931', '2024-01-17', 8, '2023-02-17', 7, NULL, 1, '2024-08-29 08:10:34', '2024-08-29 08:10:34'),
 (50, 50, 'fatwalinovera@gmail.com', '33319', '796788', '07-07-2018', '2024-11-06', 6, 9, 10, 70422, 4315, 676504, 47764, 18741, '7404864', '1234123412341234', 'Ak.', 'Boyolali', '1905-12-25', 'be former rear pool driver porch meal bottle meet cloud same', '49579815', '252963535', '426315229', '2024-11-06', 10, '287455758', '395329587', 1, 1, 9, 297, 131, 7, 'IJ/VII/259813122', 2005, '1234123412341234', 3, 23, 'STR/01/RA/377398', '2024-08-29T00:00:00.000Z', 'SIP/01/VI/69969', '2024-08-29T00:00:00.000Z', 3, '06-11-2024', 3, NULL, 1, '2024-08-29 08:10:35', '2024-08-30 22:54:48'),
-(51, 51, 'candhy.fadhila.arsyad@gmail.com', '526321', '3308922', '16-02-2018', '2024-05-10', 3, 4, 4, 219304, 47973, 354123, 45823, 75950, '23305258', '1234567891012131', 'drg.', 'Blitar', '1949-06-13', 'be former rear pool driver porch meal bottle meet cloud same', '454028861', '154203924', '131317742', '2024-05-10', 7, '93887299', '410600201', 0, 1, 12, 72, 117, 9, 'IJ/VII/311840660', 1944, '1234567891012131', 3, 13, 'STR/01/RA/108186', '2024-12-21T00:00:00.000Z', 'SIP/01/VI/228289', '2024-12-21T00:00:00.000Z', 3, '10-05-2024', 10, NULL, 0, '2024-08-29 08:10:35', '2024-08-31 01:17:51'),
-(55, 55, 'adiyatmaharis21@gmail.com', '56886585', '5847474', '01-09-2024', NULL, 1, 3, 3, 2000000, 120000, 120000, 78000, 560000, '337405161001000202', '3374070504010003', 'Prof.', 'Semarang', '2024-09-28', 'jalan test', '82226582306', '231312', '321321312', NULL, NULL, '321321312', '76967955', 1, 1, 2, 170, 85, 9, '8931803810', 2023, '3374070504010003', 2, 1, '7381798', '2024-09-30T17:00:00.000Z', '123123', NULL, 3, '25-10-2024', NULL, 1, 1, '2024-08-31 22:04:43', '2024-09-02 19:08:22'),
+(51, 51, 'candhy.fadhila.arsyad@gmail.com', '526321', '3308922', '16-02-2018', '2024-05-10', 4, 4, 4, 219304, 47973, 354123, 45823, 75950, '23305258', '1234567891012131', 'drg.', 'Blitar', '1949-06-13', 'be former rear pool driver porch meal bottle meet cloud same', '454028861', '154203924', '131317742', '2024-05-10', 7, '93887299', '410600201', 0, 1, 12, 72, 117, 9, 'IJ/VII/311840660', 1944, '1234567891012131', 3, 13, 'STR/01/RA/108186', '2024-12-21T00:00:00.000Z', 'SIP/01/VI/228289', '2024-12-21T00:00:00.000Z', 3, '10-05-2024', 10, NULL, 0, '2024-08-29 08:10:35', '2024-09-03 05:29:30'),
+(55, 55, 'adiyatmaharis21@gmail.com', '56886585', '5847474', '01-09-2024', NULL, 6, 3, 3, 2000000, 120000, 120000, 78000, 560000, '337405161001000202', '3374070504010003', 'Prof.', 'Semarang', '2024-09-28', 'jalan test', '82226582306', '231312', '321321312', NULL, NULL, '321321312', '76967955', 1, 1, 2, 170, 85, 9, '8931803810', 2023, '3374070504010003', 2, 1, '7381798', '2024-09-30T17:00:00.000Z', '123123', NULL, 3, '25-10-2024', NULL, 1, 1, '2024-08-31 22:04:43', '2024-09-03 05:29:02'),
 (56, 56, 'superadmin@example.com', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1, '2024-08-29 08:10:20', '2024-08-29 08:10:20');
 
 -- --------------------------------------------------------
@@ -549,7 +549,7 @@ CREATE TABLE `diklats` (
   `kategori_diklat_id` bigint(20) UNSIGNED NOT NULL,
   `status_diklat_id` bigint(20) UNSIGNED NOT NULL,
   `deskripsi` varchar(255) NOT NULL,
-  `kuota` int(11) NOT NULL,
+  `kuota` int(11) DEFAULT NULL,
   `tgl_mulai` varchar(255) NOT NULL,
   `tgl_selesai` varchar(255) NOT NULL,
   `jam_mulai` varchar(255) NOT NULL,
@@ -1768,7 +1768,6 @@ CREATE TABLE `pengumumans` (
 --
 
 INSERT INTO `pengumumans` (`id`, `judul`, `konten`, `is_read`, `tgl_berakhir`, `created_at`, `updated_at`) VALUES
-(1, 'Pengumuman 1', 'Konten pengumuman 1', 0, '2024-08-30', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
 (2, 'Pengumuman 2', 'Konten pengumuman 2', 0, '2024-08-31', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
 (3, 'Pengumuman 3', 'Konten pengumuman 3', 0, '2024-09-01', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
 (4, 'Pengumuman 4', 'Konten pengumuman 4', 0, '2024-09-02', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
@@ -1811,9 +1810,9 @@ INSERT INTO `pengurang_gajis` (`id`, `data_karyawan_id`, `premi_id`, `created_at
 (11, 54, 1, '2024-08-31 21:59:28', '2024-08-31 21:59:28'),
 (12, 54, 2, '2024-08-31 21:59:28', '2024-08-31 21:59:28'),
 (13, 54, 3, '2024-08-31 21:59:28', '2024-08-31 21:59:28'),
-(20, 55, 1, '2024-09-02 19:08:22', '2024-09-02 19:08:22'),
-(21, 55, 2, '2024-09-02 19:08:22', '2024-09-02 19:08:22'),
-(22, 55, 3, '2024-09-02 19:08:22', '2024-09-02 19:08:22');
+(23, 55, 1, '2024-09-03 05:29:02', '2024-09-03 05:29:02'),
+(24, 55, 2, '2024-09-03 05:29:02', '2024-09-03 05:29:02'),
+(25, 55, 3, '2024-09-03 05:29:02', '2024-09-03 05:29:02');
 
 -- --------------------------------------------------------
 
@@ -2057,7 +2056,10 @@ INSERT INTO `personal_access_tokens` (`id`, `tokenable_type`, `tokenable_id`, `n
 (109, 'App\\Models\\User', 1, 'create_token_13a65cf1-63f8-440a-958f-565da3f356d9', 'ad266ff943d7afbf78d7ff5e02c32cae547b4f66345c607297efc2a4077e6169', '[\"*\"]', '2024-09-02 23:23:30', NULL, '2024-09-02 20:45:27', '2024-09-02 23:23:30'),
 (110, 'App\\Models\\User', 11, 'TLogin', '06440cd3910b3f1d4cf95632b725ffa8eac57be9fc24e14d12dfcde18da0d559', '[\"*\"]', '2024-09-03 04:07:21', NULL, '2024-09-03 04:07:10', '2024-09-03 04:07:21'),
 (112, 'App\\Models\\User', 1, 'create_token_a6febfe3-63d2-436c-9c9a-2c9d1be9913e', 'd7bdb020929343a49e2107ac8afb0cfd7fb3a88d4660718df0a422e6fd42f666', '[\"*\"]', '2024-09-03 03:11:28', NULL, '2024-09-03 03:10:30', '2024-09-03 03:11:28'),
-(113, 'App\\Models\\User', 1, 'create_token_c6c51c6b-ebf9-4433-88f1-ff45902bc02d', '6d4dd2307806c6031f0799e15a3fb3836f56a0a3f03ef0bb6662760a430cc7be', '[\"*\"]', '2024-09-03 05:14:41', NULL, '2024-09-03 04:56:13', '2024-09-03 05:14:41');
+(113, 'App\\Models\\User', 1, 'create_token_c6c51c6b-ebf9-4433-88f1-ff45902bc02d', '6d4dd2307806c6031f0799e15a3fb3836f56a0a3f03ef0bb6662760a430cc7be', '[\"*\"]', '2024-09-03 05:29:35', NULL, '2024-09-03 04:56:13', '2024-09-03 05:29:35'),
+(114, 'App\\Models\\User', 1, 'create_token_04f2613b-5447-476b-a1da-dbd4167ab602', '1c1033a8a405d0f5e1d299b136c3b449d0e16a1cc7f4b258e5cf1c6036654ac5', '[\"*\"]', '2024-09-03 18:10:44', NULL, '2024-09-03 18:10:40', '2024-09-03 18:10:44'),
+(115, 'App\\Models\\User', 12, 'TLogin', 'e9de697926bdd47904b65faf611b49fa8ef79fd1ad7605885cb04f88d303aaed', '[\"*\"]', '2024-09-04 01:11:49', NULL, '2024-09-04 01:11:44', '2024-09-04 01:11:49'),
+(116, 'App\\Models\\User', 1, 'create_token_c5e53be6-71b6-449b-85b1-5ea72700bde8', '0978885e4a42bb9b7343730fda31925999c708a97994e9de8dbeba7f675dec5a', '[\"*\"]', '2024-09-03 19:23:39', NULL, '2024-09-03 18:32:44', '2024-09-03 19:23:39');
 
 -- --------------------------------------------------------
 
@@ -4305,7 +4307,7 @@ ALTER TABLE `pengumumans`
 -- AUTO_INCREMENT for table `pengurang_gajis`
 --
 ALTER TABLE `pengurang_gajis`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=23;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=26;
 
 --
 -- AUTO_INCREMENT for table `penilaians`
@@ -4329,7 +4331,7 @@ ALTER TABLE `permissions`
 -- AUTO_INCREMENT for table `personal_access_tokens`
 --
 ALTER TABLE `personal_access_tokens`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=114;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=117;
 
 --
 -- AUTO_INCREMENT for table `pertanyaans`

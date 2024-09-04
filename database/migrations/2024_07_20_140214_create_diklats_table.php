@@ -19,7 +19,7 @@ return new class extends Migration
             $table->foreignId('kategori_diklat_id')->constrained('kategori_diklats'); // 1 = Internal 2 = Eksternal
             $table->foreignId('status_diklat_id')->constrained('status_diklats');
             $table->string('deskripsi');
-            $table->integer('kuota');
+            $table->integer('kuota')->nullable();
             $table->string('tgl_mulai');
             $table->string('tgl_selesai');
             $table->string('jam_mulai');

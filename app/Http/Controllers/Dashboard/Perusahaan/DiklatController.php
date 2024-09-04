@@ -39,9 +39,11 @@ class DiklatController extends Controller
 
         $diklat = Diklat::query()->orderBy('created_at', 'desc');
 
+        $filters = $request->all();
+
         // Filter periode tahun jika ada
         if ($request->has('periode_tahun')) {
-            $periode_tahun = $request->input('periode_tahun');
+            $periode_tahun = $filters['periode_tahun'];
             if (is_array($periode_tahun)) {
                 $diklat->whereIn(DB::raw('YEAR(created_at)'), $periode_tahun);
             } else {
@@ -56,6 +58,17 @@ class DiklatController extends Controller
                     $query->whereIn('id', $statusDiklat);
                 } else {
                     $query->where('id', '=', $statusDiklat);
+                }
+            });
+        }
+
+        if (isset($filters['kategori_diklat'])) {
+            $kategoriDiklat = $filters['kategori_diklat'];
+            $diklat->whereHas('kategori_diklats', function ($query) use ($kategoriDiklat) {
+                if (is_array($kategoriDiklat)) {
+                    $query->whereIn('id', $kategoriDiklat);
+                } else {
+                    $query->where('id', '=', $kategoriDiklat);
                 }
             });
         }
@@ -115,14 +128,14 @@ class DiklatController extends Controller
                 'kategori_diklat' => $diklat->kategori_diklats,
                 'status_diklat' => $diklat->status_diklats,
                 'deskripsi' => $diklat->deskripsi,
-                'kuota' => $diklat->kuota,
+                'kuota' => $diklat->kuota ?? null,
                 'tgl_mulai' => $diklat->tgl_mulai,
                 'tgl_selesai' => $diklat->tgl_selesai,
                 'jam_mulai' => $diklat->jam_mulai,
                 'jam_selesai' => $diklat->jam_selesai,
                 'durasi' => $diklat->durasi,
                 'lokasi' => $diklat->lokasi,
-                'list_peserta' => $pesertaList, // List of participants
+                'list_peserta' => $pesertaList,
                 'alasan' => $diklat->alasan ?? null,
                 'created_at' => $diklat->created_at,
                 'updated_at' => $diklat->updated_at
