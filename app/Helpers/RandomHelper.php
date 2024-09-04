@@ -79,11 +79,9 @@ class RandomHelper
 		try {
 			// Konversi time string ke objek Carbon
 			$carbonDate = Carbon::createFromFormat('H:i:s', $timeString);
-
-			// Mengembalikan waktu dalam satuan detik
 			return ($carbonDate->hour * 3600) + ($carbonDate->minute * 60) + $carbonDate->second;
 		} catch (\Exception $e) {
-			return null; // Atau tangani pengecualian sesuai kebutuhan Anda
+			return null;
 		}
 	}
 
@@ -98,7 +96,7 @@ class RandomHelper
 		}
 	}
 
-	// ini untuk -> 28/08/2024
+	// ini untuk -> 28-08-2024
 	public static function convertSpecialDateFormat($dateString)
 	{
 		try {

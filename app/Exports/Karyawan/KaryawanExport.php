@@ -155,6 +155,21 @@ class KaryawanExport implements FromCollection, WithHeadings, WithMapping
             });
         }
 
+        if (isset($this->filters['masa_diklat'])) {
+            $masaDiklatJam = $this->filters['masa_diklat'];
+            if (is_array($masaDiklatJam)) {
+                $karyawan->where(function ($query) use ($masaDiklatJam) {
+                    foreach ($masaDiklatJam as $jam) {
+                        $detik = $jam * 3600; // Konversi dari jam ke detik
+                        $query->orWhere('masa_diklat', '<=', $detik);
+                    }
+                });
+            } else {
+                $detik = $masaDiklatJam * 3600; // Konversi dari jam ke detik
+                $karyawan->where('masa_diklat', '<=', $detik);
+            }
+        }
+
         return $karyawan->get();
     }
 
@@ -273,9 +288,16 @@ class KaryawanExport implements FromCollection, WithHeadings, WithMapping
             $karyawan->no_str,
             Carbon::parse($karyawan->masa_berlaku_str)->format('d-m-Y'),
             $tgl_berakhir_pks,
-            $karyawan->masa_diklat,
+            $this->formatDuration($karyawan->masa_diklat),
             Carbon::parse($karyawan->created_at)->format('d-m-Y H:i:s'),
             Carbon::parse($karyawan->updated_at)->format('d-m-Y H:i:s')
         ];
+    }
+
+    private function formatDuration($seconds)
+    {
+        $hours = floor($seconds / 3600);
+        $minutes = floor(($seconds % 3600) / 60);
+        return sprintf("%d jam %d menit", $hours, $minutes);
     }
 }

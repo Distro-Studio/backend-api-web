@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Dashboard\Pengaturan\Akun;
 
-use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
@@ -17,6 +16,12 @@ class UserPasswordController extends Controller
         // TODO: Buat validasi email dahulu
 
         $user = Auth::user();
+
+        $dataKaryawan = $user->data_karyawans;
+        if ($dataKaryawan && $dataKaryawan->email == 'super_admin@admin.rski') {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak dapat memperbarui kata sandi pada role Super Admin.'), Response::HTTP_FORBIDDEN);
+        }
+
         $data = $request->validated();
         if (isset($data['password'])) {
             // Check if the current password is correct

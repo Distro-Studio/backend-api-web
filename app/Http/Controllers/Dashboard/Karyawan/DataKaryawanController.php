@@ -1188,6 +1188,21 @@ class DataKaryawanController extends Controller
       });
     }
 
+    if (isset($filters['masa_diklat'])) {
+      $masaDiklatJam = $filters['masa_diklat'];
+      if (is_array($masaDiklatJam)) {
+        $karyawan->where(function ($query) use ($masaDiklatJam) {
+          foreach ($masaDiklatJam as $jam) {
+            $detik = $jam * 3600; // Konversi dari jam ke detik
+            $query->orWhere('masa_diklat', '<=', $detik);
+          }
+        });
+      } else {
+        $detik = $masaDiklatJam * 3600; // Konversi dari jam ke detik
+        $karyawan->where('masa_diklat', '<=', $detik);
+      }
+    }
+
     // Search
     if (isset($filters['search'])) {
       $searchTerm = '%' . $filters['search'] . '%';
