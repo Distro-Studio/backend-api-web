@@ -67,7 +67,19 @@ class DataTukarJadwalController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Jadwal karyawan pengajuan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
         }
 
-        $unitKerjaId = $jadwal->users->data_karyawans->unit_kerjas->id;
+        // Ambil data_karyawans dari user yang terkait dengan jadwal
+        $dataKaryawan = $jadwal->users->data_karyawans()->first();
+        if (!$dataKaryawan) {
+            return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data karyawan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+        }
+
+        // Ambil unit kerja yang terkait dengan data karyawan
+        $unitKerja = $dataKaryawan->unit_kerjas()->first();
+        if (!$unitKerja) {
+            return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Unit kerja tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+        }
+
+        $unitKerjaId = $unitKerja->id;
 
         // Gunakan helper untuk memastikan tanggal dikonversi dari format d/m/Y
         // $tglMulai = Carbon::parse($jadwal->tgl_mulai)->format('Y-m-d');
@@ -107,11 +119,11 @@ class DataTukarJadwalController extends Controller
             'message' => "Karyawan ditukar berhasil didapatkan.",
             'data' => [
                 'user' => $users,
-                'unit_kerja' => $users->data_karyawans->unit_kerjas ? [
-                    'id' => $users->data_karyawans->unit_kerjas->id,
-                    'nama_unit' => $users->data_karyawans->unit_kerjas->nama_unit,
-                    'jenis_karyawan' => $users->data_karyawans->unit_kerjas->jenis_karyawan
-                ] : null
+                'unit_kerja' => [
+                    'id' => $unitKerja->id,
+                    'nama_unit' => $unitKerja->nama_unit,
+                    'jenis_karyawan' => $unitKerja->jenis_karyawan
+                ]
             ]
         ]);
     }
