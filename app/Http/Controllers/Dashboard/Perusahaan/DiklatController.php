@@ -305,7 +305,7 @@ class DiklatController extends Controller
             $durasi = $tglJamMulai->diffInSeconds($tglJamSelesai);
 
             if (Gate::allows('verifikasi2 diklat')) {
-                $statusDiklatId = 4;
+                $statusDiklatId = 2;
                 $data['verifikator_1'] = Auth::id();
             } elseif (Gate::allows('verifikasi1 diklat')) {
                 $statusDiklatId = 2;
