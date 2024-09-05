@@ -318,8 +318,37 @@ class DataLemburController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data lembur karyawan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
         }
 
-        $formattedData = $dataLembur->map(function ($lembur) {
+        $nonShiftData = NonShift::find(1);
+
+        $formattedData = $dataLembur->map(function ($lembur) use ($nonShiftData) {
             $unitKerja = $lembur->users->data_karyawans->unit_kerjas ?? null;
+            $jenisKaryawan = $unitKerja->jenis_karyawan ?? null;
+
+            $jadwalData = null;
+            $jadwalNonShiftData = null;
+
+            if ($jenisKaryawan === 1) { // Shift
+                $jadwalData = $lembur->jadwals ? [
+                    'id' => $lembur->jadwals->id,
+                    'user_id' => $lembur->jadwals->user_id,
+                    'tgl_mulai' => $lembur->jadwals->tgl_mulai,
+                    'tgl_selesai' => $lembur->jadwals->tgl_selesai,
+                    'shift' => $lembur->jadwals->shifts,
+                    'created_at' => $lembur->jadwals->created_at,
+                    'updated_at' => $lembur->jadwals->updated_at
+                ] : null;
+            } elseif ($jenisKaryawan === 0) { // Non-shift
+                $jadwalNonShiftData = $nonShiftData ? [
+                    'id' => $nonShiftData->id,
+                    'nama' => $nonShiftData->nama,
+                    'jam_from' => $nonShiftData->jam_from,
+                    'jam_to' => $nonShiftData->jam_to,
+                    'deleted_at' => $nonShiftData->deleted_at,
+                    'created_at' => $nonShiftData->created_at,
+                    'updated_at' => $nonShiftData->updated_at
+                ] : null;
+            }
+
             return [
                 'id' => $lembur->id,
                 'user' => [
@@ -338,15 +367,8 @@ class DataLemburController extends Controller
                     'nama_unit' => $unitKerja->nama_unit,
                     'jenis_karyawan' => $unitKerja->jenis_karyawan,
                 ] : null,
-                'jadwal' => $lembur->jadwals ? [
-                    'id' => $lembur->jadwals->id,
-                    'user_id' => $lembur->jadwals->user_id,
-                    'tgl_mulai' => $lembur->jadwals->tgl_mulai,
-                    'tgl_selesai' => $lembur->jadwals->tgl_selesai,
-                    'shift' => $lembur->jadwals->shifts,
-                    'created_at' => $lembur->jadwals->created_at,
-                    'updated_at' => $lembur->jadwals->updated_at
-                ] : null,
+                'jadwal_shift' => $jadwalData,
+                'jadwal_non_shift' => $jadwalNonShiftData,
                 'tgl_pengajuan' => $lembur->tgl_pengajuan,
                 'durasi' => $lembur->durasi,
                 'catatan' => $lembur->catatan,

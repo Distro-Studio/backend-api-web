@@ -256,13 +256,6 @@ class DataTransferKaryawanController extends Controller
                     'created_at' => $user->created_at,
                     'updated_at' => $user->updated_at
                 ],
-                // 'role' => [
-                //     'id' => $role->id,
-                //     'name' => $role->name,
-                //     'deskripsi' => $role->deskripsi,
-                //     'created_at' => $role->created_at,
-                //     'updated_at' => $role->updated_at
-                // ], // role_id
                 'nik' => $data_karyawan->nik,
                 'kategori_transfer' => $transfer->kategori_transfer_karyawans,
                 'tgl_pengajuan' => $transfer->created_at,
