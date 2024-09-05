@@ -36,7 +36,7 @@
 		<h2>{{ $user->nama }}</h2>
 		<p>telah berpartisipasi dalam Diklat</p>
 		<h3>{{ $diklat->nama }}</h3>
-		<p>Pada tanggal {{ \Carbon\Carbon::parse($diklat->tgl_mulai) }}</p>
+		<p>Pada tanggal {{ \Carbon\Carbon::parse($diklat->tgl_mulai)->locale('id')->isoFormat('D MMMM YYYY') }}</p>
 	</div>
 </body>
 

@@ -23,6 +23,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\Perusahaan\DiklatExport;
+use App\Helpers\GenerateCertificateHelper;
 use App\Http\Requests\StoreDiklatRequest;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
 
@@ -530,6 +531,10 @@ class DiklatController extends Controller
                         if ($dataKaryawan) {
                             $dataKaryawan->masa_diklat = $diklat->durasi;
                             $dataKaryawan->save();
+
+                            // Get user for generate certificate
+                            $user = $dataKaryawan->users;
+                            GenerateCertificateHelper::generateCertificate($diklat, $user);
 
                             Log::info("Masa diklat dengan user_id {$userId} telah diupdate untuk diklat ID {$diklat->id}.");
                         } else {

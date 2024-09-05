@@ -677,7 +677,7 @@ class DataKaryawanController extends Controller
         'file_id' => $item->file_id,
         'nama' => $item->nama,
         'kategori_dokumen' => $item->kategori_berkas,
-        'path' => $item->path,
+        'path' => $fileUrl,
         'tgl_upload' => $item->tgl_upload,
         'nama_file' => $item->nama_file,
         'ext' => $item->ext,
