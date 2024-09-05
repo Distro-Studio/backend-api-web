@@ -532,9 +532,12 @@ class DiklatController extends Controller
                             $dataKaryawan->masa_diklat = $diklat->durasi;
                             $dataKaryawan->save();
 
-                            // Get user for generate certificate
-                            $user = $dataKaryawan->users;
-                            GenerateCertificateHelper::generateCertificate($diklat, $user);
+                            // Generate Certificate
+                            if ($diklat->kategori_diklat_id == 1) {
+                                $user = $dataKaryawan->users;
+                                GenerateCertificateHelper::generateCertificate($diklat, $user);
+                                Log::info("Peserta Diklat Internal '{$diklat->nama}': user_id {$userId} telah mendapatkan sertifikat.");
+                            }
 
                             Log::info("Masa diklat dengan user_id {$userId} telah diupdate untuk diklat ID {$diklat->id}.");
                         } else {
@@ -546,7 +549,12 @@ class DiklatController extends Controller
                     Log::info("Tidak ada peserta untuk diklat ID {$diklat->id} saat melakukan update masa diklat.");
                 }
 
-                return response()->json(new WithoutDataResource(Response::HTTP_OK, "Verifikasi tahap 2 untuk Diklat '{$diklat->nama}' telah disetujui."), Response::HTTP_OK);
+                $message = "Verifikasi tahap 2 untuk Diklat '{$diklat->nama}' telah disetujui.";
+                if ($diklat->kategori_diklat_id == 1) {
+                    $message .= " Sertifikat telah dikirim ke masing-masing peserta.";
+                }
+
+                return response()->json(new WithoutDataResource(Response::HTTP_OK, $message), Response::HTTP_OK);
             } else {
                 return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Diklat '{$diklat->nama}' tidak dalam status untuk disetujui pada tahap 2."), Response::HTTP_BAD_REQUEST);
             }

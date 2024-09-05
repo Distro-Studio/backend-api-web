@@ -34,7 +34,7 @@
 		<h1>Sertifikat Keikutsertaan</h1>
 		<p>Ini menyatakan bahwa</p>
 		<h2>{{ $user->nama }}</h2>
-		<p>telah berpartisipasi dalam Diklat</p>
+		<p>telah berpartisipasi dalam Diklat Internal</p>
 		<h3>{{ $diklat->nama }}</h3>
 		<p>Pada tanggal {{ \Carbon\Carbon::parse($diklat->tgl_mulai)->locale('id')->isoFormat('D MMMM YYYY') }}</p>
 	</div>
