@@ -10,7 +10,7 @@ use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\FromCollection;
 
-class DiklatExport implements FromCollection, WithHeadings, WithMapping
+class DiklatInternalExport implements FromCollection, WithHeadings, WithMapping
 {
     use Exportable;
 
@@ -18,7 +18,7 @@ class DiklatExport implements FromCollection, WithHeadings, WithMapping
 
     public function collection()
     {
-        return Diklat::with(['kategori_diklats', 'status_diklats', 'peserta_diklat.users'])->get();
+        return Diklat::with(['kategori_diklats', 'status_diklats', 'peserta_diklat.users'])->where('kategori_diklat_id', 1)->get();
     }
 
     public function headings(): array
@@ -67,7 +67,7 @@ class DiklatExport implements FromCollection, WithHeadings, WithMapping
             $this->formatDuration($diklat->durasi),
             $diklat->lokasi,
             Carbon::parse($diklat->created_at)->format('d-m-Y H:i:s'),
-            Carbon::parse($diklat->updated_at)->format('d-m-Y H:i:s'),
+            Carbon::parse($diklat->updated_at)->format('d-m-Y H:i:s')
         ];
     }
 

@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Dashboard\Perusahaan;
 
 use Illuminate\Http\Response;
 use App\Models\JenisPenilaian;
-use Illuminate\Support\Collection;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Gate;
 use App\Http\Requests\StoreJenisPenilaianRequest;

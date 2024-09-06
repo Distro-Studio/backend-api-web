@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Dashboard\Perusahaan;
 
+use App\Exports\Perusahaan\DiklatEksternalExport;
 use Exception;
 use Carbon\Carbon;
 use App\Models\User;
@@ -23,6 +24,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\Perusahaan\DiklatExport;
+use App\Exports\Perusahaan\DiklatInternalExport;
 use App\Helpers\GenerateCertificateHelper;
 use App\Http\Requests\StoreDiklatRequest;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
@@ -442,20 +444,37 @@ class DiklatController extends Controller
         ], Response::HTTP_OK);
     }
 
-    public function exportDiklat()
+    public function exportDiklatInternal()
     {
         if (!Gate::allows('export diklat')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
-        $dataCuti = Diklat::all();
-        if ($dataCuti->isEmpty()) {
-            // Kembalikan respons JSON ketika tabel kosong
-            return response()->json(new WithoutDataResource(Response::HTTP_OK, 'Tidak ada data diklat yang tersedia untuk diekspor.'), Response::HTTP_OK);
+        $diklat_internal = Diklat::where('kategori_diklat_id', 1)->get();
+        if ($diklat_internal->isEmpty()) {
+            return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Tidak ada data diklat internal yang tersedia untuk diekspor.'), Response::HTTP_NOT_FOUND);
         }
 
         try {
-            return Excel::download(new DiklatExport(), 'perusahaan-diklat.xls');
+            return Excel::download(new DiklatInternalExport(), 'perusahaan-diklat-internal.xls');
+        } catch (\Throwable $e) {
+            return response()->json(new WithoutDataResource(Response::HTTP_INTERNAL_SERVER_ERROR, 'Maaf sepertinya terjadi error. Message: ' . $e->getMessage()), Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    public function exportDiklatEksternal()
+    {
+        if (!Gate::allows('export diklat')) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
+
+        $diklat_eksternal = Diklat::where('kategori_diklat_id', 2)->get();
+        if ($diklat_eksternal->isEmpty()) {
+            return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Tidak ada data diklat eksternal yang tersedia untuk diekspor.'), Response::HTTP_NOT_FOUND);
+        }
+
+        try {
+            return Excel::download(new DiklatEksternalExport(), 'perusahaan-diklat-eksternal.xls');
         } catch (\Throwable $e) {
             return response()->json(new WithoutDataResource(Response::HTTP_INTERNAL_SERVER_ERROR, 'Maaf sepertinya terjadi error. Message: ' . $e->getMessage()), Response::HTTP_INTERNAL_SERVER_ERROR);
         }
