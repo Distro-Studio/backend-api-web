@@ -685,10 +685,9 @@ class DataTukarJadwalController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
-        $dataCuti = TukarJadwal::all(); // Sesuaikan dengan model atau query Anda
-        if ($dataCuti->isEmpty()) {
-            // Kembalikan respons JSON ketika tabel kosong
-            return response()->json(new WithoutDataResource(Response::HTTP_OK, 'Tidak ada data tukar jadwal karyawan yang tersedia untuk diekspor.'), Response::HTTP_OK);
+        $dataTukarJadwal = TukarJadwal::all();
+        if ($dataTukarJadwal->isEmpty()) {
+            return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Tidak ada data tukar jadwal karyawan yang tersedia untuk diekspor.'), Response::HTTP_NOT_FOUND);
         }
 
         try {

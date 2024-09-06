@@ -483,7 +483,6 @@ class DataPresensiController extends Controller
         }
 
         $presensiCount = Presensi::whereBetween('jam_masuk', [$startDate, $endDate])->count();
-
         if ($presensiCount === 0) {
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data presensi tidak ditemukan untuk periode yang diminta.'), Response::HTTP_NOT_FOUND);
         }

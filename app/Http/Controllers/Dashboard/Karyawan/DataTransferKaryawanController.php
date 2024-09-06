@@ -412,10 +412,9 @@ class DataTransferKaryawanController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
-        $dataCuti = TransferKaryawan::all();
-        if ($dataCuti->isEmpty()) {
-            // Kembalikan respons JSON ketika tabel kosong
-            return response()->json(new WithoutDataResource(Response::HTTP_OK, 'Tidak ada data transfer karyawan yang tersedia untuk diekspor.'), Response::HTTP_OK);
+        $dataTransfer = TransferKaryawan::all();
+        if ($dataTransfer->isEmpty()) {
+            return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Tidak ada data transfer karyawan yang tersedia untuk diekspor.'), Response::HTTP_NOT_FOUND);
         }
 
         try {

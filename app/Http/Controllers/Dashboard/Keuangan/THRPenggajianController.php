@@ -255,10 +255,9 @@ class THRPenggajianController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
-        $dataCuti = Thr::all();
-        if ($dataCuti->isEmpty()) {
-            // Kembalikan respons JSON ketika tabel kosong
-            return response()->json(new WithoutDataResource(Response::HTTP_OK, 'Tidak ada data penggajian THR karyawan yang tersedia untuk diekspor.'), Response::HTTP_OK);
+        $dataTHR = Thr::all();
+        if ($dataTHR->isEmpty()) {
+            return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Tidak ada data penggajian THR karyawan yang tersedia untuk diekspor.'), Response::HTTP_NOT_FOUND);
         }
 
         try {

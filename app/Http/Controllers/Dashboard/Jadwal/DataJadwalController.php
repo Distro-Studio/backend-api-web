@@ -1367,6 +1367,11 @@ class DataJadwalController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
+        $dataJadwal = Jadwal::all();
+        if ($dataJadwal->isEmpty()) {
+            return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Tidak ada data jadwal karyawan shift yang tersedia untuk diekspor.'), Response::HTTP_NOT_FOUND);
+        }
+
         try {
             return Excel::download(new JadwalShiftExport(), 'jadwal-shift-karyawan.xls');
         } catch (\Throwable $e) {
@@ -1378,6 +1383,11 @@ class DataJadwalController extends Controller
     {
         if (!Gate::allows('export jadwalKaryawan')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
+
+        $jadwalNonShift = NonShift::all();
+        if ($jadwalNonShift->isEmpty()) {
+            return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Tidak ada data jadwal non shift karyawan yang tersedia untuk diekspor.'), Response::HTTP_NOT_FOUND);
         }
 
         try {

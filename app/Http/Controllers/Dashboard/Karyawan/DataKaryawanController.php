@@ -1778,8 +1778,7 @@ class DataKaryawanController extends Controller
 
     $dataKaryawan = DataKaryawan::all();
     if ($dataKaryawan->isEmpty()) {
-      // Kembalikan respons JSON ketika tabel kosong
-      return response()->json(new WithoutDataResource(Response::HTTP_OK, 'Tidak ada data karyawan yang tersedia untuk diekspor.'), Response::HTTP_OK);
+      return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Tidak ada data karyawan yang tersedia untuk diekspor.'), Response::HTTP_NOT_FOUND);
     }
 
     try {

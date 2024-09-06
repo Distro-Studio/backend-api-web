@@ -512,7 +512,7 @@ class DataLemburController extends Controller
 
         $dataLembur = Lembur::all();
         if ($dataLembur->isEmpty()) {
-            return response()->json(new WithoutDataResource(Response::HTTP_OK, 'Tidak ada data lembur karyawan yang tersedia untuk diekspor.'), Response::HTTP_OK);
+            return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Tidak ada data lembur karyawan yang tersedia untuk diekspor.'), Response::HTTP_NOT_FOUND);
         }
 
         try {
