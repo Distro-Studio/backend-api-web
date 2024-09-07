@@ -36,14 +36,7 @@ class DataKaryawan extends Model
         'ptkp_id' => 'integer',
         'masa_diklat' => 'integer',
         'verifikator_1' => 'integer',
-        'status_reward_presensi' => 'integer',
-        'file_ktp' => 'integer',
-        'file_kk' => 'integer',
-        'file_sip' => 'integer',
-        'file_bpjs_kes' => 'integer',
-        'file_bpjs_ktk' => 'integer',
-        'file_ijazah' => 'integer',
-        'file_sertifikat' => 'integer',
+        'status_reward_presensi' => 'integer'
     ];
 
     public function setUangMakan($value)

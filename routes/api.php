@@ -111,6 +111,9 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::get('/detail-karyawan-user/{user_id}', [DataKaryawanController::class, 'showByUserId']);
             Route::get('/detail-karyawan/{data_karyawan_id}', [DataKaryawanController::class, 'showByDataKaryawanId']);
 
+            Route::get('/detail-karyawan-diklat-internal/{data_karyawan_id}', [DataKaryawanController::class, 'getCalculatedDiklatInternal']);
+            Route::get('/detail-karyawan-diklat-eksternal/{data_karyawan_id}', [DataKaryawanController::class, 'getCalculatedDiklatEksternal']);
+
             Route::get('/detail-karyawan-presensi/{data_karyawan_id}', [DataKaryawanController::class, 'getDataPresensi']);
             Route::get('/detail-karyawan-jadwal/{data_karyawan_id}', [DataKaryawanController::class, 'getDataJadwal']);
             Route::get('/detail-karyawan-rekam-jejak/{data_karyawan_id}', [DataKaryawanController::class, 'getDataRekamJejak']);
@@ -171,14 +174,14 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::get('/get-jadwal-user-lembur/{userId}', [DataLemburController::class, 'getJadwalPengajuanLembur']);
             Route::get('/lembur/export', [DataLemburController::class, 'exportJadwalLembur']);
             Route::apiResource('/lembur', DataLemburController::class);
-            
+
             // ! Cuti ===========>
             Route::post('/cuti/{cutiId}/verifikasi-tahap-1', [DataCutiController::class, 'verifikasiTahap1']);
             Route::post('/cuti/{cutiId}/verifikasi-tahap-2', [DataCutiController::class, 'verifikasiTahap2']);
             Route::post('/get-cuti', [DataCutiController::class, 'index']);
             Route::get('/cuti/export', [DataCutiController::class, 'exportJadwalCuti']);
             Route::apiResource('/cuti', DataCutiController::class);
-            
+
             // ! Izin ===========>
             Route::post('/get-perizinan', [DataRiwayatPerizinanController::class, 'index']);
             Route::post('/izin/{izinId}/verifikasi-perizinan', [DataRiwayatPerizinanController::class, 'verifikasiRiwayatIzin']);
