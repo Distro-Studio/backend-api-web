@@ -309,6 +309,7 @@ class DataKaryawanController extends Controller
   }
 
   // detail karyawan dashboard
+  // TODO: PERLU DITAMBAHKAN REQUEST SESUAI SULENG
   public function getCalculatedDiklatInternal($data_karyawan_id)
   {
     if (!Gate::allows('view dataKaryawan')) {
@@ -1429,6 +1430,7 @@ class DataKaryawanController extends Controller
         'no_kk' => $karyawan->no_kk,
         'alamat' => $karyawan->alamat,
         'gelar_depan' => $karyawan->gelar_depan,
+        'gelar_belakang' => $karyawan->gelar_belakang,
         'no_hp' => $karyawan->no_hp,
         'no_bpjsksh' => $karyawan->no_bpjsksh,
         'no_bpjsktk' => $karyawan->no_bpjsktk,
@@ -1660,6 +1662,7 @@ class DataKaryawanController extends Controller
       'no_kk' => $karyawan->no_kk,
       'alamat' => $karyawan->alamat,
       'gelar_depan' => $karyawan->gelar_depan,
+      'gelar_belakang' => $karyawan->gelar_belakang,
       'no_hp' => $karyawan->no_hp,
       'no_bpjsksh' => $karyawan->no_bpjsksh,
       'no_bpjsktk' => $karyawan->no_bpjsktk,
@@ -1795,6 +1798,7 @@ class DataKaryawanController extends Controller
       'no_kk' => $karyawan->no_kk,
       'alamat' => $karyawan->alamat,
       'gelar_depan' => $karyawan->gelar_depan,
+      'gelar_belakang' => $karyawan->gelar_belakang,
       'no_hp' => $karyawan->no_hp,
       'no_bpjsksh' => $karyawan->no_bpjsksh,
       'no_bpjsktk' => $karyawan->no_bpjsktk,

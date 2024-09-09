@@ -101,6 +101,7 @@ class KaryawanResource extends JsonResource
                 "no_kk" => $karyawan->no_kk,
                 "alamat" => $karyawan->alamat,
                 "gelar_depan" => $karyawan->gelar_depan,
+                'gelar_belakang' => $karyawan->gelar_belakang,
                 "no_hp" => $karyawan->no_hp,
                 "no_bpjsksh" => $karyawan->no_bpjsksh,
                 "no_bpjsktk" => $karyawan->no_bpjsktk,

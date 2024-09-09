@@ -10,7 +10,6 @@ use App\Models\Kompetensi;
 use App\Models\DataKaryawan;
 use App\Models\KelompokGaji;
 use App\Helpers\RandomHelper;
-use Illuminate\Http\Response;
 use App\Models\StatusKaryawan;
 use App\Mail\SendAccoundUsersMail;
 use Spatie\Permission\Models\Role;
@@ -20,7 +19,6 @@ use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\Importable;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Maatwebsite\Excel\Concerns\WithValidation;
-use App\Jobs\EmailNotification\AccountEmailJob;
 
 class KaryawanImport implements ToModel, WithHeadingRow, WithValidation
 {

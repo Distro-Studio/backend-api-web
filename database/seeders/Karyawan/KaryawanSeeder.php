@@ -118,6 +118,24 @@ class KaryawanSeeder extends Seeder
         ];
 
         $gelar_dpn = ['Adv.', 'Ar.', 'apt.', 'dr.', 'drg.', 'drh.', 'Ir.', 'Ns.', 'Ak.'];
+        $gelar_belakang = [
+            "Sp.A",
+            "Sp.B",
+            "Sp.BA",
+            "Sp.BM",
+            "Sp.BP",
+            "Sp.OG",
+            "Sp.P",
+            "Sp.PD",
+            "Sp.PK",
+            "Sp.Rad",
+            "Sp.THT-KL",
+            "Sp.M",
+            "Sp.JP",
+            "Sp.KJ",
+            "Sp.KFR",
+            "Sp.PD-KHOM"
+        ];
         $unit_kerja_id = UnitKerja::pluck('id')->all();
         $jabatan_id = Jabatan::pluck('id')->all();
         $kompetensi_id = Kompetensi::pluck('id')->all();
@@ -169,6 +187,7 @@ class KaryawanSeeder extends Seeder
                 "no_kk" => rand(1214, 500000000),
                 "alamat" => 'be former rear pool driver porch meal bottle meet cloud same',
                 "gelar_depan" => $gelar_dpn[array_rand($gelar_dpn)],
+                "gelar_belakang" => $gelar_belakang[array_rand($gelar_belakang)],
                 "no_hp" => rand(1214, 500000000),
                 "no_bpjsksh" => rand(1214, 500000000),
                 "no_bpjsktk" => rand(1214, 500000000),

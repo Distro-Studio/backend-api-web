@@ -33,6 +33,7 @@ return new class extends Migration
             $table->string('nik')->nullable();
             $table->string('nik_ktp', 16)->nullable();
             $table->string('gelar_depan')->nullable();
+            $table->string('gelar_belakang')->nullable();
             $table->string('tempat_lahir')->nullable();
             $table->string('tgl_lahir')->nullable();
             $table->text('alamat')->nullable();
