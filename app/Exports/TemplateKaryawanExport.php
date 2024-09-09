@@ -31,7 +31,6 @@ class TemplateKaryawanExport implements FromArray, WithHeadings
             'status_karyawan',
             'kelompok_gaji',
             'no_rekening',
-            'tunjangan_jabatan',
             'tunjangan_fungsional',
             'tunjangan_khusus',
             'tunjangan_lainnya',
