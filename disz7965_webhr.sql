@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Sep 04, 2024 at 10:15 AM
+-- Generation Time: Sep 09, 2024 at 02:04 PM
 -- Server version: 10.5.22-MariaDB-cll-lve
 -- PHP Version: 8.3.9
 
@@ -36,13 +36,6 @@ CREATE TABLE `activity_logs` (
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
---
--- Dumping data for table `activity_logs`
---
-
-INSERT INTO `activity_logs` (`id`, `activity`, `kategori_activity_id`, `user_id`, `created_at`, `updated_at`) VALUES
-(1, 'Masuk', 1, 55, '2024-09-01 05:41:31', '2024-09-01 05:41:31');
-
 -- --------------------------------------------------------
 
 --
@@ -67,117 +60,6 @@ CREATE TABLE `berkas` (
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
---
--- Dumping data for table `berkas`
---
-
-INSERT INTO `berkas` (`id`, `user_id`, `file_id`, `nama`, `kategori_berkas_id`, `status_berkas_id`, `path`, `tgl_upload`, `nama_file`, `ext`, `size`, `verifikator_1`, `alasan`, `created_at`, `updated_at`) VALUES
-(1, 2, '415e48d3-20c3-445b-b709-ceb0331c1b47', 'Berkas Transfer - User 0', 3, 1, '/berkas/karyawan/karyawan-transfer/dokumen_2', '2024-08-29 15:10:35', 'dokumen_2', 'application/pdf', '3006', NULL, NULL, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(2, 3, '2c7d89c2-3a30-4043-9549-6eaf40252e8e', 'Berkas Transfer - User 1', 3, 1, '/berkas/karyawan/karyawan-transfer/dokumen_3', '2024-08-29 15:10:35', 'dokumen_3', 'application/pdf', '2534', NULL, NULL, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(3, 4, '464a7cd7-3890-48cd-9c94-9eca7866bad1', 'Berkas Transfer - User 2', 3, 1, '/berkas/karyawan/karyawan-transfer/dokumen_4', '2024-08-29 15:10:35', 'dokumen_4', 'application/pdf', '3790', NULL, NULL, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(4, 5, '3dd96436-8306-49f5-b4ce-68e9a954db0e', 'Berkas Transfer - User 3', 3, 1, '/berkas/karyawan/karyawan-transfer/dokumen_5', '2024-08-29 15:10:35', 'dokumen_5', 'application/pdf', '3836', NULL, NULL, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(5, 6, 'd223625f-9a35-4a5b-afcf-59b4c5e359e6', 'Berkas Transfer - User 4', 3, 1, '/berkas/karyawan/karyawan-transfer/dokumen_6', '2024-08-29 15:10:35', 'dokumen_6', 'application/pdf', '3296', NULL, NULL, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(6, 7, '0542e839-f4b9-4e93-acc0-cb9e90242fca', 'Berkas Transfer - User 5', 3, 1, '/berkas/karyawan/karyawan-transfer/dokumen_7', '2024-08-29 15:10:35', 'dokumen_7', 'application/pdf', '2846', NULL, NULL, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(7, 8, '60492fb8-bb7d-448c-ae7f-f3ba93ff499c', 'Berkas Transfer - User 6', 3, 1, '/berkas/karyawan/karyawan-transfer/dokumen_8', '2024-08-29 15:10:35', 'dokumen_8', 'application/pdf', '2770', NULL, NULL, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(8, 9, '1be4df40-b71f-4b5c-95e0-817339d2139e', 'Berkas Transfer - User 7', 3, 1, '/berkas/karyawan/karyawan-transfer/dokumen_9', '2024-08-29 15:10:35', 'dokumen_9', 'application/pdf', '3226', NULL, NULL, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(9, 10, '20371975-3df6-4279-b212-e69de7f93d20', 'Berkas Transfer - User 8', 3, 1, '/berkas/karyawan/karyawan-transfer/dokumen_10', '2024-08-29 15:10:35', 'dokumen_10', 'application/pdf', '4105', NULL, NULL, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(10, 11, '9bd5c628-74a2-4e0a-9c43-e317d9a7103e', 'Berkas Transfer - User 9', 3, 1, '/berkas/karyawan/karyawan-transfer/dokumen_11', '2024-08-29 15:10:35', 'dokumen_11', 'application/pdf', '2849', NULL, NULL, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(11, 12, 'a0a2b983-83b4-4152-852c-61bf9d1aeb02', 'Berkas Transfer - User 10', 3, 1, '/berkas/karyawan/karyawan-transfer/dokumen_12', '2024-08-29 15:10:35', 'dokumen_12', 'application/pdf', '4608', NULL, NULL, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(12, 13, '39868080-032f-4da8-8a79-77fba56b915a', 'Berkas Transfer - User 11', 3, 1, '/berkas/karyawan/karyawan-transfer/dokumen_13', '2024-08-29 15:10:35', 'dokumen_13', 'application/pdf', '3637', NULL, NULL, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(13, 14, 'ba2040b8-c971-4e54-8c4b-e096ee6d4e31', 'Berkas Transfer - User 12', 3, 1, '/berkas/karyawan/karyawan-transfer/dokumen_14', '2024-08-29 15:10:35', 'dokumen_14', 'application/pdf', '4635', NULL, NULL, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(14, 15, 'e407525e-8e2e-416d-a62a-c9cb2150abdb', 'Berkas Transfer - User 13', 3, 1, '/berkas/karyawan/karyawan-transfer/dokumen_15', '2024-08-29 15:10:35', 'dokumen_15', 'application/pdf', '4681', NULL, NULL, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(15, 16, '7175428d-e458-45cf-bbcf-de755a5e44f2', 'Berkas Transfer - User 14', 3, 1, '/berkas/karyawan/karyawan-transfer/dokumen_16', '2024-08-29 15:10:35', 'dokumen_16', 'application/pdf', '3568', NULL, NULL, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(16, 17, '46ab25aa-9e47-4a07-b3e1-bd2568ebb640', 'Berkas Transfer - User 15', 3, 1, '/berkas/karyawan/karyawan-transfer/dokumen_17', '2024-08-29 15:10:35', 'dokumen_17', 'application/pdf', '2673', NULL, NULL, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(17, 18, '732b3557-0932-4bd7-8398-82209d342101', 'Berkas Transfer - User 16', 3, 1, '/berkas/karyawan/karyawan-transfer/dokumen_18', '2024-08-29 15:10:35', 'dokumen_18', 'application/pdf', '3694', NULL, NULL, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(18, 19, 'dc0b6570-6b60-431f-a51a-53849f9bd4c6', 'Berkas Transfer - User 17', 3, 1, '/berkas/karyawan/karyawan-transfer/dokumen_19', '2024-08-29 15:10:35', 'dokumen_19', 'application/pdf', '2433', NULL, NULL, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(19, 20, 'b8853032-07f2-436e-93f7-a59a96fc04c8', 'Berkas Transfer - User 18', 3, 1, '/berkas/karyawan/karyawan-transfer/dokumen_20', '2024-08-29 15:10:35', 'dokumen_20', 'application/pdf', '4742', NULL, NULL, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(20, 21, 'b937d4d4-4306-435b-a4c7-dbfeff42d8df', 'Berkas Transfer - User 19', 3, 1, '/berkas/karyawan/karyawan-transfer/dokumen_21', '2024-08-29 15:10:35', 'dokumen_21', 'application/pdf', '2736', NULL, NULL, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(21, 22, '56be1916-f08e-494c-8e0a-571c92911568', 'Berkas Transfer - User 20', 3, 1, '/berkas/karyawan/karyawan-transfer/dokumen_22', '2024-08-29 15:10:35', 'dokumen_22', 'application/pdf', '3425', NULL, NULL, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(22, 23, 'a5168b1e-604a-47fc-9c8c-b184bf4a1022', 'Berkas Transfer - User 21', 3, 1, '/berkas/karyawan/karyawan-transfer/dokumen_23', '2024-08-29 15:10:35', 'dokumen_23', 'application/pdf', '2405', NULL, NULL, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(23, 24, '44152968-c8d4-4d84-8f43-4a169698d2f9', 'Berkas Transfer - User 22', 3, 1, '/berkas/karyawan/karyawan-transfer/dokumen_24', '2024-08-29 15:10:35', 'dokumen_24', 'application/pdf', '3730', NULL, NULL, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(24, 25, '7a2a5c8c-5638-4755-8e75-3c8fe1ff0b9a', 'Berkas Transfer - User 23', 3, 1, '/berkas/karyawan/karyawan-transfer/dokumen_25', '2024-08-29 15:10:35', 'dokumen_25', 'application/pdf', '2443', NULL, NULL, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(25, 26, 'e3787990-a63e-4c1f-baf9-295cb21f8244', 'Berkas Transfer - User 24', 3, 1, '/berkas/karyawan/karyawan-transfer/dokumen_26', '2024-08-29 15:10:35', 'dokumen_26', 'application/pdf', '3634', NULL, NULL, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(26, 27, '951a9d1a-fe93-48b4-ab4d-3539e0ecd919', 'Berkas Transfer - User 25', 3, 1, '/berkas/karyawan/karyawan-transfer/dokumen_27', '2024-08-29 15:10:35', 'dokumen_27', 'application/pdf', '4108', NULL, NULL, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(27, 28, '4c0f969e-69cb-47f5-8cc6-93e47fc68d13', 'Berkas Transfer - User 26', 3, 1, '/berkas/karyawan/karyawan-transfer/dokumen_28', '2024-08-29 15:10:35', 'dokumen_28', 'application/pdf', '4140', NULL, NULL, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(28, 29, 'fa010317-6277-4635-aa3f-b19b03d9c98f', 'Berkas Transfer - User 27', 3, 1, '/berkas/karyawan/karyawan-transfer/dokumen_29', '2024-08-29 15:10:35', 'dokumen_29', 'application/pdf', '3485', NULL, NULL, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(29, 30, '9191dbb8-f716-45d7-9817-7cfb5c3028a7', 'Berkas Transfer - User 28', 3, 1, '/berkas/karyawan/karyawan-transfer/dokumen_30', '2024-08-29 15:10:35', 'dokumen_30', 'application/pdf', '3798', NULL, NULL, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(30, 31, 'ba5c460e-e80b-4560-854b-8921c380682b', 'Berkas Transfer - User 29', 3, 1, '/berkas/karyawan/karyawan-transfer/dokumen_31', '2024-08-29 15:10:35', 'dokumen_31', 'application/pdf', '3382', NULL, NULL, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(31, 32, '8f4268e2-8e7a-46cd-9064-c4a475aafdb8', 'Berkas Transfer - User 30', 3, 1, '/berkas/karyawan/karyawan-transfer/dokumen_32', '2024-08-29 15:10:35', 'dokumen_32', 'application/pdf', '2788', NULL, NULL, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(32, 33, '71aa8f9b-18be-4687-b0f1-b42e5aa4f805', 'Berkas Transfer - User 31', 3, 1, '/berkas/karyawan/karyawan-transfer/dokumen_33', '2024-08-29 15:10:35', 'dokumen_33', 'application/pdf', '3987', NULL, NULL, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(33, 34, 'f03441af-819d-482e-9f60-13f3c3cc1422', 'Berkas Transfer - User 32', 3, 1, '/berkas/karyawan/karyawan-transfer/dokumen_34', '2024-08-29 15:10:35', 'dokumen_34', 'application/pdf', '3060', NULL, NULL, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(34, 35, 'c3222647-d8e6-4fdb-a2d7-8584b59ae0f3', 'Berkas Transfer - User 33', 3, 1, '/berkas/karyawan/karyawan-transfer/dokumen_35', '2024-08-29 15:10:35', 'dokumen_35', 'application/pdf', '3164', NULL, NULL, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(35, 36, 'c551fae4-85c3-4e8a-bb01-9a5f22a6fe6d', 'Berkas Transfer - User 34', 3, 1, '/berkas/karyawan/karyawan-transfer/dokumen_36', '2024-08-29 15:10:35', 'dokumen_36', 'application/pdf', '4685', NULL, NULL, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(36, 37, 'c8a66faa-31eb-40d6-a145-59a90aa1ead9', 'Berkas Transfer - User 35', 3, 1, '/berkas/karyawan/karyawan-transfer/dokumen_37', '2024-08-29 15:10:35', 'dokumen_37', 'application/pdf', '4662', NULL, NULL, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(37, 38, 'eb019394-0b4d-4fb6-abb1-ffe8b2b2006f', 'Berkas Transfer - User 36', 3, 1, '/berkas/karyawan/karyawan-transfer/dokumen_38', '2024-08-29 15:10:35', 'dokumen_38', 'application/pdf', '3868', NULL, NULL, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(38, 39, '7728f66d-13ef-4ce5-9370-dea77360cd9f', 'Berkas Transfer - User 37', 3, 1, '/berkas/karyawan/karyawan-transfer/dokumen_39', '2024-08-29 15:10:35', 'dokumen_39', 'application/pdf', '2307', NULL, NULL, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(39, 40, 'e087db0a-a693-4896-8383-392e09351ed2', 'Berkas Transfer - User 38', 3, 1, '/berkas/karyawan/karyawan-transfer/dokumen_40', '2024-08-29 15:10:35', 'dokumen_40', 'application/pdf', '4499', NULL, NULL, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(40, 41, '4de0fe74-b2a5-4abd-ad4c-2e195c02346a', 'Berkas Transfer - User 39', 3, 1, '/berkas/karyawan/karyawan-transfer/dokumen_41', '2024-08-29 15:10:35', 'dokumen_41', 'application/pdf', '2732', NULL, NULL, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(41, 42, '0e5c62bd-1064-4c28-bd29-d33d742e8346', 'Berkas Transfer - User 40', 3, 1, '/berkas/karyawan/karyawan-transfer/dokumen_42', '2024-08-29 15:10:35', 'dokumen_42', 'application/pdf', '2809', NULL, NULL, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(42, 43, 'ce6b033e-3cdc-4835-851e-864e9dcfec52', 'Berkas Transfer - User 41', 3, 1, '/berkas/karyawan/karyawan-transfer/dokumen_43', '2024-08-29 15:10:35', 'dokumen_43', 'application/pdf', '4652', NULL, NULL, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(43, 44, 'fdb211ac-b5e1-4827-aa27-71b8d5a40e9f', 'Berkas Transfer - User 42', 3, 1, '/berkas/karyawan/karyawan-transfer/dokumen_44', '2024-08-29 15:10:35', 'dokumen_44', 'application/pdf', '3071', NULL, NULL, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(44, 45, 'ea22d838-49d7-4b36-bc8d-1e68b32f4172', 'Berkas Transfer - User 43', 3, 1, '/berkas/karyawan/karyawan-transfer/dokumen_45', '2024-08-29 15:10:35', 'dokumen_45', 'application/pdf', '3894', NULL, NULL, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(45, 46, '7a612707-e24a-4867-bc09-e9a3a6106ffa', 'Berkas Transfer - User 44', 3, 1, '/berkas/karyawan/karyawan-transfer/dokumen_46', '2024-08-29 15:10:35', 'dokumen_46', 'application/pdf', '2444', NULL, NULL, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(46, 47, '9712618e-446b-434c-8088-aeacaed7d378', 'Berkas Transfer - User 45', 3, 1, '/berkas/karyawan/karyawan-transfer/dokumen_47', '2024-08-29 15:10:35', 'dokumen_47', 'application/pdf', '2685', NULL, NULL, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(47, 48, '3f69ab49-246e-4c98-a0e4-06849f7f5c37', 'Berkas Transfer - User 46', 3, 1, '/berkas/karyawan/karyawan-transfer/dokumen_48', '2024-08-29 15:10:35', 'dokumen_48', 'application/pdf', '3674', NULL, NULL, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(48, 49, 'a0723119-50e4-408f-9d3b-549829e3dfad', 'Berkas Transfer - User 47', 3, 1, '/berkas/karyawan/karyawan-transfer/dokumen_49', '2024-08-29 15:10:35', 'dokumen_49', 'application/pdf', '3914', NULL, NULL, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(49, 50, '3a343a3f-3fd2-475d-97f1-903a3fa404bf', 'Berkas Transfer - User 48', 3, 1, '/berkas/karyawan/karyawan-transfer/dokumen_50', '2024-08-29 15:10:35', 'dokumen_50', 'application/pdf', '2372', NULL, NULL, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(50, 51, 'a613df0d-30f3-4cd7-9240-0b8322c86072', 'Berkas Transfer - User 49', 3, 1, '/berkas/karyawan/karyawan-transfer/dokumen_51', '2024-08-29 15:10:35', 'dokumen_51', 'application/pdf', '3495', NULL, NULL, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(51, 2, '930b4d03-046e-4fde-9581-19f3b1b82ef5', 'Berkas Diklat Eksternal - User 0', 3, 1, '/path/to/diklat/berkas/Diklat_Eksternal_0', '2024-08-29 15:10:35', 'dokumen_2', 'image/jpeg', '1493', NULL, NULL, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(52, 3, '4abc66bc-d6b8-4d53-863c-c4bc68a1d42b', 'Berkas Diklat - User 1', 3, 1, '/path/to/diklat/berkas/Diklat_Thumbnail_1', '2024-08-29 15:10:35', 'dokumen_3', 'image/jpeg', '1110', NULL, NULL, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(53, 4, '0326eab9-948c-4d4e-876d-ab3b7040dffa', 'Berkas Diklat - User 2', 3, 1, '/path/to/diklat/berkas/Diklat_Thumbnail_2', '2024-08-29 15:10:35', 'dokumen_4', 'image/jpeg', '1056', NULL, NULL, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(54, 5, '2e4c00b1-ff7c-4f22-a243-84fe349ba2e4', 'Berkas Diklat - User 3', 3, 1, '/path/to/diklat/berkas/Diklat_Thumbnail_3', '2024-08-29 15:10:35', 'dokumen_5', 'image/jpeg', '1437', NULL, NULL, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(55, 6, '9f0db6cb-2e88-4f0d-83a7-572b6565f815', 'Berkas Diklat Eksternal - User 4', 3, 1, '/path/to/diklat/berkas/Diklat_Eksternal_4', '2024-08-29 15:10:35', 'dokumen_6', 'image/jpeg', '1727', NULL, NULL, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(56, 7, 'b7cfae61-076d-4be1-bc57-ea34a3d6523f', 'Berkas Diklat - User 5', 3, 1, '/path/to/diklat/berkas/Diklat_Thumbnail_5', '2024-08-29 15:10:35', 'dokumen_7', 'image/jpeg', '1387', NULL, NULL, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(57, 8, 'd4f35dc7-d6ac-465b-96e9-dc2bcd9246f2', 'Berkas Diklat - User 6', 3, 1, '/path/to/diklat/berkas/Diklat_Thumbnail_6', '2024-08-29 15:10:35', 'dokumen_8', 'image/jpeg', '1694', NULL, NULL, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(58, 9, '7ee94cc0-1f8e-445c-9866-7145abb77a1b', 'Berkas Diklat - User 7', 3, 1, '/path/to/diklat/berkas/Diklat_Thumbnail_7', '2024-08-29 15:10:35', 'dokumen_9', 'image/jpeg', '1998', NULL, NULL, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(59, 10, 'c72e36ce-8624-4c68-9f39-50f0a4f5a439', 'Berkas Diklat - User 8', 3, 1, '/path/to/diklat/berkas/Diklat_Thumbnail_8', '2024-08-29 15:10:35', 'dokumen_10', 'image/jpeg', '1142', NULL, NULL, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(60, 11, 'a682a6ab-99da-4b79-9d49-1a3476011032', 'Berkas Diklat Eksternal - User 9', 3, 1, '/path/to/diklat/berkas/Diklat_Eksternal_9', '2024-08-29 15:10:35', 'dokumen_11', 'image/jpeg', '1200', NULL, NULL, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(61, 12, '59347e19-aa1d-46a6-81a7-a1235f56756c', 'Berkas Diklat Eksternal - User 10', 3, 1, '/path/to/diklat/berkas/Diklat_Eksternal_10', '2024-08-29 15:10:35', 'dokumen_12', 'image/jpeg', '1190', NULL, NULL, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(62, 13, 'e5b25683-44d5-45b0-8e15-d56571a4d6a9', 'Berkas Diklat Eksternal - User 11', 3, 1, '/path/to/diklat/berkas/Diklat_Eksternal_11', '2024-08-29 15:10:35', 'dokumen_13', 'image/jpeg', '1139', NULL, NULL, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(63, 14, '062543be-c04b-422e-88ee-aa36e73d0733', 'Berkas Diklat Eksternal - User 12', 3, 1, '/path/to/diklat/berkas/Diklat_Eksternal_12', '2024-08-29 15:10:35', 'dokumen_14', 'image/jpeg', '1337', NULL, NULL, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(64, 15, '953b0bd8-93b0-4743-ae97-ea9aa2092908', 'Berkas Diklat Eksternal - User 13', 3, 1, '/path/to/diklat/berkas/Diklat_Eksternal_13', '2024-08-29 15:10:35', 'dokumen_15', 'image/jpeg', '1375', NULL, NULL, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(65, 16, 'ceb64178-a5b6-46c8-b61e-eab1f29d9527', 'Berkas Diklat - User 14', 3, 1, '/path/to/diklat/berkas/Diklat_Thumbnail_14', '2024-08-29 15:10:35', 'dokumen_16', 'image/jpeg', '1312', NULL, NULL, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(66, 17, '10a22cfe-06f6-4d36-b9dd-e9649fcd14b1', 'Berkas Diklat - User 15', 3, 1, '/path/to/diklat/berkas/Diklat_Thumbnail_15', '2024-08-29 15:10:35', 'dokumen_17', 'image/jpeg', '1754', NULL, NULL, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(67, 18, '8abdab82-aa2b-40f0-ac16-13b858176810', 'Berkas Diklat Eksternal - User 16', 3, 1, '/path/to/diklat/berkas/Diklat_Eksternal_16', '2024-08-29 15:10:35', 'dokumen_18', 'image/jpeg', '1093', NULL, NULL, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(68, 19, '44d007ea-0beb-452e-9c1c-7a8acf8a5d8f', 'Berkas Diklat - User 17', 3, 1, '/path/to/diklat/berkas/Diklat_Thumbnail_17', '2024-08-29 15:10:35', 'dokumen_19', 'image/jpeg', '1339', NULL, NULL, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(69, 20, 'ae1369fe-794c-4506-8757-f6621437894b', 'Berkas Diklat - User 18', 3, 1, '/path/to/diklat/berkas/Diklat_Thumbnail_18', '2024-08-29 15:10:35', 'dokumen_20', 'image/jpeg', '1834', NULL, NULL, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(70, 21, '1c5ae697-bc6a-4439-a4b3-6eb96c649dbb', 'Berkas Diklat - User 19', 3, 1, '/path/to/diklat/berkas/Diklat_Thumbnail_19', '2024-08-29 15:10:35', 'dokumen_21', 'image/jpeg', '1222', NULL, NULL, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(71, 22, 'd98e1e57-b99a-4307-bac3-761cb75e6277', 'Berkas Diklat Eksternal - User 20', 3, 1, '/path/to/diklat/berkas/Diklat_Eksternal_20', '2024-08-29 15:10:35', 'dokumen_22', 'image/jpeg', '1500', NULL, NULL, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(72, 23, '8c59044b-ba09-4d75-a23a-e881b84a58cc', 'Berkas Diklat - User 21', 3, 1, '/path/to/diklat/berkas/Diklat_Thumbnail_21', '2024-08-29 15:10:35', 'dokumen_23', 'image/jpeg', '1521', NULL, NULL, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(73, 24, 'd8af2199-acc9-4748-b7c0-db3933dcad18', 'Berkas Diklat - User 22', 3, 1, '/path/to/diklat/berkas/Diklat_Thumbnail_22', '2024-08-29 15:10:35', 'dokumen_24', 'image/jpeg', '1036', NULL, NULL, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(74, 25, 'bbffeb71-07bb-4235-996f-c864c7ff57b7', 'Berkas Diklat - User 23', 3, 1, '/path/to/diklat/berkas/Diklat_Thumbnail_23', '2024-08-29 15:10:35', 'dokumen_25', 'image/jpeg', '1284', NULL, NULL, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(75, 26, '1965811f-dac7-4bcd-90a4-da6d9e0e5ec4', 'Berkas Diklat - User 24', 3, 1, '/path/to/diklat/berkas/Diklat_Thumbnail_24', '2024-08-29 15:10:35', 'dokumen_26', 'image/jpeg', '1362', NULL, NULL, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(76, 43, 'b2df1040-94fb-4c85-be34-b3cd6eb40a06', 'Upload Foto Pelaporan 1', 3, 1, '/path/to/uploads/pelaporan_1.jpg', '2024-08-29 15:10:35', 'pelaporan_1.jpg', 'image/jpeg', '2023', NULL, NULL, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(77, 24, 'db5eb441-ea11-4dd3-b87b-508be3d6cbf9', 'Upload Foto Pelaporan 2', 3, 1, '/path/to/uploads/pelaporan_2.jpg', '2024-08-29 15:10:35', 'pelaporan_2.jpg', 'image/jpeg', '2041', NULL, NULL, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(78, 6, 'ea8095a4-2b94-401a-9589-9326d8d76eb4', 'Upload Foto Pelaporan 3', 3, 1, '/path/to/uploads/pelaporan_3.jpg', '2024-08-29 15:10:35', 'pelaporan_3.jpg', 'image/jpeg', '2467', NULL, NULL, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(79, 19, '79be8aeb-2230-42c5-a303-1e23935813a2', 'Upload Foto Pelaporan 4', 3, 1, '/path/to/uploads/pelaporan_4.jpg', '2024-08-29 15:10:35', 'pelaporan_4.jpg', 'image/jpeg', '1663', NULL, NULL, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(80, 42, 'aab883db-a519-4a81-bf2f-d60fc71439c0', 'Upload Foto Pelaporan 5', 3, 1, '/path/to/uploads/pelaporan_5.jpg', '2024-08-29 15:10:35', 'pelaporan_5.jpg', 'image/jpeg', '2576', NULL, NULL, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(81, 46, 'ca1d21ae-8c5f-4ea3-977b-af13e798ac5b', 'Upload Foto Pelaporan 6', 3, 1, '/path/to/uploads/pelaporan_6.jpg', '2024-08-29 15:10:35', 'pelaporan_6.jpg', 'image/jpeg', '2963', NULL, NULL, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(82, 28, 'dde0d8cd-e0d4-4bed-80ce-7958f2c51eef', 'Upload Foto Pelaporan 7', 3, 1, '/path/to/uploads/pelaporan_7.jpg', '2024-08-29 15:10:35', 'pelaporan_7.jpg', 'image/jpeg', '1697', NULL, NULL, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(83, 6, '71630921-32f7-472a-a8ee-877e975983fb', 'Upload Foto Pelaporan 8', 3, 1, '/path/to/uploads/pelaporan_8.jpg', '2024-08-29 15:10:35', 'pelaporan_8.jpg', 'image/jpeg', '2649', NULL, NULL, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(84, 21, 'f8d38f1a-f6f0-4856-9e13-38dbb1f5b152', 'Upload Foto Pelaporan 9', 3, 1, '/path/to/uploads/pelaporan_9.jpg', '2024-08-29 15:10:35', 'pelaporan_9.jpg', 'image/jpeg', '2309', NULL, NULL, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(85, 21, '3bfa75bc-a113-4f49-a04b-3b937dfceb13', 'Upload Foto Pelaporan 10', 3, 1, '/path/to/uploads/pelaporan_10.jpg', '2024-08-29 15:10:35', 'pelaporan_10.jpg', 'image/jpeg', '1535', NULL, NULL, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(86, 6, '28f60bae-257f-4d54-9e3d-10850620d0ce', 'Upload Foto Pelaporan 11', 3, 1, '/path/to/uploads/pelaporan_11.jpg', '2024-08-29 15:10:35', 'pelaporan_11.jpg', 'image/jpeg', '2963', NULL, NULL, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(87, 24, 'f8cae05b-06ec-4a64-8fdb-003dad2ed54d', 'Upload Foto Pelaporan 12', 3, 1, '/path/to/uploads/pelaporan_12.jpg', '2024-08-29 15:10:35', 'pelaporan_12.jpg', 'image/jpeg', '2879', NULL, NULL, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(88, 11, '571a4849-d5a0-4ffd-88ae-7c9f9e0eb982', 'Upload Foto Pelaporan 13', 3, 1, '/path/to/uploads/pelaporan_13.jpg', '2024-08-29 15:10:35', 'pelaporan_13.jpg', 'image/jpeg', '2458', NULL, NULL, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(89, 44, '9a405fb7-725c-436e-934b-1cc08acb0ea7', 'Upload Foto Pelaporan 14', 3, 1, '/path/to/uploads/pelaporan_14.jpg', '2024-08-29 15:10:35', 'pelaporan_14.jpg', 'image/jpeg', '1737', NULL, NULL, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(90, 15, 'e15d97b2-2928-4d5f-bdfe-35ff3a2c4181', 'Upload Foto Pelaporan 15', 3, 1, '/path/to/uploads/pelaporan_15.jpg', '2024-08-29 15:10:35', 'pelaporan_15.jpg', 'image/jpeg', '1381', NULL, NULL, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(91, 11, '835b523f-9c50-4246-8284-0a69b866ba60', 'Upload Foto Pelaporan 16', 3, 1, '/path/to/uploads/pelaporan_16.jpg', '2024-08-29 15:10:35', 'pelaporan_16.jpg', 'image/jpeg', '1747', NULL, NULL, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(92, 15, 'bea1b1ad-c9a0-4f45-882d-361219cf280c', 'Upload Foto Pelaporan 17', 3, 1, '/path/to/uploads/pelaporan_17.jpg', '2024-08-29 15:10:35', 'pelaporan_17.jpg', 'image/jpeg', '1677', NULL, NULL, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(93, 9, 'db240128-2d0a-4706-b86c-24bc932fd19d', 'Upload Foto Pelaporan 18', 3, 1, '/path/to/uploads/pelaporan_18.jpg', '2024-08-29 15:10:35', 'pelaporan_18.jpg', 'image/jpeg', '1054', NULL, NULL, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(94, 42, '0d78b4c6-d032-43ae-bc08-d301b9a2e0e0', 'Upload Foto Pelaporan 19', 3, 1, '/path/to/uploads/pelaporan_19.jpg', '2024-08-29 15:10:35', 'pelaporan_19.jpg', 'image/jpeg', '2499', NULL, NULL, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(95, 24, '7e36d009-8c25-4a64-ac72-4a831f18cd6f', 'Upload Foto Pelaporan 20', 3, 1, '/path/to/uploads/pelaporan_20.jpg', '2024-08-29 15:10:35', 'pelaporan_20.jpg', 'image/jpeg', '2276', NULL, NULL, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(103, 55, '9ce7387b-2769-4503-bbeb-a3202d2b64af', 'KTP', 1, 1, '/storage/file/V1GrnMrC', '2024-09-01 00:00:00', 'V1GrnMrC', 'image/jpeg', '17555 KB', NULL, NULL, '2024-09-01 05:36:29', '2024-09-01 05:36:29'),
-(104, 55, '9ce7387c-aa5a-492e-890d-39a9428724d8', 'KK', 1, 1, '/storage/file/xJ4yDBby', '2024-09-01 00:00:00', 'xJ4yDBby', 'image/jpeg', '17555 KB', NULL, NULL, '2024-09-01 05:36:30', '2024-09-01 05:36:30'),
-(105, 55, '9ce7387e-0849-4cd7-9280-1abf11568588', 'SIP', 1, 1, '/storage/file/XdwAXJYB', '2024-09-01 00:00:00', 'XdwAXJYB', 'image/jpeg', '17555 KB', NULL, NULL, '2024-09-01 05:36:31', '2024-09-01 05:36:31'),
-(106, 55, '9ce7387f-918a-4fdb-b739-63631c5c02b8', 'BPJS Kesehatan', 1, 1, '/storage/file/Bd67DuRp', '2024-09-01 00:00:00', 'Bd67DuRp', 'image/jpeg', '17555 KB', NULL, NULL, '2024-09-01 05:36:32', '2024-09-01 05:36:32'),
-(107, 55, '9ce73881-1d0a-4e6a-bab7-96e5c461ea42', 'BPJS Ketenagakerjaan', 1, 1, '/storage/file/7ngti46R', '2024-09-01 00:00:00', '7ngti46R', 'image/jpeg', '17555 KB', NULL, NULL, '2024-09-01 05:36:33', '2024-09-01 05:36:33'),
-(108, 55, '9ce73882-9c0d-4888-8c9e-7aa44e9bc17b', 'Ijazah', 1, 1, '/storage/file/r4CWMs7i', '2024-09-01 00:00:00', 'r4CWMs7i', 'image/jpeg', '17555 KB', NULL, NULL, '2024-09-01 05:36:34', '2024-09-01 05:36:34'),
-(109, 55, '9ce73884-27aa-4bc2-8fd0-63582918b9a2', 'Sertifikat', 1, 1, '/storage/file/Hz60lwAR', '2024-09-01 00:00:00', 'Hz60lwAR', 'image/jpeg', '17555 KB', NULL, NULL, '2024-09-01 05:36:35', '2024-09-01 05:36:35'),
-(110, 55, '9ce73a47-b630-4409-8e27-4d1ec0aac406', 'Haris Adiyatma Farhan', 3, 2, '/storage/file/CQH2v9wlmJQJ', '2024-09-01 00:00:00', 'CQH2v9wlmJQJ', 'image/jpeg', '182985 KB', NULL, NULL, '2024-09-01 05:41:31', '2024-09-01 05:41:31'),
-(111, 1, '9ceb26f7-1d1a-4b64-ab7f-e898a49b5c40', 'WKxzvL6CBQVS4aDpxffK', 3, 2, '/storage/file/WKxzvL6CBQVS4aDpxffK', '2024-09-03 04:30:49', 'WKxzvL6CBQVS4aDpxffK', 'image/png', '423088 KB', NULL, NULL, '2024-09-02 21:30:49', '2024-09-02 21:30:49'),
-(112, 1, '9cebc8e3-9720-4934-9021-3eb971cd98b8', 'lZT6gHhHvNoc41JaxWKf', 3, 2, '/storage/file/lZT6gHhHvNoc41JaxWKf', '2024-09-03 12:03:36', 'lZT6gHhHvNoc41JaxWKf', 'image/png', '142623 KB', NULL, NULL, '2024-09-03 05:03:36', '2024-09-03 05:03:36');
-
 -- --------------------------------------------------------
 
 --
@@ -199,15 +81,6 @@ CREATE TABLE `cutis` (
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
---
--- Dumping data for table `cutis`
---
-
-INSERT INTO `cutis` (`id`, `user_id`, `tipe_cuti_id`, `tgl_from`, `tgl_to`, `catatan`, `durasi`, `status_cuti_id`, `verifikator_1`, `verifikator_2`, `alasan`, `created_at`, `updated_at`) VALUES
-(1, 38, 3, '02-09-2024', '03-09-2024', NULL, 2, 4, 50, 50, NULL, '2024-08-31 20:31:32', '2024-08-31 20:32:50'),
-(2, 55, 5, '2024-09-30T17:00:00.000Z', '2024-10-10T17:00:00.000Z', NULL, 11, 1, NULL, NULL, NULL, '2024-09-01 05:44:02', '2024-09-01 05:44:02'),
-(3, 55, 1, '2024-09-30T17:00:00.000Z', '2024-10-09T17:00:00.000Z', NULL, 10, 1, NULL, NULL, NULL, '2024-09-01 05:46:01', '2024-09-01 05:46:01');
 
 -- --------------------------------------------------------
 
@@ -234,6 +107,7 @@ CREATE TABLE `data_karyawans` (
   `nik` varchar(255) DEFAULT NULL,
   `nik_ktp` varchar(16) DEFAULT NULL,
   `gelar_depan` varchar(255) DEFAULT NULL,
+  `gelar_belakang` varchar(255) DEFAULT NULL,
   `tempat_lahir` varchar(255) DEFAULT NULL,
   `tgl_lahir` varchar(255) DEFAULT NULL,
   `alamat` text DEFAULT NULL,
@@ -249,7 +123,7 @@ CREATE TABLE `data_karyawans` (
   `kategori_darah_id` bigint(20) UNSIGNED DEFAULT NULL,
   `tinggi_badan` int(11) DEFAULT NULL,
   `berat_badan` int(11) DEFAULT NULL,
-  `pendidikan_terakhir` bigint(20) UNSIGNED DEFAULT NULL,
+  `pendidikan_terakhir` varchar(255) DEFAULT NULL,
   `no_ijazah` varchar(255) DEFAULT NULL,
   `tahun_lulus` int(11) DEFAULT NULL,
   `no_kk` varchar(20) DEFAULT NULL,
@@ -272,60 +146,8 @@ CREATE TABLE `data_karyawans` (
 -- Dumping data for table `data_karyawans`
 --
 
-INSERT INTO `data_karyawans` (`id`, `user_id`, `email`, `no_rm`, `no_manulife`, `tgl_masuk`, `tgl_keluar`, `unit_kerja_id`, `jabatan_id`, `kompetensi_id`, `tunjangan_fungsional`, `tunjangan_khusus`, `tunjangan_lainnya`, `uang_makan`, `uang_lembur`, `nik`, `nik_ktp`, `gelar_depan`, `tempat_lahir`, `tgl_lahir`, `alamat`, `no_hp`, `no_bpjsksh`, `no_bpjsktk`, `tgl_diangkat`, `masa_kerja`, `npwp`, `no_rekening`, `jenis_kelamin`, `kategori_agama_id`, `kategori_darah_id`, `tinggi_badan`, `berat_badan`, `pendidikan_terakhir`, `no_ijazah`, `tahun_lulus`, `no_kk`, `status_karyawan_id`, `kelompok_gaji_id`, `no_str`, `masa_berlaku_str`, `no_sip`, `masa_berlaku_sip`, `ptkp_id`, `tgl_berakhir_pks`, `masa_diklat`, `verifikator_1`, `status_reward_presensi`, `created_at`, `updated_at`) VALUES
-(1, 1, 'super_admin@admin.rski', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1, '2024-08-29 08:10:20', '2024-08-29 08:10:20'),
-(2, 2, 'user0@example.com', '4530031', '4860191', '2020-02-01', '2023-06-06', 3, 15, 7, 144113, 87509, 320227, 62522, 90716, '2267924', '4481530', 'Ir.', 'Tasikmalaya', '1939-09-08', 'be former rear pool driver porch meal bottle meet cloud same', '335816290', '256578249', '482555156', '2023-06-06', 27, '306503597', '493226751', 1, 2, 6, 137, 99, 1, 'IJ/VII/97185074', 1921, '227744589', 3, 21, 'STR/01/RA/271605', '2024-07-09', 'SIP/01/VI/25578', '2024-07-09', 4, '2023-06-06', 7, NULL, 1, '2024-08-29 08:10:21', '2024-08-29 08:10:21'),
-(3, 3, 'user1@example.com', '183773', '4993998', '2012-02-03', '2023-04-28', 15, 13, 12, 132995, 90593, 717088, 52455, 82051, '10565133', '769122', 'drg.', 'Pemalang', '1973-02-02', 'be former rear pool driver porch meal bottle meet cloud same', '387107704', '157497046', '73699136', '2023-04-28', 23, '474473817', '395041160', 1, 2, 7, 160, 126, 12, 'IJ/VII/209821073', 1846, '254619157', 3, 15, 'STR/01/RA/222470', '2026-12-12', 'SIP/01/VI/134130', '2026-12-12', 1, '2023-04-28', 7, NULL, 1, '2024-08-29 08:10:21', '2024-08-29 08:10:21'),
-(4, 4, 'user2@example.com', '1028309', '2759661', '2016-09-30', '2024-10-20', 18, 18, 13, 134402, 17543, 913300, 11172, 116202, '33125412', '8394354', 'Ir.', 'Kebumen', '1940-09-29', 'be former rear pool driver porch meal bottle meet cloud same', '352329108', '22246543', '81501865', '2024-10-20', 39, '86886499', '356619161', 1, 5, 1, 165, 34, 11, 'IJ/VII/336236170', 1837, '196599563', 1, 23, 'STR/01/RA/484751', '2026-03-22', 'SIP/01/VI/205519', '2026-03-22', 2, '2024-10-20', 8, NULL, 1, '2024-08-29 08:10:21', '2024-08-29 08:10:21'),
-(5, 5, 'user3@example.com', '2362312', '4457547', '2012-06-26', '2024-08-10', 19, 18, 2, 245484, 114138, 668748, 47120, 35357, '12955657', '22104227', 'Ar.', 'Banyuwangi', '1985-05-16', 'be former rear pool driver porch meal bottle meet cloud same', '37063240', '170396988', '257553222', '2024-08-10', 23, '158952080', '413408908', 1, 3, 4, 126, 37, 12, 'IJ/VII/65360234', 1933, '70246404', 2, 13, 'STR/01/RA/12546', '2023-05-31', 'SIP/01/VI/79325', '2023-05-31', 1, '2024-08-10', 9, NULL, 1, '2024-08-29 08:10:22', '2024-08-29 08:10:22'),
-(6, 6, 'user4@example.com', '3618923', '4508516', '2022-02-19', '2023-04-19', 18, 5, 1, 243290, 92386, 483200, 61455, 30116, '7362160', '45824678', 'dr.', 'Madiun', '1975-03-04', 'be former rear pool driver porch meal bottle meet cloud same', '134578551', '171788702', '47012112', '2023-04-19', 38, '448576818', '293040069', 0, 2, 9, 21, 112, 11, 'IJ/VII/269653368', 1888, '453394930', 2, 9, 'STR/01/RA/6556', '2026-06-13', 'SIP/01/VI/90545', '2026-06-13', 7, '2023-04-19', 1, NULL, 1, '2024-08-29 08:10:22', '2024-08-29 08:10:22'),
-(7, 7, 'user5@example.com', '4537131', '2388785', '2007-02-28', '2023-01-28', 9, 18, 9, 228628, 59530, 382275, 2884, 119854, '18698170', '34070057', 'drg.', 'Kuningan', '1902-01-24', 'be former rear pool driver porch meal bottle meet cloud same', '127480172', '399806609', '419384542', '2023-01-28', 27, '354220715', '334017306', 0, 5, 12, 236, 83, 4, 'IJ/VII/303929469', 1860, '36080177', 2, 18, 'STR/01/RA/497670', '2024-09-15', 'SIP/01/VI/279280', '2024-09-15', 8, '2023-01-28', 2, NULL, 1, '2024-08-29 08:10:22', '2024-08-29 08:10:22'),
-(8, 8, 'user6@example.com', '3500908', '528044', '2009-05-29', '2023-01-23', 16, 16, 5, 212964, 70461, 806811, 20874, 12442, '9763680', '9839791', 'drh.', 'Banyumas', '2001-04-01', 'be former rear pool driver porch meal bottle meet cloud same', '45279521', '370620529', '107631819', '2023-01-23', 7, '244100203', '467090473', 0, 6, 3, 40, 161, 12, 'IJ/VII/347327713', 1825, '230701709', 2, 17, 'STR/01/RA/109828', '2023-04-02', 'SIP/01/VI/219646', '2023-04-02', 4, '2023-01-23', 7, NULL, 1, '2024-08-29 08:10:22', '2024-08-29 08:10:22'),
-(9, 9, 'user7@example.com', '4950019', '3042867', '2018-05-07', '2024-05-15', 1, 18, 9, 228636, 7515, 263834, 11832, 80741, '26778094', '29572106', 'Adv.', 'Lumajang', '1988-05-08', 'be former rear pool driver porch meal bottle meet cloud same', '317041978', '318535196', '488226836', '2024-05-15', 34, '463995051', '146187438', 1, 3, 8, 125, 49, 7, 'IJ/VII/206461388', 1916, '66224321', 1, 15, 'STR/01/RA/88424', '2028-10-23', 'SIP/01/VI/427005', '2028-10-23', 7, '2024-05-15', 7, NULL, 1, '2024-08-29 08:10:23', '2024-08-29 08:10:23'),
-(10, 10, 'user8@example.com', '4715307', '93354', '2022-02-02', '2023-06-13', 21, 14, 2, 161370, 73697, 302791, 1805, 26639, '34033482', '23043962', 'Adv.', 'Jombang', '1963-07-09', 'be former rear pool driver porch meal bottle meet cloud same', '488535908', '113243945', '20874473', '2023-06-13', 33, '451131367', '108737732', 0, 2, 10, 194, 191, 4, 'IJ/VII/196983687', 1878, '119895755', 1, 5, 'STR/01/RA/444494', '2024-06-15', 'SIP/01/VI/156217', '2024-06-15', 7, '2023-06-13', 10, NULL, 1, '2024-08-29 08:10:23', '2024-08-29 08:10:23'),
-(11, 11, 'user9@example.com', '2677617', '865986', '2017-03-17', '2023-01-29', 10, 16, 9, 212103, 57713, 450039, 56278, 65708, '14207361', '13567596', 'Adv.', 'Sidoarjo', '1984-10-17', 'be former rear pool driver porch meal bottle meet cloud same', '278662757', '298205192', '239068654', '2023-01-29', 13, '1918800', '433366969', 0, 3, 8, 162, 199, 5, 'IJ/VII/140978698', 1863, '347564015', 3, 18, 'STR/01/RA/442407', '2026-03-13', 'SIP/01/VI/164231', '2026-03-13', 3, '2023-01-29', 8, NULL, 1, '2024-08-29 08:10:23', '2024-08-29 08:10:23'),
-(12, 12, 'user10@example.com', '640690', '2608233', '2021-09-11', '2024-04-30', 2, 6, 11, 87050, 101957, 539908, 63184, 96429, '23312732', '43621589', 'apt.', 'Kuningan', '1979-04-16', 'be former rear pool driver porch meal bottle meet cloud same', '203788208', '335037520', '61682503', '2024-04-30', 26, '20489818', '458571118', 0, 5, 10, 299, 114, 4, 'IJ/VII/225132862', 1867, '350653782', 3, 10, 'STR/01/RA/287748', '2028-11-18', 'SIP/01/VI/471968', '2028-11-18', 3, '2024-04-30', 10, NULL, 0, '2024-08-29 08:10:24', '2024-08-29 08:10:24'),
-(13, 13, 'user11@example.com', '361167', '4922924', '2017-03-08', '2024-10-12', 11, 7, 12, 170457, 32372, 737330, 68267, 106331, '37304921', '11162967', 'apt.', 'Sumedang', '1933-12-29', 'be former rear pool driver porch meal bottle meet cloud same', '357942551', '416198659', '256976118', '2024-10-12', 36, '397834338', '196883788', 0, 1, 5, 141, 186, 6, 'IJ/VII/70113087', 1892, '44295026', 1, 6, 'STR/01/RA/99107', '2028-03-08', 'SIP/01/VI/320952', '2028-03-08', 2, '2024-10-12', 8, NULL, 1, '2024-08-29 08:10:24', '2024-08-29 08:10:24'),
-(14, 14, 'user12@example.com', '2110170', '3625145', '2010-06-05', '2024-05-04', 7, 17, 7, 112671, 71799, 335494, 45563, 72787, '35331125', '29125743', 'Ir.', 'Trenggalek', '1964-02-25', 'be former rear pool driver porch meal bottle meet cloud same', '286482385', '303688049', '20676477', '2024-05-04', 31, '73515643', '499040992', 0, 5, 2, 227, 64, 8, 'IJ/VII/220764933', 1923, '88807813', 3, 8, 'STR/01/RA/113895', '2028-09-02', 'SIP/01/VI/75187', '2028-09-02', 4, '2024-05-04', 9, NULL, 1, '2024-08-29 08:10:24', '2024-08-29 08:10:24'),
-(15, 15, 'user13@example.com', '693415', '1174503', '2009-04-13', '2024-03-10', 14, 15, 1, 249484, 18416, 482772, 27869, 37009, '12527657', '30001657', 'apt.', 'Pemalang', '1957-02-08', 'be former rear pool driver porch meal bottle meet cloud same', '102478147', '2733537', '394009686', '2024-03-10', 18, '377866742', '246283128', 1, 5, 9, 157, 57, 10, 'IJ/VII/463879003', 1898, '471965982', 3, 23, 'STR/01/RA/314605', '2028-08-14', 'SIP/01/VI/314295', '2028-08-14', 5, '2024-03-10', 1, NULL, 1, '2024-08-29 08:10:25', '2024-08-29 08:10:25'),
-(16, 16, 'user14@example.com', '2511135', '1864040', '2010-10-13', '2023-02-20', 6, 2, 3, 189586, 58112, 865192, 17072, 73646, '5724870', '27634954', 'Ak.', 'Pekalongan', '1985-07-22', 'be former rear pool driver porch meal bottle meet cloud same', '131630185', '277015105', '70048358', '2023-02-20', 27, '267536512', '388190644', 0, 6, 2, 136, 130, 4, 'IJ/VII/244759999', 1958, '427376535', 3, 5, 'STR/01/RA/438041', '2027-04-24', 'SIP/01/VI/159831', '2027-04-24', 7, '2023-02-20', 5, NULL, 0, '2024-08-29 08:10:25', '2024-08-29 08:10:25'),
-(17, 17, 'user15@example.com', '1921685', '1473496', '2013-04-03', '2024-05-30', 9, 7, 11, 220690, 61822, 348491, 25865, 64605, '3462300', '12570093', 'drh.', 'Ponorogo', '1967-09-19', 'be former rear pool driver porch meal bottle meet cloud same', '10910915', '95602647', '338934769', '2024-05-30', 10, '443909920', '234512348', 1, 4, 10, 43, 130, 10, 'IJ/VII/466180631', 1953, '21387983', 2, 18, 'STR/01/RA/143992', '2026-03-10', 'SIP/01/VI/295501', '2026-03-10', 8, '2024-05-30', 9, NULL, 1, '2024-08-29 08:10:25', '2024-08-29 08:10:25'),
-(18, 18, 'user16@example.com', '1347194', '1832414', '2009-03-24', '2024-08-10', 19, 10, 12, 141523, 114857, 347864, 57251, 91324, '17290198', '42089171', 'dr.', 'Blitar', '1952-04-29', 'be former rear pool driver porch meal bottle meet cloud same', '230077154', '182433617', '35330536', '2024-08-10', 6, '56463918', '357614510', 1, 3, 7, 26, 17, 9, 'IJ/VII/75607847', 1990, '199716440', 2, 18, 'STR/01/RA/410268', '2024-05-05', 'SIP/01/VI/413024', '2024-05-05', 8, '2024-08-10', 2, NULL, 1, '2024-08-29 08:10:25', '2024-08-29 08:10:25'),
-(19, 19, 'user17@example.com', '2792718', '4138614', '2019-05-08', '2023-02-05', 9, 18, 3, 222365, 48863, 738240, 50283, 66025, '44237029', '45528248', 'Adv.', 'Kudus', '1951-04-18', 'be former rear pool driver porch meal bottle meet cloud same', '292421235', '459374179', '476016774', '2023-02-05', 16, '64830069', '114606047', 0, 6, 6, 33, 157, 2, 'IJ/VII/420525474', 1908, '365626324', 1, 13, 'STR/01/RA/213671', '2023-03-24', 'SIP/01/VI/469723', '2023-03-24', 5, '2023-02-05', 2, NULL, 1, '2024-08-29 08:10:26', '2024-08-29 08:10:26'),
-(20, 20, 'user18@example.com', '1241028', '2354048', '2013-03-08', '2023-04-28', 6, 15, 13, 85279, 69844, 348519, 38802, 59371, '27519001', '6121730', 'dr.', 'Indramayu', '1951-06-30', 'be former rear pool driver porch meal bottle meet cloud same', '357908715', '5814992', '198615881', '2023-04-28', 13, '12086676', '302261977', 1, 1, 3, 149, 163, 7, 'IJ/VII/74514396', 1885, '379694316', 2, 17, 'STR/01/RA/127571', '2026-09-16', 'SIP/01/VI/191766', '2026-09-16', 1, '2023-04-28', 1, NULL, 1, '2024-08-29 08:10:26', '2024-08-29 08:10:26'),
-(21, 21, 'user19@example.com', '4736058', '2159138', '2022-11-22', '2024-08-17', 7, 16, 6, 192965, 54612, 795232, 67255, 38865, '42035122', '9552192', 'drg.', 'Demak', '1995-02-15', 'be former rear pool driver porch meal bottle meet cloud same', '338436844', '144465519', '94070886', '2024-08-17', 30, '457631399', '307086632', 1, 2, 10, 290, 33, 5, 'IJ/VII/105585090', 1896, '409983954', 3, 16, 'STR/01/RA/327660', '2023-06-08', 'SIP/01/VI/238686', '2023-06-08', 6, '2024-08-17', 9, NULL, 1, '2024-08-29 08:10:26', '2024-08-29 08:10:26'),
-(22, 22, 'user20@example.com', '784101', '1758375', '2022-02-07', '2023-07-20', 20, 15, 1, 133724, 71597, 318917, 35430, 119313, '33221623', '39180429', 'Adv.', 'Demak', '1911-06-16', 'be former rear pool driver porch meal bottle meet cloud same', '335375262', '147689423', '433833140', '2023-07-20', 24, '399217944', '28931209', 1, 5, 10, 131, 140, 2, 'IJ/VII/282525067', 2007, '193070756', 1, 2, 'STR/01/RA/256472', '2028-04-12', 'SIP/01/VI/344889', '2028-04-12', 5, '2023-07-20', 5, NULL, 1, '2024-08-29 08:10:27', '2024-08-29 08:10:27'),
-(23, 23, 'user21@example.com', '121473', '1678931', '2012-10-27', '2023-11-18', 10, 9, 12, 127266, 38451, 253339, 60872, 26129, '45344226', '14498630', 'drh.', 'Depok', '1990-05-17', 'be former rear pool driver porch meal bottle meet cloud same', '125412831', '334489561', '264551738', '2023-11-18', 6, '43275778', '457666302', 1, 2, 1, 176, 185, 6, 'IJ/VII/468328417', 1927, '34271069', 3, 24, 'STR/01/RA/177068', '2023-01-11', 'SIP/01/VI/475959', '2023-01-11', 2, '2023-11-18', 7, NULL, 1, '2024-08-29 08:10:27', '2024-08-29 08:10:27'),
-(24, 24, 'user22@example.com', '1077940', '530838', '2018-04-13', '2023-07-08', 10, 4, 9, 146056, 34316, 853467, 59194, 76219, '32543256', '26437350', 'Ns.', 'Sumedang', '1913-01-16', 'be former rear pool driver porch meal bottle meet cloud same', '296720914', '325159', '28957417', '2023-07-08', 37, '253362764', '187690075', 1, 3, 8, 238, 157, 4, 'IJ/VII/129717502', 1935, '416785314', 3, 20, 'STR/01/RA/38235', '2024-07-18', 'SIP/01/VI/386044', '2024-07-18', 6, '2023-07-08', 7, NULL, 1, '2024-08-29 08:10:27', '2024-08-29 08:10:27'),
-(25, 25, 'user23@example.com', '2646517', '4025105', '2011-04-24', '2024-04-19', 2, 4, 12, 178897, 43899, 550793, 27128, 44699, '44112766', '45096467', 'drg.', 'Banyuwangi', '1947-07-25', 'be former rear pool driver porch meal bottle meet cloud same', '122519520', '35202166', '444278076', '2024-04-19', 38, '451607937', '117449871', 1, 1, 9, 63, 199, 2, 'IJ/VII/158163194', 1979, '382578618', 1, 14, 'STR/01/RA/413303', '2026-03-26', 'SIP/01/VI/77811', '2026-03-26', 2, '2024-04-19', 6, NULL, 1, '2024-08-29 08:10:27', '2024-08-29 08:10:27'),
-(26, 26, 'user24@example.com', '2287917', '951497', '2020-02-27', '2023-06-13', 11, 3, 12, 84116, 110699, 907803, 8539, 99237, '24746072', '37208297', 'drg.', 'Trenggalek', '1978-01-06', 'be former rear pool driver porch meal bottle meet cloud same', '337995238', '66093236', '255048217', '2023-06-13', 20, '75964579', '180363331', 0, 2, 11, 84, 59, 12, 'IJ/VII/186197527', 1973, '242076569', 3, 18, 'STR/01/RA/350895', '2027-10-23', 'SIP/01/VI/456599', '2027-10-23', 7, '2023-06-13', 9, NULL, 1, '2024-08-29 08:10:28', '2024-08-29 08:10:28'),
-(27, 27, 'user25@example.com', '4018005', '4492598', '2020-05-27', '2024-10-23', 16, 17, 11, 124513, 118005, 437178, 42147, 40099, '9827385', '3899363', 'Adv.', 'Sragen', '1924-08-30', 'be former rear pool driver porch meal bottle meet cloud same', '3455226', '423633732', '271532856', '2024-10-23', 17, '13617619', '389787363', 1, 3, 3, 118, 15, 7, 'IJ/VII/397494958', 1849, '174291902', 3, 23, 'STR/01/RA/419540', '2027-06-15', 'SIP/01/VI/332254', '2027-06-15', 3, '2024-10-23', 9, NULL, 1, '2024-08-29 08:10:28', '2024-08-29 08:10:28'),
-(28, 28, 'user26@example.com', '267822', '2485222', '2007-03-26', '2023-09-05', 7, 18, 11, 206494, 874, 473067, 35745, 107740, '15834035', '25734330', 'Ns.', 'Kajen', '1969-05-29', 'be former rear pool driver porch meal bottle meet cloud same', '64821041', '476106995', '200014760', '2023-09-05', 16, '255592822', '467706785', 1, 5, 10, 274, 177, 12, 'IJ/VII/395148050', 1855, '365248452', 3, 18, 'STR/01/RA/57659', '2025-03-23', 'SIP/01/VI/380382', '2025-03-23', 7, '2023-09-05', 1, NULL, 1, '2024-08-29 08:10:28', '2024-08-29 08:10:28'),
-(29, 29, 'user27@example.com', '2731347', '415518', '2022-06-05', '2023-05-14', 10, 12, 7, 120977, 76841, 989939, 35462, 100108, '30452154', '28383718', 'dr.', 'Jombang', '1994-06-04', 'be former rear pool driver porch meal bottle meet cloud same', '21439', '367960832', '161107931', '2023-05-14', 1, '325252719', '279803143', 0, 5, 4, 174, 99, 11, 'IJ/VII/166977347', 1867, '151500296', 1, 7, 'STR/01/RA/401523', '2024-07-09', 'SIP/01/VI/177931', '2024-07-09', 5, '2023-05-14', 3, NULL, 1, '2024-08-29 08:10:29', '2024-08-29 08:10:29'),
-(30, 30, 'user28@example.com', '2040508', '2035395', '2017-01-20', '2024-05-24', 9, 7, 6, 177828, 2721, 415136, 12881, 16732, '44461808', '45429518', 'Adv.', 'Lamongan', '1953-04-30', 'be former rear pool driver porch meal bottle meet cloud same', '318053044', '83446181', '321653028', '2024-05-24', 7, '323225097', '218531210', 0, 3, 1, 172, 126, 1, 'IJ/VII/234341811', 1890, '171358804', 2, 7, 'STR/01/RA/295048', '2024-07-31', 'SIP/01/VI/480848', '2024-07-31', 1, '2024-05-24', 3, NULL, 1, '2024-08-29 08:10:29', '2024-08-29 08:10:29'),
-(31, 31, 'user29@example.com', '2587219', '3050369', '2013-12-22', '2023-07-24', 19, 15, 10, 126557, 19774, 846626, 59093, 50600, '12623532', '12550553', 'Ir.', 'Brebes', '1926-03-27', 'be former rear pool driver porch meal bottle meet cloud same', '401677018', '334068382', '165379939', '2023-07-24', 3, '353492619', '361450855', 0, 3, 1, 245, 97, 6, 'IJ/VII/322984937', 1994, '74275178', 1, 24, 'STR/01/RA/424467', '2023-01-19', 'SIP/01/VI/429772', '2023-01-19', 3, '2023-07-24', 4, NULL, 1, '2024-08-29 08:10:29', '2024-08-29 08:10:29'),
-(32, 32, 'user30@example.com', '3401077', '2526812', '2008-05-09', '2024-06-06', 11, 18, 5, 91328, 53324, 893897, 65298, 41652, '19523629', '35745618', 'Ak.', 'Subang', '1930-09-28', 'be former rear pool driver porch meal bottle meet cloud same', '443122181', '1656977', '399746678', '2024-06-06', 13, '136561677', '39407477', 1, 3, 10, 229, 183, 11, 'IJ/VII/114679558', 1904, '163525987', 2, 25, 'STR/01/RA/160878', '2028-01-09', 'SIP/01/VI/485197', '2028-01-09', 4, '2024-06-06', 10, NULL, 1, '2024-08-29 08:10:29', '2024-08-29 08:10:29'),
-(33, 33, 'user31@example.com', '3045704', '4414506', '2009-05-07', '2024-11-11', 6, 4, 11, 101957, 116821, 352725, 29392, 117933, '18528231', '4515595', 'Ir.', 'Purwakarta', '1988-06-12', 'be former rear pool driver porch meal bottle meet cloud same', '186878927', '215857384', '22923159', '2024-11-11', 40, '250384970', '208713464', 1, 6, 3, 190, 18, 11, 'IJ/VII/189106449', 1992, '103624661', 2, 12, 'STR/01/RA/447783', '2024-07-10', 'SIP/01/VI/209721', '2024-07-10', 1, '2024-11-11', 1, NULL, 1, '2024-08-29 08:10:30', '2024-08-29 08:10:30'),
-(34, 34, 'user32@example.com', '1355085', '4362377', '2008-04-03', '2024-04-22', 21, 17, 4, 215115, 92396, 999400, 4569, 90640, '8102317', '6290948', 'drg.', 'Pati', '1933-06-09', 'be former rear pool driver porch meal bottle meet cloud same', '238718909', '35352651', '443658018', '2024-04-22', 14, '449757882', '236035871', 1, 5, 2, 272, 24, 6, 'IJ/VII/473254730', 1841, '381501930', 3, 13, 'STR/01/RA/246125', '2027-12-08', 'SIP/01/VI/84889', '2027-12-08', 2, '2024-04-22', 6, NULL, 1, '2024-08-29 08:10:30', '2024-08-29 08:10:30'),
-(35, 35, 'user33@example.com', '783444', '87865', '2015-07-12', '2023-04-27', 8, 16, 5, 207549, 31197, 812084, 36799, 113268, '27369668', '27395629', 'Adv.', 'Surabaya', '1918-01-07', 'be former rear pool driver porch meal bottle meet cloud same', '283335396', '372922411', '368463257', '2023-04-27', 32, '399732177', '5160798', 0, 5, 6, 63, 192, 12, 'IJ/VII/195370326', 1838, '314023553', 1, 11, 'STR/01/RA/354082', '2028-03-10', 'SIP/01/VI/181597', '2028-03-10', 6, '2023-04-27', 3, NULL, 1, '2024-08-29 08:10:30', '2024-08-29 08:10:30'),
-(36, 36, 'user34@example.com', '4667337', '4316152', '2021-01-16', '2024-05-29', 13, 5, 3, 111152, 64837, 661154, 50284, 20882, '18499222', '2282860', 'apt.', 'Banyuwangi', '1930-08-10', 'be former rear pool driver porch meal bottle meet cloud same', '208584124', '197607750', '245076445', '2024-05-29', 5, '191239023', '327095077', 1, 2, 2, 124, 86, 10, 'IJ/VII/356418251', 1994, '293239153', 3, 20, 'STR/01/RA/37439', '2024-11-10', 'SIP/01/VI/214988', '2024-11-10', 1, '2024-05-29', 10, NULL, 1, '2024-08-29 08:10:31', '2024-08-29 08:10:31'),
-(37, 37, 'user35@example.com', '2519673', '4590360', '2008-04-08', '2023-10-23', 2, 4, 9, 218140, 31472, 500738, 27151, 46559, '24803917', '41410145', 'Ns.', 'Tuban', '2003-04-17', 'be former rear pool driver porch meal bottle meet cloud same', '32195081', '354000781', '465843323', '2023-10-23', 3, '78425655', '10000427', 1, 1, 10, 65, 162, 4, 'IJ/VII/218645627', 1941, '451690856', 3, 6, 'STR/01/RA/497909', '2025-05-12', 'SIP/01/VI/480304', '2025-05-12', 7, '2023-10-23', 8, NULL, 1, '2024-08-29 08:10:31', '2024-08-29 08:10:31'),
-(38, 38, 'user36@example.com', '3129095', '2431913', '2011-12-09', '2024-01-11', 6, 14, 8, 187873, 34931, 906778, 10724, 52804, '23434910', '45456518', 'drh.', 'Trenggalek', '1986-09-05', 'be former rear pool driver porch meal bottle meet cloud same', '46514821', '382237908', '458893125', '2024-01-11', 22, '187973549', '288947709', 0, 3, 3, 75, 143, 12, 'IJ/VII/416896803', 1965, '264889471', 2, 8, 'STR/01/RA/92649', '2028-07-27', 'SIP/01/VI/41025', '2028-07-27', 5, '2024-01-11', 8, NULL, 0, '2024-08-29 08:10:31', '2024-08-29 08:10:31'),
-(39, 39, 'user37@example.com', '1865172', '1328901', '2022-12-20', '2024-08-25', 7, 10, 13, 100997, 88622, 736511, 11751, 64064, '1034239', '21278433', 'Ar.', 'Cirebon', '1947-01-01', 'be former rear pool driver porch meal bottle meet cloud same', '55485727', '154943900', '131230239', '2024-08-25', 29, '14345429', '205111084', 1, 2, 7, 95, 119, 8, 'IJ/VII/170216888', 2007, '278654512', 1, 12, 'STR/01/RA/483886', '2028-05-03', 'SIP/01/VI/168372', '2028-05-03', 2, '2024-08-25', 4, NULL, 1, '2024-08-29 08:10:31', '2024-08-29 08:10:31'),
-(40, 40, 'user38@example.com', '1932322', '797404', '2007-04-09', '2024-05-03', 5, 13, 4, 246048, 18174, 864821, 47558, 32855, '41166003', '47594044', 'Ak.', 'Purworejo', '1959-01-24', 'be former rear pool driver porch meal bottle meet cloud same', '11502117', '260268822', '493222566', '2024-05-03', 3, '390997591', '350184332', 0, 5, 5, 230, 78, 10, 'IJ/VII/32605647', 1947, '112982492', 3, 17, 'STR/01/RA/267348', '2023-02-17', 'SIP/01/VI/188655', '2023-02-17', 6, '2024-05-03', 2, NULL, 1, '2024-08-29 08:10:32', '2024-08-29 08:10:32'),
-(41, 41, 'user39@example.com', '796652', '1923236', '2011-01-13', '2024-07-19', 7, 11, 7, 125417, 89759, 780485, 48979, 10661, '31907881', '32421733', 'apt.', 'Bandung', '1972-06-05', 'be former rear pool driver porch meal bottle meet cloud same', '115129733', '387934202', '257640609', '2024-07-19', 1, '177537020', '372030408', 0, 6, 5, 58, 104, 5, 'IJ/VII/384698886', 1964, '263858852', 1, 21, 'STR/01/RA/282732', '2025-02-10', 'SIP/01/VI/424568', '2025-02-10', 8, '2024-07-19', 10, NULL, 1, '2024-08-29 08:10:32', '2024-08-29 08:10:32'),
-(42, 42, 'user40@example.com', '954496', '312172', '2012-07-16', '2024-03-04', 9, 17, 11, 195571, 97963, 710162, 25192, 112594, '4384686', '13988051', 'Ak.', 'Banyuwangi', '1964-01-19', 'be former rear pool driver porch meal bottle meet cloud same', '248663001', '111623215', '113690523', '2024-03-04', 6, '412799627', '103549815', 1, 4, 3, 140, 163, 12, 'IJ/VII/341667592', 1915, '178772385', 3, 17, 'STR/01/RA/240058', '2025-08-27', 'SIP/01/VI/33860', '2025-08-27', 1, '2024-03-04', 5, NULL, 1, '2024-08-29 08:10:32', '2024-08-29 08:10:32'),
-(43, 43, 'user41@example.com', '3527251', '2344345', '2017-12-25', '2024-04-24', 5, 19, 3, 113701, 72761, 552001, 558, 37714, '4444076', '28559845', 'Ir.', 'Nganjuk', '1939-06-14', 'be former rear pool driver porch meal bottle meet cloud same', '209849342', '108674779', '104878594', '2024-04-24', 25, '72123575', '8805487', 0, 5, 3, 69, 145, 2, 'IJ/VII/427956478', 1857, '76160732', 3, 25, 'STR/01/RA/116958', '2028-06-02', 'SIP/01/VI/498685', '2028-06-02', 4, '2024-04-24', 4, NULL, 1, '2024-08-29 08:10:33', '2024-08-29 08:10:33'),
-(44, 44, 'user42@example.com', '4788736', '1150062', '2007-02-14', '2023-09-11', 13, 8, 4, 218363, 94149, 812820, 26191, 83737, '41659982', '21449568', 'Adv.', 'Pemalang', '1962-09-29', 'be former rear pool driver porch meal bottle meet cloud same', '401873983', '126756002', '327063742', '2023-09-11', 2, '485526478', '478640808', 1, 6, 1, 131, 59, 4, 'IJ/VII/441495429', 1826, '205322426', 2, 18, 'STR/01/RA/383501', '2025-08-08', 'SIP/01/VI/353632', '2025-08-08', 5, '2023-09-11', 5, NULL, 1, '2024-08-29 08:10:33', '2024-08-29 08:10:33'),
-(45, 45, 'user43@example.com', '1291705', '924227', '2014-04-22', '2023-03-02', 2, 4, 13, 241667, 114766, 948008, 9404, 28771, '15589199', '11708257', 'Ir.', 'Sidoarjo', '1909-03-11', 'be former rear pool driver porch meal bottle meet cloud same', '457723433', '356733029', '15836224', '2023-03-02', 24, '78953653', '345940924', 1, 2, 10, 109, 21, 10, 'IJ/VII/443922348', 2006, '472012874', 1, 26, 'STR/01/RA/433845', '2023-10-25', 'SIP/01/VI/260311', '2023-10-25', 4, '2023-03-02', 8, NULL, 1, '2024-08-29 08:10:33', '2024-08-29 08:10:33'),
-(46, 46, 'user44@example.com', '3847071', '4853029', '2012-09-17', '2024-04-21', 20, 1, 4, 194476, 48073, 443828, 28385, 66979, '11313510', '18408665', 'Adv.', 'Pasuruan', '1940-01-14', 'be former rear pool driver porch meal bottle meet cloud same', '249009557', '1815014', '352988966', '2024-04-21', 1, '446680409', '38390922', 1, 2, 5, 13, 68, 5, 'IJ/VII/493435134', 1801, '422340628', 1, 22, 'STR/01/RA/230103', '2028-05-19', 'SIP/01/VI/376252', '2028-05-19', 6, '2024-04-21', 7, NULL, 1, '2024-08-29 08:10:33', '2024-08-29 08:10:33'),
-(47, 47, 'user45@example.com', '1905041', '4299541', '2018-05-08', '2024-08-03', 20, 10, 8, 199872, 13493, 921410, 9856, 110227, '21390360', '3572204', 'Ir.', 'Pati', '1971-02-14', 'be former rear pool driver porch meal bottle meet cloud same', '96385756', '127422697', '110264544', '2024-08-03', 10, '476800673', '108704721', 0, 3, 1, 36, 14, 5, 'IJ/VII/169623925', 1949, '499017517', 1, 25, 'STR/01/RA/267856', '2026-04-05', 'SIP/01/VI/149831', '2026-04-05', 1, '2024-08-03', 10, NULL, 1, '2024-08-29 08:10:34', '2024-08-29 08:10:34'),
-(48, 48, 'user46@example.com', '4241828', '3229182', '2014-05-22', '2023-11-07', 8, 6, 8, 76433, 95394, 937079, 62152, 38696, '46254097', '29224274', 'Adv.', 'Magetan', '1956-09-18', 'be former rear pool driver porch meal bottle meet cloud same', '73438538', '481515518', '268708105', '2023-11-07', 29, '211426986', '318608031', 0, 3, 11, 142, 40, 12, 'IJ/VII/136799562', 1942, '57878737', 1, 1, 'STR/01/RA/289426', '2028-04-06', 'SIP/01/VI/471345', '2028-04-06', 6, '2023-11-07', 8, NULL, 1, '2024-08-29 08:10:34', '2024-08-29 08:10:34'),
-(49, 49, 'user47@example.com', '3216531', '3297626', '2013-10-02', '2023-02-17', 9, 10, 6, 175024, 88555, 463654, 38684, 83578, '9435341', '22180808', 'Adv.', 'Bogor', '1910-01-14', 'be former rear pool driver porch meal bottle meet cloud same', '293728240', '5064815', '144700112', '2023-02-17', 22, '267393991', '29802647', 0, 5, 11, 79, 36, 8, 'IJ/VII/216004364', 1822, '495331637', 3, 7, 'STR/01/RA/101769', '2024-01-17', 'SIP/01/VI/265931', '2024-01-17', 8, '2023-02-17', 7, NULL, 1, '2024-08-29 08:10:34', '2024-08-29 08:10:34'),
-(50, 50, 'fatwalinovera@gmail.com', '33319', '796788', '07-07-2018', '2024-11-06', 6, 9, 10, 70422, 4315, 676504, 47764, 18741, '7404864', '1234123412341234', 'Ak.', 'Boyolali', '1905-12-25', 'be former rear pool driver porch meal bottle meet cloud same', '49579815', '252963535', '426315229', '2024-11-06', 10, '287455758', '395329587', 1, 1, 9, 297, 131, 7, 'IJ/VII/259813122', 2005, '1234123412341234', 3, 23, 'STR/01/RA/377398', '2024-08-29T00:00:00.000Z', 'SIP/01/VI/69969', '2024-08-29T00:00:00.000Z', 3, '06-11-2024', 3, NULL, 1, '2024-08-29 08:10:35', '2024-08-30 22:54:48'),
-(51, 51, 'candhy.fadhila.arsyad@gmail.com', '526321', '3308922', '16-02-2018', '2024-05-10', 4, 4, 4, 219304, 47973, 354123, 45823, 75950, '23305258', '1234567891012131', 'drg.', 'Blitar', '1949-06-13', 'be former rear pool driver porch meal bottle meet cloud same', '454028861', '154203924', '131317742', '2024-05-10', 7, '93887299', '410600201', 0, 1, 12, 72, 117, 9, 'IJ/VII/311840660', 1944, '1234567891012131', 3, 13, 'STR/01/RA/108186', '2024-12-21T00:00:00.000Z', 'SIP/01/VI/228289', '2024-12-21T00:00:00.000Z', 3, '10-05-2024', 10, NULL, 0, '2024-08-29 08:10:35', '2024-09-03 05:29:30'),
-(55, 55, 'adiyatmaharis21@gmail.com', '56886585', '5847474', '01-09-2024', NULL, 6, 3, 3, 2000000, 120000, 120000, 78000, 560000, '337405161001000202', '3374070504010003', 'Prof.', 'Semarang', '2024-09-28', 'jalan test', '82226582306', '231312', '321321312', NULL, NULL, '321321312', '76967955', 1, 1, 2, 170, 85, 9, '8931803810', 2023, '3374070504010003', 2, 1, '7381798', '2024-09-30T17:00:00.000Z', '123123', NULL, 3, '25-10-2024', NULL, 1, 1, '2024-08-31 22:04:43', '2024-09-03 05:29:02'),
-(56, 56, 'superadmin@example.com', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1, '2024-08-29 08:10:20', '2024-08-29 08:10:20');
+INSERT INTO `data_karyawans` (`id`, `user_id`, `email`, `no_rm`, `no_manulife`, `tgl_masuk`, `tgl_keluar`, `unit_kerja_id`, `jabatan_id`, `kompetensi_id`, `tunjangan_fungsional`, `tunjangan_khusus`, `tunjangan_lainnya`, `uang_makan`, `uang_lembur`, `nik`, `nik_ktp`, `gelar_depan`, `gelar_belakang`, `tempat_lahir`, `tgl_lahir`, `alamat`, `no_hp`, `no_bpjsksh`, `no_bpjsktk`, `tgl_diangkat`, `masa_kerja`, `npwp`, `no_rekening`, `jenis_kelamin`, `kategori_agama_id`, `kategori_darah_id`, `tinggi_badan`, `berat_badan`, `pendidikan_terakhir`, `no_ijazah`, `tahun_lulus`, `no_kk`, `status_karyawan_id`, `kelompok_gaji_id`, `no_str`, `masa_berlaku_str`, `no_sip`, `masa_berlaku_sip`, `ptkp_id`, `tgl_berakhir_pks`, `masa_diklat`, `verifikator_1`, `status_reward_presensi`, `created_at`, `updated_at`) VALUES
+(1, 1, 'super_admin@admin.rski', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, '2024-09-09 06:26:11', '2024-09-09 06:26:11');
 
 -- --------------------------------------------------------
 
@@ -346,177 +168,6 @@ CREATE TABLE `data_keluargas` (
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
---
--- Dumping data for table `data_keluargas`
---
-
-INSERT INTO `data_keluargas` (`id`, `data_karyawan_id`, `nama_keluarga`, `hubungan`, `pendidikan_terakhir`, `status_hidup`, `pekerjaan`, `no_hp`, `email`, `created_at`, `updated_at`) VALUES
-(1, 1, 'Nama Ayah 1', 'Ayah', 'S3', 1, 'Pekerjaan Ayah 1', '4212966', 'ayah1@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(2, 1, 'Nama Ibu 1', 'Ibu', 'S1', 0, 'Pekerjaan Ibu 1', '2432550', 'ibu1@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(3, 1, 'Nama Keluarga 1 0', 'Ibu Suami', 'D2', 1, 'Pekerjaan 1 0', '4337778', 'keluarga10@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(4, 2, 'Nama Ayah 2', 'Ayah', 'D1', 0, 'Pekerjaan Ayah 2', '133818', 'ayah2@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(5, 2, 'Nama Ibu 2', 'Ibu', 'D2', 0, 'Pekerjaan Ibu 2', '151469', 'ibu2@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(6, 2, 'Nama Keluarga 2 0', 'Suami', 'S2', 1, 'Pekerjaan 2 0', '3252295', 'keluarga20@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(7, 2, 'Nama Keluarga 2 1', 'Kakek', 'D1', 1, 'Pekerjaan 2 1', '82974', 'keluarga21@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(8, 3, 'Nama Ayah 3', 'Ayah', 'S2', 0, 'Pekerjaan Ayah 3', '1922799', 'ayah3@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(9, 3, 'Nama Ibu 3', 'Ibu', 'S3', 1, 'Pekerjaan Ibu 3', '274298', 'ibu3@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(10, 3, 'Nama Keluarga 3 0', 'Suami', 'D1', 1, 'Pekerjaan 3 0', '4555339', 'keluarga30@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(11, 3, 'Nama Keluarga 3 1', 'Ayah Istri', 'S1', 0, 'Pekerjaan 3 1', '1242591', 'keluarga31@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(12, 4, 'Nama Ayah 4', 'Ayah', 'D4', 0, 'Pekerjaan Ayah 4', '1125150', 'ayah4@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(13, 4, 'Nama Ibu 4', 'Ibu', 'S1', 0, 'Pekerjaan Ibu 4', '1210356', 'ibu4@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(14, 4, 'Nama Keluarga 4 0', 'Ayah Istri', 'D1', 0, 'Pekerjaan 4 0', '1341931', 'keluarga40@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(15, 4, 'Nama Keluarga 4 1', 'Nenek', 'S3', 1, 'Pekerjaan 4 1', '3098918', 'keluarga41@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(16, 5, 'Nama Ayah 5', 'Ayah', 'D1', 0, 'Pekerjaan Ayah 5', '474296', 'ayah5@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(17, 5, 'Nama Ibu 5', 'Ibu', 'S1', 1, 'Pekerjaan Ibu 5', '2376802', 'ibu5@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(18, 5, 'Nama Keluarga 5 0', 'Nenek', 'SMK', 1, 'Pekerjaan 5 0', '2447899', 'keluarga50@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(19, 6, 'Nama Ayah 6', 'Ayah', 'D4', 1, 'Pekerjaan Ayah 6', '995547', 'ayah6@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(20, 6, 'Nama Ibu 6', 'Ibu', 'SMA', 0, 'Pekerjaan Ibu 6', '3417873', 'ibu6@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(21, 7, 'Nama Ayah 7', 'Ayah', 'SMA', 0, 'Pekerjaan Ayah 7', '2965277', 'ayah7@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(22, 7, 'Nama Ibu 7', 'Ibu', 'SMK', 0, 'Pekerjaan Ibu 7', '1149685', 'ibu7@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(23, 7, 'Nama Keluarga 7 0', 'Suami', 'S1', 0, 'Pekerjaan 7 0', '715799', 'keluarga70@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(24, 8, 'Nama Ayah 8', 'Ayah', 'S1', 0, 'Pekerjaan Ayah 8', '2498242', 'ayah8@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(25, 8, 'Nama Ibu 8', 'Ibu', 'S2', 0, 'Pekerjaan Ibu 8', '2928524', 'ibu8@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(26, 9, 'Nama Ayah 9', 'Ayah', 'D1', 1, 'Pekerjaan Ayah 9', '2432116', 'ayah9@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(27, 9, 'Nama Ibu 9', 'Ibu', 'D2', 1, 'Pekerjaan Ibu 9', '1387735', 'ibu9@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(28, 10, 'Nama Ayah 10', 'Ayah', 'D2', 1, 'Pekerjaan Ayah 10', '2203859', 'ayah10@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(29, 10, 'Nama Ibu 10', 'Ibu', 'D1', 1, 'Pekerjaan Ibu 10', '145672', 'ibu10@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(30, 11, 'Nama Ayah 11', 'Ayah', 'S1', 0, 'Pekerjaan Ayah 11', '1076236', 'ayah11@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(31, 11, 'Nama Ibu 11', 'Ibu', 'S2', 1, 'Pekerjaan Ibu 11', '4522252', 'ibu11@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(32, 11, 'Nama Keluarga 11 0', 'Ibu Istri', 'D4', 0, 'Pekerjaan 11 0', '1102469', 'keluarga110@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(33, 11, 'Nama Keluarga 11 1', 'Ibu Istri', 'S3', 0, 'Pekerjaan 11 1', '542154', 'keluarga111@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(34, 12, 'Nama Ayah 12', 'Ayah', 'SMK', 0, 'Pekerjaan Ayah 12', '3437890', 'ayah12@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(35, 12, 'Nama Ibu 12', 'Ibu', 'D2', 0, 'Pekerjaan Ibu 12', '3748968', 'ibu12@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(36, 12, 'Nama Keluarga 12 0', 'Nenek', 'S2', 1, 'Pekerjaan 12 0', '4637309', 'keluarga120@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(37, 12, 'Nama Keluarga 12 1', 'Anak', 'D3', 0, 'Pekerjaan 12 1', '3644534', 'keluarga121@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(38, 13, 'Nama Ayah 13', 'Ayah', 'D2', 0, 'Pekerjaan Ayah 13', '4012163', 'ayah13@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(39, 13, 'Nama Ibu 13', 'Ibu', 'S3', 1, 'Pekerjaan Ibu 13', '4095253', 'ibu13@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(40, 14, 'Nama Ayah 14', 'Ayah', 'S2', 0, 'Pekerjaan Ayah 14', '3831313', 'ayah14@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(41, 14, 'Nama Ibu 14', 'Ibu', 'D2', 1, 'Pekerjaan Ibu 14', '173821', 'ibu14@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(42, 15, 'Nama Ayah 15', 'Ayah', 'D1', 1, 'Pekerjaan Ayah 15', '818738', 'ayah15@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(43, 15, 'Nama Ibu 15', 'Ibu', 'D3', 0, 'Pekerjaan Ibu 15', '3298999', 'ibu15@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(44, 15, 'Nama Keluarga 15 0', 'Kakek', 'SMA', 1, 'Pekerjaan 15 0', '634643', 'keluarga150@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(45, 15, 'Nama Keluarga 15 1', 'Nenek', 'SMK', 0, 'Pekerjaan 15 1', '412840', 'keluarga151@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(46, 16, 'Nama Ayah 16', 'Ayah', 'D2', 1, 'Pekerjaan Ayah 16', '4671464', 'ayah16@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(47, 16, 'Nama Ibu 16', 'Ibu', 'D2', 0, 'Pekerjaan Ibu 16', '1548387', 'ibu16@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(48, 16, 'Nama Keluarga 16 0', 'Istri', 'SMK', 1, 'Pekerjaan 16 0', '1790955', 'keluarga160@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(49, 17, 'Nama Ayah 17', 'Ayah', 'D3', 1, 'Pekerjaan Ayah 17', '3888929', 'ayah17@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(50, 17, 'Nama Ibu 17', 'Ibu', 'D1', 0, 'Pekerjaan Ibu 17', '3142646', 'ibu17@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(51, 17, 'Nama Keluarga 17 0', 'Anak', 'S1', 1, 'Pekerjaan 17 0', '3273301', 'keluarga170@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(52, 18, 'Nama Ayah 18', 'Ayah', 'D1', 1, 'Pekerjaan Ayah 18', '1795460', 'ayah18@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(53, 18, 'Nama Ibu 18', 'Ibu', 'SMK', 0, 'Pekerjaan Ibu 18', '3575103', 'ibu18@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(54, 18, 'Nama Keluarga 18 0', 'Istri', 'S3', 0, 'Pekerjaan 18 0', '3676798', 'keluarga180@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(55, 18, 'Nama Keluarga 18 1', 'Kakek', 'S3', 0, 'Pekerjaan 18 1', '1761726', 'keluarga181@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(56, 19, 'Nama Ayah 19', 'Ayah', 'S3', 1, 'Pekerjaan Ayah 19', '2630618', 'ayah19@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(57, 19, 'Nama Ibu 19', 'Ibu', 'S3', 0, 'Pekerjaan Ibu 19', '3407961', 'ibu19@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(58, 19, 'Nama Keluarga 19 0', 'Anak', 'D1', 0, 'Pekerjaan 19 0', '3125017', 'keluarga190@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(59, 19, 'Nama Keluarga 19 1', 'Ayah Istri', 'SMA', 1, 'Pekerjaan 19 1', '2070392', 'keluarga191@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(60, 20, 'Nama Ayah 20', 'Ayah', 'D1', 1, 'Pekerjaan Ayah 20', '4376155', 'ayah20@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(61, 20, 'Nama Ibu 20', 'Ibu', 'SMA', 0, 'Pekerjaan Ibu 20', '3408081', 'ibu20@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(62, 20, 'Nama Keluarga 20 0', 'Anak', 'D4', 0, 'Pekerjaan 20 0', '2509276', 'keluarga200@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(63, 20, 'Nama Keluarga 20 1', 'Nenek', 'S3', 1, 'Pekerjaan 20 1', '825910', 'keluarga201@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(64, 21, 'Nama Ayah 21', 'Ayah', 'D4', 0, 'Pekerjaan Ayah 21', '4636384', 'ayah21@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(65, 21, 'Nama Ibu 21', 'Ibu', 'SMK', 1, 'Pekerjaan Ibu 21', '4554598', 'ibu21@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(66, 21, 'Nama Keluarga 21 0', 'Kakek', 'S1', 1, 'Pekerjaan 21 0', '2842698', 'keluarga210@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(67, 22, 'Nama Ayah 22', 'Ayah', 'SMK', 1, 'Pekerjaan Ayah 22', '1061504', 'ayah22@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(68, 22, 'Nama Ibu 22', 'Ibu', 'S3', 0, 'Pekerjaan Ibu 22', '479425', 'ibu22@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(69, 22, 'Nama Keluarga 22 0', 'Ibu Suami', 'S2', 0, 'Pekerjaan 22 0', '3964217', 'keluarga220@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(70, 22, 'Nama Keluarga 22 1', 'Istri', 'SMK', 0, 'Pekerjaan 22 1', '3680731', 'keluarga221@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(71, 23, 'Nama Ayah 23', 'Ayah', 'SMK', 1, 'Pekerjaan Ayah 23', '3840670', 'ayah23@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(72, 23, 'Nama Ibu 23', 'Ibu', 'D4', 1, 'Pekerjaan Ibu 23', '4610367', 'ibu23@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(73, 23, 'Nama Keluarga 23 0', 'Ayah Istri', 'SMK', 0, 'Pekerjaan 23 0', '4939619', 'keluarga230@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(74, 23, 'Nama Keluarga 23 1', 'Ayah Suami', 'SMK', 1, 'Pekerjaan 23 1', '1365434', 'keluarga231@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(75, 24, 'Nama Ayah 24', 'Ayah', 'D4', 1, 'Pekerjaan Ayah 24', '1756060', 'ayah24@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(76, 24, 'Nama Ibu 24', 'Ibu', 'SMA', 0, 'Pekerjaan Ibu 24', '4006665', 'ibu24@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(77, 24, 'Nama Keluarga 24 0', 'Ibu Suami', 'S1', 1, 'Pekerjaan 24 0', '4577354', 'keluarga240@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(78, 25, 'Nama Ayah 25', 'Ayah', 'SMK', 1, 'Pekerjaan Ayah 25', '1631050', 'ayah25@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(79, 25, 'Nama Ibu 25', 'Ibu', 'S2', 1, 'Pekerjaan Ibu 25', '2790343', 'ibu25@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(80, 25, 'Nama Keluarga 25 0', 'Ayah Suami', 'D4', 1, 'Pekerjaan 25 0', '3997275', 'keluarga250@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(81, 25, 'Nama Keluarga 25 1', 'Nenek', 'S2', 1, 'Pekerjaan 25 1', '315940', 'keluarga251@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(82, 26, 'Nama Ayah 26', 'Ayah', 'D3', 0, 'Pekerjaan Ayah 26', '1563670', 'ayah26@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(83, 26, 'Nama Ibu 26', 'Ibu', 'D4', 1, 'Pekerjaan Ibu 26', '4108712', 'ibu26@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(84, 26, 'Nama Keluarga 26 0', 'Nenek', 'D2', 1, 'Pekerjaan 26 0', '1609444', 'keluarga260@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(85, 27, 'Nama Ayah 27', 'Ayah', 'D1', 0, 'Pekerjaan Ayah 27', '1622241', 'ayah27@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(86, 27, 'Nama Ibu 27', 'Ibu', 'SMA', 0, 'Pekerjaan Ibu 27', '4794183', 'ibu27@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(87, 27, 'Nama Keluarga 27 0', 'Anak', 'D4', 0, 'Pekerjaan 27 0', '2125325', 'keluarga270@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(88, 27, 'Nama Keluarga 27 1', 'Nenek', 'S1', 0, 'Pekerjaan 27 1', '2059992', 'keluarga271@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(89, 27, 'Nama Keluarga 27 2', 'Istri', 'S2', 1, 'Pekerjaan 27 2', '2120319', 'keluarga272@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(90, 28, 'Nama Ayah 28', 'Ayah', 'D4', 1, 'Pekerjaan Ayah 28', '333050', 'ayah28@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(91, 28, 'Nama Ibu 28', 'Ibu', 'S3', 1, 'Pekerjaan Ibu 28', '1499006', 'ibu28@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(92, 28, 'Nama Keluarga 28 0', 'Kakek', 'D1', 0, 'Pekerjaan 28 0', '817229', 'keluarga280@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(93, 28, 'Nama Keluarga 28 1', 'Kakek', 'SMA', 0, 'Pekerjaan 28 1', '1522024', 'keluarga281@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(94, 29, 'Nama Ayah 29', 'Ayah', 'D3', 1, 'Pekerjaan Ayah 29', '2694474', 'ayah29@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(95, 29, 'Nama Ibu 29', 'Ibu', 'D1', 1, 'Pekerjaan Ibu 29', '3051678', 'ibu29@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(96, 29, 'Nama Keluarga 29 0', 'Ibu Suami', 'S2', 1, 'Pekerjaan 29 0', '1014505', 'keluarga290@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(97, 30, 'Nama Ayah 30', 'Ayah', 'SMK', 1, 'Pekerjaan Ayah 30', '858795', 'ayah30@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(98, 30, 'Nama Ibu 30', 'Ibu', 'D4', 0, 'Pekerjaan Ibu 30', '2436042', 'ibu30@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(99, 30, 'Nama Keluarga 30 0', 'Ibu Istri', 'S2', 0, 'Pekerjaan 30 0', '1919419', 'keluarga300@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(100, 31, 'Nama Ayah 31', 'Ayah', 'S2', 1, 'Pekerjaan Ayah 31', '4455235', 'ayah31@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(101, 31, 'Nama Ibu 31', 'Ibu', 'S3', 0, 'Pekerjaan Ibu 31', '1215853', 'ibu31@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(102, 31, 'Nama Keluarga 31 0', 'Kakek', 'S3', 0, 'Pekerjaan 31 0', '1546579', 'keluarga310@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(103, 32, 'Nama Ayah 32', 'Ayah', 'SMK', 0, 'Pekerjaan Ayah 32', '2533037', 'ayah32@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(104, 32, 'Nama Ibu 32', 'Ibu', 'D3', 0, 'Pekerjaan Ibu 32', '780689', 'ibu32@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(105, 32, 'Nama Keluarga 32 0', 'Ayah Suami', 'D1', 1, 'Pekerjaan 32 0', '3746775', 'keluarga320@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(106, 33, 'Nama Ayah 33', 'Ayah', 'SMA', 1, 'Pekerjaan Ayah 33', '4853192', 'ayah33@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(107, 33, 'Nama Ibu 33', 'Ibu', 'SMK', 1, 'Pekerjaan Ibu 33', '1321327', 'ibu33@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(108, 33, 'Nama Keluarga 33 0', 'Ayah Istri', 'SMK', 1, 'Pekerjaan 33 0', '3011431', 'keluarga330@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(109, 33, 'Nama Keluarga 33 1', 'Kakek', 'D1', 1, 'Pekerjaan 33 1', '3736470', 'keluarga331@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(110, 33, 'Nama Keluarga 33 2', 'Nenek', 'S2', 0, 'Pekerjaan 33 2', '71991', 'keluarga332@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(111, 34, 'Nama Ayah 34', 'Ayah', 'D2', 0, 'Pekerjaan Ayah 34', '3894203', 'ayah34@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(112, 34, 'Nama Ibu 34', 'Ibu', 'D1', 0, 'Pekerjaan Ibu 34', '2029677', 'ibu34@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(113, 34, 'Nama Keluarga 34 0', 'Nenek', 'D2', 1, 'Pekerjaan 34 0', '4522620', 'keluarga340@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(114, 35, 'Nama Ayah 35', 'Ayah', 'S2', 0, 'Pekerjaan Ayah 35', '3705788', 'ayah35@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(115, 35, 'Nama Ibu 35', 'Ibu', 'D1', 1, 'Pekerjaan Ibu 35', '525814', 'ibu35@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(116, 35, 'Nama Keluarga 35 0', 'Anak', 'D2', 0, 'Pekerjaan 35 0', '295155', 'keluarga350@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(117, 35, 'Nama Keluarga 35 1', 'Ayah Suami', 'SMA', 0, 'Pekerjaan 35 1', '3640279', 'keluarga351@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(118, 36, 'Nama Ayah 36', 'Ayah', 'D2', 1, 'Pekerjaan Ayah 36', '2446080', 'ayah36@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(119, 36, 'Nama Ibu 36', 'Ibu', 'D2', 0, 'Pekerjaan Ibu 36', '4159379', 'ibu36@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(120, 37, 'Nama Ayah 37', 'Ayah', 'D3', 1, 'Pekerjaan Ayah 37', '3709249', 'ayah37@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(121, 37, 'Nama Ibu 37', 'Ibu', 'D1', 0, 'Pekerjaan Ibu 37', '4208610', 'ibu37@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(122, 37, 'Nama Keluarga 37 0', 'Anak', 'S1', 1, 'Pekerjaan 37 0', '1365896', 'keluarga370@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(123, 38, 'Nama Ayah 38', 'Ayah', 'D3', 0, 'Pekerjaan Ayah 38', '4510053', 'ayah38@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(124, 38, 'Nama Ibu 38', 'Ibu', 'S1', 0, 'Pekerjaan Ibu 38', '3098444', 'ibu38@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(125, 39, 'Nama Ayah 39', 'Ayah', 'D4', 0, 'Pekerjaan Ayah 39', '1409168', 'ayah39@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(126, 39, 'Nama Ibu 39', 'Ibu', 'SMK', 0, 'Pekerjaan Ibu 39', '4108341', 'ibu39@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(127, 39, 'Nama Keluarga 39 0', 'Nenek', 'D1', 1, 'Pekerjaan 39 0', '9220', 'keluarga390@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(128, 39, 'Nama Keluarga 39 1', 'Ayah Istri', 'D1', 0, 'Pekerjaan 39 1', '2523914', 'keluarga391@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(129, 39, 'Nama Keluarga 39 2', 'Nenek', 'S1', 0, 'Pekerjaan 39 2', '1528677', 'keluarga392@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(130, 40, 'Nama Ayah 40', 'Ayah', 'SMK', 1, 'Pekerjaan Ayah 40', '1518154', 'ayah40@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(131, 40, 'Nama Ibu 40', 'Ibu', 'S2', 1, 'Pekerjaan Ibu 40', '1376580', 'ibu40@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(132, 40, 'Nama Keluarga 40 0', 'Kakek', 'S1', 0, 'Pekerjaan 40 0', '655844', 'keluarga400@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(133, 40, 'Nama Keluarga 40 1', 'Ayah Istri', 'S3', 1, 'Pekerjaan 40 1', '1822148', 'keluarga401@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(134, 41, 'Nama Ayah 41', 'Ayah', 'SMA', 0, 'Pekerjaan Ayah 41', '3067961', 'ayah41@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(135, 41, 'Nama Ibu 41', 'Ibu', 'D4', 1, 'Pekerjaan Ibu 41', '3829522', 'ibu41@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(136, 42, 'Nama Ayah 42', 'Ayah', 'S2', 0, 'Pekerjaan Ayah 42', '3639186', 'ayah42@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(137, 42, 'Nama Ibu 42', 'Ibu', 'D3', 0, 'Pekerjaan Ibu 42', '2345185', 'ibu42@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(138, 42, 'Nama Keluarga 42 0', 'Istri', 'D1', 1, 'Pekerjaan 42 0', '1447016', 'keluarga420@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(139, 43, 'Nama Ayah 43', 'Ayah', 'SMA', 1, 'Pekerjaan Ayah 43', '3687893', 'ayah43@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(140, 43, 'Nama Ibu 43', 'Ibu', 'S3', 0, 'Pekerjaan Ibu 43', '1420554', 'ibu43@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(141, 44, 'Nama Ayah 44', 'Ayah', 'D2', 0, 'Pekerjaan Ayah 44', '4712412', 'ayah44@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(142, 44, 'Nama Ibu 44', 'Ibu', 'D3', 0, 'Pekerjaan Ibu 44', '3152800', 'ibu44@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(143, 44, 'Nama Keluarga 44 0', 'Ayah Suami', 'SMA', 1, 'Pekerjaan 44 0', '1050298', 'keluarga440@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(144, 45, 'Nama Ayah 45', 'Ayah', 'SMK', 1, 'Pekerjaan Ayah 45', '755970', 'ayah45@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(145, 45, 'Nama Ibu 45', 'Ibu', 'S1', 1, 'Pekerjaan Ibu 45', '159375', 'ibu45@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(146, 45, 'Nama Keluarga 45 0', 'Ibu Suami', 'D3', 1, 'Pekerjaan 45 0', '4858668', 'keluarga450@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(147, 46, 'Nama Ayah 46', 'Ayah', 'D3', 1, 'Pekerjaan Ayah 46', '714862', 'ayah46@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(148, 46, 'Nama Ibu 46', 'Ibu', 'SMK', 0, 'Pekerjaan Ibu 46', '1351765', 'ibu46@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(149, 46, 'Nama Keluarga 46 0', 'Suami', 'D2', 0, 'Pekerjaan 46 0', '260562', 'keluarga460@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(150, 46, 'Nama Keluarga 46 1', 'Ayah Suami', 'D3', 0, 'Pekerjaan 46 1', '3536041', 'keluarga461@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(151, 47, 'Nama Ayah 47', 'Ayah', 'S3', 1, 'Pekerjaan Ayah 47', '3176189', 'ayah47@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(152, 47, 'Nama Ibu 47', 'Ibu', 'S3', 1, 'Pekerjaan Ibu 47', '1844298', 'ibu47@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(153, 48, 'Nama Ayah 48', 'Ayah', 'S2', 1, 'Pekerjaan Ayah 48', '4308353', 'ayah48@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(154, 48, 'Nama Ibu 48', 'Ibu', 'D4', 0, 'Pekerjaan Ibu 48', '3547307', 'ibu48@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(155, 48, 'Nama Keluarga 48 0', 'Ibu Suami', 'D4', 0, 'Pekerjaan 48 0', '3230207', 'keluarga480@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(156, 49, 'Nama Ayah 49', 'Ayah', 'SMK', 1, 'Pekerjaan Ayah 49', '2061826', 'ayah49@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(157, 49, 'Nama Ibu 49', 'Ibu', 'S3', 0, 'Pekerjaan Ibu 49', '300143', 'ibu49@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(158, 50, 'Nama Ayah 50', 'Ayah', 'D2', 1, 'Pekerjaan Ayah 50', '3630790', 'ayah50@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(159, 50, 'Nama Ibu 50', 'Ibu', 'SMA', 1, 'Pekerjaan Ibu 50', '1231990', 'ibu50@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(160, 50, 'Nama Keluarga 50 0', 'Anak', 'D3', 1, 'Pekerjaan 50 0', '504279', 'keluarga500@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(161, 50, 'Nama Keluarga 50 1', 'Ayah Istri', 'S2', 1, 'Pekerjaan 50 1', '4796383', 'keluarga501@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(162, 51, 'Nama Ayah 51', 'Ayah', 'S1', 1, 'Pekerjaan Ayah 51', '3209975', 'ayah51@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(163, 51, 'Nama Ibu 51', 'Ibu', 'D3', 0, 'Pekerjaan Ibu 51', '3140959', 'ibu51@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(164, 51, 'Nama Keluarga 51 0', 'Suami', 'S2', 1, 'Pekerjaan 51 0', '3941669', 'keluarga510@example.com', '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(165, 55, 'joko', 'Suami', 'ini pendidikan', 1, 'DOKTER', '82226582306', 'adiyatmaharis21@gmail.com', '2024-09-01 05:07:45', '2024-09-01 05:07:45');
 
 -- --------------------------------------------------------
 
@@ -594,17 +245,6 @@ CREATE TABLE `hari_liburs` (
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
---
--- Dumping data for table `hari_liburs`
---
-
-INSERT INTO `hari_liburs` (`id`, `nama`, `tanggal`, `deleted_at`, `created_at`, `updated_at`) VALUES
-(1, 'Minggu', '2024-06-01', '2024-08-29 18:11:06', NULL, '2024-08-29 18:11:06'),
-(2, 'HUT RI 2024', '2024-08-17', '2024-08-29 18:11:21', '2024-08-29 18:11:21', '2024-08-29 18:11:21'),
-(3, 'Cuti Bersama', '2024-09-01', NULL, '2024-08-29 18:11:34', '2024-08-29 18:11:34'),
-(4, 'Hari Buruh', '2024-08-31', '2024-08-31 21:48:38', '2024-08-29 18:14:00', '2024-08-31 21:48:38'),
-(5, 'Hari ini', '2024-09-01', NULL, '2024-08-31 21:49:00', '2024-08-31 21:49:00');
-
 -- --------------------------------------------------------
 
 --
@@ -620,31 +260,6 @@ CREATE TABLE `jabatans` (
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
---
--- Dumping data for table `jabatans`
---
-
-INSERT INTO `jabatans` (`id`, `nama_jabatan`, `is_struktural`, `tunjangan_jabatan`, `deleted_at`, `created_at`, `updated_at`) VALUES
-(1, 'Keuangan', 1, 1943104, NULL, '2023-12-16 08:10:20', '2024-08-29 08:10:20'),
-(2, 'Dokter Umum', 0, 1201902, NULL, '2024-02-05 08:10:20', '2024-08-29 08:10:20'),
-(3, 'Bidan', 0, 4081677, NULL, '2024-07-29 08:10:20', '2024-08-29 08:10:20'),
-(4, 'HRD', 1, 2521526, NULL, '2024-07-07 08:10:20', '2024-08-29 08:10:20'),
-(5, 'Staf Tata Usaha', 0, 3382896, NULL, '2024-05-31 08:10:20', '2024-08-29 08:10:20'),
-(6, 'Apoteker', 0, 1818356, NULL, '2024-08-18 08:10:20', '2024-08-29 08:10:20'),
-(7, 'Kepala Rumah Sakit', 1, 1887160, NULL, '2024-05-14 08:10:20', '2024-08-29 08:10:20'),
-(8, 'Tenaga Radiologi', 0, 2233528, NULL, '2023-10-06 08:10:20', '2024-08-29 08:10:20'),
-(9, 'Satpam', 1, 4099127, NULL, '2024-04-11 08:10:20', '2024-08-29 08:10:20'),
-(10, 'Tenaga Medis Darurat', 1, 3650022, NULL, '2024-04-11 08:10:20', '2024-08-29 08:10:20'),
-(11, 'Kabid Keperawatan', 0, 4797307, NULL, '2024-07-12 08:10:20', '2024-08-29 08:10:20'),
-(12, 'Pekerja Sosial', 0, 861929, NULL, '2024-02-09 08:10:20', '2024-08-29 08:10:20'),
-(13, 'Kabid Pelayanan Penunjang', 0, 3132479, NULL, '2024-06-06 08:10:20', '2024-08-29 08:10:20'),
-(14, 'Fisioterapis', 1, 2682958, NULL, '2024-06-21 08:10:20', '2024-08-29 08:10:20'),
-(15, 'Kabid Pendidikan dan Penelitian', 1, 4564034, NULL, '2024-07-02 08:10:20', '2024-08-29 08:10:20'),
-(16, 'Bendahara', 0, 2924399, NULL, '2024-07-30 08:10:20', '2024-08-29 08:10:20'),
-(17, 'Wakil Direktur', 0, 3893788, NULL, '2023-09-17 08:10:20', '2024-08-29 08:10:20'),
-(18, 'Dokter Spesialis', 0, 875721, NULL, '2024-01-01 08:10:20', '2024-08-29 08:10:20'),
-(19, 'Tenaga Kebersihan', 0, 4173362, NULL, '2024-01-04 08:10:20', '2024-08-29 08:10:20');
 
 -- --------------------------------------------------------
 
@@ -1097,38 +712,6 @@ CREATE TABLE `kelompok_gajis` (
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
---
--- Dumping data for table `kelompok_gajis`
---
-
-INSERT INTO `kelompok_gajis` (`id`, `nama_kelompok`, `besaran_gaji`, `deleted_at`, `created_at`, `updated_at`) VALUES
-(1, 'Kelompok Gaji A', 6580013, NULL, '2024-03-11 08:10:20', '2024-08-29 08:10:20'),
-(2, 'Kelompok Gaji B', 6598400, NULL, '2023-10-11 08:10:20', '2024-08-29 08:10:20'),
-(3, 'Kelompok Gaji C', 9782931, NULL, '2024-08-18 08:10:20', '2024-08-29 08:10:20'),
-(4, 'Kelompok Gaji D', 5455079, NULL, '2023-09-09 08:10:20', '2024-08-29 08:10:20'),
-(5, 'Kelompok Gaji E', 8633546, NULL, '2023-11-15 08:10:20', '2024-08-29 08:10:20'),
-(6, 'Kelompok Gaji F', 8618140, NULL, '2024-03-20 08:10:20', '2024-08-29 08:10:20'),
-(7, 'Kelompok Gaji G', 5726342, NULL, '2024-01-19 08:10:20', '2024-08-29 08:10:20'),
-(8, 'Kelompok Gaji H', 8379663, NULL, '2024-08-01 08:10:20', '2024-08-29 08:10:20'),
-(9, 'Kelompok Gaji I', 6404119, NULL, '2023-11-08 08:10:20', '2024-08-29 08:10:20'),
-(10, 'Kelompok Gaji J', 5195340, NULL, '2024-08-08 08:10:20', '2024-08-29 08:10:20'),
-(11, 'Kelompok Gaji K', 9983220, NULL, '2023-10-26 08:10:20', '2024-08-29 08:10:20'),
-(12, 'Kelompok Gaji L', 5180527, NULL, '2024-02-11 08:10:20', '2024-08-29 08:10:20'),
-(13, 'Kelompok Gaji M', 8004405, NULL, '2024-06-08 08:10:20', '2024-08-29 08:10:20'),
-(14, 'Kelompok Gaji N', 9941121, NULL, '2023-12-03 08:10:20', '2024-08-29 08:10:20'),
-(15, 'Kelompok Gaji O', 5597658, NULL, '2024-03-01 08:10:20', '2024-08-29 08:10:20'),
-(16, 'Kelompok Gaji P', 7002145, NULL, '2024-02-29 08:10:20', '2024-08-29 08:10:20'),
-(17, 'Kelompok Gaji Q', 9281637, '2024-08-31 21:43:58', '2024-08-28 08:10:20', '2024-08-31 21:43:58'),
-(18, 'Kelompok Gaji R', 5594718, NULL, '2024-07-19 08:10:20', '2024-08-29 08:10:20'),
-(19, 'Kelompok Gaji S', 6282663, NULL, '2023-09-09 08:10:20', '2024-08-29 08:10:20'),
-(20, 'Kelompok Gaji T', 9446166, NULL, '2024-04-23 08:10:20', '2024-08-29 08:10:20'),
-(21, 'Kelompok Gaji U', 9587648, NULL, '2024-01-16 08:10:20', '2024-08-29 08:10:20'),
-(22, 'Kelompok Gaji V', 9427437, NULL, '2023-11-22 08:10:20', '2024-08-29 08:10:20'),
-(23, 'Kelompok Gaji W', 5824907, NULL, '2024-02-09 08:10:20', '2024-08-29 08:10:20'),
-(24, 'Kelompok Gaji X', 9731618, NULL, '2023-09-09 08:10:20', '2024-08-29 08:10:20'),
-(25, 'Kelompok Gaji Y', 8699894, NULL, '2024-02-13 08:10:20', '2024-08-29 08:10:20'),
-(26, 'Kelompok Gaji Z', 5821227, NULL, '2024-01-18 08:10:20', '2024-08-29 08:10:20');
-
 -- --------------------------------------------------------
 
 --
@@ -1145,25 +728,6 @@ CREATE TABLE `kompetensis` (
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
---
--- Dumping data for table `kompetensis`
---
-
-INSERT INTO `kompetensis` (`id`, `nama_kompetensi`, `jenis_kompetensi`, `tunjangan_kompetensi`, `nilai_bor`, `deleted_at`, `created_at`, `updated_at`) VALUES
-(1, 'Dokter Spesialis Jantung', 0, 1654494, 120000, NULL, '2024-03-16 08:10:20', '2024-08-29 08:10:20'),
-(2, 'Dokter Spesialis Penyakit Dalam', 0, 2533495, 120000, NULL, '2024-05-25 08:10:20', '2024-08-29 08:10:20'),
-(3, 'Dokter Spesialis Anak', 0, 1676674, 120000, NULL, '2024-03-17 08:10:20', '2024-08-29 08:10:20'),
-(4, 'Dokter Spesialis Bedah', 0, 543084, 120000, NULL, '2023-11-22 08:10:20', '2024-08-29 08:10:20'),
-(5, 'Perawat', 1, 815886, 120000, NULL, '2024-06-22 08:10:20', '2024-08-29 08:10:20'),
-(6, 'Bidan', 0, 2055918, 120000, NULL, '2023-12-20 08:10:20', '2024-08-29 08:10:20'),
-(7, 'Ahli Gizi', 1, 2551117, 120000, NULL, '2023-11-14 08:10:20', '2024-08-29 08:10:20'),
-(8, 'Tenaga Farmasi', 1, 1570488, 120000, NULL, '2024-02-27 08:10:20', '2024-08-29 08:10:20'),
-(9, 'Petugas Laboratorium', 0, 2111467, 120000, NULL, '2024-07-19 08:10:20', '2024-08-29 08:10:20'),
-(10, 'Ahli Radiologi', 0, 2256991, 120000, NULL, '2023-11-23 08:10:20', '2024-08-29 08:10:20'),
-(11, 'Fisioterapis', 0, 2673527, 120000, NULL, '2024-05-26 08:10:20', '2024-08-29 08:10:20'),
-(12, 'Petugas Administrasi', 0, 1280395, 120000, NULL, '2024-01-16 08:10:20', '2024-08-29 08:10:20'),
-(13, 'Petugas Kebersihan', 0, 2042795, 120000, NULL, '2024-05-14 08:10:20', '2024-08-29 08:10:20');
 
 -- --------------------------------------------------------
 
@@ -1203,7 +767,7 @@ CREATE TABLE `lokasi_kantors` (
 --
 
 INSERT INTO `lokasi_kantors` (`id`, `alamat`, `lat`, `long`, `radius`, `created_at`, `updated_at`) VALUES
-(1, 'Jl. Slamet Riyadi No.404, Purwosari, Kec. Laweyan, Kota Surakarta, Jawa Tengah 57142', '-6.9859222980560185', '110.418359041214', 100, '2024-08-29 08:10:20', '2024-08-31 22:41:11');
+(1, 'Jl. Slamet Riyadi No.404, Purwosari, Kec. Laweyan, Kota Surakarta, Jawa Tengah 57142', '-7.563257447528563', '110.80177722497034', 100, '2024-08-29 08:10:20', '2024-09-06 08:49:13');
 
 -- --------------------------------------------------------
 
@@ -1350,6 +914,8 @@ INSERT INTO `model_has_roles` (`role_id`, `model_type`, `model_id`) VALUES
 (2, 'App\\Models\\User', 46),
 (2, 'App\\Models\\User', 47),
 (2, 'App\\Models\\User', 48),
+(2, 'App\\Models\\User', 49),
+(2, 'App\\Models\\User', 55),
 (3, 'App\\Models\\User', 2),
 (3, 'App\\Models\\User', 3),
 (3, 'App\\Models\\User', 4),
@@ -1382,12 +948,12 @@ INSERT INTO `model_has_roles` (`role_id`, `model_type`, `model_id`) VALUES
 (4, 'App\\Models\\User', 42),
 (4, 'App\\Models\\User', 43),
 (4, 'App\\Models\\User', 44),
-(4, 'App\\Models\\User', 49),
 (4, 'App\\Models\\User', 51),
 (4, 'App\\Models\\User', 52),
 (4, 'App\\Models\\User', 53),
 (4, 'App\\Models\\User', 54),
-(4, 'App\\Models\\User', 55);
+(4, 'App\\Models\\User', 57),
+(4, 'App\\Models\\User', 58);
 
 -- --------------------------------------------------------
 
@@ -1428,246 +994,6 @@ CREATE TABLE `notifikasis` (
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
---
--- Dumping data for table `notifikasis`
---
-
-INSERT INTO `notifikasis` (`id`, `kategori_notifikasi_id`, `user_id`, `message`, `is_read`, `created_at`, `updated_at`) VALUES
-(1, 2, 2, 'Jadwal Anda berhasil ditukar dengan karyawan Mas Ndo pada tanggal 2 September 2024.', 0, '2024-08-31 03:22:44', '2024-08-31 03:22:44'),
-(2, 2, 51, 'Jadwal Anda berhasil ditukar dengan karyawan User 0 pada tanggal 2 September 2024.', 0, '2024-08-31 03:22:44', '2024-08-31 03:22:44'),
-(3, 3, 51, 'Mas Ndo, Anda mendapatkan pengajuan lembur dengan durasi 3 Jam 0 Menit.', 0, '2024-08-31 03:23:09', '2024-08-31 03:23:09'),
-(4, 1, 51, 'Pengajuan cuti \'Cuti Sakit\' Anda pada tanggal \'31 Agustus 2024\' telah \'Disetujui\' tahap 1 oleh \'Super Admin\'.', 0, '2024-08-31 03:24:32', '2024-08-31 03:24:32'),
-(5, 2, 2, 'Jadwal Anda berhasil ditukar dengan karyawan Mas Ndo pada tanggal 2 September 2024.', 0, '2024-08-31 03:32:03', '2024-08-31 03:32:03'),
-(6, 2, 51, 'Jadwal Anda berhasil ditukar dengan karyawan User 0 pada tanggal 2 September 2024.', 0, '2024-08-31 03:32:03', '2024-08-31 03:32:03'),
-(7, 3, 51, 'Mas Ndo, Anda mendapatkan pengajuan lembur dengan durasi 2 Jam 0 Menit.', 0, '2024-08-31 03:32:35', '2024-08-31 03:32:35'),
-(8, 1, 51, 'Pengajuan cuti \'Cuti Sakit\' Anda pada tanggal \'31 Agustus 2024\' telah \'Disetujui\' tahap 1 oleh \'Super Admin\'.', 0, '2024-08-31 03:32:43', '2024-08-31 03:32:43'),
-(9, 2, 2, 'Jadwal Anda berhasil ditukar dengan karyawan Mas Ndo pada tanggal 2 September 2024.', 0, '2024-08-31 04:07:13', '2024-08-31 04:07:13'),
-(10, 2, 51, 'Jadwal Anda berhasil ditukar dengan karyawan User 0 pada tanggal 2 September 2024.', 0, '2024-08-31 04:07:13', '2024-08-31 04:07:13'),
-(11, 3, 51, 'Mas Ndo, Anda mendapatkan pengajuan lembur dengan durasi 2 Jam 0 Menit.', 0, '2024-08-31 04:07:33', '2024-08-31 04:07:33'),
-(12, 1, 51, 'Mas Ndo, anda mendapatkan cuti Cuti Sakit dengan durasi 4 hari yang dimulai pada 1 September 2024 s/d 4 September 2024.', 0, '2024-08-31 04:07:51', '2024-08-31 04:07:51'),
-(13, 1, 51, 'Pengajuan cuti \'Cuti Sakit\' Anda pada tanggal \'31 Agustus 2024\' telah \'Disetujui\' tahap 1 oleh \'Super Admin\'.', 0, '2024-08-31 04:08:04', '2024-08-31 04:08:04'),
-(14, 2, 2, 'Jadwal Anda berhasil ditukar dengan karyawan Mas Ndo pada tanggal 2 September 2024.', 0, '2024-08-31 04:17:42', '2024-08-31 04:17:42'),
-(15, 2, 51, 'Jadwal Anda berhasil ditukar dengan karyawan User 0 pada tanggal 2 September 2024.', 0, '2024-08-31 04:17:42', '2024-08-31 04:17:42'),
-(16, 3, 51, 'Mas Ndo, Anda mendapatkan pengajuan lembur dengan durasi 3 Jam 0 Menit.', 0, '2024-08-31 04:18:36', '2024-08-31 04:18:36'),
-(17, 1, 51, 'Pengajuan cuti \'Cuti Sakit\' Anda pada tanggal \'31 Agustus 2024\' telah \'Disetujui\' tahap 1 oleh \'Super Admin\'.', 0, '2024-08-31 04:19:10', '2024-08-31 04:19:10'),
-(18, 1, 51, 'Pengajuan cuti \'Cuti Sakit\' Anda pada tanggal \'31 Agustus 2024\' telah \'Disetujui\' tahap 2 oleh \'Super Admin\'.', 0, '2024-08-31 04:22:07', '2024-08-31 04:22:07'),
-(19, 2, 16, 'Jadwal Anda berhasil ditukar dengan karyawan User 18 pada tanggal 2 September 2024.', 0, '2024-08-31 04:28:10', '2024-08-31 04:28:10'),
-(20, 2, 20, 'Jadwal Anda berhasil ditukar dengan karyawan User 14 pada tanggal 2 September 2024.', 0, '2024-08-31 04:28:10', '2024-08-31 04:28:10'),
-(21, 3, 16, 'User 14, Anda mendapatkan pengajuan lembur dengan durasi 4 Jam 0 Menit.', 0, '2024-08-31 04:28:30', '2024-08-31 04:28:30'),
-(22, 1, 16, 'User 14, anda mendapatkan cuti Cuti Sakit dengan durasi 4 hari yang dimulai pada 1 September 2024 s/d 4 September 2024.', 0, '2024-08-31 04:29:00', '2024-08-31 04:29:00'),
-(23, 1, 16, 'Pengajuan cuti \'Cuti Sakit\' Anda pada tanggal \'31 Agustus 2024\' telah \'Disetujui\' tahap 1 oleh \'Super Admin\'.', 0, '2024-08-31 04:29:11', '2024-08-31 04:29:11'),
-(24, 2, 16, 'Jadwal Anda berhasil ditukar dengan karyawan User 18 pada tanggal 2 September 2024.', 0, '2024-08-31 04:44:46', '2024-08-31 04:44:46'),
-(25, 2, 20, 'Jadwal Anda berhasil ditukar dengan karyawan User 14 pada tanggal 2 September 2024.', 0, '2024-08-31 04:44:46', '2024-08-31 04:44:46'),
-(26, 3, 16, 'User 14, Anda mendapatkan pengajuan lembur dengan durasi 3 Jam 0 Menit.', 0, '2024-08-31 04:45:08', '2024-08-31 04:45:08'),
-(27, 1, 16, 'Pengajuan cuti \'Cuti Sakit\' Anda pada tanggal \'31 Agustus 2024\' telah \'Disetujui\' tahap 1 oleh \'Super Admin\'.', 0, '2024-08-31 04:45:14', '2024-08-31 04:45:14'),
-(28, 2, 2, 'Jadwal Anda berhasil ditukar dengan karyawan Mas Ndo pada tanggal 2 September 2024.', 0, '2024-08-31 04:48:54', '2024-08-31 04:48:54'),
-(29, 2, 51, 'Jadwal Anda berhasil ditukar dengan karyawan User 0 pada tanggal 2 September 2024.', 0, '2024-08-31 04:48:54', '2024-08-31 04:48:54'),
-(30, 1, 51, 'Mas Ndo, anda mendapatkan cuti Cuti Sakit dengan durasi 5 hari yang dimulai pada 1 September 2024 s/d 5 September 2024.', 0, '2024-08-31 04:49:32', '2024-08-31 04:49:32'),
-(31, 1, 51, 'Pengajuan cuti \'Cuti Sakit\' Anda pada tanggal \'31 Agustus 2024\' telah \'Disetujui\' tahap 1 oleh \'Super Admin\'.', 0, '2024-08-31 04:49:38', '2024-08-31 04:49:38'),
-(32, 2, 2, 'Jadwal Anda berhasil ditukar dengan karyawan Mas Ndo pada tanggal 2 September 2024.', 0, '2024-08-31 05:56:07', '2024-08-31 05:56:07'),
-(33, 2, 51, 'Jadwal Anda berhasil ditukar dengan karyawan User 0 pada tanggal 2 September 2024.', 0, '2024-08-31 05:56:07', '2024-08-31 05:56:07'),
-(34, 1, 2, 'User 0, anda mendapatkan cuti Cuti Sakit dengan durasi 5 hari yang dimulai pada 1 September 2024 s/d 5 September 2024.', 0, '2024-08-31 05:56:28', '2024-08-31 05:56:28'),
-(35, 2, 2, 'Jadwal Anda berhasil ditukar dengan karyawan Mas Ndo pada tanggal 2 September 2024.', 0, '2024-08-31 07:39:19', '2024-08-31 07:39:19'),
-(36, 2, 51, 'Jadwal Anda berhasil ditukar dengan karyawan User 0 pada tanggal 2 September 2024.', 0, '2024-08-31 07:39:19', '2024-08-31 07:39:19'),
-(37, 1, 51, 'Mas Ndo, anda mendapatkan cuti Cuti Sakit dengan durasi 4 hari yang dimulai pada 1 September 2024 s/d 4 September 2024.', 0, '2024-08-31 07:39:55', '2024-08-31 07:39:55'),
-(38, 1, 4, 'User 2, anda mendapatkan cuti Cuti Sakit dengan durasi 2 hari yang dimulai pada 2 September 2024 s/d 3 September 2024.', 0, '2024-08-31 07:51:49', '2024-08-31 07:51:49'),
-(39, 2, 2, 'Jadwal Anda berhasil ditukar dengan karyawan Mas Ndo pada tanggal 2 September 2024.', 0, '2024-08-31 07:54:42', '2024-08-31 07:54:42'),
-(40, 2, 51, 'Jadwal Anda berhasil ditukar dengan karyawan User 0 pada tanggal 2 September 2024.', 0, '2024-08-31 07:54:42', '2024-08-31 07:54:42'),
-(41, 1, 51, 'Mas Ndo, anda mendapatkan cuti Cuti Sakit dengan durasi 5 hari yang dimulai pada 1 September 2024 s/d 5 September 2024.', 0, '2024-08-31 07:55:15', '2024-08-31 07:55:15'),
-(42, 2, 2, 'Jadwal Anda berhasil ditukar dengan karyawan Mas Ndo pada tanggal 2 September 2024.', 0, '2024-08-31 14:59:11', '2024-08-31 14:59:11'),
-(43, 2, 51, 'Jadwal Anda berhasil ditukar dengan karyawan User 0 pada tanggal 2 September 2024.', 0, '2024-08-31 14:59:11', '2024-08-31 14:59:11'),
-(44, 1, 51, 'Mas Ndo, anda mendapatkan cuti Cuti Sakit dengan durasi 4 hari yang dimulai pada 2 September 2024 s/d 5 September 2024.', 0, '2024-08-31 15:00:03', '2024-08-31 15:00:03'),
-(45, 2, 2, 'Jadwal Anda berhasil ditukar dengan karyawan Mas Ndo pada tanggal 2 September 2024.', 0, '2024-08-31 15:04:46', '2024-08-31 15:04:46'),
-(46, 2, 51, 'Jadwal Anda berhasil ditukar dengan karyawan User 0 pada tanggal 2 September 2024.', 0, '2024-08-31 15:04:46', '2024-08-31 15:04:46'),
-(47, 1, 51, 'Mas Ndo, anda mendapatkan cuti Cuti Sakit dengan durasi 4 hari yang dimulai pada 2 September 2024 s/d 5 September 2024.', 0, '2024-08-31 15:06:45', '2024-08-31 15:06:45'),
-(48, 2, 2, 'Jadwal Anda berhasil ditukar dengan karyawan Mas Ndo pada tanggal 3 September 2024.', 0, '2024-08-31 15:08:23', '2024-08-31 15:08:23'),
-(49, 2, 51, 'Jadwal Anda berhasil ditukar dengan karyawan User 0 pada tanggal 3 September 2024.', 0, '2024-08-31 15:08:23', '2024-08-31 15:08:23'),
-(50, 1, 51, 'Mas Ndo, anda mendapatkan cuti Cuti Sakit dengan durasi 4 hari yang dimulai pada 2 September 2024 s/d 5 September 2024.', 0, '2024-08-31 15:08:58', '2024-08-31 15:08:58'),
-(51, 2, 2, 'Jadwal Anda berhasil ditukar dengan karyawan Mas Ndo pada tanggal 3 September 2024.', 0, '2024-08-31 15:10:45', '2024-08-31 15:10:45'),
-(52, 2, 51, 'Jadwal Anda berhasil ditukar dengan karyawan User 0 pada tanggal 3 September 2024.', 0, '2024-08-31 15:10:45', '2024-08-31 15:10:45'),
-(53, 1, 51, 'Mas Ndo, anda mendapatkan cuti Cuti Sakit dengan durasi 4 hari yang dimulai pada 2 September 2024 s/d 5 September 2024.', 0, '2024-08-31 15:12:02', '2024-08-31 15:12:02'),
-(54, 2, 2, 'Jadwal Anda berhasil ditukar dengan karyawan Mas Ndo pada tanggal 3 September 2024.', 0, '2024-08-31 15:13:40', '2024-08-31 15:13:40'),
-(55, 2, 51, 'Jadwal Anda berhasil ditukar dengan karyawan User 0 pada tanggal 3 September 2024.', 0, '2024-08-31 15:13:40', '2024-08-31 15:13:40'),
-(56, 1, 51, 'Mas Ndo, anda mendapatkan cuti Cuti Sakit dengan durasi 4 hari yang dimulai pada 2 September 2024 s/d 5 September 2024.', 0, '2024-08-31 15:13:59', '2024-08-31 15:13:59'),
-(57, 2, 2, 'Jadwal Anda berhasil ditukar dengan karyawan Mas Ndo pada tanggal 3 September 2024.', 0, '2024-08-31 15:15:12', '2024-08-31 15:15:12'),
-(58, 2, 51, 'Jadwal Anda berhasil ditukar dengan karyawan User 0 pada tanggal 3 September 2024.', 0, '2024-08-31 15:15:12', '2024-08-31 15:15:12'),
-(59, 1, 51, 'Mas Ndo, anda mendapatkan cuti Cuti Sakit dengan durasi 4 hari yang dimulai pada 2 September 2024 s/d 5 September 2024.', 0, '2024-08-31 15:15:48', '2024-08-31 15:15:48'),
-(60, 3, 16, 'User 14, Anda mendapatkan pengajuan lembur dengan durasi 1 Jam 0 Menit.', 0, '2024-08-31 19:50:22', '2024-08-31 19:50:22'),
-(61, 2, 16, 'Jadwal Anda berhasil ditukar dengan karyawan User 18 pada tanggal 2 September 2024.', 0, '2024-08-31 20:04:05', '2024-08-31 20:04:05'),
-(62, 2, 20, 'Jadwal Anda berhasil ditukar dengan karyawan User 14 pada tanggal 2 September 2024.', 0, '2024-08-31 20:04:05', '2024-08-31 20:04:05'),
-(63, 3, 16, 'Verifikasi tahap 2 untuk pengajuan tukar jadwal Anda telah disetujui.', 0, '2024-08-31 20:22:26', '2024-08-31 20:22:26'),
-(64, 3, 20, 'Verifikasi tahap 2 untuk pengajuan tukar jadwal dari User 14 telah disetujui.', 0, '2024-08-31 20:22:26', '2024-08-31 20:22:26'),
-(65, 2, 33, 'Jadwal Anda berhasil ditukar dengan karyawan User 36 pada tanggal 2 September 2024.', 0, '2024-08-31 20:27:23', '2024-08-31 20:27:23'),
-(66, 2, 38, 'Jadwal Anda berhasil ditukar dengan karyawan User 31 pada tanggal 2 September 2024.', 0, '2024-08-31 20:27:23', '2024-08-31 20:27:23'),
-(67, 3, 38, 'User 36, Anda mendapatkan pengajuan lembur dengan durasi 0 Jam 1 Menit.', 0, '2024-08-31 20:28:37', '2024-08-31 20:28:37'),
-(68, 1, 38, 'User 36, anda mendapatkan cuti Cuti Sakit dengan durasi 2 hari yang dimulai pada 2 September 2024 s/d 3 September 2024.', 0, '2024-08-31 20:31:32', '2024-08-31 20:31:32'),
-(69, 1, 38, 'Pengajuan cuti \'Cuti Sakit\' Anda pada tanggal \'1 September 2024\' telah \'Disetujui\' tahap 1 oleh \'Sulenq Wazawsky\'.', 0, '2024-08-31 20:32:01', '2024-08-31 20:32:01'),
-(70, 1, 38, 'Pengajuan cuti \'Cuti Sakit\' Anda pada tanggal \'1 September 2024\' telah \'Disetujui\' tahap 2 oleh \'Sulenq Wazawsky\'.', 0, '2024-08-31 20:32:50', '2024-08-31 20:32:50'),
-(71, 3, 50, 'Sulenq Wazawsky, Anda mendapatkan pengajuan lembur dengan durasi 0 Jam 1 Menit.', 0, '2024-08-31 20:34:18', '2024-08-31 20:34:18'),
-(72, 2, 50, 'Jadwal Anda berhasil ditukar dengan karyawan User 14 pada tanggal 2 September 2024.', 0, '2024-08-31 20:38:21', '2024-08-31 20:38:21'),
-(73, 2, 16, 'Jadwal Anda berhasil ditukar dengan karyawan Sulenq Wazawsky pada tanggal 2 September 2024.', 0, '2024-08-31 20:38:21', '2024-08-31 20:38:21'),
-(74, 3, 16, 'User 14, Anda mendapatkan pengajuan lembur dengan durasi 2 Jam 0 Menit.', 0, '2024-08-31 21:23:44', '2024-08-31 21:23:44'),
-(75, 2, 16, 'Jadwal Anda berhasil ditukar dengan karyawan User 18 pada tanggal 4 September 2024.', 0, '2024-08-31 21:24:11', '2024-08-31 21:24:11'),
-(76, 2, 20, 'Jadwal Anda berhasil ditukar dengan karyawan User 14 pada tanggal 4 September 2024.', 0, '2024-08-31 21:24:11', '2024-08-31 21:24:11'),
-(77, 3, 2, 'User 0, Anda mendapatkan pengajuan lembur dengan durasi 0 Jam 0 Menit.', 0, '2024-09-02 03:12:32', '2024-09-02 03:12:32'),
-(78, 3, 3, 'User 1, Anda mendapatkan pengajuan lembur dengan durasi 10 Jam 25 Menit.', 0, '2024-09-02 03:25:18', '2024-09-02 03:25:18'),
-(79, 9, 4, 'Anda telah mendapatkan pengurangan gaji \'Ganti rugi gelas pecah\', Silahkan lakukan pengecekkan kembali dan pastikan gaji anda telah sesuai.', 0, '2024-09-02 07:07:06', '2024-09-02 07:07:06'),
-(80, 5, 4, 'Penggajian untuk periode September 2024 telah dipublikasikan. Silakan cek slip gaji Anda.', 0, '2024-09-02 07:22:08', '2024-09-02 07:22:08'),
-(81, 5, 9, 'Penggajian untuk periode September 2024 telah dipublikasikan. Silakan cek slip gaji Anda.', 0, '2024-09-02 07:22:08', '2024-09-02 07:22:08'),
-(82, 5, 10, 'Penggajian untuk periode September 2024 telah dipublikasikan. Silakan cek slip gaji Anda.', 0, '2024-09-02 07:22:08', '2024-09-02 07:22:08'),
-(83, 5, 13, 'Penggajian untuk periode September 2024 telah dipublikasikan. Silakan cek slip gaji Anda.', 0, '2024-09-02 07:22:08', '2024-09-02 07:22:08'),
-(84, 5, 19, 'Penggajian untuk periode September 2024 telah dipublikasikan. Silakan cek slip gaji Anda.', 0, '2024-09-02 07:22:08', '2024-09-02 07:22:08'),
-(85, 5, 22, 'Penggajian untuk periode September 2024 telah dipublikasikan. Silakan cek slip gaji Anda.', 0, '2024-09-02 07:22:08', '2024-09-02 07:22:08'),
-(86, 5, 25, 'Penggajian untuk periode September 2024 telah dipublikasikan. Silakan cek slip gaji Anda.', 0, '2024-09-02 07:22:08', '2024-09-02 07:22:08'),
-(87, 5, 29, 'Penggajian untuk periode September 2024 telah dipublikasikan. Silakan cek slip gaji Anda.', 0, '2024-09-02 07:22:08', '2024-09-02 07:22:08'),
-(88, 5, 31, 'Penggajian untuk periode September 2024 telah dipublikasikan. Silakan cek slip gaji Anda.', 0, '2024-09-02 07:22:08', '2024-09-02 07:22:08'),
-(89, 5, 35, 'Penggajian untuk periode September 2024 telah dipublikasikan. Silakan cek slip gaji Anda.', 0, '2024-09-02 07:22:08', '2024-09-02 07:22:08'),
-(90, 5, 39, 'Penggajian untuk periode September 2024 telah dipublikasikan. Silakan cek slip gaji Anda.', 0, '2024-09-02 07:22:08', '2024-09-02 07:22:08'),
-(91, 5, 41, 'Penggajian untuk periode September 2024 telah dipublikasikan. Silakan cek slip gaji Anda.', 0, '2024-09-02 07:22:08', '2024-09-02 07:22:08'),
-(92, 5, 45, 'Penggajian untuk periode September 2024 telah dipublikasikan. Silakan cek slip gaji Anda.', 0, '2024-09-02 07:22:08', '2024-09-02 07:22:08'),
-(93, 5, 46, 'Penggajian untuk periode September 2024 telah dipublikasikan. Silakan cek slip gaji Anda.', 0, '2024-09-02 07:22:08', '2024-09-02 07:22:08'),
-(94, 5, 47, 'Penggajian untuk periode September 2024 telah dipublikasikan. Silakan cek slip gaji Anda.', 0, '2024-09-02 07:22:08', '2024-09-02 07:22:08'),
-(95, 5, 48, 'Penggajian untuk periode September 2024 telah dipublikasikan. Silakan cek slip gaji Anda.', 0, '2024-09-02 07:22:08', '2024-09-02 07:22:08'),
-(96, 5, 5, 'Penggajian untuk periode September 2024 telah dipublikasikan. Silakan cek slip gaji Anda.', 0, '2024-09-02 07:22:08', '2024-09-02 07:22:08'),
-(97, 5, 6, 'Penggajian untuk periode September 2024 telah dipublikasikan. Silakan cek slip gaji Anda.', 0, '2024-09-02 07:22:08', '2024-09-02 07:22:08'),
-(98, 5, 7, 'Penggajian untuk periode September 2024 telah dipublikasikan. Silakan cek slip gaji Anda.', 0, '2024-09-02 07:22:08', '2024-09-02 07:22:08'),
-(99, 5, 8, 'Penggajian untuk periode September 2024 telah dipublikasikan. Silakan cek slip gaji Anda.', 0, '2024-09-02 07:22:08', '2024-09-02 07:22:08'),
-(100, 5, 17, 'Penggajian untuk periode September 2024 telah dipublikasikan. Silakan cek slip gaji Anda.', 0, '2024-09-02 07:22:08', '2024-09-02 07:22:08'),
-(101, 5, 18, 'Penggajian untuk periode September 2024 telah dipublikasikan. Silakan cek slip gaji Anda.', 0, '2024-09-02 07:22:08', '2024-09-02 07:22:08'),
-(102, 5, 20, 'Penggajian untuk periode September 2024 telah dipublikasikan. Silakan cek slip gaji Anda.', 0, '2024-09-02 07:22:08', '2024-09-02 07:22:08'),
-(103, 5, 30, 'Penggajian untuk periode September 2024 telah dipublikasikan. Silakan cek slip gaji Anda.', 0, '2024-09-02 07:22:08', '2024-09-02 07:22:08'),
-(104, 5, 32, 'Penggajian untuk periode September 2024 telah dipublikasikan. Silakan cek slip gaji Anda.', 0, '2024-09-02 07:22:08', '2024-09-02 07:22:08'),
-(105, 5, 33, 'Penggajian untuk periode September 2024 telah dipublikasikan. Silakan cek slip gaji Anda.', 0, '2024-09-02 07:22:08', '2024-09-02 07:22:08'),
-(106, 5, 38, 'Penggajian untuk periode September 2024 telah dipublikasikan. Silakan cek slip gaji Anda.', 0, '2024-09-02 07:22:08', '2024-09-02 07:22:08'),
-(107, 5, 44, 'Penggajian untuk periode September 2024 telah dipublikasikan. Silakan cek slip gaji Anda.', 0, '2024-09-02 07:22:08', '2024-09-02 07:22:08'),
-(108, 5, 55, 'Penggajian untuk periode September 2024 telah dipublikasikan. Silakan cek slip gaji Anda.', 0, '2024-09-02 07:22:08', '2024-09-02 07:22:08'),
-(109, 5, 2, 'Penggajian untuk periode September 2024 telah dipublikasikan. Silakan cek slip gaji Anda.', 0, '2024-09-02 07:22:08', '2024-09-02 07:22:08'),
-(110, 5, 3, 'Penggajian untuk periode September 2024 telah dipublikasikan. Silakan cek slip gaji Anda.', 0, '2024-09-02 07:22:08', '2024-09-02 07:22:08'),
-(111, 5, 11, 'Penggajian untuk periode September 2024 telah dipublikasikan. Silakan cek slip gaji Anda.', 0, '2024-09-02 07:22:08', '2024-09-02 07:22:08'),
-(112, 5, 12, 'Penggajian untuk periode September 2024 telah dipublikasikan. Silakan cek slip gaji Anda.', 0, '2024-09-02 07:22:08', '2024-09-02 07:22:08'),
-(113, 5, 14, 'Penggajian untuk periode September 2024 telah dipublikasikan. Silakan cek slip gaji Anda.', 0, '2024-09-02 07:22:08', '2024-09-02 07:22:08'),
-(114, 5, 15, 'Penggajian untuk periode September 2024 telah dipublikasikan. Silakan cek slip gaji Anda.', 0, '2024-09-02 07:22:08', '2024-09-02 07:22:08'),
-(115, 5, 16, 'Penggajian untuk periode September 2024 telah dipublikasikan. Silakan cek slip gaji Anda.', 0, '2024-09-02 07:22:08', '2024-09-02 07:22:08'),
-(116, 5, 21, 'Penggajian untuk periode September 2024 telah dipublikasikan. Silakan cek slip gaji Anda.', 0, '2024-09-02 07:22:08', '2024-09-02 07:22:08'),
-(117, 5, 23, 'Penggajian untuk periode September 2024 telah dipublikasikan. Silakan cek slip gaji Anda.', 0, '2024-09-02 07:22:08', '2024-09-02 07:22:08'),
-(118, 5, 24, 'Penggajian untuk periode September 2024 telah dipublikasikan. Silakan cek slip gaji Anda.', 0, '2024-09-02 07:22:08', '2024-09-02 07:22:08'),
-(119, 5, 26, 'Penggajian untuk periode September 2024 telah dipublikasikan. Silakan cek slip gaji Anda.', 0, '2024-09-02 07:22:08', '2024-09-02 07:22:08'),
-(120, 5, 27, 'Penggajian untuk periode September 2024 telah dipublikasikan. Silakan cek slip gaji Anda.', 0, '2024-09-02 07:22:08', '2024-09-02 07:22:08'),
-(121, 5, 28, 'Penggajian untuk periode September 2024 telah dipublikasikan. Silakan cek slip gaji Anda.', 0, '2024-09-02 07:22:08', '2024-09-02 07:22:08'),
-(122, 5, 34, 'Penggajian untuk periode September 2024 telah dipublikasikan. Silakan cek slip gaji Anda.', 0, '2024-09-02 07:22:08', '2024-09-02 07:22:08'),
-(123, 5, 36, 'Penggajian untuk periode September 2024 telah dipublikasikan. Silakan cek slip gaji Anda.', 0, '2024-09-02 07:22:08', '2024-09-02 07:22:08'),
-(124, 5, 37, 'Penggajian untuk periode September 2024 telah dipublikasikan. Silakan cek slip gaji Anda.', 0, '2024-09-02 07:22:08', '2024-09-02 07:22:08'),
-(125, 5, 40, 'Penggajian untuk periode September 2024 telah dipublikasikan. Silakan cek slip gaji Anda.', 0, '2024-09-02 07:22:08', '2024-09-02 07:22:08'),
-(126, 5, 42, 'Penggajian untuk periode September 2024 telah dipublikasikan. Silakan cek slip gaji Anda.', 0, '2024-09-02 07:22:08', '2024-09-02 07:22:08'),
-(127, 5, 43, 'Penggajian untuk periode September 2024 telah dipublikasikan. Silakan cek slip gaji Anda.', 0, '2024-09-02 07:22:08', '2024-09-02 07:22:08'),
-(128, 5, 49, 'Penggajian untuk periode September 2024 telah dipublikasikan. Silakan cek slip gaji Anda.', 0, '2024-09-02 07:22:08', '2024-09-02 07:22:08'),
-(129, 5, 50, 'Penggajian untuk periode September 2024 telah dipublikasikan. Silakan cek slip gaji Anda.', 0, '2024-09-02 07:22:08', '2024-09-02 07:22:08'),
-(130, 5, 51, 'Penggajian untuk periode September 2024 telah dipublikasikan. Silakan cek slip gaji Anda.', 0, '2024-09-02 07:22:08', '2024-09-02 07:22:08'),
-(131, 4, 2, 'Diklat baru berjudul Libur Hari Raya akan dilaksanakan pada tanggal 4 September 2024 di lokasi Gudang pada jam 10:00:00.', 0, '2024-09-02 21:30:49', '2024-09-02 21:30:49'),
-(132, 4, 3, 'Diklat baru berjudul Libur Hari Raya akan dilaksanakan pada tanggal 4 September 2024 di lokasi Gudang pada jam 10:00:00.', 0, '2024-09-02 21:30:49', '2024-09-02 21:30:49'),
-(133, 4, 4, 'Diklat baru berjudul Libur Hari Raya akan dilaksanakan pada tanggal 4 September 2024 di lokasi Gudang pada jam 10:00:00.', 0, '2024-09-02 21:30:49', '2024-09-02 21:30:49'),
-(134, 4, 5, 'Diklat baru berjudul Libur Hari Raya akan dilaksanakan pada tanggal 4 September 2024 di lokasi Gudang pada jam 10:00:00.', 0, '2024-09-02 21:30:49', '2024-09-02 21:30:49'),
-(135, 4, 6, 'Diklat baru berjudul Libur Hari Raya akan dilaksanakan pada tanggal 4 September 2024 di lokasi Gudang pada jam 10:00:00.', 0, '2024-09-02 21:30:49', '2024-09-02 21:30:49'),
-(136, 4, 7, 'Diklat baru berjudul Libur Hari Raya akan dilaksanakan pada tanggal 4 September 2024 di lokasi Gudang pada jam 10:00:00.', 0, '2024-09-02 21:30:49', '2024-09-02 21:30:49'),
-(137, 4, 8, 'Diklat baru berjudul Libur Hari Raya akan dilaksanakan pada tanggal 4 September 2024 di lokasi Gudang pada jam 10:00:00.', 0, '2024-09-02 21:30:49', '2024-09-02 21:30:49'),
-(138, 4, 9, 'Diklat baru berjudul Libur Hari Raya akan dilaksanakan pada tanggal 4 September 2024 di lokasi Gudang pada jam 10:00:00.', 0, '2024-09-02 21:30:49', '2024-09-02 21:30:49'),
-(139, 4, 10, 'Diklat baru berjudul Libur Hari Raya akan dilaksanakan pada tanggal 4 September 2024 di lokasi Gudang pada jam 10:00:00.', 0, '2024-09-02 21:30:49', '2024-09-02 21:30:49'),
-(140, 4, 11, 'Diklat baru berjudul Libur Hari Raya akan dilaksanakan pada tanggal 4 September 2024 di lokasi Gudang pada jam 10:00:00.', 0, '2024-09-02 21:30:49', '2024-09-02 21:30:49'),
-(141, 4, 12, 'Diklat baru berjudul Libur Hari Raya akan dilaksanakan pada tanggal 4 September 2024 di lokasi Gudang pada jam 10:00:00.', 0, '2024-09-02 21:30:49', '2024-09-02 21:30:49'),
-(142, 4, 13, 'Diklat baru berjudul Libur Hari Raya akan dilaksanakan pada tanggal 4 September 2024 di lokasi Gudang pada jam 10:00:00.', 0, '2024-09-02 21:30:49', '2024-09-02 21:30:49'),
-(143, 4, 14, 'Diklat baru berjudul Libur Hari Raya akan dilaksanakan pada tanggal 4 September 2024 di lokasi Gudang pada jam 10:00:00.', 0, '2024-09-02 21:30:49', '2024-09-02 21:30:49'),
-(144, 4, 15, 'Diklat baru berjudul Libur Hari Raya akan dilaksanakan pada tanggal 4 September 2024 di lokasi Gudang pada jam 10:00:00.', 0, '2024-09-02 21:30:49', '2024-09-02 21:30:49'),
-(145, 4, 16, 'Diklat baru berjudul Libur Hari Raya akan dilaksanakan pada tanggal 4 September 2024 di lokasi Gudang pada jam 10:00:00.', 0, '2024-09-02 21:30:49', '2024-09-02 21:30:49'),
-(146, 4, 17, 'Diklat baru berjudul Libur Hari Raya akan dilaksanakan pada tanggal 4 September 2024 di lokasi Gudang pada jam 10:00:00.', 0, '2024-09-02 21:30:49', '2024-09-02 21:30:49'),
-(147, 4, 18, 'Diklat baru berjudul Libur Hari Raya akan dilaksanakan pada tanggal 4 September 2024 di lokasi Gudang pada jam 10:00:00.', 0, '2024-09-02 21:30:49', '2024-09-02 21:30:49'),
-(148, 4, 19, 'Diklat baru berjudul Libur Hari Raya akan dilaksanakan pada tanggal 4 September 2024 di lokasi Gudang pada jam 10:00:00.', 0, '2024-09-02 21:30:49', '2024-09-02 21:30:49'),
-(149, 4, 20, 'Diklat baru berjudul Libur Hari Raya akan dilaksanakan pada tanggal 4 September 2024 di lokasi Gudang pada jam 10:00:00.', 0, '2024-09-02 21:30:49', '2024-09-02 21:30:49'),
-(150, 4, 21, 'Diklat baru berjudul Libur Hari Raya akan dilaksanakan pada tanggal 4 September 2024 di lokasi Gudang pada jam 10:00:00.', 0, '2024-09-02 21:30:49', '2024-09-02 21:30:49'),
-(151, 4, 22, 'Diklat baru berjudul Libur Hari Raya akan dilaksanakan pada tanggal 4 September 2024 di lokasi Gudang pada jam 10:00:00.', 0, '2024-09-02 21:30:49', '2024-09-02 21:30:49'),
-(152, 4, 23, 'Diklat baru berjudul Libur Hari Raya akan dilaksanakan pada tanggal 4 September 2024 di lokasi Gudang pada jam 10:00:00.', 0, '2024-09-02 21:30:49', '2024-09-02 21:30:49'),
-(153, 4, 24, 'Diklat baru berjudul Libur Hari Raya akan dilaksanakan pada tanggal 4 September 2024 di lokasi Gudang pada jam 10:00:00.', 0, '2024-09-02 21:30:49', '2024-09-02 21:30:49'),
-(154, 4, 25, 'Diklat baru berjudul Libur Hari Raya akan dilaksanakan pada tanggal 4 September 2024 di lokasi Gudang pada jam 10:00:00.', 0, '2024-09-02 21:30:49', '2024-09-02 21:30:49'),
-(155, 4, 26, 'Diklat baru berjudul Libur Hari Raya akan dilaksanakan pada tanggal 4 September 2024 di lokasi Gudang pada jam 10:00:00.', 0, '2024-09-02 21:30:49', '2024-09-02 21:30:49'),
-(156, 4, 27, 'Diklat baru berjudul Libur Hari Raya akan dilaksanakan pada tanggal 4 September 2024 di lokasi Gudang pada jam 10:00:00.', 0, '2024-09-02 21:30:49', '2024-09-02 21:30:49'),
-(157, 4, 28, 'Diklat baru berjudul Libur Hari Raya akan dilaksanakan pada tanggal 4 September 2024 di lokasi Gudang pada jam 10:00:00.', 0, '2024-09-02 21:30:49', '2024-09-02 21:30:49'),
-(158, 4, 29, 'Diklat baru berjudul Libur Hari Raya akan dilaksanakan pada tanggal 4 September 2024 di lokasi Gudang pada jam 10:00:00.', 0, '2024-09-02 21:30:49', '2024-09-02 21:30:49'),
-(159, 4, 30, 'Diklat baru berjudul Libur Hari Raya akan dilaksanakan pada tanggal 4 September 2024 di lokasi Gudang pada jam 10:00:00.', 0, '2024-09-02 21:30:49', '2024-09-02 21:30:49'),
-(160, 4, 31, 'Diklat baru berjudul Libur Hari Raya akan dilaksanakan pada tanggal 4 September 2024 di lokasi Gudang pada jam 10:00:00.', 0, '2024-09-02 21:30:49', '2024-09-02 21:30:49'),
-(161, 4, 32, 'Diklat baru berjudul Libur Hari Raya akan dilaksanakan pada tanggal 4 September 2024 di lokasi Gudang pada jam 10:00:00.', 0, '2024-09-02 21:30:49', '2024-09-02 21:30:49'),
-(162, 4, 33, 'Diklat baru berjudul Libur Hari Raya akan dilaksanakan pada tanggal 4 September 2024 di lokasi Gudang pada jam 10:00:00.', 0, '2024-09-02 21:30:49', '2024-09-02 21:30:49'),
-(163, 4, 34, 'Diklat baru berjudul Libur Hari Raya akan dilaksanakan pada tanggal 4 September 2024 di lokasi Gudang pada jam 10:00:00.', 0, '2024-09-02 21:30:49', '2024-09-02 21:30:49'),
-(164, 4, 35, 'Diklat baru berjudul Libur Hari Raya akan dilaksanakan pada tanggal 4 September 2024 di lokasi Gudang pada jam 10:00:00.', 0, '2024-09-02 21:30:49', '2024-09-02 21:30:49'),
-(165, 4, 36, 'Diklat baru berjudul Libur Hari Raya akan dilaksanakan pada tanggal 4 September 2024 di lokasi Gudang pada jam 10:00:00.', 0, '2024-09-02 21:30:49', '2024-09-02 21:30:49'),
-(166, 4, 37, 'Diklat baru berjudul Libur Hari Raya akan dilaksanakan pada tanggal 4 September 2024 di lokasi Gudang pada jam 10:00:00.', 0, '2024-09-02 21:30:49', '2024-09-02 21:30:49'),
-(167, 4, 38, 'Diklat baru berjudul Libur Hari Raya akan dilaksanakan pada tanggal 4 September 2024 di lokasi Gudang pada jam 10:00:00.', 0, '2024-09-02 21:30:49', '2024-09-02 21:30:49'),
-(168, 4, 39, 'Diklat baru berjudul Libur Hari Raya akan dilaksanakan pada tanggal 4 September 2024 di lokasi Gudang pada jam 10:00:00.', 0, '2024-09-02 21:30:49', '2024-09-02 21:30:49'),
-(169, 4, 40, 'Diklat baru berjudul Libur Hari Raya akan dilaksanakan pada tanggal 4 September 2024 di lokasi Gudang pada jam 10:00:00.', 0, '2024-09-02 21:30:49', '2024-09-02 21:30:49'),
-(170, 4, 41, 'Diklat baru berjudul Libur Hari Raya akan dilaksanakan pada tanggal 4 September 2024 di lokasi Gudang pada jam 10:00:00.', 0, '2024-09-02 21:30:49', '2024-09-02 21:30:49'),
-(171, 4, 42, 'Diklat baru berjudul Libur Hari Raya akan dilaksanakan pada tanggal 4 September 2024 di lokasi Gudang pada jam 10:00:00.', 0, '2024-09-02 21:30:49', '2024-09-02 21:30:49'),
-(172, 4, 43, 'Diklat baru berjudul Libur Hari Raya akan dilaksanakan pada tanggal 4 September 2024 di lokasi Gudang pada jam 10:00:00.', 0, '2024-09-02 21:30:49', '2024-09-02 21:30:49'),
-(173, 4, 44, 'Diklat baru berjudul Libur Hari Raya akan dilaksanakan pada tanggal 4 September 2024 di lokasi Gudang pada jam 10:00:00.', 0, '2024-09-02 21:30:49', '2024-09-02 21:30:49'),
-(174, 4, 45, 'Diklat baru berjudul Libur Hari Raya akan dilaksanakan pada tanggal 4 September 2024 di lokasi Gudang pada jam 10:00:00.', 0, '2024-09-02 21:30:49', '2024-09-02 21:30:49'),
-(175, 4, 46, 'Diklat baru berjudul Libur Hari Raya akan dilaksanakan pada tanggal 4 September 2024 di lokasi Gudang pada jam 10:00:00.', 0, '2024-09-02 21:30:49', '2024-09-02 21:30:49'),
-(176, 4, 47, 'Diklat baru berjudul Libur Hari Raya akan dilaksanakan pada tanggal 4 September 2024 di lokasi Gudang pada jam 10:00:00.', 0, '2024-09-02 21:30:49', '2024-09-02 21:30:49'),
-(177, 4, 48, 'Diklat baru berjudul Libur Hari Raya akan dilaksanakan pada tanggal 4 September 2024 di lokasi Gudang pada jam 10:00:00.', 0, '2024-09-02 21:30:49', '2024-09-02 21:30:49'),
-(178, 4, 49, 'Diklat baru berjudul Libur Hari Raya akan dilaksanakan pada tanggal 4 September 2024 di lokasi Gudang pada jam 10:00:00.', 0, '2024-09-02 21:30:49', '2024-09-02 21:30:49'),
-(179, 4, 50, 'Diklat baru berjudul Libur Hari Raya akan dilaksanakan pada tanggal 4 September 2024 di lokasi Gudang pada jam 10:00:00.', 0, '2024-09-02 21:30:49', '2024-09-02 21:30:49'),
-(180, 4, 51, 'Diklat baru berjudul Libur Hari Raya akan dilaksanakan pada tanggal 4 September 2024 di lokasi Gudang pada jam 10:00:00.', 0, '2024-09-02 21:30:49', '2024-09-02 21:30:49'),
-(181, 4, 55, 'Diklat baru berjudul Libur Hari Raya akan dilaksanakan pada tanggal 4 September 2024 di lokasi Gudang pada jam 10:00:00.', 0, '2024-09-02 21:30:49', '2024-09-02 21:30:49'),
-(182, 4, 56, 'Diklat baru berjudul Libur Hari Raya akan dilaksanakan pada tanggal 4 September 2024 di lokasi Gudang pada jam 10:00:00.', 0, '2024-09-02 21:30:49', '2024-09-02 21:30:49'),
-(183, 4, 2, 'Diklat baru berjudul Libur Hari Raya akan dilaksanakan pada tanggal 5 September 2024 di lokasi Gudang pada jam 08:00:00.', 0, '2024-09-03 05:03:36', '2024-09-03 05:03:36'),
-(184, 4, 3, 'Diklat baru berjudul Libur Hari Raya akan dilaksanakan pada tanggal 5 September 2024 di lokasi Gudang pada jam 08:00:00.', 0, '2024-09-03 05:03:36', '2024-09-03 05:03:36'),
-(185, 4, 4, 'Diklat baru berjudul Libur Hari Raya akan dilaksanakan pada tanggal 5 September 2024 di lokasi Gudang pada jam 08:00:00.', 0, '2024-09-03 05:03:36', '2024-09-03 05:03:36'),
-(186, 4, 5, 'Diklat baru berjudul Libur Hari Raya akan dilaksanakan pada tanggal 5 September 2024 di lokasi Gudang pada jam 08:00:00.', 0, '2024-09-03 05:03:36', '2024-09-03 05:03:36'),
-(187, 4, 6, 'Diklat baru berjudul Libur Hari Raya akan dilaksanakan pada tanggal 5 September 2024 di lokasi Gudang pada jam 08:00:00.', 0, '2024-09-03 05:03:36', '2024-09-03 05:03:36'),
-(188, 4, 7, 'Diklat baru berjudul Libur Hari Raya akan dilaksanakan pada tanggal 5 September 2024 di lokasi Gudang pada jam 08:00:00.', 0, '2024-09-03 05:03:36', '2024-09-03 05:03:36'),
-(189, 4, 8, 'Diklat baru berjudul Libur Hari Raya akan dilaksanakan pada tanggal 5 September 2024 di lokasi Gudang pada jam 08:00:00.', 0, '2024-09-03 05:03:36', '2024-09-03 05:03:36'),
-(190, 4, 9, 'Diklat baru berjudul Libur Hari Raya akan dilaksanakan pada tanggal 5 September 2024 di lokasi Gudang pada jam 08:00:00.', 0, '2024-09-03 05:03:36', '2024-09-03 05:03:36'),
-(191, 4, 10, 'Diklat baru berjudul Libur Hari Raya akan dilaksanakan pada tanggal 5 September 2024 di lokasi Gudang pada jam 08:00:00.', 0, '2024-09-03 05:03:36', '2024-09-03 05:03:36'),
-(192, 4, 11, 'Diklat baru berjudul Libur Hari Raya akan dilaksanakan pada tanggal 5 September 2024 di lokasi Gudang pada jam 08:00:00.', 0, '2024-09-03 05:03:36', '2024-09-03 05:03:36'),
-(193, 4, 12, 'Diklat baru berjudul Libur Hari Raya akan dilaksanakan pada tanggal 5 September 2024 di lokasi Gudang pada jam 08:00:00.', 0, '2024-09-03 05:03:36', '2024-09-03 05:03:36'),
-(194, 4, 13, 'Diklat baru berjudul Libur Hari Raya akan dilaksanakan pada tanggal 5 September 2024 di lokasi Gudang pada jam 08:00:00.', 0, '2024-09-03 05:03:36', '2024-09-03 05:03:36'),
-(195, 4, 14, 'Diklat baru berjudul Libur Hari Raya akan dilaksanakan pada tanggal 5 September 2024 di lokasi Gudang pada jam 08:00:00.', 0, '2024-09-03 05:03:36', '2024-09-03 05:03:36'),
-(196, 4, 15, 'Diklat baru berjudul Libur Hari Raya akan dilaksanakan pada tanggal 5 September 2024 di lokasi Gudang pada jam 08:00:00.', 0, '2024-09-03 05:03:36', '2024-09-03 05:03:36'),
-(197, 4, 16, 'Diklat baru berjudul Libur Hari Raya akan dilaksanakan pada tanggal 5 September 2024 di lokasi Gudang pada jam 08:00:00.', 0, '2024-09-03 05:03:36', '2024-09-03 05:03:36'),
-(198, 4, 17, 'Diklat baru berjudul Libur Hari Raya akan dilaksanakan pada tanggal 5 September 2024 di lokasi Gudang pada jam 08:00:00.', 0, '2024-09-03 05:03:36', '2024-09-03 05:03:36'),
-(199, 4, 18, 'Diklat baru berjudul Libur Hari Raya akan dilaksanakan pada tanggal 5 September 2024 di lokasi Gudang pada jam 08:00:00.', 0, '2024-09-03 05:03:36', '2024-09-03 05:03:36'),
-(200, 4, 19, 'Diklat baru berjudul Libur Hari Raya akan dilaksanakan pada tanggal 5 September 2024 di lokasi Gudang pada jam 08:00:00.', 0, '2024-09-03 05:03:36', '2024-09-03 05:03:36'),
-(201, 4, 20, 'Diklat baru berjudul Libur Hari Raya akan dilaksanakan pada tanggal 5 September 2024 di lokasi Gudang pada jam 08:00:00.', 0, '2024-09-03 05:03:36', '2024-09-03 05:03:36'),
-(202, 4, 21, 'Diklat baru berjudul Libur Hari Raya akan dilaksanakan pada tanggal 5 September 2024 di lokasi Gudang pada jam 08:00:00.', 0, '2024-09-03 05:03:36', '2024-09-03 05:03:36'),
-(203, 4, 22, 'Diklat baru berjudul Libur Hari Raya akan dilaksanakan pada tanggal 5 September 2024 di lokasi Gudang pada jam 08:00:00.', 0, '2024-09-03 05:03:36', '2024-09-03 05:03:36'),
-(204, 4, 23, 'Diklat baru berjudul Libur Hari Raya akan dilaksanakan pada tanggal 5 September 2024 di lokasi Gudang pada jam 08:00:00.', 0, '2024-09-03 05:03:36', '2024-09-03 05:03:36'),
-(205, 4, 24, 'Diklat baru berjudul Libur Hari Raya akan dilaksanakan pada tanggal 5 September 2024 di lokasi Gudang pada jam 08:00:00.', 0, '2024-09-03 05:03:36', '2024-09-03 05:03:36'),
-(206, 4, 25, 'Diklat baru berjudul Libur Hari Raya akan dilaksanakan pada tanggal 5 September 2024 di lokasi Gudang pada jam 08:00:00.', 0, '2024-09-03 05:03:36', '2024-09-03 05:03:36'),
-(207, 4, 26, 'Diklat baru berjudul Libur Hari Raya akan dilaksanakan pada tanggal 5 September 2024 di lokasi Gudang pada jam 08:00:00.', 0, '2024-09-03 05:03:36', '2024-09-03 05:03:36'),
-(208, 4, 27, 'Diklat baru berjudul Libur Hari Raya akan dilaksanakan pada tanggal 5 September 2024 di lokasi Gudang pada jam 08:00:00.', 0, '2024-09-03 05:03:36', '2024-09-03 05:03:36'),
-(209, 4, 28, 'Diklat baru berjudul Libur Hari Raya akan dilaksanakan pada tanggal 5 September 2024 di lokasi Gudang pada jam 08:00:00.', 0, '2024-09-03 05:03:36', '2024-09-03 05:03:36'),
-(210, 4, 29, 'Diklat baru berjudul Libur Hari Raya akan dilaksanakan pada tanggal 5 September 2024 di lokasi Gudang pada jam 08:00:00.', 0, '2024-09-03 05:03:36', '2024-09-03 05:03:36'),
-(211, 4, 30, 'Diklat baru berjudul Libur Hari Raya akan dilaksanakan pada tanggal 5 September 2024 di lokasi Gudang pada jam 08:00:00.', 0, '2024-09-03 05:03:36', '2024-09-03 05:03:36'),
-(212, 4, 31, 'Diklat baru berjudul Libur Hari Raya akan dilaksanakan pada tanggal 5 September 2024 di lokasi Gudang pada jam 08:00:00.', 0, '2024-09-03 05:03:36', '2024-09-03 05:03:36'),
-(213, 4, 32, 'Diklat baru berjudul Libur Hari Raya akan dilaksanakan pada tanggal 5 September 2024 di lokasi Gudang pada jam 08:00:00.', 0, '2024-09-03 05:03:36', '2024-09-03 05:03:36'),
-(214, 4, 33, 'Diklat baru berjudul Libur Hari Raya akan dilaksanakan pada tanggal 5 September 2024 di lokasi Gudang pada jam 08:00:00.', 0, '2024-09-03 05:03:36', '2024-09-03 05:03:36'),
-(215, 4, 34, 'Diklat baru berjudul Libur Hari Raya akan dilaksanakan pada tanggal 5 September 2024 di lokasi Gudang pada jam 08:00:00.', 0, '2024-09-03 05:03:36', '2024-09-03 05:03:36'),
-(216, 4, 35, 'Diklat baru berjudul Libur Hari Raya akan dilaksanakan pada tanggal 5 September 2024 di lokasi Gudang pada jam 08:00:00.', 0, '2024-09-03 05:03:36', '2024-09-03 05:03:36'),
-(217, 4, 36, 'Diklat baru berjudul Libur Hari Raya akan dilaksanakan pada tanggal 5 September 2024 di lokasi Gudang pada jam 08:00:00.', 0, '2024-09-03 05:03:36', '2024-09-03 05:03:36'),
-(218, 4, 37, 'Diklat baru berjudul Libur Hari Raya akan dilaksanakan pada tanggal 5 September 2024 di lokasi Gudang pada jam 08:00:00.', 0, '2024-09-03 05:03:36', '2024-09-03 05:03:36'),
-(219, 4, 38, 'Diklat baru berjudul Libur Hari Raya akan dilaksanakan pada tanggal 5 September 2024 di lokasi Gudang pada jam 08:00:00.', 0, '2024-09-03 05:03:36', '2024-09-03 05:03:36'),
-(220, 4, 39, 'Diklat baru berjudul Libur Hari Raya akan dilaksanakan pada tanggal 5 September 2024 di lokasi Gudang pada jam 08:00:00.', 0, '2024-09-03 05:03:36', '2024-09-03 05:03:36'),
-(221, 4, 40, 'Diklat baru berjudul Libur Hari Raya akan dilaksanakan pada tanggal 5 September 2024 di lokasi Gudang pada jam 08:00:00.', 0, '2024-09-03 05:03:36', '2024-09-03 05:03:36'),
-(222, 4, 41, 'Diklat baru berjudul Libur Hari Raya akan dilaksanakan pada tanggal 5 September 2024 di lokasi Gudang pada jam 08:00:00.', 0, '2024-09-03 05:03:36', '2024-09-03 05:03:36'),
-(223, 4, 42, 'Diklat baru berjudul Libur Hari Raya akan dilaksanakan pada tanggal 5 September 2024 di lokasi Gudang pada jam 08:00:00.', 0, '2024-09-03 05:03:36', '2024-09-03 05:03:36'),
-(224, 4, 43, 'Diklat baru berjudul Libur Hari Raya akan dilaksanakan pada tanggal 5 September 2024 di lokasi Gudang pada jam 08:00:00.', 0, '2024-09-03 05:03:36', '2024-09-03 05:03:36'),
-(225, 4, 44, 'Diklat baru berjudul Libur Hari Raya akan dilaksanakan pada tanggal 5 September 2024 di lokasi Gudang pada jam 08:00:00.', 0, '2024-09-03 05:03:36', '2024-09-03 05:03:36'),
-(226, 4, 45, 'Diklat baru berjudul Libur Hari Raya akan dilaksanakan pada tanggal 5 September 2024 di lokasi Gudang pada jam 08:00:00.', 0, '2024-09-03 05:03:36', '2024-09-03 05:03:36'),
-(227, 4, 46, 'Diklat baru berjudul Libur Hari Raya akan dilaksanakan pada tanggal 5 September 2024 di lokasi Gudang pada jam 08:00:00.', 0, '2024-09-03 05:03:36', '2024-09-03 05:03:36'),
-(228, 4, 47, 'Diklat baru berjudul Libur Hari Raya akan dilaksanakan pada tanggal 5 September 2024 di lokasi Gudang pada jam 08:00:00.', 0, '2024-09-03 05:03:36', '2024-09-03 05:03:36'),
-(229, 4, 48, 'Diklat baru berjudul Libur Hari Raya akan dilaksanakan pada tanggal 5 September 2024 di lokasi Gudang pada jam 08:00:00.', 0, '2024-09-03 05:03:36', '2024-09-03 05:03:36'),
-(230, 4, 49, 'Diklat baru berjudul Libur Hari Raya akan dilaksanakan pada tanggal 5 September 2024 di lokasi Gudang pada jam 08:00:00.', 0, '2024-09-03 05:03:36', '2024-09-03 05:03:36'),
-(231, 4, 50, 'Diklat baru berjudul Libur Hari Raya akan dilaksanakan pada tanggal 5 September 2024 di lokasi Gudang pada jam 08:00:00.', 0, '2024-09-03 05:03:36', '2024-09-03 05:03:36'),
-(232, 4, 51, 'Diklat baru berjudul Libur Hari Raya akan dilaksanakan pada tanggal 5 September 2024 di lokasi Gudang pada jam 08:00:00.', 0, '2024-09-03 05:03:36', '2024-09-03 05:03:36'),
-(233, 4, 55, 'Diklat baru berjudul Libur Hari Raya akan dilaksanakan pada tanggal 5 September 2024 di lokasi Gudang pada jam 08:00:00.', 0, '2024-09-03 05:03:36', '2024-09-03 05:03:36'),
-(234, 4, 56, 'Diklat baru berjudul Libur Hari Raya akan dilaksanakan pada tanggal 5 September 2024 di lokasi Gudang pada jam 08:00:00.', 0, '2024-09-03 05:03:36', '2024-09-03 05:03:36');
-
 -- --------------------------------------------------------
 
 --
@@ -1697,32 +1023,6 @@ CREATE TABLE `pelaporans` (
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
---
--- Dumping data for table `pelaporans`
---
-
-INSERT INTO `pelaporans` (`id`, `pelapor`, `pelaku`, `tgl_kejadian`, `lokasi`, `kronologi`, `upload_foto`, `created_at`, `updated_at`) VALUES
-(1, 43, 25, '2024-08-19 15:10:35', 'Lokasi Kejadian 1', 'Kronologi kejadian pelaporan 1 yang berisi detail kejadian dan saksi-saksi.', 76, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(2, 24, 5, '2024-08-14 15:10:35', 'Lokasi Kejadian 2', 'Kronologi kejadian pelaporan 2 yang berisi detail kejadian dan saksi-saksi.', 77, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(3, 6, 45, '2024-08-05 15:10:35', 'Lokasi Kejadian 3', 'Kronologi kejadian pelaporan 3 yang berisi detail kejadian dan saksi-saksi.', 78, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(4, 19, 1, '2024-08-06 15:10:35', 'Lokasi Kejadian 4', 'Kronologi kejadian pelaporan 4 yang berisi detail kejadian dan saksi-saksi.', 79, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(5, 42, 25, '2024-08-02 15:10:35', 'Lokasi Kejadian 5', 'Kronologi kejadian pelaporan 5 yang berisi detail kejadian dan saksi-saksi.', 80, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(6, 46, 15, '2024-07-30 15:10:35', 'Lokasi Kejadian 6', 'Kronologi kejadian pelaporan 6 yang berisi detail kejadian dan saksi-saksi.', 81, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(7, 28, 51, '2024-08-08 15:10:35', 'Lokasi Kejadian 7', 'Kronologi kejadian pelaporan 7 yang berisi detail kejadian dan saksi-saksi.', 82, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(8, 6, 44, '2024-08-21 15:10:35', 'Lokasi Kejadian 8', 'Kronologi kejadian pelaporan 8 yang berisi detail kejadian dan saksi-saksi.', 83, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(9, 21, 8, '2024-08-09 15:10:35', 'Lokasi Kejadian 9', 'Kronologi kejadian pelaporan 9 yang berisi detail kejadian dan saksi-saksi.', 84, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(10, 21, 35, '2024-08-09 15:10:35', 'Lokasi Kejadian 10', 'Kronologi kejadian pelaporan 10 yang berisi detail kejadian dan saksi-saksi.', 85, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(11, 6, 10, '2024-08-24 15:10:35', 'Lokasi Kejadian 11', 'Kronologi kejadian pelaporan 11 yang berisi detail kejadian dan saksi-saksi.', 86, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(12, 24, 31, '2024-08-14 15:10:35', 'Lokasi Kejadian 12', 'Kronologi kejadian pelaporan 12 yang berisi detail kejadian dan saksi-saksi.', 87, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(13, 11, 10, '2024-08-25 15:10:35', 'Lokasi Kejadian 13', 'Kronologi kejadian pelaporan 13 yang berisi detail kejadian dan saksi-saksi.', 88, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(14, 44, 31, '2024-08-09 15:10:35', 'Lokasi Kejadian 14', 'Kronologi kejadian pelaporan 14 yang berisi detail kejadian dan saksi-saksi.', 89, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(15, 15, 7, '2024-08-05 15:10:35', 'Lokasi Kejadian 15', 'Kronologi kejadian pelaporan 15 yang berisi detail kejadian dan saksi-saksi.', 90, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(16, 11, 19, '2024-08-28 15:10:35', 'Lokasi Kejadian 16', 'Kronologi kejadian pelaporan 16 yang berisi detail kejadian dan saksi-saksi.', 91, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(17, 15, 45, '2024-08-11 15:10:35', 'Lokasi Kejadian 17', 'Kronologi kejadian pelaporan 17 yang berisi detail kejadian dan saksi-saksi.', 92, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(18, 9, 21, '2024-08-15 15:10:35', 'Lokasi Kejadian 18', 'Kronologi kejadian pelaporan 18 yang berisi detail kejadian dan saksi-saksi.', 93, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(19, 42, 34, '2024-08-19 15:10:35', 'Lokasi Kejadian 19', 'Kronologi kejadian pelaporan 19 yang berisi detail kejadian dan saksi-saksi.', 94, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(20, 24, 2, '2024-08-08 15:10:35', 'Lokasi Kejadian 20', 'Kronologi kejadian pelaporan 20 yang berisi detail kejadian dan saksi-saksi.', 95, '2024-08-29 08:10:35', '2024-08-29 08:10:35');
 
 -- --------------------------------------------------------
 
@@ -1812,7 +1112,19 @@ INSERT INTO `pengurang_gajis` (`id`, `data_karyawan_id`, `premi_id`, `created_at
 (13, 54, 3, '2024-08-31 21:59:28', '2024-08-31 21:59:28'),
 (23, 55, 1, '2024-09-03 05:29:02', '2024-09-03 05:29:02'),
 (24, 55, 2, '2024-09-03 05:29:02', '2024-09-03 05:29:02'),
-(25, 55, 3, '2024-09-03 05:29:02', '2024-09-03 05:29:02');
+(25, 55, 3, '2024-09-03 05:29:02', '2024-09-03 05:29:02'),
+(26, 57, 1, '2024-09-05 20:16:51', '2024-09-05 20:16:51'),
+(27, 57, 2, '2024-09-05 20:16:51', '2024-09-05 20:16:51'),
+(28, 57, 3, '2024-09-05 20:16:51', '2024-09-05 20:16:51'),
+(29, 57, 4, '2024-09-05 20:16:51', '2024-09-05 20:16:51'),
+(30, 51, 1, '2024-09-06 08:25:53', '2024-09-06 08:25:53'),
+(31, 51, 2, '2024-09-06 08:25:53', '2024-09-06 08:25:53'),
+(32, 51, 3, '2024-09-06 08:25:53', '2024-09-06 08:25:53'),
+(33, 51, 4, '2024-09-06 08:25:53', '2024-09-06 08:25:53'),
+(34, 58, 1, '2024-09-08 20:15:23', '2024-09-08 20:15:23'),
+(35, 58, 2, '2024-09-08 20:15:23', '2024-09-08 20:15:23'),
+(36, 58, 3, '2024-09-08 20:15:23', '2024-09-08 20:15:23'),
+(37, 58, 4, '2024-09-08 20:15:23', '2024-09-08 20:15:23');
 
 -- --------------------------------------------------------
 
@@ -2029,7 +1341,7 @@ INSERT INTO `personal_access_tokens` (`id`, `tokenable_type`, `tokenable_id`, `n
 (53, 'App\\Models\\User', 50, 'TLogin', '057c4af0f382a8c3068365c25e9faf1af8367e68e3e5138260791f9ef3118f02', '[\"*\"]', '2024-08-31 08:28:05', NULL, '2024-08-31 08:19:17', '2024-08-31 08:28:05'),
 (55, 'App\\Models\\User', 1, 'create_token_2c522d8f-ec0b-4c25-86d5-3f67c9150abf', '47d607b240f7eaf5fa1e6db5fc20d5943166aadfd989721c0e995f50cd71e519', '[\"*\"]', '2024-08-31 06:05:31', NULL, '2024-08-31 02:47:10', '2024-08-31 06:05:31'),
 (57, 'App\\Models\\User', 1, 'create_token_d0a5fce9-2fcf-4217-8164-8e2194950538', 'd9aca7e53c8ebb8bccddd622164339b4a32cc8cff8353f8a68e4d169e24e8f0d', '[\"*\"]', '2024-08-31 07:55:25', NULL, '2024-08-31 07:23:24', '2024-08-31 07:55:25'),
-(59, 'App\\Models\\User', 1, 'create_token_07149cdc-e269-4c4c-8611-b476ae8357d6', '44e63416c70e5e80461123a1ceedca4736a83729ce548fb943d7f302a1379b2a', '[\"*\"]', '2024-09-02 19:10:13', NULL, '2024-08-31 07:46:20', '2024-09-02 19:10:13'),
+(59, 'App\\Models\\User', 1, 'create_token_07149cdc-e269-4c4c-8611-b476ae8357d6', '44e63416c70e5e80461123a1ceedca4736a83729ce548fb943d7f302a1379b2a', '[\"*\"]', '2024-09-06 08:49:32', NULL, '2024-08-31 07:46:20', '2024-09-06 08:49:32'),
 (64, 'App\\Models\\User', 50, 'create_token_dee849a8-7775-409c-99f4-6ea4425b0129', 'fe0c39308892f78205eab7e61e36a57ef9cbcc6741be69e2b0a3b075d5201f58', '[\"*\"]', '2024-08-31 21:49:57', NULL, '2024-08-31 20:13:31', '2024-08-31 21:49:57'),
 (66, 'App\\Models\\User', 1, 'create_token_6983b771-cb1b-4c74-8466-3b5c24331702', 'a890cc44a32360f301e3b8cc5b01321633a67928e3b1aa63156c0617cd99022d', '[\"*\"]', '2024-09-01 01:34:27', NULL, '2024-08-31 21:42:37', '2024-09-01 01:34:27'),
 (67, 'App\\Models\\User', 55, 'TLogin', '3156f7a7ec88b6f4500abf001c6088535da7d7fe11a5d91ffa4ed85f7b301c93', '[\"*\"]', '2024-09-01 05:36:55', NULL, '2024-09-01 05:05:11', '2024-09-01 05:36:55'),
@@ -2059,7 +1371,37 @@ INSERT INTO `personal_access_tokens` (`id`, `tokenable_type`, `tokenable_id`, `n
 (113, 'App\\Models\\User', 1, 'create_token_c6c51c6b-ebf9-4433-88f1-ff45902bc02d', '6d4dd2307806c6031f0799e15a3fb3836f56a0a3f03ef0bb6662760a430cc7be', '[\"*\"]', '2024-09-03 05:29:35', NULL, '2024-09-03 04:56:13', '2024-09-03 05:29:35'),
 (114, 'App\\Models\\User', 1, 'create_token_04f2613b-5447-476b-a1da-dbd4167ab602', '1c1033a8a405d0f5e1d299b136c3b449d0e16a1cc7f4b258e5cf1c6036654ac5', '[\"*\"]', '2024-09-03 18:10:44', NULL, '2024-09-03 18:10:40', '2024-09-03 18:10:44'),
 (115, 'App\\Models\\User', 12, 'TLogin', 'e9de697926bdd47904b65faf611b49fa8ef79fd1ad7605885cb04f88d303aaed', '[\"*\"]', '2024-09-04 01:11:49', NULL, '2024-09-04 01:11:44', '2024-09-04 01:11:49'),
-(116, 'App\\Models\\User', 1, 'create_token_c5e53be6-71b6-449b-85b1-5ea72700bde8', '0978885e4a42bb9b7343730fda31925999c708a97994e9de8dbeba7f675dec5a', '[\"*\"]', '2024-09-03 19:23:39', NULL, '2024-09-03 18:32:44', '2024-09-03 19:23:39');
+(116, 'App\\Models\\User', 1, 'create_token_c5e53be6-71b6-449b-85b1-5ea72700bde8', '0978885e4a42bb9b7343730fda31925999c708a97994e9de8dbeba7f675dec5a', '[\"*\"]', '2024-09-03 19:23:39', NULL, '2024-09-03 18:32:44', '2024-09-03 19:23:39'),
+(117, 'App\\Models\\User', 1, 'create_token_5d71a9e3-64fe-4061-b9a0-221f66681348', '902da534f04ba2cde1837f830eff3df9c72694b3f8e7cb1318b356475bee9b18', '[\"*\"]', '2024-09-04 06:49:24', NULL, '2024-09-04 02:33:11', '2024-09-04 06:49:24'),
+(118, 'App\\Models\\User', 1, 'create_token_9b321136-c713-469f-91b5-edf03debc4b7', '312e5e7e54709f1675bd8e025de50dd85f98dee9ac49ded338041093859cc753', '[\"*\"]', '2024-09-04 03:50:32', NULL, '2024-09-04 02:50:28', '2024-09-04 03:50:32'),
+(119, 'App\\Models\\User', 3, 'TLogin', 'f0c8720a1e21e1f0648373df97f19bbcf803861f37decc51cf4996fdf2424c14', '[\"*\"]', '2024-09-04 13:05:44', NULL, '2024-09-04 12:54:18', '2024-09-04 13:05:44'),
+(122, 'App\\Models\\User', 1, 'create_token_51bf63db-5af6-4fd2-9e0b-0c600f4d02ed', '21b9ba6220782f2051a5c08073fe4cc3e46bd7e6a5412df36ba4cb61dc8ec12c', '[\"*\"]', '2024-09-08 18:51:10', NULL, '2024-09-04 06:16:05', '2024-09-08 18:51:10'),
+(124, 'App\\Models\\User', 1, 'create_token_ef5d9935-2374-47f0-8e21-527655d237d0', 'd714621e67484705efb9c91fe7d932c8c7e012d4d15eabe37cfb0f283986e750', '[\"*\"]', '2024-09-04 20:26:53', NULL, '2024-09-04 18:08:16', '2024-09-04 20:26:53'),
+(127, 'App\\Models\\User', 1, 'create_token_89295f7c-f14a-434d-adfb-0f5c5ee10189', '6c0c8243206a6739fe968a24e12bf2d9df97f427a25bd12a484ffa061d14894e', '[\"*\"]', '2024-09-04 22:25:24', NULL, '2024-09-04 22:24:13', '2024-09-04 22:25:24'),
+(128, 'App\\Models\\User', 1, 'create_token_4f9c7df0-8413-4f3c-bd24-fec778772286', '6784fc982b0ff49ab455b36eb122000def3e69333e562ca91bf74b1321832d55', '[\"*\"]', '2024-09-04 23:11:57', NULL, '2024-09-04 23:11:41', '2024-09-04 23:11:57'),
+(129, 'App\\Models\\User', 1, 'create_token_94f9c188-c932-436c-96b7-ee3aed7d58bb', '3df4eeffebccff32703c14957f4a7068bb34e0c6dbcf5e8fe34c61e455544fd5', '[\"*\"]', '2024-09-05 22:43:42', NULL, '2024-09-05 00:14:24', '2024-09-05 22:43:42'),
+(130, 'App\\Models\\User', 1, 'create_token_06ed6016-a766-4847-8d32-daca6daa3118', '69459cdd6bb8fdf7e35108bdf24a1b8d2a71ade63e65b405e93df2fe27b031fe', '[\"*\"]', '2024-09-05 10:06:59', NULL, '2024-09-05 00:15:40', '2024-09-05 10:06:59'),
+(131, 'App\\Models\\User', 1, 'create_token_78c13367-47b6-486a-925d-277e0eb1abe1', 'b541978fa77505c3ff279bc4abe496efb053e39aebcfc94e9244409fcf86b2de', '[\"*\"]', '2024-09-05 05:39:51', NULL, '2024-09-05 05:35:18', '2024-09-05 05:39:51'),
+(132, 'App\\Models\\User', 1, 'create_token_7d9dda18-2476-4080-954c-41615824ba56', '43b3695aa09042a9fa0cf7a416a8742831cb96371948e7f0bf17a6b812e19aae', '[\"*\"]', '2024-09-05 20:10:55', NULL, '2024-09-05 20:10:29', '2024-09-05 20:10:55'),
+(133, 'App\\Models\\User', 1, 'create_token_45596e73-c063-4ce0-85e7-c5de8bdd33a1', '76fae3474a81e838a1cd1a84cddd0245b1bca578cbf07ca873529828ad13c5ca', '[\"*\"]', '2024-09-05 20:21:17', NULL, '2024-09-05 20:11:38', '2024-09-05 20:21:17'),
+(134, 'App\\Models\\User', 48, 'TLogin', '3817239129c845311aff17bc643794919118465e8a0d12ec944c691bcfde3727', '[\"*\"]', '2024-09-06 03:22:51', NULL, '2024-09-06 03:19:07', '2024-09-06 03:22:51'),
+(135, 'App\\Models\\User', 1, 'create_token_ad34d27f-5a4a-4bfd-b287-301fea501d34', 'f0cd7f4c01d320387993ae391430025f89218bd38325acdbcc01c5551824f479', '[\"*\"]', '2024-09-05 21:55:34', NULL, '2024-09-05 20:36:49', '2024-09-05 21:55:34'),
+(136, 'App\\Models\\User', 1, 'create_token_19a7c759-7ad2-4e06-8852-57bebda1998e', 'd8f30a00cedf888f3189a84e1d9e6900d7b20be6239c932868ecd55ce2f62d07', '[\"*\"]', '2024-09-05 22:27:11', NULL, '2024-09-05 22:13:41', '2024-09-05 22:27:11'),
+(137, 'App\\Models\\User', 1, 'create_token_f21dd3ce-b761-484e-b497-34acd2e2ad1d', '4e7ef792d400d8d5769c4be3ffe29548719fab99b4a41ce1fe633d332b6e1a7e', '[\"*\"]', '2024-09-05 23:58:15', NULL, '2024-09-05 23:31:53', '2024-09-05 23:58:15'),
+(140, 'App\\Models\\User', 50, 'TLogin', 'f16181a0bae8402d1d8119ae2af485344d28cc271072ce16fc0c286f459b00fd', '[\"*\"]', '2024-09-06 09:37:03', NULL, '2024-09-06 09:32:45', '2024-09-06 09:37:03'),
+(141, 'App\\Models\\User', 22, 'TLogin', '5afedf31412c1cc45066315ef4e58a7d89c796235cd8dbfb8c05e667dd7d4c99', '[\"*\"]', '2024-09-06 11:17:51', NULL, '2024-09-06 11:17:18', '2024-09-06 11:17:51'),
+(142, 'App\\Models\\User', 11, 'TLogin', 'c0162c1f23ff08def83a3ed5eb4c636f72e92a9a867908a6bdc12ab2fffc0874', '[\"*\"]', '2024-09-06 11:23:11', NULL, '2024-09-06 11:22:42', '2024-09-06 11:23:11'),
+(143, 'App\\Models\\User', 1, 'create_token_eabbc31a-8754-4ae1-b32f-8fb78e5d7af1', 'a65c3ad5527c69e0c963665bd021043f3a665632ded918e8feb9f060d375f938', '[\"*\"]', '2024-09-06 05:56:58', NULL, '2024-09-06 04:41:37', '2024-09-06 05:56:58'),
+(144, 'App\\Models\\User', 24, 'TLogin', '260da51da166363f8558c8e5de800960e776e98bde4205c5ba77831cc1ab17e4', '[\"*\"]', '2024-09-06 13:07:11', NULL, '2024-09-06 12:53:53', '2024-09-06 13:07:11'),
+(145, 'App\\Models\\User', 24, 'TLogin', '9f27b37ad1d4d6a695e8ada3ec757f5c1c9634541bc757a216c97cf334129bd2', '[\"*\"]', '2024-09-07 05:51:05', NULL, '2024-09-07 04:30:00', '2024-09-07 05:51:05'),
+(146, 'App\\Models\\User', 1, 'create_token_6eeff3f1-4b5b-4883-bef8-5f72aae1d34d', '9ddb625cfa74d68ef8f7923e6a2adba5468f9e2f8df57b99e4f07f34fac1c7e1', '[\"*\"]', '2024-09-07 03:23:49', NULL, '2024-09-07 03:23:48', '2024-09-07 03:23:49'),
+(156, 'App\\Models\\User', 12, 'TLogin', 'a467b75c8f0c1700f8c9dfd7207e164f0aa6c256b258741d5e25388210ebfe70', '[\"*\"]', '2024-09-08 10:39:49', NULL, '2024-09-08 10:38:45', '2024-09-08 10:39:49'),
+(158, 'App\\Models\\User', 1, 'create_token_948137e6-814b-4a37-a3ba-1fd1b1e2101b', 'a024370c6d750b2022fd15d471f73cb5a21e4e38ff5f6f7fa16a5cbf4296bcd4', '[\"*\"]', '2024-09-08 20:21:28', NULL, '2024-09-08 18:16:28', '2024-09-08 20:21:28'),
+(159, 'App\\Models\\User', 24, 'TLogin', '4ef3e81ace38b5cdd7f795db204b5e98cf3de90cb2a64cb257c2c08b2df114b8', '[\"*\"]', '2024-09-09 01:27:30', NULL, '2024-09-09 01:24:07', '2024-09-09 01:27:30'),
+(160, 'App\\Models\\User', 1, 'create_token_5cbed055-5123-4793-85a7-85593c65afa4', '00ad7ac42d5202b8f26932a2302213b1beb0a2bd90ca549728bcca8bc85c14e2', '[\"*\"]', '2024-09-08 19:14:33', NULL, '2024-09-08 19:03:39', '2024-09-08 19:14:33'),
+(161, 'App\\Models\\User', 58, 'TLogin', '36cf00db457f7f34b81e6d14eb31fa8c4d598280ae5e66856049d200cf5f3d4a', '[\"*\"]', NULL, NULL, '2024-09-09 03:15:48', '2024-09-09 03:15:48'),
+(162, 'App\\Models\\User', 1, 'create_token_f57df6b1-59bc-471c-8fa6-1776359cca80', 'd548b434076148d434caa9cfd9920c31d9b7e3d08f38d82723e428c8c6c16400', '[\"*\"]', '2024-09-08 21:47:34', NULL, '2024-09-08 21:46:38', '2024-09-08 21:47:34'),
+(164, 'App\\Models\\User', 1, 'create_token_58946b2e-00bc-4fca-85f5-ef59b331eeb9', 'bceb40bcb0ce2c1655cb15021ea7f72a8edf901f9791a529ba44e474ed1cca41', '[\"*\"]', '2024-09-09 00:04:38', NULL, '2024-09-08 23:26:59', '2024-09-09 00:04:38');
 
 -- --------------------------------------------------------
 
@@ -2075,42 +1417,6 @@ CREATE TABLE `pertanyaans` (
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
---
--- Dumping data for table `pertanyaans`
---
-
-INSERT INTO `pertanyaans` (`id`, `pertanyaan`, `jenis_penilaian_id`, `deleted_at`, `created_at`, `updated_at`) VALUES
-(1, 'Bagaimana kualitas kerja karyawan ini?', 1, NULL, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(2, 'Seberapa baik karyawan ini dalam bekerja sama dengan tim?', 1, NULL, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(3, 'Apakah karyawan ini menunjukkan inisiatif dalam pekerjaannya?', 1, NULL, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(4, 'Seberapa baik karyawan ini dalam menyelesaikan tugas tepat waktu?', 1, NULL, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(5, 'Bagaimana karyawan ini menangani tekanan kerja?', 1, NULL, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(6, 'Apakah karyawan ini menunjukkan kemampuan komunikasi yang baik?', 1, NULL, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(7, 'Seberapa baik karyawan ini dalam mengikuti instruksi dan prosedur?', 1, NULL, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(8, 'Bagaimana karyawan ini beradaptasi dengan perubahan di tempat kerja?', 1, NULL, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(9, 'Apakah karyawan ini menunjukkan sikap yang positif di tempat kerja?', 1, NULL, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(10, 'Seberapa baik karyawan ini dalam belajar hal-hal baru?', 1, NULL, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(11, 'Bagaimana kualitas kerja karyawan ini?', 2, NULL, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(12, 'Seberapa baik karyawan ini dalam bekerja sama dengan tim?', 2, NULL, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(13, 'Apakah karyawan ini menunjukkan inisiatif dalam pekerjaannya?', 2, NULL, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(14, 'Seberapa baik karyawan ini dalam menyelesaikan tugas tepat waktu?', 2, NULL, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(15, 'Bagaimana karyawan ini menangani tekanan kerja?', 2, NULL, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(16, 'Apakah karyawan ini menunjukkan kemampuan komunikasi yang baik?', 2, NULL, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(17, 'Seberapa baik karyawan ini dalam mengikuti instruksi dan prosedur?', 2, NULL, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(18, 'Bagaimana karyawan ini beradaptasi dengan perubahan di tempat kerja?', 2, NULL, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(19, 'Apakah karyawan ini menunjukkan sikap yang positif di tempat kerja?', 2, NULL, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(20, 'Seberapa baik karyawan ini dalam belajar hal-hal baru?', 2, NULL, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(21, 'Bagaimana kualitas kerja karyawan ini?', 3, NULL, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(22, 'Seberapa baik karyawan ini dalam bekerja sama dengan tim?', 3, NULL, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(23, 'Apakah karyawan ini menunjukkan inisiatif dalam pekerjaannya?', 3, NULL, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(24, 'Seberapa baik karyawan ini dalam menyelesaikan tugas tepat waktu?', 3, NULL, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(25, 'Bagaimana karyawan ini menangani tekanan kerja?', 3, NULL, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(26, 'Apakah karyawan ini menunjukkan kemampuan komunikasi yang baik?', 3, NULL, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(27, 'Seberapa baik karyawan ini dalam mengikuti instruksi dan prosedur?', 3, NULL, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(28, 'Bagaimana karyawan ini beradaptasi dengan perubahan di tempat kerja?', 3, NULL, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(29, 'Apakah karyawan ini menunjukkan sikap yang positif di tempat kerja?', 3, NULL, '2024-08-29 08:10:35', '2024-08-29 08:10:35'),
-(30, 'Seberapa baik karyawan ini dalam belajar hal-hal baru?', 3, NULL, '2024-08-29 08:10:35', '2024-08-29 08:10:35');
 
 -- --------------------------------------------------------
 
@@ -2251,13 +1557,6 @@ CREATE TABLE `presensis` (
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
---
--- Dumping data for table `presensis`
---
-
-INSERT INTO `presensis` (`id`, `user_id`, `data_karyawan_id`, `jadwal_id`, `jam_masuk`, `jam_keluar`, `durasi`, `lat`, `long`, `latkeluar`, `longkeluar`, `foto_masuk`, `foto_keluar`, `kategori_presensi_id`, `note`, `created_at`, `updated_at`) VALUES
-(1, 55, 55, 10, '2024-09-01 12:41:31', NULL, NULL, '-6.9858976', '110.4180278', NULL, NULL, 110, NULL, 2, NULL, '2024-09-01 05:41:31', '2024-09-01 05:41:31');
 
 -- --------------------------------------------------------
 
@@ -3321,15 +2620,6 @@ CREATE TABLE `tukar_jadwals` (
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
---
--- Dumping data for table `tukar_jadwals`
---
-
-INSERT INTO `tukar_jadwals` (`id`, `user_pengajuan`, `jadwal_pengajuan`, `user_ditukar`, `jadwal_ditukar`, `status_penukaran_id`, `kategori_penukaran_id`, `verifikator_1`, `verifikator_2`, `alasan`, `deleted_at`, `created_at`, `updated_at`) VALUES
-(1, 16, 3, 20, 4, 4, 1, NULL, 50, NULL, NULL, '2024-08-31 20:04:05', '2024-08-31 20:22:26'),
-(3, 50, 7, 16, 4, 4, 1, NULL, NULL, NULL, NULL, '2024-08-31 20:38:21', '2024-08-31 20:38:21'),
-(4, 16, 8, 20, 9, 4, 1, NULL, NULL, NULL, NULL, '2024-08-31 21:24:11', '2024-08-31 21:24:11');
-
 -- --------------------------------------------------------
 
 --
@@ -3344,34 +2634,6 @@ CREATE TABLE `unit_kerjas` (
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
---
--- Dumping data for table `unit_kerjas`
---
-
-INSERT INTO `unit_kerjas` (`id`, `nama_unit`, `jenis_karyawan`, `deleted_at`, `created_at`, `updated_at`) VALUES
-(1, 'Radiologi', 1, NULL, '2023-10-27 08:10:20', '2024-08-29 08:10:20'),
-(2, 'Psikiatri', 1, NULL, '2024-06-09 08:10:20', '2024-08-29 08:10:20'),
-(3, 'Pengembangan Mutu', 1, NULL, '2023-09-12 08:10:20', '2024-08-29 08:10:20'),
-(4, 'Sumber Daya Manusia (SDM)', 1, NULL, '2023-11-20 08:10:20', '2024-08-29 08:10:20'),
-(5, 'Hukum dan Kerjasama', 0, NULL, '2024-05-21 08:10:20', '2024-08-29 08:10:20'),
-(6, 'Bedah', 1, NULL, '2024-03-29 08:10:20', '2024-08-29 08:10:20'),
-(7, 'Asuransi Kesehatan', 1, NULL, '2024-02-13 08:10:20', '2024-08-29 08:10:20'),
-(8, 'Gizi', 1, NULL, '2024-04-06 08:10:20', '2024-08-29 08:10:20'),
-(9, 'Apotek', 1, NULL, '2024-02-25 08:10:20', '2024-08-29 08:10:20'),
-(10, 'Rehabilitasi Medik', 1, NULL, '2024-07-25 08:10:20', '2024-08-29 08:10:20'),
-(11, 'Teknologi Informasi dan Komunikasi (TIK)', 0, NULL, '2024-02-23 08:10:20', '2024-08-29 08:10:20'),
-(12, 'Onkologi', 0, NULL, '2023-12-14 08:10:20', '2024-08-29 08:10:20'),
-(13, 'Unit Gawat Darurat (UGD)', 0, NULL, '2023-10-31 08:10:20', '2024-08-29 08:10:20'),
-(14, 'Kebidanan dan Kandungan', 1, NULL, '2023-12-08 08:10:20', '2024-08-29 08:10:20'),
-(15, 'Telinga Hidung Tenggorokan (THT)', 0, NULL, '2024-06-16 08:10:20', '2024-08-29 08:10:20'),
-(16, 'Badan Penyelenggara Jaminan Sosial (BPJS)', 0, NULL, '2023-10-03 08:10:20', '2024-08-29 08:10:20'),
-(17, 'Penyakit Dalam', 0, NULL, '2024-08-13 08:10:20', '2024-08-29 08:10:20'),
-(18, 'Laundry', 0, NULL, '2024-06-30 08:10:20', '2024-08-29 08:10:20'),
-(19, 'Keamanan', 1, NULL, '2024-08-01 08:10:20', '2024-08-29 08:10:20'),
-(20, 'Gigi dan Mulut', 1, NULL, '2023-12-28 08:10:20', '2024-08-29 08:10:20'),
-(21, 'Kantin', 1, NULL, '2024-04-09 08:10:20', '2024-08-29 08:10:20'),
-(22, 'Nakes', 1, NULL, '2024-08-29 20:05:39', '2024-08-29 20:05:39');
 
 -- --------------------------------------------------------
 
@@ -3400,59 +2662,7 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`id`, `nama`, `email_verified_at`, `password`, `role_id`, `data_karyawan_id`, `foto_profil`, `data_completion_step`, `status_aktif`, `remember_token`, `remember_token_expired_at`, `created_at`, `updated_at`) VALUES
-(1, 'Super Admin', NULL, '$2y$12$oi0EMhrCJcKaBTUTTt6FRu9UUSoTd.thhHEBA1pTWjhI/03rWRUKu', NULL, NULL, NULL, 0, 2, NULL, NULL, '2024-08-29 08:10:20', '2024-08-29 17:26:58'),
-(2, 'User 0', NULL, '$2y$12$FQePRCbtzdXwEZQjFHRA/eWz0wCX4bhGyEGQo6Gst5DJlXFm.ozWe', NULL, 2, NULL, 0, 2, NULL, NULL, '2024-08-29 08:10:21', '2024-08-29 08:10:21'),
-(3, 'User 1', NULL, '$2y$12$gst3GC.TSGn5o2ctJSDsCOnAjurQTD0i1dt9h/di9ycvtbWNvrB7W', NULL, 3, NULL, 0, 2, NULL, NULL, '2024-08-29 08:10:21', '2024-08-29 08:10:21'),
-(4, 'User 2', NULL, '$2y$12$wCszgfpS3lGVMyr6IkzYBOqgyo7xBIZTYWA22IVchccW148udJeoS', NULL, 4, NULL, 0, 2, NULL, NULL, '2024-08-29 08:10:21', '2024-08-29 08:10:21'),
-(5, 'User 3', NULL, '$2y$12$DaObJOMet7rEhekt.1WjpOb6/OWlritHh/QfruU2cVyBjWpPqNX32', NULL, 5, NULL, 0, 2, NULL, NULL, '2024-08-29 08:10:22', '2024-08-29 08:10:22'),
-(6, 'User 4', NULL, '$2y$12$c3LbBqeWZ1DFwUERl36MA.GW0IcChDhtJ9SzGpw/BYITze9cpa0YO', NULL, 6, NULL, 0, 2, NULL, NULL, '2024-08-29 08:10:22', '2024-08-29 08:10:22'),
-(7, 'User 5', NULL, '$2y$12$IKnWxKMOXosl5rCBMzZgeeuXL0pCAK3xGDRzxVmZvY7t9XF2F.vFW', NULL, 7, NULL, 0, 2, NULL, NULL, '2024-08-29 08:10:22', '2024-08-29 08:10:22'),
-(8, 'User 6', NULL, '$2y$12$A.Tu2pP5AEyQ/j.zMCYeA.L79ac5/U9cJ6O9i0HlRRRrFQw/PIiuy', NULL, 8, NULL, 0, 2, NULL, NULL, '2024-08-29 08:10:22', '2024-08-29 08:10:22'),
-(9, 'User 7', NULL, '$2y$12$/8unhf3Bgwu6wz.4.Giz4OvOSRXI1mazh82QW2c8oQykninUHIzFC', NULL, 9, NULL, 0, 2, NULL, NULL, '2024-08-29 08:10:23', '2024-08-29 08:10:23'),
-(10, 'User 8', NULL, '$2y$12$xzNFINggC8QsqhW0cqf70OP3MSqyudfwnyh4YmJ.1coe.cVORCNGO', NULL, 10, NULL, 0, 2, NULL, NULL, '2024-08-29 08:10:23', '2024-08-29 08:10:23'),
-(11, 'User 9', NULL, '$2y$12$7TRcYl4RbvWwUInWSk0yC.WKoTIHyVAdXkuSrlonrQCg/C59skutS', NULL, 11, NULL, 0, 2, NULL, NULL, '2024-08-29 08:10:23', '2024-08-29 08:10:23'),
-(12, 'User 10', NULL, '$2y$12$a3230NGJNExuz96CkB5aSOnR.mSVkmBPijzHiF.dWZjzdmTCzsg3u', NULL, 12, NULL, 0, 2, NULL, NULL, '2024-08-29 08:10:24', '2024-08-29 08:10:24'),
-(13, 'User 11', NULL, '$2y$12$WV1DGCY1tt5NmbmXBhQENuMlYutLqIeMzrHV3XY9hYZ.YF66rLg3C', NULL, 13, NULL, 0, 2, NULL, NULL, '2024-08-29 08:10:24', '2024-08-29 08:10:24'),
-(14, 'User 12', NULL, '$2y$12$Ype5r.ZwZoDJjyMY8F7kYurHaf2e7Vm6AMlVagIE7jdTWVSCnluEq', NULL, 14, NULL, 0, 2, NULL, NULL, '2024-08-29 08:10:24', '2024-08-29 08:10:24'),
-(15, 'User 13', NULL, '$2y$12$1VwQOYM/GlDxTMb7xZYHvu6yeL2NyDvZN2z919a2sWEkb30HzsknO', NULL, 15, NULL, 0, 2, NULL, NULL, '2024-08-29 08:10:25', '2024-08-29 08:10:25'),
-(16, 'User 14', NULL, '$2y$12$BCKq5/YrbhfBX36N9QOyzuMImgrme8R.QS5zfKIBEylXBcBk.V4be', NULL, 16, NULL, 0, 2, NULL, NULL, '2024-08-29 08:10:25', '2024-08-29 08:10:25'),
-(17, 'User 15', NULL, '$2y$12$rsKMA1lM2Lvi1bE5wu.NHuYR33D8flJsl.jt328gBN2id2oJkso1y', NULL, 17, NULL, 0, 2, NULL, NULL, '2024-08-29 08:10:25', '2024-08-29 08:10:25'),
-(18, 'User 16', NULL, '$2y$12$1ZcS812/V0tggbnh8lO1e.olkiIZQaHBfB8Jr0iD0LwZpKlTLgohm', NULL, 18, NULL, 0, 2, NULL, NULL, '2024-08-29 08:10:25', '2024-08-29 08:10:25'),
-(19, 'User 17', NULL, '$2y$12$20cAmRGcbYF8EhxHbFlwvOw3E8kUVkhIM35OvO6JTNrDX4a.iE1JK', NULL, 19, NULL, 0, 2, NULL, NULL, '2024-08-29 08:10:26', '2024-08-29 08:10:26'),
-(20, 'User 18', NULL, '$2y$12$sc32kwMchtPJNMYDGrA9D.lPEY3spn3g2H20LTlZQLqiLNyuvV2au', NULL, 20, NULL, 0, 2, NULL, NULL, '2024-08-29 08:10:26', '2024-08-29 08:10:26'),
-(21, 'User 19', NULL, '$2y$12$O142h18BU5zEqoXyxaiH6OERlmJQktzrtyednlopK93TZsx2CQ90q', NULL, 21, NULL, 0, 2, NULL, NULL, '2024-08-29 08:10:26', '2024-08-29 08:10:26'),
-(22, 'User 20', NULL, '$2y$12$7lKK2iClg00Dnwwny2X4oO/FfLSAFp.xHtLwzLvhFEtwrZrVAdu.a', NULL, 22, NULL, 0, 2, NULL, NULL, '2024-08-29 08:10:27', '2024-08-29 08:10:27'),
-(23, 'User 21', NULL, '$2y$12$Q6Pv5BKGGK2n.Bt0Y1NUcebzsqKCqu8AIIhKGeGNnxY3Nw7FZkFE.', NULL, 23, NULL, 0, 2, NULL, NULL, '2024-08-29 08:10:27', '2024-08-29 08:10:27'),
-(24, 'User 22', NULL, '$2y$12$W7xVuw9PPWBt3eaWX45f5uYIc3e7eluJJKcoL.8obnfGlwB/jOiBW', NULL, 24, NULL, 0, 2, NULL, NULL, '2024-08-29 08:10:27', '2024-08-29 08:10:27'),
-(25, 'User 23', NULL, '$2y$12$sgYszcAQ03JG0Vcjn/LSiu1gpewCJy/0mL91DEouwC9posMrl1iCC', NULL, 25, NULL, 0, 2, NULL, NULL, '2024-08-29 08:10:27', '2024-08-29 08:10:27'),
-(26, 'User 24', NULL, '$2y$12$f9tdSBWpktyDkjtU.C2tHOwDRVXPeYfg7NOBrGtLW69X/M9NwMbR2', NULL, 26, NULL, 0, 2, NULL, NULL, '2024-08-29 08:10:28', '2024-08-29 08:10:28'),
-(27, 'User 25', NULL, '$2y$12$XsFUyw04iV1Tu2y.c0GCn.RC8Ghbru1oppTwpDZ9YG3nFuuP9XJoW', NULL, 27, NULL, 0, 2, NULL, NULL, '2024-08-29 08:10:28', '2024-08-29 08:10:28'),
-(28, 'User 26', NULL, '$2y$12$sxdKuIY9KsykBtz8ZfpbeOM.4P4N10T7r6hpIFURhW45884QLS8KC', NULL, 28, NULL, 0, 2, NULL, NULL, '2024-08-29 08:10:28', '2024-08-29 08:10:28'),
-(29, 'User 27', NULL, '$2y$12$KjXSfFI6Oy9w4k2uh2/Lzug17mPKz4RtaT5q/LNr0tDMxuVUPfs8i', NULL, 29, NULL, 0, 2, NULL, NULL, '2024-08-29 08:10:29', '2024-08-29 08:10:29'),
-(30, 'User 28', NULL, '$2y$12$bNIXMaUwLNakkcAKcIhgjO.JYaSve/rzuviNvM.nphODyR9aVebW2', NULL, 30, NULL, 0, 2, NULL, NULL, '2024-08-29 08:10:29', '2024-08-29 08:10:29'),
-(31, 'User 29', NULL, '$2y$12$dmhb/BdPSeVjEBp6uSo0EOdBHr7sIrAjB7X3O66d6KnQ0v6w9muYW', NULL, 31, NULL, 0, 2, NULL, NULL, '2024-08-29 08:10:29', '2024-08-29 08:10:29'),
-(32, 'User 30', NULL, '$2y$12$3Qg/s5sjp/p.ZQBqym5LguDKL9L9KujuXl3CdlO4I5ZfakNwxRMP.', NULL, 32, NULL, 0, 2, NULL, NULL, '2024-08-29 08:10:29', '2024-08-29 08:10:29'),
-(33, 'User 31', NULL, '$2y$12$t47gDHbqeB9dcyZwJPZGP.Y5/CULLgp3BICRox6hB1EJKyVmbCg8S', NULL, 33, NULL, 0, 2, NULL, NULL, '2024-08-29 08:10:30', '2024-08-29 08:10:30'),
-(34, 'User 32', NULL, '$2y$12$HN8VYxqDutZNdJf5SoC2LO73DObDmC0W6z1lUh6iggK0AbxRwh4vW', NULL, 34, NULL, 0, 2, NULL, NULL, '2024-08-29 08:10:30', '2024-08-29 08:10:30'),
-(35, 'User 33', NULL, '$2y$12$l5u1lEbQvej3OgKJyWINr.l1LlVOU4o3BVAXDRn2vOv1Mu93q.DGG', NULL, 35, NULL, 0, 2, NULL, NULL, '2024-08-29 08:10:30', '2024-08-29 08:10:30'),
-(36, 'User 34', NULL, '$2y$12$5R.qPrlqrdox/lzk3iAPHOanQXEcW2bmdrWxZHrtqrfVR876rKjR2', NULL, 36, NULL, 0, 2, NULL, NULL, '2024-08-29 08:10:31', '2024-08-29 08:10:31'),
-(37, 'User 35', NULL, '$2y$12$cFf/VOsyHn2yrrufx/VIWeNaVwu3eWB.7r6HD4SYtHJG8kSaU4/AG', NULL, 37, NULL, 0, 2, NULL, NULL, '2024-08-29 08:10:31', '2024-08-29 08:10:31'),
-(38, 'User 36', NULL, '$2y$12$A9UHFhFlyvVoxyhQdKBMH.CYrx3TmtcvnJEsEjP88uEiGcARUfIH.', NULL, 38, NULL, 0, 2, NULL, NULL, '2024-08-29 08:10:31', '2024-08-29 08:10:31'),
-(39, 'User 37', NULL, '$2y$12$Px2Ow517yJ8y..4IPeP7kOy522LHzQr5BI6DNjflo8xW1ZxYIw9ye', NULL, 39, NULL, 0, 2, NULL, NULL, '2024-08-29 08:10:31', '2024-08-29 08:10:31'),
-(40, 'User 38', NULL, '$2y$12$GUF2y/91ZOJWHEUeEgAKJu1UjvDbb2P0KpaWYWplI3xFj5ZHY1S2K', NULL, 40, NULL, 0, 2, NULL, NULL, '2024-08-29 08:10:32', '2024-08-29 08:10:32'),
-(41, 'User 39', NULL, '$2y$12$ob9KFEDoQ00SsbbTWFKSBOdavIGe5CFyQwUuUKqnkNjU46Jgns7ty', NULL, 41, NULL, 0, 2, NULL, NULL, '2024-08-29 08:10:32', '2024-08-29 08:10:32'),
-(42, 'User 40', NULL, '$2y$12$/4vc/WtNCdNzqvmNlZqYsOSi6STY.YqaKZoKz5K0u7Be2gfObstJK', NULL, 42, NULL, 0, 2, NULL, NULL, '2024-08-29 08:10:32', '2024-08-29 08:10:32'),
-(43, 'User 41', NULL, '$2y$12$G7R4.O5RaKcmSvJ98ln3iuAqx0afYvoIN2QGMN3T6uliRJdGAYTgu', NULL, 43, NULL, 0, 2, NULL, NULL, '2024-08-29 08:10:33', '2024-08-29 08:10:33'),
-(44, 'User 42', NULL, '$2y$12$8zca3PjoXWFt1o/F/ceH5uz0rOt/3alYlvFj28d7k0Cw/OuebQWwW', NULL, 44, NULL, 0, 2, NULL, NULL, '2024-08-29 08:10:33', '2024-08-29 08:10:33'),
-(45, 'User 43', NULL, '$2y$12$rPmrBmzFxdYrf/3HFy0aYOkqLkX402/PRmH1bkEjdD1pW0BLcUl3q', NULL, 45, NULL, 0, 2, NULL, NULL, '2024-08-29 08:10:33', '2024-08-29 08:10:33'),
-(46, 'User 44', NULL, '$2y$12$ZnKbiaeGIZjjsE2HLNb/8.Fs2ckNeETlFBKMeM06nN8NnbzC268t2', NULL, 46, NULL, 0, 2, NULL, NULL, '2024-08-29 08:10:33', '2024-08-29 08:10:33'),
-(47, 'User 45', NULL, '$2y$12$A9lxUs.sPAIQJP.n168gF.pAJKO/5vmVscXHEb8bSu1WcSt1Erdl2', NULL, 47, NULL, 0, 2, NULL, NULL, '2024-08-29 08:10:34', '2024-08-29 08:10:34'),
-(48, 'User 46', NULL, '$2y$12$mIKgTywD5Fhpts4T6nrsgueRfnMaLliUwE1KPeJ4swmo73rMeVu8u', NULL, 48, NULL, 0, 2, NULL, NULL, '2024-08-29 08:10:34', '2024-08-29 08:10:34'),
-(49, 'User 47', NULL, '$2y$12$vgB1qy6JWUkDibCJpeXtyOydlr5PNIGws3Mb4MKIv.MzU8ytwuxla', NULL, 49, NULL, 0, 2, NULL, NULL, '2024-08-29 08:10:34', '2024-08-29 08:10:34'),
-(50, 'Sulenq Wazawsky', NULL, '$2y$12$i20XUFXaWUXJmKQaPyy1.OIM0GEC8sgYXtU4aBmK3/xOp829G0/T2', NULL, 50, NULL, 0, 2, NULL, NULL, '2024-08-29 08:10:35', '2024-08-31 00:27:45'),
-(51, 'Mas Ndo', NULL, '$2y$12$qN3zuTogEhLf814FlKlDy.AIRO6viCiIjzfvD/LICKOH2fz0lfGwW', NULL, 51, NULL, 0, 2, '$2y$12$pJGX3s6MT0AECT3nmWPNW.ls3L5hyAsthx4dNEJbDr8nBBbI91hy2', '2024-08-31 02:54:20', '2024-08-29 08:10:35', '2024-08-31 02:44:20'),
-(55, 'Haris Adiyatma Farhan', NULL, '$2y$12$D9KTxOWqIcfIq/Jrt.xBEOzcNn6Lnr/UJuHR1KysmVrDnk.PTmfZS', 4, 55, NULL, 0, 2, NULL, NULL, '2024-08-31 22:04:43', '2024-08-31 22:37:47'),
-(56, 'Super Admin 2', NULL, '$2y$12$PSi7WRVFJ5esPkSb9zc0meiqZrw1Dutugd6bagzV2Vq/7Zn339YJm', NULL, NULL, NULL, 0, 2, NULL, NULL, '2024-08-29 08:10:20', '2024-09-01 20:05:31');
+(1, 'Super Admin', NULL, '$2y$12$oi0EMhrCJcKaBTUTTt6FRu9UUSoTd.thhHEBA1pTWjhI/03rWRUKu', NULL, NULL, NULL, 0, 2, NULL, NULL, '2024-08-29 08:10:20', '2024-08-29 17:26:58');
 
 --
 -- Indexes for dumped tables
@@ -3499,7 +2709,6 @@ ALTER TABLE `data_karyawans`
   ADD KEY `data_karyawans_kompetensi_id_foreign` (`kompetensi_id`),
   ADD KEY `data_karyawans_kategori_agama_id_foreign` (`kategori_agama_id`),
   ADD KEY `data_karyawans_kategori_darah_id_foreign` (`kategori_darah_id`),
-  ADD KEY `data_karyawans_pendidikan_terakhir_foreign` (`pendidikan_terakhir`),
   ADD KEY `data_karyawans_status_karyawan_id_foreign` (`status_karyawan_id`),
   ADD KEY `data_karyawans_kelompok_gaji_id_foreign` (`kelompok_gaji_id`),
   ADD KEY `data_karyawans_ptkp_id_foreign` (`ptkp_id`),
@@ -4073,31 +3282,31 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `activity_logs`
 --
 ALTER TABLE `activity_logs`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `berkas`
 --
 ALTER TABLE `berkas`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=113;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `cutis`
 --
 ALTER TABLE `cutis`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `data_karyawans`
 --
 ALTER TABLE `data_karyawans`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=57;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `data_keluargas`
 --
 ALTER TABLE `data_keluargas`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=166;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `detail_gajis`
@@ -4121,13 +3330,13 @@ ALTER TABLE `failed_jobs`
 -- AUTO_INCREMENT for table `hari_liburs`
 --
 ALTER TABLE `hari_liburs`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `jabatans`
 --
 ALTER TABLE `jabatans`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `jadwals`
@@ -4247,13 +3456,13 @@ ALTER TABLE `kategori_tukar_jadwals`
 -- AUTO_INCREMENT for table `kelompok_gajis`
 --
 ALTER TABLE `kelompok_gajis`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=27;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `kompetensis`
 --
 ALTER TABLE `kompetensis`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `lemburs`
@@ -4283,13 +3492,13 @@ ALTER TABLE `non_shifts`
 -- AUTO_INCREMENT for table `notifikasis`
 --
 ALTER TABLE `notifikasis`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=235;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `pelaporans`
 --
 ALTER TABLE `pelaporans`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `penggajians`
@@ -4307,7 +3516,7 @@ ALTER TABLE `pengumumans`
 -- AUTO_INCREMENT for table `pengurang_gajis`
 --
 ALTER TABLE `pengurang_gajis`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=26;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=38;
 
 --
 -- AUTO_INCREMENT for table `penilaians`
@@ -4331,13 +3540,13 @@ ALTER TABLE `permissions`
 -- AUTO_INCREMENT for table `personal_access_tokens`
 --
 ALTER TABLE `personal_access_tokens`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=117;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=165;
 
 --
 -- AUTO_INCREMENT for table `pertanyaans`
 --
 ALTER TABLE `pertanyaans`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=31;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `perubahan_berkas`
@@ -4373,7 +3582,7 @@ ALTER TABLE `premis`
 -- AUTO_INCREMENT for table `presensis`
 --
 ALTER TABLE `presensis`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `ptkps`
@@ -4523,19 +3732,19 @@ ALTER TABLE `transfer_karyawans`
 -- AUTO_INCREMENT for table `tukar_jadwals`
 --
 ALTER TABLE `tukar_jadwals`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `unit_kerjas`
 --
 ALTER TABLE `unit_kerjas`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=23;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=57;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=59;
 
 --
 -- Constraints for dumped tables
@@ -4576,7 +3785,6 @@ ALTER TABLE `data_karyawans`
   ADD CONSTRAINT `data_karyawans_kategori_darah_id_foreign` FOREIGN KEY (`kategori_darah_id`) REFERENCES `kategori_darahs` (`id`),
   ADD CONSTRAINT `data_karyawans_kelompok_gaji_id_foreign` FOREIGN KEY (`kelompok_gaji_id`) REFERENCES `kelompok_gajis` (`id`),
   ADD CONSTRAINT `data_karyawans_kompetensi_id_foreign` FOREIGN KEY (`kompetensi_id`) REFERENCES `kompetensis` (`id`),
-  ADD CONSTRAINT `data_karyawans_pendidikan_terakhir_foreign` FOREIGN KEY (`pendidikan_terakhir`) REFERENCES `kategori_pendidikans` (`id`),
   ADD CONSTRAINT `data_karyawans_ptkp_id_foreign` FOREIGN KEY (`ptkp_id`) REFERENCES `ptkps` (`id`),
   ADD CONSTRAINT `data_karyawans_status_karyawan_id_foreign` FOREIGN KEY (`status_karyawan_id`) REFERENCES `status_karyawans` (`id`),
   ADD CONSTRAINT `data_karyawans_unit_kerja_id_foreign` FOREIGN KEY (`unit_kerja_id`) REFERENCES `unit_kerjas` (`id`),
