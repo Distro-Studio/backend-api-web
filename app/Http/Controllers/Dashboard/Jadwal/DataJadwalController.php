@@ -148,17 +148,6 @@ class DataJadwalController extends Controller
     //         }
     //     }
 
-    //     if (isset($filters['pendidikan_terakhir'])) {
-    //         $namaPendidikan = $filters['pendidikan_terakhir'];
-    //         $jadwal->whereHas('users.data_karyawans.kategori_pendidikans', function ($query) use ($namaPendidikan) {
-    //             if (is_array($namaPendidikan)) {
-    //                 $query->whereIn('id', $namaPendidikan);
-    //             } else {
-    //                 $query->where('id', '=', $namaPendidikan);
-    //             }
-    //         });
-    //     }
-
     //     if (isset($filters['jenis_karyawan'])) {
     //         $jenisKaryawan = $filters['jenis_karyawan'];
     //         if (is_array($jenisKaryawan)) {
@@ -405,13 +394,6 @@ class DataJadwalController extends Controller
     //         });
     //     }
 
-    //     if (isset($filters['pendidikan_terakhir'])) {
-    //         $namaPendidikan = $filters['pendidikan_terakhir'];
-    //         $usersQuery->whereHas('data_karyawans.kategori_pendidikans', function ($query) use ($namaPendidikan) {
-    //             $query->whereIn('id', (array) $namaPendidikan);
-    //         });
-    //     }
-
     //     if (isset($filters['jenis_karyawan'])) {
     //         $jenisKaryawan = $filters['jenis_karyawan'];
     //         $usersQuery->whereHas('data_karyawans.unit_kerjas', function ($query) use ($jenisKaryawan) {
@@ -603,13 +585,6 @@ class DataJadwalController extends Controller
     //             } else {
     //                 $query->where('jenis_kelamin', $jenisKelamin);
     //             }
-    //         });
-    //     }
-
-    //     if (isset($filters['pendidikan_terakhir'])) {
-    //         $namaPendidikan = $filters['pendidikan_terakhir'];
-    //         $usersQuery->whereHas('data_karyawans.kategori_pendidikans', function ($query) use ($namaPendidikan) {
-    //             $query->whereIn('id', (array) $namaPendidikan);
     //         });
     //     }
 
@@ -826,13 +801,6 @@ class DataJadwalController extends Controller
             });
         }
 
-        if (isset($filters['pendidikan_terakhir'])) {
-            $namaPendidikan = $filters['pendidikan_terakhir'];
-            $usersQuery->whereHas('data_karyawans.kategori_pendidikans', function ($query) use ($namaPendidikan) {
-                $query->whereIn('id', (array) $namaPendidikan);
-            });
-        }
-
         if (isset($filters['jenis_karyawan'])) {
             $jenisKaryawan = $filters['jenis_karyawan'];
             $usersQuery->whereHas('data_karyawans.unit_kerjas', function ($query) use ($jenisKaryawan) {
@@ -853,7 +821,8 @@ class DataJadwalController extends Controller
             $usersQuery->where(function ($query) use ($searchTerm) {
                 $query->where('nama', 'like', $searchTerm)
                     ->orWhereHas('data_karyawans', function ($query) use ($searchTerm) {
-                        $query->where('nik', 'like', $searchTerm);
+                        $query->where('nik', 'like', $searchTerm)
+                            ->orWhere('pendidikan_terakhir', 'like', $searchTerm);
                     });
             });
         }

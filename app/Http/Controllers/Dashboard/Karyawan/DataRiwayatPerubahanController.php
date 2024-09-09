@@ -137,17 +137,6 @@ class DataRiwayatPerubahanController extends Controller
             }
         }
 
-        if (isset($filters['pendidikan_terakhir'])) {
-            $namaPendidikan = $filters['pendidikan_terakhir'];
-            $data_perubahan->whereHas('data_karyawans.kategori_pendidikans', function ($query) use ($namaPendidikan) {
-                if (is_array($namaPendidikan)) {
-                    $query->whereIn('id', $namaPendidikan);
-                } else {
-                    $query->where('id', '=', $namaPendidikan);
-                }
-            });
-        }
-
         if (isset($filters['jenis_karyawan'])) {
             $jenisKaryawan = $filters['jenis_karyawan'];
             if (is_array($jenisKaryawan)) {
@@ -183,7 +172,8 @@ class DataRiwayatPerubahanController extends Controller
                 $query->whereHas('data_karyawans.users', function ($query) use ($searchTerm) {
                     $query->where('nama', 'like', $searchTerm);
                 })->orWhereHas('data_karyawans', function ($query) use ($searchTerm) {
-                    $query->where('nik', 'like', $searchTerm);
+                    $query->where('nik', 'like', $searchTerm)
+                        ->orWhere('pendidikan_terakhir', 'like', $searchTerm);
                 });
             });
         }
@@ -222,36 +212,37 @@ class DataRiwayatPerubahanController extends Controller
             $originalData = $data_perubahan->original_data;
             $updatedData = $data_perubahan->updated_data;
 
-            if ($data_perubahan->jenis_perubahan === 'Keluarga') {
-                if (is_array($originalData)) {
-                    foreach ($originalData as &$item) {
-                        if (isset($item['pendidikan_terakhir'])) {
-                            $item['pendidikan_terakhir'] = KategoriPendidikan::find($item['pendidikan_terakhir']) ?? null;
-                        }
-                    }
-                }
+            // if ($data_perubahan->jenis_perubahan === 'Keluarga') {
+            //     if (is_array($originalData)) {
+            //         foreach ($originalData as &$item) {
+            //             if (isset($item['pendidikan_terakhir'])) {
+            //                 $item['pendidikan_terakhir'] = KategoriPendidikan::find($item['pendidikan_terakhir']) ?? null;
+            //             }
+            //         }
+            //     }
 
-                if (is_array($updatedData)) {
-                    foreach ($updatedData as &$item) {
-                        if (isset($item['pendidikan_terakhir'])) {
-                            $item['pendidikan_terakhir'] = KategoriPendidikan::find($item['pendidikan_terakhir']) ?? null;
-                        }
-                    }
-                }
-            }
+            //     if (is_array($updatedData)) {
+            //         foreach ($updatedData as &$item) {
+            //             if (isset($item['pendidikan_terakhir'])) {
+            //                 $item['pendidikan_terakhir'] = KategoriPendidikan::find($item['pendidikan_terakhir']) ?? null;
+            //             }
+            //         }
+            //     }
+            // }
 
             if ($data_perubahan->jenis_perubahan === 'Personal') {
-                if (in_array($data_perubahan->kolom, ['kategori_agama_id', 'kategori_darah_id', 'pendidikan_terakhir'])) {
+                if (in_array($data_perubahan->kolom, ['kategori_agama_id', 'kategori_darah_id'])) {
                     if ($data_perubahan->kolom === 'kategori_agama_id') {
                         $originalData = KategoriAgama::find($originalData) ?? $originalData;
                         $updatedData = KategoriAgama::find($updatedData) ?? $updatedData;
                     } elseif ($data_perubahan->kolom === 'kategori_darah_id') {
                         $originalData = KategoriDarah::find($originalData) ?? $originalData;
                         $updatedData = KategoriDarah::find($updatedData) ?? $updatedData;
-                    } elseif ($data_perubahan->kolom === 'pendidikan_terakhir') {
-                        $originalData = KategoriPendidikan::find($originalData) ?? $originalData;
-                        $updatedData = KategoriPendidikan::find($updatedData) ?? $updatedData;
                     }
+                    // elseif ($data_perubahan->kolom === 'pendidikan_terakhir') {
+                    //     $originalData = KategoriPendidikan::find($originalData) ?? $originalData;
+                    //     $updatedData = KategoriPendidikan::find($updatedData) ?? $updatedData;
+                    // }
                 }
             }
 

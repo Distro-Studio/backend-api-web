@@ -141,17 +141,6 @@ class PenyesuaianGajiController extends Controller
       }
     }
 
-    if (isset($filters['pendidikan_terakhir'])) {
-      $namaPendidikan = $filters['pendidikan_terakhir'];
-      $PenyesuaianGaji->whereHas('penggajians.data_karyawans.kategori_pendidikans', function ($query) use ($namaPendidikan) {
-        if (is_array($namaPendidikan)) {
-          $query->whereIn('id', $namaPendidikan);
-        } else {
-          $query->where('id', '=', $namaPendidikan);
-        }
-      });
-    }
-
     if (isset($filters['jenis_karyawan'])) {
       $jenisKaryawan = $filters['jenis_karyawan'];
       if (is_array($jenisKaryawan)) {
@@ -176,7 +165,8 @@ class PenyesuaianGajiController extends Controller
         $query->whereHas('penggajians.data_karyawans.users', function ($query) use ($searchTerm) {
           $query->where('nama', 'like', $searchTerm);
         })->orWhereHas('penggajians.data_karyawans', function ($query) use ($searchTerm) {
-          $query->where('nik', 'like', $searchTerm);
+          $query->where('nik', 'like', $searchTerm)
+            ->orWhere('pendidikan_terakhir', 'like', $searchTerm);
         });
       });
     }
