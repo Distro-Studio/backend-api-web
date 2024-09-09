@@ -21,7 +21,7 @@ class PengumumanController extends Controller
 
         $pengumuman = Pengumuman::orderBy('created_at', 'desc')->get();
         if ($pengumuman->isEmpty()) {
-            return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data pengumuman tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+            return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Tidak ada data pengumuman yang tersedia.'), Response::HTTP_NOT_FOUND);
         }
 
         $formattedData = $pengumuman->map(function ($pengumuman) {

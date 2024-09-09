@@ -78,13 +78,13 @@ class DashboardController extends Controller
 
         if ($totalEmployees == 0) {
             return response()->json([
-                'status' => Response::HTTP_OK,
+                'status' => Response::HTTP_NOT_FOUND,
                 'message' => "Tidak ada data karyawan yang tersedia.",
                 'data' => [
                     'persen_laki_laki' => 0,
                     'persen_perempuan' => 0,
                 ]
-            ], Response::HTTP_OK);
+            ], Response::HTTP_NOT_FOUND);
         }
 
         // Retrieve the count of male and female employees
@@ -119,6 +119,13 @@ class DashboardController extends Controller
         // Retrieve all positions
         $jabatans = Jabatan::all();
 
+        if ($jabatans->isEmpty()) {
+            return response()->json([
+                'status' => Response::HTTP_NOT_FOUND,
+                'message' => "Tidak ada data jabatan yang tersedia.",
+            ], Response::HTTP_NOT_FOUND);
+        }
+
         // Initialize an array to hold the results
         $result = [];
 
@@ -142,6 +149,13 @@ class DashboardController extends Controller
     {
         // Retrieve all statuses
         $statuses = DB::table('status_karyawans')->get();
+
+        if ($statuses->isEmpty()) {
+            return response()->json([
+                'status' => Response::HTTP_NOT_FOUND,
+                'message' => "Tidak ada data status karyawan yang tersedia.",
+            ], Response::HTTP_NOT_FOUND);
+        }
 
         // Initialize an array to hold the results
         $result = [];

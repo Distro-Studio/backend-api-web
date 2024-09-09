@@ -9,7 +9,6 @@ use App\Models\Ptkp;
 use App\Models\User;
 use App\Models\Premi;
 use App\Models\Berkas;
-use App\Models\Diklat;
 use App\Models\Lembur;
 use App\Models\Jabatan;
 use App\Models\Presensi;
@@ -22,7 +21,6 @@ use App\Models\TukarJadwal;
 use App\Models\DataKaryawan;
 use App\Models\DataKeluarga;
 use App\Models\KelompokGaji;
-use App\Models\LokasiKantor;
 use Illuminate\Http\Request;
 use App\Helpers\RandomHelper;
 use App\Models\PesertaDiklat;
@@ -30,16 +28,13 @@ use Illuminate\Http\Response;
 use App\Models\StatusKaryawan;
 use App\Models\RiwayatPerubahan;
 use App\Models\TransferKaryawan;
-use App\Mail\SendAccoundUsersMail;
 use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Models\Role;
-use Illuminate\Support\Facades\Log;
 use App\Helpers\StorageServerHelper;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Mail;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\TemplateKaryawanExport;
 use App\Exports\Karyawan\KaryawanExport;
@@ -62,6 +57,13 @@ class DataKaryawanController extends Controller
     $userNonShift = User::whereHas('data_karyawans.unit_kerjas', function ($query) {
       $query->where('jenis_karyawan', 0); // 0 = non shift
     })->where('nama', '!=', 'Super Admin')->where('status_aktif', 2)->get();
+
+    if ($userNonShift->isEmpty()) {
+      return response()->json([
+        'status' => Response::HTTP_NOT_FOUND,
+        'message' => 'Data karyawan non shift tidak ditemukan.',
+      ], Response::HTTP_NOT_FOUND);
+    }
 
     $formattedData = $userNonShift->map(function ($user) {
       $unitKerja = $user->data_karyawans->unit_kerjas ?? null;
@@ -104,6 +106,13 @@ class DataKaryawanController extends Controller
       $query->where('jenis_karyawan', 1); // 1 = shift
     })->where('nama', '!=', 'Super Admin')->where('status_aktif', 2)->get();
 
+    if ($userShift->isEmpty()) {
+      return response()->json([
+        'status' => Response::HTTP_NOT_FOUND,
+        'message' => 'Data karyawan shift tidak ditemukan.',
+      ], Response::HTTP_NOT_FOUND);
+    }
+
     $formattedData = $userShift->map(function ($user) {
       $unitKerja = $user->data_karyawans->unit_kerjas ?? null;
 
@@ -143,6 +152,13 @@ class DataKaryawanController extends Controller
 
     $users = User::where('nama', '!=', 'Super Admin')->where('status_aktif', 2)->get();
 
+    if ($users->isEmpty()) {
+      return response()->json([
+        'status' => Response::HTTP_NOT_FOUND,
+        'message' => 'Data karyawan tidak ditemukan.',
+      ], Response::HTTP_NOT_FOUND);
+    }
+
     $formattedData = $users->map(function ($user) {
       $unitKerja = $user->data_karyawans->unit_kerjas ?? null;
 
@@ -181,6 +197,13 @@ class DataKaryawanController extends Controller
     }
 
     $unit_kerja = UnitKerja::all();
+    if ($unit_kerja->isEmpty()) {
+      return response()->json([
+        'status' => Response::HTTP_NOT_FOUND,
+        'message' => 'Data unit kerja tidak ditemukan.',
+      ], Response::HTTP_NOT_FOUND);
+    }
+
     return response()->json([
       'status' => Response::HTTP_OK,
       'message' => 'Retrieving all unit kerja for dropdown',
@@ -195,6 +218,13 @@ class DataKaryawanController extends Controller
     }
 
     $jabatan = Jabatan::all();
+    if ($jabatan->isEmpty()) {
+      return response()->json([
+        'status' => Response::HTTP_NOT_FOUND,
+        'message' => 'Data jabatan tidak ditemukan.',
+      ], Response::HTTP_NOT_FOUND);
+    }
+
     return response()->json([
       'status' => Response::HTTP_OK,
       'message' => 'Retrieving all jabatan for dropdown',
@@ -209,6 +239,13 @@ class DataKaryawanController extends Controller
     }
 
     $status_karyawan = StatusKaryawan::all();
+    if ($status_karyawan->isEmpty()) {
+      return response()->json([
+        'status' => Response::HTTP_NOT_FOUND,
+        'message' => 'Data status karyawan tidak ditemukan.'
+      ], Response::HTTP_NOT_FOUND);
+    }
+
     return response()->json([
       'status' => Response::HTTP_OK,
       'message' => 'Retrieving all status karyawan for dropdown',
@@ -223,6 +260,13 @@ class DataKaryawanController extends Controller
     }
 
     $kompetensi = Kompetensi::all();
+    if ($kompetensi->isEmpty()) {
+      return response()->json([
+        'status' => Response::HTTP_NOT_FOUND,
+        'message' => 'Data kompetensi tidak ditemukan.'
+      ], Response::HTTP_NOT_FOUND);
+    }
+
     return response()->json([
       'status' => Response::HTTP_OK,
       'message' => 'Retrieving all kompetensi for dropdown',
@@ -238,6 +282,12 @@ class DataKaryawanController extends Controller
 
     $user = Auth::user();
     $roles = Role::all();
+    if ($roles->isEmpty()) {
+      return response()->json([
+        'status' => Response::HTTP_NOT_FOUND,
+        'message' => 'Data role tidak ditemukan.'
+      ], Response::HTTP_NOT_FOUND);
+    }
 
     if ($user->nama !== 'Super Admin') {
       $roles = $roles->filter(function ($role) {
@@ -259,6 +309,13 @@ class DataKaryawanController extends Controller
     }
 
     $kelompok_gaji = KelompokGaji::all();
+    if ($kelompok_gaji->isEmpty()) {
+      return response()->json([
+        'status' => Response::HTTP_NOT_FOUND,
+        'message' => 'Data kelompok gaji tidak ditemukan.'
+      ], Response::HTTP_NOT_FOUND);
+    }
+
     return response()->json([
       'status' => Response::HTTP_OK,
       'message' => 'Retrieving all kelompok gaji for dropdown',
@@ -273,6 +330,13 @@ class DataKaryawanController extends Controller
     }
 
     $ptkp = Ptkp::all();
+    if ($ptkp->isEmpty()) {
+      return response()->json([
+        'status' => Response::HTTP_NOT_FOUND,
+        'message' => 'Data ptkp tidak ditemukan.'
+      ], Response::HTTP_NOT_FOUND);
+    }
+
     return response()->json([
       'status' => Response::HTTP_OK,
       'message' => 'Retrieving all ptkp for dropdown',
@@ -287,6 +351,13 @@ class DataKaryawanController extends Controller
     }
 
     $premi = Premi::all();
+    if ($premi->isEmpty()) {
+      return response()->json([
+        'status' => Response::HTTP_NOT_FOUND,
+        'message' => 'Data premi tidak ditemukan.'
+      ], Response::HTTP_NOT_FOUND);
+    }
+
     return response()->json([
       'status' => Response::HTTP_OK,
       'message' => 'Retrieving all premi for dropdown',
@@ -301,6 +372,13 @@ class DataKaryawanController extends Controller
     }
 
     $dataKaryawan = DataKaryawan::where('email', '!=', 'super_admin@admin.rski')->get();
+    if ($dataKaryawan->isEmpty()) {
+      return response()->json([
+        'status' => Response::HTTP_NOT_FOUND,
+        'message' => 'Data karyawan tidak ditemukan.'
+      ], Response::HTTP_NOT_FOUND);
+    }
+
     return response()->json([
       'status' => Response::HTTP_OK,
       'message' => 'Retrieving all karyawan for dropdown',
