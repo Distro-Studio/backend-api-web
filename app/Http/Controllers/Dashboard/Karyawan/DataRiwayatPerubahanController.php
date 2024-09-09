@@ -251,6 +251,7 @@ class DataRiwayatPerubahanController extends Controller
                 'user' => $relasiUser ? [
                     'id' => $relasiUser->id,
                     'nama' => $relasiUser->nama,
+                    'username' => $relasiUser->username,
                     'email_verified_at' => $relasiUser->email_verified_at,
                     'data_karyawan_id' => $relasiUser->data_karyawan_id,
                     'foto_profil' => $relasiUser->foto_profil,

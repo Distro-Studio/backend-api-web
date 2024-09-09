@@ -59,6 +59,7 @@ class CutiJadwalResource extends JsonResource
                 'user' => [
                     'id' => $cuti_jadwal->users->id,
                     'nama' => $cuti_jadwal->users->nama,
+                    'username' => $cuti_jadwal->users->username,
                     'email_verified_at' => $cuti_jadwal->users->email_verified_at,
                     'data_karyawan_id' => $cuti_jadwal->users->data_karyawan_id,
                     'foto_profil' => $cuti_jadwal->users->foto_profil,

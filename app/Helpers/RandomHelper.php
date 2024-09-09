@@ -24,6 +24,27 @@ class RandomHelper
 		return $password;
 	}
 
+	public static function generateUsername($nama): string
+	{
+		// Ubah string nama menjadi lowercase
+		$nama = strtolower($nama);
+
+		$namaArray = explode(' ', $nama);
+
+		// Jika ada lebih dari satu kata
+		if (count($namaArray) > 1) {
+			// Ambil kata pertama dan kata terakhir
+			$namaDepan = $namaArray[0];
+			$namaBelakang = $namaArray[count($namaArray) - 1];
+
+			// Gabungkan dengan titik di antara nama depan dan nama belakang
+			return $namaDepan . '.' . $namaBelakang;
+		} else {
+			// Jika hanya ada satu kata
+			return $namaArray[0];
+		}
+	}
+
 	// ini untuk -> Tue Aug 13 2024 00:00:00 GMT+0700 (Western Indonesia Time)
 	public static function convertToDateTimeString($dateString)
 	{

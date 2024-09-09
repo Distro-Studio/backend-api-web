@@ -59,6 +59,7 @@ class LemburJadwalResource extends JsonResource
                 'user' => [
                     'id' => $lembur->users->id,
                     'nama' => $lembur->users->nama,
+                    'username' => $lembur->users->username,
                     'email_verified_at' => $lembur->users->email_verified_at,
                     'data_karyawan_id' => $lembur->users->data_karyawan_id,
                     'foto_profil' => $lembur->users->foto_profil,

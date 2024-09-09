@@ -58,6 +58,7 @@ class AkunResource extends JsonResource
             return [
                 'id' => $akun->id,
                 'nama' => $akun->nama,
+                'username' => $akun->username,
                 'foto_profil' => $akun->foto_profil,
                 'nik' => optional($akun->data_karyawans)->nik,
                 'email' => optional($akun->data_karyawans)->email,

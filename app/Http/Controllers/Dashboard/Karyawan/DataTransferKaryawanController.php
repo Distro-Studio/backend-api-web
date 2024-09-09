@@ -238,6 +238,7 @@ class DataTransferKaryawanController extends Controller
                 'user' => [
                     'id' => $user->id,
                     'nama' => $user->nama,
+                    'username' => $user->username,
                     'email_verified_at' => $user->email_verified_at,
                     'data_karyawan_id' => $user->data_karyawan_id,
                     'foto_profil' => $user->foto_profil,

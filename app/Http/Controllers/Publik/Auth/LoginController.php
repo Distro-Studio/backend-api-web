@@ -19,13 +19,16 @@ class LoginController extends Controller
     {
         $credentials = $request->validated();
 
-        $user = User::whereHas('data_karyawans', function ($query) use ($credentials) {
-            $query->where('email', $credentials['email']);
+        $user = User::where(function ($query) use ($credentials) {
+            $query->whereHas('data_karyawans', function ($query) use ($credentials) {
+                $query->where('email', $credentials['email']);
+            })
+                ->orWhere('username', $credentials['email']);
         })->first();
 
         if (!$user || !Hash::check($credentials['password'], $user->password)) {
-            Log::error("Login failed for email: {$credentials['email']} - Invalid credentials or account inactive.");
-            return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Password atau email anda tidak valid, silahkan cek kembali dan pastikan akun anda aktif'), Response::HTTP_BAD_REQUEST);
+            Log::error("Login failed for email/username: {$credentials['email']} - Invalid credentials or account inactive.");
+            return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Password atau email/username anda tidak valid, silahkan cek kembali dan pastikan akun anda aktif'), Response::HTTP_BAD_REQUEST);
         }
 
         // Cek status_aktif

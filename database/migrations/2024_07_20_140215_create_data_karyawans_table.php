@@ -52,6 +52,7 @@ return new class extends Migration
             // $table->enum('pendidikan_terakhir', ['SD', 'SMP', 'SMA', 'D1', 'D2', 'D3', 'D4', 'S1', 'S2', 'S3'])->nullable();
             // $table->foreignId('pendidikan_terakhir')->nullable()->constrained('kategori_pendidikans');
             $table->string('pendidikan_terakhir')->nullable();
+            $table->string('asal_sekolah')->nullable();
             $table->string('no_ijazah')->nullable();
             $table->integer('tahun_lulus')->nullable();
             $table->string('no_kk', 20)->nullable();

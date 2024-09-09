@@ -234,6 +234,7 @@ class DataCutiController extends Controller
                 'user' => [
                     'id' => $dataCuti->users->id,
                     'nama' => $dataCuti->users->nama,
+                    'username' => $dataCuti->users->username,
                     'email_verified_at' => $dataCuti->users->email_verified_at,
                     'data_karyawan_id' => $dataCuti->users->data_karyawan_id,
                     'foto_profil' => $dataCuti->users->foto_profil,
@@ -484,6 +485,7 @@ class DataCutiController extends Controller
             'user' => [
                 'id' => $dataCuti->users->id,
                 'nama' => $dataCuti->users->nama,
+                'username' => $dataCuti->users->username,
                 'email_verified_at' => $dataCuti->users->email_verified_at,
                 'data_karyawan_id' => $dataCuti->users->data_karyawan_id,
                 'foto_profil' => $dataCuti->users->foto_profil,

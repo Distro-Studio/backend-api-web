@@ -533,6 +533,7 @@ class DataTukarJadwalController extends Controller
                         'user' => [
                             'id' => $userPengajuan->id,
                             'nama' => $userPengajuan->nama,
+                            'username' => $userPengajuan->users->username,
                             'email_verified_at' => $userPengajuan->email_verified_at,
                             'data_karyawan_id' => $userPengajuan->data_karyawan_id,
                             'foto_profil' => $userPengajuan->foto_profil,
@@ -552,6 +553,7 @@ class DataTukarJadwalController extends Controller
                         'user' => [
                             'id' => $userDitukar->id,
                             'nama' => $userDitukar->nama,
+                            'username' => $userDitukar->users->username,
                             'email_verified_at' => $userDitukar->email_verified_at,
                             'data_karyawan_id' => $userDitukar->data_karyawan_id,
                             'foto_profil' => $userDitukar->foto_profil,

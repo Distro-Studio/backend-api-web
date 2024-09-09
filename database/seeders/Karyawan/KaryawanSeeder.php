@@ -136,6 +136,39 @@ class KaryawanSeeder extends Seeder
             "Sp.KFR",
             "Sp.PD-KHOM"
         ];
+        $asal_sekolah = [
+            'SMA Negeri 1 Jakarta',
+            'SMA Negeri 3 Bandung',
+            'SMA Negeri 4 Surabaya',
+            'SMA Negeri 2 Yogyakarta',
+            'SMA Negeri 5 Malang',
+            'SMA Negeri 6 Medan',
+            'SMA Negeri 1 Makassar',
+            'SMA Negeri 8 Jakarta',
+            'SMA Negeri 1 Semarang',
+            'SMA Negeri 2 Denpasar',
+            'SMA Negeri 1 Palembang',
+            'SMA Negeri 3 Depok',
+            'SMA Negeri 2 Bekasi',
+            'SMA Negeri 1 Pontianak',
+            'SMA Negeri 2 Balikpapan',
+            'SMA Negeri 1 Padang',
+            'SMA Negeri 5 Surakarta',
+            'SMA Negeri 3 Samarinda',
+            'SMA Negeri 1 Manado',
+            'SMA Negeri 4 Tangerang',
+            'SMA Negeri 2 Cirebon',
+            'SMA Negeri 7 Mataram',
+            'SMA Negeri 1 Banda Aceh',
+            'SMA Negeri 3 Pekanbaru',
+            'SMA Negeri 2 Batam',
+            'SMA Negeri 1 Kupang',
+            'SMA Negeri 6 Palu',
+            'SMA Negeri 3 Ambon',
+            'SMA Negeri 2 Jayapura',
+            'SMA Negeri 1 Banjarmasin'
+        ];
+        
         $unit_kerja_id = UnitKerja::pluck('id')->all();
         $jabatan_id = Jabatan::pluck('id')->all();
         $kompetensi_id = Kompetensi::pluck('id')->all();
@@ -149,6 +182,7 @@ class KaryawanSeeder extends Seeder
         for ($i = 0; $i < 50; $i++) {
             $user = User::create([
                 'nama' => 'User ' . $i,
+                'username' => 'user' . $i,
                 'password' => 'password' . $i,
                 'status_aktif' => 2,
                 'data_completion_step' => 0,
@@ -198,6 +232,7 @@ class KaryawanSeeder extends Seeder
                 "kategori_agama_id" => $kategori_agama_id[array_rand($kategori_agama_id)],
                 "kategori_darah_id" => $kategori_darah_id[array_rand($kategori_darah_id)],
                 "pendidikan_terakhir" => $kategori_pendidikan_id[array_rand($kategori_pendidikan_id)],
+                "asal_sekolah" => $asal_sekolah[array_rand($asal_sekolah)],
                 "tinggi_badan" => rand(10, 300),
                 "berat_badan" => rand(10, 200),
                 "no_ijazah" => "IJ/VII/" . rand(1214, 500000000),

@@ -73,6 +73,7 @@ class DataKaryawanController extends Controller
         'user' => [
           'id' => $user->id,
           'nama' => $user->nama,
+          'username' => $user->username,
           'email_verified_at' => $user->email_verified_at,
           'data_karyawan_id' => $user->data_karyawan_id,
           'foto_profil' => $user->foto_profil,
@@ -121,6 +122,7 @@ class DataKaryawanController extends Controller
         'user' => [
           'id' => $user->id,
           'nama' => $user->nama,
+          'username' => $user->username,
           'email_verified_at' => $user->email_verified_at,
           'data_karyawan_id' => $user->data_karyawan_id,
           'foto_profil' => $user->foto_profil,
@@ -167,6 +169,7 @@ class DataKaryawanController extends Controller
         'user' => [
           'id' => $user->id,
           'nama' => $user->nama,
+          'username' => $user->username,
           'email_verified_at' => $user->email_verified_at,
           'data_karyawan_id' => $user->data_karyawan_id,
           'foto_profil' => $user->foto_profil,
@@ -437,6 +440,7 @@ class DataKaryawanController extends Controller
         'user' => [
           'id' => $userName->id,
           'nama' => $userName->nama,
+          'username' => $userName->username,
           'email_verified_at' => $userName->email_verified_at,
           'data_karyawan_id' => $userName->data_karyawan_id,
           'foto_profil' => $userName->foto_profil,
@@ -501,6 +505,7 @@ class DataKaryawanController extends Controller
         'user' => [
           'id' => $userName->id,
           'nama' => $userName->nama,
+          'username' => $userName->username,
           'email_verified_at' => $userName->email_verified_at,
           'data_karyawan_id' => $userName->data_karyawan_id,
           'foto_profil' => $userName->foto_profil,
@@ -641,6 +646,7 @@ class DataKaryawanController extends Controller
       'user' => [
         'id' => $user->id,
         'nama' => $user->nama,
+        'username' => $user->username,
         'email_verified_at' => $user->email_verified_at,
         'data_karyawan_id' => $user->data_karyawan_id,
         'foto_profil' => $user->foto_profil,
@@ -696,6 +702,7 @@ class DataKaryawanController extends Controller
         'user' => [
           'id' => $user->id,
           'nama' => $user->nama,
+          'username' => $user->username,
           'email_verified_at' => $user->email_verified_at,
           'data_karyawan_id' => $user->data_karyawan_id,
           'foto_profil' => $user->foto_profil,
@@ -741,6 +748,7 @@ class DataKaryawanController extends Controller
           'user' => [
             'id' => $relasiUser->id,
             'nama' => $relasiUser->nama,
+            'username' => $relasiUser->username,
             'email_verified_at' => $relasiUser->email_verified_at,
             'data_karyawan_id' => $relasiUser->data_karyawan_id,
             'foto_profil' => $relasiUser->foto_profil,
@@ -832,6 +840,7 @@ class DataKaryawanController extends Controller
         'user' => [
           'id' => $user->id,
           'nama' => $user->nama,
+          'username' => $user->username,
           'email_verified_at' => $user->email_verified_at,
           'data_karyawan_id' => $user->data_karyawan_id,
           'foto_profil' => $user->foto_profil,
@@ -908,6 +917,7 @@ class DataKaryawanController extends Controller
         'user' => [
           'id' => $user->id,
           'nama' => $user->nama,
+          'username' => $user->username,
           'email_verified_at' => $user->email_verified_at,
           'data_karyawan_id' => $user->data_karyawan_id,
           'foto_profil' => $user->foto_profil,
@@ -1026,6 +1036,7 @@ class DataKaryawanController extends Controller
       'user' => [
         'id' => $karyawan->users->id,
         'nama' => $karyawan->users->nama,
+        'username' => $karyawan->users->username,
         'email_verified_at' => $karyawan->users->email_verified_at,
         'data_karyawan_id' => $karyawan->users->data_karyawan_id,
         'foto_profil' => $karyawan->users->foto_profil,
@@ -1081,6 +1092,7 @@ class DataKaryawanController extends Controller
           'user' => [
             'id' => $item->user_pengajuans->id,
             'nama' => $item->user_pengajuans->nama,
+            'username' => $item->user_pengajuans->username,
             'email_verified_at' => $item->user_pengajuans->email_verified_at,
             'data_karyawan_id' => $item->user_pengajuans->data_karyawan_id,
             'foto_profil' => $item->user_pengajuans->foto_profil,
@@ -1097,6 +1109,7 @@ class DataKaryawanController extends Controller
           'user' => [
             'id' => $item->user_ditukars->id,
             'nama' => $item->user_ditukars->nama,
+            'username' => $item->user_ditukars->username,
             'email_verified_at' => $item->user_ditukars->email_verified_at,
             'data_karyawan_id' => $item->user_ditukars->data_karyawan_id,
             'foto_profil' => $item->user_ditukars->foto_profil,
@@ -1458,6 +1471,7 @@ class DataKaryawanController extends Controller
         'user' => [
           'id' => $karyawan->users->id,
           'nama' => $karyawan->users->nama,
+          'username' => $karyawan->users->username,
           'email_verified_at' => $karyawan->users->email_verified_at,
           'data_karyawan_id' => $karyawan->users->data_karyawan_id,
           'foto_profil' => $karyawan->users->foto_profil,
@@ -1509,6 +1523,7 @@ class DataKaryawanController extends Controller
         'agama' => $karyawan->kategori_agamas, // agama_id
         'golongan_darah' => $karyawan->kategori_darahs, // golongan_darah_id
         'pendidikan_terakhir' => $karyawan->pendidikan_terakhir,
+        'asal_sekolah' => $karyawan->asal_sekolah,
         'tinggi_badan' => $karyawan->tinggi_badan,
         'berat_badan' => $karyawan->berat_badan,
         'no_ijazah' => $karyawan->no_ijazah,
@@ -1546,6 +1561,7 @@ class DataKaryawanController extends Controller
 
     // Generate password secara otomatis
     $generatedPassword = RandomHelper::generatePassword();
+    $generatedUsername = RandomHelper::generateUsername($data['nama']);
 
     DB::beginTransaction();
     try {
@@ -1553,7 +1569,7 @@ class DataKaryawanController extends Controller
         'nama' => $data['nama'],
         'status_aktif' => 1,
         'role_id' => $data['role_id'],
-        // 'username' => $data['username'],
+        'username' => $generatedUsername,
         'password' => Hash::make($generatedPassword),
       ];
 
@@ -1674,6 +1690,7 @@ class DataKaryawanController extends Controller
       'user' => [
         'id' => $karyawan->users->id,
         'nama' => $karyawan->users->nama,
+        'username' => $karyawan->users->username,
         'email_verified_at' => $karyawan->users->email_verified_at,
         'data_karyawan_id' => $karyawan->users->data_karyawan_id,
         'foto_profil' => $karyawan->users->foto_profil,
@@ -1809,6 +1826,7 @@ class DataKaryawanController extends Controller
       'user' => [
         'id' => $karyawan->users->id,
         'nama' => $karyawan->users->nama,
+        'username' => $karyawan->users->username,
         'email_verified_at' => $karyawan->users->email_verified_at,
         'data_karyawan_id' => $karyawan->users->data_karyawan_id,
         'foto_profil' => $karyawan->users->foto_profil,

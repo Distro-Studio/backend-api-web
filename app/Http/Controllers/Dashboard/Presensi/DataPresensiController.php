@@ -385,6 +385,7 @@ class DataPresensiController extends Controller
                 'user' => [
                     'id' => $presensiHariIni->users->id,
                     'nama' => $presensiHariIni->users->nama,
+                    'username' => $presensiHariIni->users->username,
                     'email_verified_at' => $presensiHariIni->users->email_verified_at,
                     'data_karyawan_id' => $presensiHariIni->users->data_karyawan_id,
                     'foto_profil' => $presensiHariIni->users->foto_profil,

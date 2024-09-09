@@ -50,6 +50,7 @@ class KaryawanImport implements ToModel, WithHeadingRow, WithValidation
   {
     return [
       'nama' => 'required|string|max:225',
+      'username' => 'required|string|max:225',
       'email' => 'required|email|max:225|unique:data_karyawans,email',
       'role' => 'required|exists:roles,name',
       'no_rm' => 'required',
@@ -79,6 +80,9 @@ class KaryawanImport implements ToModel, WithHeadingRow, WithValidation
       'nama.required' => 'Nama karyawan tidak diperbolehkan kosong.',
       'nama.string' => 'Nama karyawan tidak diperbolehkan mengandung angka.',
       'nama.max' => 'Nama karyawan melebihi batas maksimum panjang karakter.',
+      'username.required' => 'Username karyawan tidak diperbolehkan kosong.',
+      'username.string' => 'Username karyawan tidak diperbolehkan mengandung angka.',
+      'username.max' => 'Username karyawan melebihi batas maksimum panjang karakter.',
       'email.required' => 'Email karyawan tidak diperbolehkan kosong.',
       'email.email' => 'Alamat email yang valid wajib menggunakan @.',
       'email.max' => 'Email karyawan melebihi batas maksimum panjang karakter.',
@@ -126,6 +130,7 @@ class KaryawanImport implements ToModel, WithHeadingRow, WithValidation
       $user_id = $existingUser->id;
     } else {
       $password = RandomHelper::generatePassword();
+      $username = RandomHelper::generateUsername($row['nama']);
 
       // Find role ID
       $role = $this->Role->where('name', $row['role'])->first();
@@ -137,12 +142,14 @@ class KaryawanImport implements ToModel, WithHeadingRow, WithValidation
       // Create new user
       $userData = [
         'nama' => $row['nama'],
+        'username' => $username,
         'status_aktif' => 1,
         'role_id' => $role->id,
         'password' => Hash::make($password),
       ];
       $createUser = User::create($userData);
       $createUser->assignRole($role->name);
+
       Mail::to($row['email'])->send(new SendAccoundUsersMail($row['email'], $password, $row['nama']));
       // AccountEmailJob::dispatch($row['email'], $password, $row['nama']);
 
@@ -170,7 +177,7 @@ class KaryawanImport implements ToModel, WithHeadingRow, WithValidation
       'status_karyawan' => $status_karyawan_id->id,
       'kelompok_gaji_id' => $kelompok_gaji_id->id,
       'no_rekening' => $row['no_rekening'],
-      'tunjangan_jabatan' => $row['tunjangan_jabatan'],
+      // 'tunjangan_jabatan' => $row['tunjangan_jabatan'],
       'tunjangan_fungsional' => $row['tunjangan_fungsional'],
       'tunjangan_khusus' => $row['tunjangan_khusus'],
       'tunjangan_lainnya' => $row['tunjangan_lainnya'],

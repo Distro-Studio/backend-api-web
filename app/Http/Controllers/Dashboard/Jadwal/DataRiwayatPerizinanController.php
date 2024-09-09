@@ -214,6 +214,7 @@ class DataRiwayatPerizinanController extends Controller
                 'user' => [
                     'id' => $dataPerizinan->users->id,
                     'nama' => $dataPerizinan->users->nama,
+                    'username' => $dataPerizinan->users->username,
                     'email_verified_at' => $dataPerizinan->users->email_verified_at,
                     'data_karyawan_id' => $dataPerizinan->users->data_karyawan_id,
                     'foto_profil' => $dataPerizinan->users->foto_profil,
