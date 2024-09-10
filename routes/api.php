@@ -127,6 +127,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::get('/detail-karyawan-lembur/{data_karyawan_id}', [DataKaryawanController::class, 'getDataLembur']);
             Route::get('/detail-karyawan-feedback-penilaian/{data_karyawan_id}', [DataKaryawanController::class, 'getDataFeedbackPenilaian']);
 
+            Route::get('/detail-karyawan-diklat/{data_karyawan_id}', [DataKaryawanController::class, 'getDataDiklat']);
+
             Route::apiResource('/data-karyawan', DataKaryawanController::class);
 
             // ! Transfer Karyawan ===========>

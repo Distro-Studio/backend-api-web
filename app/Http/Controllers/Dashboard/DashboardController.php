@@ -26,7 +26,7 @@ class DashboardController extends Controller
         $kategoriAbsenId = DB::table('kategori_presensis')->where('label', 'Absen')->value('id');
 
         // Calculate total number of employees excluding the super admin
-        $calculatedKaryawan = DataKaryawan::where('email', '!=', 'super_admin@admin.rski')->count();
+        $calculatedKaryawan = DataKaryawan::where('id', '!=', 1)->count();
 
         // Hitung karyawan shift yang libur berdasarkan user_id
         $countLiburShift = Jadwal::where('shift_id', 0)
@@ -74,7 +74,7 @@ class DashboardController extends Controller
     public function calculatedKelamin()
     {
         // Retrieve all employees excluding the super admin
-        $totalEmployees = DataKaryawan::where('email', '!=', 'super_admin@admin.rski')->count();
+        $totalEmployees = DataKaryawan::where('id', '!=', 1)->count();
 
         if ($totalEmployees == 0) {
             return response()->json([

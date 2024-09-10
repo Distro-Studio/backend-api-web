@@ -13,7 +13,7 @@ class StatusKaryawanSeeder extends Seeder
      */
     public function run(): void
     {
-        $status = ['Tetap', 'Kontrak', 'Training'];
+        $status = ['Tetap', 'Kontrak', 'Magang'];
 
         foreach ($status as $status) {
             DB::table('status_karyawans')->insert([

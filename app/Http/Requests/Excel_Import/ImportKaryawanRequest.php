@@ -25,7 +25,7 @@ class ImportKaryawanRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'karyawan_file' => 'required|mimes:xlsx,xls,csv',
+            'karyawan_file' => 'required|mimes:xls,csv',
         ];
     }
 
@@ -33,7 +33,7 @@ class ImportKaryawanRequest extends FormRequest
     {
         return [
             'karyawan_file.required' => 'Silahkan masukkan file data karyawan terlebih dahulu.',
-            'karyawan_file.mimes' => 'File data karyawan wajib berupa excel dan berekstensi .xlsx, .xls, .csv.',
+            'karyawan_file.mimes' => 'File data karyawan wajib berupa excel dan berekstensi .xls, .csv.',
         ];
     }
 

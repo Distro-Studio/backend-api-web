@@ -99,7 +99,7 @@ class THRPenggajianController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
-        $data_karyawan_ids = DataKaryawan::where('email', '!=', 'super_admin@admin.rski')->pluck('id')->toArray();
+        $data_karyawan_ids = DataKaryawan::where('id', '!=', 1)->pluck('id')->toArray();
         // $tglRunTHR = Carbon::parse($request->input('tgl_run_thr'));
         $tglRunTHR = Carbon::parse(RandomHelper::convertToDateString($request->input('tgl_run_thr')));
         // $tglRunTHR = Carbon::createFromFormat('d-m-Y',($request->input('tgl_run_thr')))->format('Y-m-d');

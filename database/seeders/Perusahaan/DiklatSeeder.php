@@ -86,6 +86,7 @@ class DiklatSeeder extends Seeder
 
     private function createBerkas($user_id, $nama, $path)
     {
+        $random_filename = Str::random(20);
         return Berkas::create([
             'user_id' => $user_id,
             'file_id' => (string) Str::uuid(),
@@ -94,7 +95,7 @@ class DiklatSeeder extends Seeder
             'status_berkas_id' => StatusBerkas::where('label', 'Menunggu')->first()->id,
             'path' => $path,
             'tgl_upload' => now(),
-            'nama_file' => 'dokumen_' . $user_id,
+            'nama_file' => $random_filename . $user_id,
             'ext' => 'image/jpeg',
             'size' => rand(1000, 2000),
         ]);

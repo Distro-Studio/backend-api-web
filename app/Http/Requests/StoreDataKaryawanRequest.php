@@ -26,7 +26,7 @@ class StoreDataKaryawanRequest extends FormRequest
     {
         return [
             'nama' => 'required|string|max:225',
-            'email' => 'required|email|string|unique:data_karyawans,email',
+            'email' => 'nullable|email|string|unique:data_karyawans,email',
             'role_id' => 'required|integer|exists:roles,id',
             'no_rm' => 'required|string',
             'no_manulife' => 'nullable|string',
@@ -59,7 +59,7 @@ class StoreDataKaryawanRequest extends FormRequest
             'nama.required' => 'Nama karyawan tidak diperbolehkan kosong.',
             'nama.string' => 'Nama karyawan tidak diperbolehkan mengandung angka.',
             'nama.max' => 'Nama karyawan melebihi batas maksimum panjang karakter.',
-            'email.required' => 'Email karyawan tidak diperbolehkan kosong.',
+            // 'email.required' => 'Email karyawan tidak diperbolehkan kosong.',
             'email.string' => 'Email karyawan tidak diperbolehkan mengandung selain huruf.',
             'email.email' => 'Alamat email yang valid wajib menggunakan @.',
             'email.max' => 'Email karyawan melebihi batas maksimum panjang karakter.',

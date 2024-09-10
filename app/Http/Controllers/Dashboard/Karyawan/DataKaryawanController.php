@@ -374,7 +374,7 @@ class DataKaryawanController extends Controller
       return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
     }
 
-    $dataKaryawan = DataKaryawan::where('email', '!=', 'super_admin@admin.rski')->get();
+    $dataKaryawan = DataKaryawan::where('id', '!=', 1)->get();
     if ($dataKaryawan->isEmpty()) {
       return response()->json([
         'status' => Response::HTTP_NOT_FOUND,
@@ -390,7 +390,6 @@ class DataKaryawanController extends Controller
   }
 
   // detail karyawan dashboard
-  // TODO: PERLU DITAMBAHKAN REQUEST SESUAI SULENG
   public function getCalculatedDiklatInternal($data_karyawan_id)
   {
     if (!Gate::allows('view dataKaryawan')) {
@@ -591,7 +590,7 @@ class DataKaryawanController extends Controller
 
     // Cari data karyawan berdasarkan data_karyawan_id
     $karyawan = DataKaryawan::with(['users.jadwals.shifts', 'unit_kerjas'])
-      ->where('email', '!=', 'super_admin@admin.rski')
+      ->where('id', '!=', 1)
       ->find($data_karyawan_id);
 
     if (!$karyawan) {
@@ -673,7 +672,7 @@ class DataKaryawanController extends Controller
     }
 
     // Cari karyawan berdasarkan data_karyawan_id
-    $karyawan = DataKaryawan::where('email', '!=', 'super_admin@admin.rski')->find($data_karyawan_id);
+    $karyawan = DataKaryawan::where('id', '!=', 1)->find($data_karyawan_id);
     if (!$karyawan) {
       return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data karyawan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
     }
@@ -1000,7 +999,7 @@ class DataKaryawanController extends Controller
     }
 
     // Ambil data karyawan berdasarkan data_karyawan_id
-    $karyawan = DataKaryawan::where('email', '!=', 'super_admin@admin.rski')->find($data_karyawan_id);
+    $karyawan = DataKaryawan::where('id', '!=', 1)->find($data_karyawan_id);
     if (!$karyawan) {
       return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data karyawan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
     }
@@ -1280,6 +1279,80 @@ class DataKaryawanController extends Controller
     ], Response::HTTP_OK);
   }
 
+  public function getDataDiklat($data_karyawan_id)
+  {
+    if (!Gate::allows('view dataKaryawan')) {
+      return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+    }
+
+    // Ambil semua peserta_diklat yang sesuai dengan data_karyawan_id tanpa filter tambahan
+    $pesertaDiklats = PesertaDiklat::where('peserta', $data_karyawan_id)
+      ->with('diklats', 'diklats.berkas_dokumen_eksternals', 'users')
+      ->get();
+
+    if ($pesertaDiklats->isEmpty()) {
+      return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Tidak ada data diklat yang ditemukan untuk karyawan ini.'), Response::HTTP_NOT_FOUND);
+    }
+
+    $userName = $pesertaDiklats->first()->users;
+    $formattedData = $pesertaDiklats->map(function ($pesertaDiklat) {
+      $diklat = $pesertaDiklat->diklats;
+      $server_url = env('STORAGE_SERVER_DOMAIN');
+
+      return [
+        'id' => $diklat->id,
+        'nama' => $diklat->nama,
+        'kategori_diklat_id' => $diklat->kategori_diklats,
+        'status_diklat_id' => $diklat->status_diklats,
+        'deskripsi' => $diklat->deskripsi,
+        'kuota' => $diklat->kuota,
+        'tgl_mulai' => $diklat->tgl_mulai,
+        'tgl_selesai' => $diklat->tgl_selesai,
+        'jam_mulai' => $diklat->jam_mulai,
+        'jam_selesai' => $diklat->jam_selesai,
+        'durasi' => $diklat->durasi,
+        'lokasi' => $diklat->lokasi,
+        'dokumen_eksternal' => $diklat->berkas_dokumen_eksternals ? [
+          'id' => $diklat->berkas_dokumen_eksternals->id,
+          'nama_file' => $diklat->berkas_dokumen_eksternals->nama_file,
+          'path' => $server_url . $diklat->berkas_dokumen_eksternals->path,
+          'ext' => $diklat->berkas_dokumen_eksternals->ext,
+          'size' => $diklat->berkas_dokumen_eksternals->size,
+          'tgl_upload' => $diklat->berkas_dokumen_eksternals->tgl_upload,
+          'created_at' => $diklat->berkas_dokumen_eksternals->created_at,
+          'updated_at' => $diklat->berkas_dokumen_eksternals->updated_at
+        ] : null,
+        'verifikator_1' => $diklat->verifikator_1,
+        'verifikator_2' => $diklat->verifikator_2,
+        'alasan' => $diklat->alasan,
+        'created_at' => $diklat->created_at,
+        'updated_at' => $diklat->updated_at
+      ];
+    });
+
+    // Response JSON dengan semua kolom dari jadwal diklat yang diikuti dan total durasi
+    return response()->json([
+      'status' => Response::HTTP_OK,
+      'message' => "Data diklat dari karyawan '{$userName->nama}' berhasil ditampilkan.",
+      'data' => [
+        'user' => [
+          'id' => $userName->id,
+          'nama' => $userName->nama,
+          'username' => $userName->username,
+          'email_verified_at' => $userName->email_verified_at,
+          'data_karyawan_id' => $userName->data_karyawan_id,
+          'foto_profil' => $userName->foto_profil,
+          'data_completion_step' => $userName->data_completion_step,
+          'status_aktif' => $userName->status_aktif,
+          'created_at' => $userName->created_at,
+          'updated_at' => $userName->updated_at
+        ],
+        'unit_kerja' => $userName->data_karyawans->unit_kerjas,
+        'jadwal_diklat' => $formattedData
+      ]
+    ], Response::HTTP_OK);
+  }
+
   public function index(Request $request)
   {
     if (!Gate::allows('view dataKaryawan')) {
@@ -1287,9 +1360,9 @@ class DataKaryawanController extends Controller
     }
 
     // Per page
-    $limit = $request->input('limit', 10); // Default per page is 10
+    $limit = $request->input('limit', 10);
 
-    $karyawan = DataKaryawan::query()->where('email', '!=', 'super_admin@admin.rski')->orderBy('created_at', 'desc');
+    $karyawan = DataKaryawan::query()->where('id', '!=', 1)->orderBy('created_at', 'desc');
 
     // Ambil semua filter dari request body
     $filters = $request->all();
@@ -1649,7 +1722,7 @@ class DataKaryawanController extends Controller
     $data_karyawan_id = $user->data_karyawan_id;
 
     // Find karyawan by data_karyawan_id
-    $karyawan = DataKaryawan::where('email', '!=', 'super_admin@admin.rski')->find($data_karyawan_id);
+    $karyawan = DataKaryawan::where('id', '!=', 1)->find($data_karyawan_id);
 
     if (!$karyawan) {
       return response()->json([
@@ -1786,7 +1859,7 @@ class DataKaryawanController extends Controller
     }
 
     // Find karyawan by data_karyawan_id
-    $karyawan = DataKaryawan::where('email', '!=', 'super_admin@admin.rski')->find($data_karyawan_id);
+    $karyawan = DataKaryawan::where('id', '!=', 1)->find($data_karyawan_id);
 
     if (!$karyawan) {
       return response()->json([
@@ -2036,7 +2109,7 @@ class DataKaryawanController extends Controller
       return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
     }
 
-    $karyawan = DataKaryawan::where('email', '!=', 'super_admin@admin.rski')->find($data_karyawan_id);
+    $karyawan = DataKaryawan::where('id', '!=', 1)->find($data_karyawan_id);
 
     if (!$karyawan) {
       return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data karyawan tidak ditemukan.'), Response::HTTP_NOT_FOUND);

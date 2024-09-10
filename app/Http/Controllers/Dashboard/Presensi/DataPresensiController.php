@@ -60,7 +60,7 @@ class DataPresensiController extends Controller
         }
 
         // Calculate total number of employees excluding the super admin
-        $calculatedKaryawan = DataKaryawan::where('email', '!=', 'super_admin@admin.rski')->count();
+        $calculatedKaryawan = DataKaryawan::where('id', '!=', 1)->count();
 
         // Hitung jumlah presensi dalam setiap kategori
         $countTepatWaktu = Presensi::where('kategori_presensi_id', $kategoriTepatWaktuId)
