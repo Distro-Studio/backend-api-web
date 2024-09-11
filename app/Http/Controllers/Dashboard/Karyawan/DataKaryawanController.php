@@ -1670,6 +1670,7 @@ class DataKaryawanController extends Controller
         'uang_makan' => $data['uang_makan'],
         'uang_lembur' => $data['uang_lembur'],
         'ptkp_id' => $data['ptkp_id'],
+        'tgl_diangkat' => $data['tgl_diangkat'],
       ]);
       $createDataKaryawan->save();
 
@@ -1852,6 +1853,7 @@ class DataKaryawanController extends Controller
       'agama' => $karyawan->kategori_agamas,
       'golongan_darah' => $karyawan->kategori_darahs,
       'pendidikan_terakhir' => $karyawan->pendidikan_terakhir,
+      'asal_sekolah' => $karyawan->asal_sekolah,
       'tinggi_badan' => $karyawan->tinggi_badan,
       'berat_badan' => $karyawan->berat_badan,
       'no_ijazah' => $karyawan->no_ijazah,
@@ -2012,6 +2014,7 @@ class DataKaryawanController extends Controller
       'agama' => $karyawan->kategori_agamas, // agama_id
       'golongan_darah' => $karyawan->kategori_darahs, // golongan_darah_id
       'pendidikan_terakhir' => $karyawan->pendidikan_terakhir,
+      'asal_sekolah' => $karyawan->asal_sekolah,
       'tinggi_badan' => $karyawan->tinggi_badan,
       'berat_badan' => $karyawan->berat_badan,
       'no_ijazah' => $karyawan->no_ijazah,

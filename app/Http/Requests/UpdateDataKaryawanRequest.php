@@ -47,7 +47,7 @@ class UpdateDataKaryawanRequest extends FormRequest
 
             // tambahan dari mobile
             'tempat_lahir' => 'required',
-            'tanggal_lahir' => 'required|string',
+            'tgl_lahir' => 'required|string',
             'no_hp' => 'required|numeric',
             'jenis_kelamin' => 'required|in:0,1',
             'nik_ktp' => 'required|integer|digits:16',
@@ -69,6 +69,10 @@ class UpdateDataKaryawanRequest extends FormRequest
             'masa_berlaku_sip' => 'nullable|string',
             'no_bpjsksh' => 'required',
             'no_bpjsktk' => 'required',
+
+            'pendidikan_terakhir' => 'required|string',
+            'asal_sekolah' => 'required|string',
+            'tgl_diangkat' => 'required|string'
         ];
     }
 
@@ -120,8 +124,8 @@ class UpdateDataKaryawanRequest extends FormRequest
             'ptkp_id.exists' => 'Maaf PTKP yang dipilih tidak valid.',
 
             'tempat_lahir.required' => 'Tempat lahir karyawan tidak diperbolehkan kosong.',
-            'tanggal_lahir.required' => 'Tanggal lahir karyawan tidak diperbolehkan kosong.',
-            'tanggal_lahir.string' => 'Tanggal lahir karyawan tidak diperbolehkan mengandung selain angka.',
+            'tgl_lahir.required' => 'Tanggal lahir karyawan tidak diperbolehkan kosong.',
+            'tgl_lahir.string' => 'Tanggal lahir karyawan tidak diperbolehkan mengandung selain angka.',
             'no_hp.required' => 'Nomor HP karyawan tidak diperbolehkan kosong.',
             'no_hp.numeric' => 'Nomor HP karyawan tidak diperbolehkan mengandung selain angka.',
             'jenis_kelamin.required' => 'Jenis kelamin karyawan tidak diperbolehkan kosong.',
@@ -147,14 +151,20 @@ class UpdateDataKaryawanRequest extends FormRequest
             'tahun_lulus.required' => 'Tahun lulus karyawan tidak diperbolehkan kosong.',
             'tahun_lulus.numeric' => 'Tahun lulus karyawan tidak diperbolehkan mengandung selain angka.',
             'no_ijazah.required' => 'Nomor ijazah karyawan tidak diperbolehkan kosong.',
-
+            
             'no_str.required' => 'Nomor STR karyawan tidak diperbolehkan kosong.',
             'masa_berlaku_str.string' => 'Masa berlaku STR karyawan tidak diperbolehkan mengandung selain angka.',
             'no_sip.required' => 'Nomor SIP karyawan tidak diperbolehkan kosong.',
             'masa_berlaku_sip.string' => 'Masa berlaku SIP karyawan hanya diperbolehkan mengandung angka dan huruf.',
             'no_bpjsksh.required' => 'Nomor BPJS Kesehatan karyawan tidak diperbolehkan kosong.',
             'no_bpjsktk.required' => 'Nomor BPJS Ketenagakerjaan karyawan tidak diperbolehkan kosong.',
-
+            
+            'pendidikan_terakhir.required' => 'Pendidikan terakhir karyawan tidak diperbolehkan kosong.',
+            'pendidikan_terakhir.string' => 'Pendidikan terakhir karyawan tidak diperbolehkan mengandung selain huruf.',
+            'asal_sekolah.required' => 'Asal sekolah karyawan tidak diperbolehkan kosong.',
+            'asal_sekolah.string' => 'Asal sekolah karyawan tidak diperbolehkan mengandung selain huruf.',
+            'tgl_diangkat.required' => 'Tanggal diangkat karyawan tidak diperbolehkan kosong.',
+            'tgl_diangkat.string' => 'Tanggal diangkat karyawan tidak diperbolehkan mengandung selain huruf.',
             // file
             // 'file_ktp.required' => 'File KTP karyawan tidak diperbolehkan kosong.',
             // 'file_ktp.file' => 'File KTP karyawan tidak diperbolehkan mengandung selain dokumen.',

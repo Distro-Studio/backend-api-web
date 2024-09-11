@@ -179,44 +179,76 @@ class KaryawanImport implements ToModel, WithHeadingRow, WithValidation
       $user_id = $createUser->id;
     }
 
-    $jabatan = $this->Jabatan->where('nama_jabatan', $row['jabatan'])->first();
-    if (!$jabatan) {
-      throw new \Exception("Jabatan '" . $row['jabatan'] . "' tidak ditemukan.");
+    if (!empty($row['jabatan'])) {
+      $jabatan = $this->Jabatan->where('nama_jabatan', $row['jabatan'])->first();
+      if (!$jabatan) {
+        throw new \Exception("Jabatan '" . $row['jabatan'] . "' tidak ditemukan.");
+      }
+    } else {
+      $jabatan = null;
     }
 
-    $unit_kerja = $this->UnitKerja->where('nama_unit', $row['unit_kerja'])->first();
-    if (!$unit_kerja) {
-      throw new \Exception("Unit kerja '" . $row['unit_kerja'] . "' tidak ditemukan.");
+    if (!empty($row['unit_kerja'])) {
+      $unit_kerja = $this->UnitKerja->where('nama_unit', $row['unit_kerja'])->first();
+      if (!$unit_kerja) {
+        throw new \Exception("Unit kerja '" . $row['unit_kerja'] . "' tidak ditemukan.");
+      }
+    } else {
+      $unit_kerja = null;
     }
 
-    $kompetensi = $this->Kompetensi->where('nama_kompetensi', $row['kompetensi'])->first();
-    if (!$kompetensi) {
-      throw new \Exception("Kompetensi '" . $row['kompetensi'] . "' tidak ditemukan.");
+    if (!empty($row['kompetensi'])) {
+      $kompetensi = $this->Kompetensi->where('nama_kompetensi', $row['kompetensi'])->first();
+      if (!$kompetensi) {
+        throw new \Exception("Kompetensi '" . $row['kompetensi'] . "' tidak ditemukan.");
+      }
+    } else {
+      $kompetensi = null;
     }
 
-    $kelompok_gaji = $this->KelompokGaji->where('nama_kelompok', $row['kelompok_gaji'])->first();
-    if (!$kelompok_gaji) {
-      throw new \Exception("Kelompok gaji '" . $row['kelompok_gaji'] . "' tidak ditemukan.");
+    if (!empty($row['kelompok_gaji'])) {
+      $kelompok_gaji = $this->KelompokGaji->where('nama_kelompok', $row['kelompok_gaji'])->first();
+      if (!$kelompok_gaji) {
+        throw new \Exception("Kelompok gaji '" . $row['kelompok_gaji'] . "' tidak ditemukan.");
+      }
+    } else {
+      $kelompok_gaji = null;
     }
 
-    $ptkp = $this->PTKP->where('kode_ptkp', $row['kode_ptkp'])->first();
-    if (!$ptkp) {
-      throw new \Exception("PTKP '" . $row['kode_ptkp'] . "' tidak ditemukan.");
+    if (!empty($row['kode_ptkp'])) {
+      $ptkp = $this->PTKP->where('kode_ptkp', $row['kode_ptkp'])->first();
+      if (!$ptkp) {
+        throw new \Exception("PTKP '" . $row['kode_ptkp'] . "' tidak ditemukan.");
+      }
+    } else {
+      $ptkp = null;
     }
 
-    $status_karyawan = $this->StatusKaryawan->where('label', $row['status_karyawan'])->first();
-    if (!$status_karyawan) {
-      throw new \Exception("Status karyawan '" . $row['status_karyawan'] . "' tidak ditemukan.");
+    if (!empty($row['status_karyawan'])) {
+      $status_karyawan = $this->StatusKaryawan->where('label', $row['status_karyawan'])->first();
+      if (!$status_karyawan) {
+        throw new \Exception("Status karyawan '" . $row['status_karyawan'] . "' tidak ditemukan.");
+      }
+    } else {
+      $status_karyawan = null;
     }
 
-    $agama = $this->KategoriAgama->where('label', $row['agama'])->first();
-    if (!$agama) {
-      throw new \Exception("Agama '" . $row['agama'] . "' tidak ditemukan.");
+    if (!empty($row['agama'])) {
+      $agama = $this->KategoriAgama->where('label', $row['agama'])->first();
+      if (!$agama) {
+        throw new \Exception("Agama '" . $row['agama'] . "' tidak ditemukan.");
+      }
+    } else {
+      $agama = null;
     }
 
-    $darah = $this->GolonganDarah->where('label', $row['darah'])->first();
-    if (!$darah) {
-      throw new \Exception("Golongan darah '" . $row['darah'] . "' tidak ditemukan.");
+    if (!empty($row['darah'])) {
+      $darah = $this->GolonganDarah->where('label', $row['darah'])->first();
+      if (!$darah) {
+        throw new \Exception("Golongan darah '" . $row['darah'] . "' tidak ditemukan.");
+      }
+    } else {
+      $darah = null;
     }
 
     $tgl_masuk = \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($row['tgl_masuk']);
@@ -237,6 +269,11 @@ class KaryawanImport implements ToModel, WithHeadingRow, WithValidation
       $jenis_kelamin = 0;
     }
 
+    $tahun_lulus = null;
+    if (!empty($row['tahun_lulus']) && is_numeric(trim($row['tahun_lulus']))) {
+      $tahun_lulus = $row['tahun_lulus'];
+    }
+
     $dataKaryawan = DataKaryawan::create([
       'user_id' => $user_id,
       'email' => $row['email'],
@@ -247,18 +284,18 @@ class KaryawanImport implements ToModel, WithHeadingRow, WithValidation
       // 'tgl_masuk' => $row['tgl_masuk'],
       // 'tgl_berakhir_pks' => $row['tgl_berakhir_pks'],
       'nik' => $row['nik'],
-      'unit_kerja_id' => $unit_kerja->id,
-      'jabatan_id' => $jabatan->id,
-      'kompetensi_id' => $kompetensi->id,
-      'status_karyawan_id' => $status_karyawan->id,
-      'kelompok_gaji_id' => $kelompok_gaji->id,
+      'unit_kerja_id' => $unit_kerja ? $unit_kerja->id : null,
+      'jabatan_id' => $jabatan ? $jabatan->id : null,
+      'kompetensi_id' => $kompetensi ? $kompetensi->id : null,
+      'status_karyawan_id' => $status_karyawan ? $status_karyawan->id : null,
+      'kelompok_gaji_id' => $kelompok_gaji ? $kelompok_gaji->id : null,
       'no_rekening' => $row['no_rekening'],
       'tunjangan_fungsional' => $row['tunjangan_fungsional'],
       'tunjangan_khusus' => $row['tunjangan_khusus'],
       'tunjangan_lainnya' => $row['tunjangan_lainnya'],
       'uang_makan' => $row['uang_makan'],
       'uang_lembur' => $row['uang_lembur'],
-      'ptkp_id' => $ptkp->id,
+      'ptkp_id' => $ptkp ? $ptkp->id : null,
 
       // Tambahan
       'gelar_depan' => $row['gelar_depan'],
@@ -271,13 +308,13 @@ class KaryawanImport implements ToModel, WithHeadingRow, WithValidation
       'no_kk' => $row['no_kk'],
       'npwp' => $row['npwp'],
       'jenis_kelamin' => $jenis_kelamin,
-      'kategori_agama_id' => $agama->id,
-      'kategori_darah_id' => $darah->id,
+      'kategori_agama_id' => $agama ? $agama->id : null,
+      'kategori_darah_id' => $darah ? $darah->id : null,
       'tinggi_badan' => $row['tinggi_badan'],
       'berat_badan' => $row['berat_badan'],
       'pendidikan_terakhir' => $row['pendidikan_terakhir'],
       'asal_sekolah' => $row['asal_sekolah'],
-      'tahun_lulus' => $row['tahun_lulus'],
+      'tahun_lulus' => $tahun_lulus,
       'tgl_diangkat' => $tgl_diangkat_formatted,
     ]);
 
