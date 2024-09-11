@@ -35,13 +35,8 @@ class LoginController extends Controller
         if ($user->status_aktif == 1) {
             auth()->logout(); // Logout user jika status_aktif bernilai 1
             Log::error("Login failed for user ID: {$user->id} - Account inactive since {$user->updated_at}.");
-            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, "Kami mendeteksi bahwa akun anda sudah tidak aktif sejak {$user->updated_at}."), Response::HTTP_FORBIDDEN);
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, "Kami mendeteksi bahwa akun anda tidak aktif sejak {$user->updated_at}."), Response::HTTP_FORBIDDEN);
         }
-
-        // karyawan gabole login
-        // if ($user->roles->isEmpty() || $user->roles->first()->permissions->isEmpty()) {
-        //     return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk membuka halaman admin, jika anda bukan karyawan silahkan hubungi Admin Personalia.'), Response::HTTP_FORBIDDEN);
-        // }
 
         Log::info("Login successful for user ID: {$user->id}, Name: {$user->nama}.");
 

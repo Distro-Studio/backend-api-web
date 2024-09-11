@@ -37,6 +37,26 @@ class TemplateKaryawanExport implements FromArray, WithHeadings
             'uang_makan',
             'uang_lembur',
             'kode_ptkp',
+
+            // tambahan
+            'gelar_depan',
+            'gelar_belakang',
+            'tempat_lahir',
+            'tgl_lahir',
+            'alamat',
+            'no_hp',
+            'nik_ktp',
+            'no_kk',
+            'npwp',
+            'jenis_kelamin',
+            'agama',
+            'darah',
+            'tinggi_badan',
+            'berat_badan',
+            'pendidikan_terakhir',
+            'asal_sekolah',
+            'tahun_lulus',
+            'tgl_diangkat'
         ];
     }
 }

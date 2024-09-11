@@ -13,6 +13,8 @@ use App\Models\KelompokGaji;
 use App\Helpers\RandomHelper;
 use App\Models\StatusKaryawan;
 use App\Mail\SendAccoundUsersMail;
+use App\Models\KategoriAgama;
+use App\Models\KategoriDarah;
 use Spatie\Permission\Models\Role;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
@@ -34,6 +36,8 @@ class KaryawanImport implements ToModel, WithHeadingRow, WithValidation
   private $KelompokGaji;
   private $PTKP;
   private $StatusKaryawan;
+  private $KategoriAgama;
+  private $GolonganDarah;
 
   public function __construct()
   {
@@ -45,6 +49,8 @@ class KaryawanImport implements ToModel, WithHeadingRow, WithValidation
     $this->KelompokGaji = KelompokGaji::select('id', 'nama_kelompok')->get();
     $this->PTKP = Ptkp::select('id', 'kode_ptkp')->get();
     $this->StatusKaryawan = StatusKaryawan::select('id', 'label')->get();
+    $this->KategoriAgama = KategoriAgama::select('id', 'label')->get();
+    $this->GolonganDarah = KategoriDarah::select('id', 'label')->get();
   }
 
   public function rules(): array
@@ -69,6 +75,26 @@ class KaryawanImport implements ToModel, WithHeadingRow, WithValidation
       'uang_makan' => 'required|numeric',
       'uang_lembur' => 'nullable|numeric',
       'kode_ptkp' => 'required',
+
+      // tambahan
+      'gelar_depan' => 'nullable',
+      'gelar_belakang' => 'nullable',
+      'tempat_lahir' => 'nullable',
+      'tgl_lahir' => 'nullable',
+      'alamat' => 'nullable',
+      'no_hp' => 'nullable|numeric',
+      'nik_ktp' => 'nullable|numeric',
+      'no_kk' => 'nullable|numeric',
+      'npwp' => 'nullable|numeric',
+      'jenis_kelamin' => 'nullable|in:P,L',
+      'agama' => 'nullable',
+      'darah' => 'nullable',
+      'tinggi_badan' => 'nullable|numeric',
+      'berat_badan' => 'nullable|numeric',
+      'pendidikan_terakhir' => 'nullable',
+      'asal_sekolah' => 'nullable',
+      'tahun_lulus' => 'nullable|numeric',
+      'tgl_diangkat' => 'nullable',
     ];
   }
 
@@ -94,18 +120,27 @@ class KaryawanImport implements ToModel, WithHeadingRow, WithValidation
 
       'kelompok_gaji.required' => 'Silahkan masukkan kelompok gaji karyawan terlebih dahulu.',
       'no_rekening.required' => 'Nomor rekening karyawan tidak diperbolehkan kosong.',
-      'no_rekening.numeric' => 'Nomor rekening karyawan tidak diperbolehkan mengandung huruf.',
+      'no_rekening.numeric' => 'Nomor rekening karyawan tidak diperbolehkan mengandung selain angka.',
       'tunjangan_fungsional.required' => 'Tunjangan fungsional karyawan tidak diperbolehkan kosong.',
-      'tunjangan_fungsional.numeric' => 'Tunjangan fungsional karyawan tidak diperbolehkan mengandung huruf.',
+      'tunjangan_fungsional.numeric' => 'Tunjangan fungsional karyawan tidak diperbolehkan mengandung selain angka.',
       'tunjangan_khusus.required' => 'Tunjangan khusus karyawan tidak diperbolehkan kosong.',
-      'tunjangan_khusus.numeric' => 'Tunjangan khusus karyawan tidak diperbolehkan mengandung huruf.',
+      'tunjangan_khusus.numeric' => 'Tunjangan khusus karyawan tidak diperbolehkan mengandung selain angka.',
       'tunjangan_lainnya.required' => 'Tunjangan karyawan lainya tidak diperbolehkan kosong.',
-      'tunjangan_lainnya.numeric' => 'Tunjangan karyawan lainya tidak diperbolehkan mengandung huruf.',
+      'tunjangan_lainnya.numeric' => 'Tunjangan karyawan lainya tidak diperbolehkan mengandung selain angka.',
       'uang_makan.required' => 'Uang makan karyawan tidak diperbolehkan kosong.',
-      'uang_makan.numeric' => 'Uang makan karyawan tidak diperbolehkan mengandung huruf.',
+      'uang_makan.numeric' => 'Uang makan karyawan tidak diperbolehkan mengandung selain angka.',
       'uang_lembur.required' => 'Uang lembur karyawan tidak diperbolehkan kosong.',
-      'uang_lembur.numeric' => 'Uang lembur karyawan tidak diperbolehkan mengandung huruf.',
+      'uang_lembur.numeric' => 'Uang lembur karyawan tidak diperbolehkan mengandung selain angka.',
       'kode_ptkp.required' => 'Silahkan masukkan PTKP karyawan terlebih dahulu.',
+
+      'no_hp.numeric' => 'Nomor HP karyawan tidak diperbolehkan mengandung selain angka.',
+      'nik_ktp.numeric' => 'NIK KTP karyawan tidak diperbolehkan mengandung selain angka.',
+      'no_kk.numeric' => 'Nomor KK karyawan tidak diperbolehkan mengandung selain angka.',
+      'npwp.numeric' => 'Nomor NPWP karyawan tidak diperbolehkan mengandung selain angka.',
+      'jenis_kelamin.in' => 'Jenis kelamin karyawan tidak diperbolehkan mengandung nilai selain P dan L.',
+      'tinggi_badan.numeric' => 'Tinggi badan karyawan tidak diperbolehkan mengandung selain angka.',
+      'berat_badan.numeric' => 'Berat badan karyawan tidak diperbolehkan mengandung selain angka.',
+      'tahun_lulus.numeric' => 'Tahun lulus pendidikan karyawan tidak diperbolehkan mengandung selain angka.',
     ];
   }
 
@@ -128,7 +163,9 @@ class KaryawanImport implements ToModel, WithHeadingRow, WithValidation
       $userData = [
         'nama' => $row['nama'],
         'username' => $username,
-        'status_aktif' => 1,
+        // 'status_aktif' => 1,
+        'status_aktif' => 2,
+        'data_completion_step' => 0,
         'role_id' => $role->id,
         // 'password' => Hash::make($password),
         'password' => Hash::make('1234'),
@@ -159,24 +196,46 @@ class KaryawanImport implements ToModel, WithHeadingRow, WithValidation
 
     $kelompok_gaji = $this->KelompokGaji->where('nama_kelompok', $row['kelompok_gaji'])->first();
     if (!$kelompok_gaji) {
-      throw new \Exception("Kelompok gaji '" . $row['kelompok_gaji'], "' tidak ditemukan.");
+      throw new \Exception("Kelompok gaji '" . $row['kelompok_gaji'] . "' tidak ditemukan.");
     }
 
     $ptkp = $this->PTKP->where('kode_ptkp', $row['kode_ptkp'])->first();
     if (!$ptkp) {
-      throw new \Exception("PTKP '" . $row['kode_ptkp'], "' tidak ditemukan.");
+      throw new \Exception("PTKP '" . $row['kode_ptkp'] . "' tidak ditemukan.");
     }
 
     $status_karyawan = $this->StatusKaryawan->where('label', $row['status_karyawan'])->first();
     if (!$status_karyawan) {
-      throw new \Exception("Status karyawan '" . $row['status_karyawan'], "' tidak ditemukan.");
+      throw new \Exception("Status karyawan '" . $row['status_karyawan'] . "' tidak ditemukan.");
+    }
+
+    $agama = $this->KategoriAgama->where('label', $row['agama'])->first();
+    if (!$agama) {
+      throw new \Exception("Agama '" . $row['agama'] . "' tidak ditemukan.");
+    }
+
+    $darah = $this->GolonganDarah->where('label', $row['darah'])->first();
+    if (!$darah) {
+      throw new \Exception("Golongan darah '" . $row['darah'] . "' tidak ditemukan.");
     }
 
     $tgl_masuk = \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($row['tgl_masuk']);
     $tgl_berakhir_pks = \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($row['tgl_berakhir_pks']);
+    $tgl_lahir = \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($row['tgl_lahir']);
+    $tgl_diangkat = \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($row['tgl_diangkat']);
 
     $tgl_masuk_formatted = Carbon::instance($tgl_masuk)->format('d-m-Y');
     $tgl_berakhir_pks_formatted = Carbon::instance($tgl_berakhir_pks)->format('d-m-Y');
+    $tgl_lahir_formatted = Carbon::instance($tgl_lahir)->format('d-m-Y');
+    $tgl_diangkat_formatted = Carbon::instance($tgl_diangkat)->format('d-m-Y');
+
+    // Konversi jenis kelamin
+    $jenis_kelamin = null;
+    if ($row['jenis_kelamin'] === 'L') {
+      $jenis_kelamin = 1;
+    } elseif ($row['jenis_kelamin'] === 'P') {
+      $jenis_kelamin = 0;
+    }
 
     $dataKaryawan = DataKaryawan::create([
       'user_id' => $user_id,
@@ -200,6 +259,26 @@ class KaryawanImport implements ToModel, WithHeadingRow, WithValidation
       'uang_makan' => $row['uang_makan'],
       'uang_lembur' => $row['uang_lembur'],
       'ptkp_id' => $ptkp->id,
+
+      // Tambahan
+      'gelar_depan' => $row['gelar_depan'],
+      'gelar_belakang' => $row['gelar_belakang'],
+      'tempat_lahir' => $row['tempat_lahir'],
+      'tgl_lahir' => $tgl_lahir_formatted,
+      'alamat' => $row['alamat'],
+      'no_hp' => $row['no_hp'],
+      'nik_ktp' => $row['nik_ktp'],
+      'no_kk' => $row['no_kk'],
+      'npwp' => $row['npwp'],
+      'jenis_kelamin' => $jenis_kelamin,
+      'kategori_agama_id' => $agama->id,
+      'kategori_darah_id' => $darah->id,
+      'tinggi_badan' => $row['tinggi_badan'],
+      'berat_badan' => $row['berat_badan'],
+      'pendidikan_terakhir' => $row['pendidikan_terakhir'],
+      'asal_sekolah' => $row['asal_sekolah'],
+      'tahun_lulus' => $row['tahun_lulus'],
+      'tgl_diangkat' => $tgl_diangkat_formatted,
     ]);
 
     $createUser->update(['data_karyawan_id' => $dataKaryawan->id]);

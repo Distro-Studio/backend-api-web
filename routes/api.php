@@ -101,7 +101,6 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('/download-template-presensi', [DataPresensiController::class, 'downloadPresensiTemplate']);
 
         // TODO: ganti email di create & transfer karyawan
-        // TODO: ganti send email dengan email create akun pada validasi jika email berubah
         Route::group(['prefix' => '/karyawan'], function () {
             // ! Data Karyawan ===========>
             Route::post('/get-data-karyawan', [DataKaryawanController::class, 'index']);
@@ -110,9 +109,6 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::post('/{data_karyawan_id}/status-karyawan', [DataKaryawanController::class, 'toggleStatusUser']);
             Route::get('/detail-karyawan-user/{user_id}', [DataKaryawanController::class, 'showByUserId']);
             Route::get('/detail-karyawan/{data_karyawan_id}', [DataKaryawanController::class, 'showByDataKaryawanId']);
-
-            Route::get('/detail-karyawan-diklat-internal/{data_karyawan_id}', [DataKaryawanController::class, 'getCalculatedDiklatInternal']);
-            Route::get('/detail-karyawan-diklat-eksternal/{data_karyawan_id}', [DataKaryawanController::class, 'getCalculatedDiklatEksternal']);
 
             Route::get('/detail-karyawan-presensi/{data_karyawan_id}', [DataKaryawanController::class, 'getDataPresensi']);
             Route::get('/detail-karyawan-jadwal/{data_karyawan_id}', [DataKaryawanController::class, 'getDataJadwal']);

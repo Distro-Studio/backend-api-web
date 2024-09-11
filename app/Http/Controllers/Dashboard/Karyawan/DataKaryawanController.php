@@ -390,135 +390,135 @@ class DataKaryawanController extends Controller
   }
 
   // detail karyawan dashboard
-  public function getCalculatedDiklatInternal($data_karyawan_id)
-  {
-    if (!Gate::allows('view dataKaryawan')) {
-      return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
-    }
+  // public function getCalculatedDiklatInternal($data_karyawan_id)
+  // {
+  //   if (!Gate::allows('view dataKaryawan')) {
+  //     return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+  //   }
 
-    $currentMonth = Carbon::now('Asia/Jakarta')->month;
-    $currentYear = Carbon::now('Asia/Jakarta')->year;
+  //   $currentMonth = Carbon::now('Asia/Jakarta')->month;
+  //   $currentYear = Carbon::now('Asia/Jakarta')->year;
 
-    // Step 1: Ambil semua peserta_diklat yang sesuai dengan data_karyawan_id dan diklat internal
-    $pesertaDiklats = PesertaDiklat::whereHas('diklats', function ($query) use ($currentMonth, $currentYear) {
-      $query->where('kategori_diklat_id', 1)
-        ->whereMonth('tgl_mulai', $currentMonth)
-        ->whereYear('tgl_mulai', $currentYear)
-        ->orderBy('tgl_mulai', 'desc');
-    })
-      ->where('peserta', $data_karyawan_id)
-      ->with('diklats', 'users')
-      ->get();
+  //   // Step 1: Ambil semua peserta_diklat yang sesuai dengan data_karyawan_id dan diklat internal
+  //   $pesertaDiklats = PesertaDiklat::whereHas('diklats', function ($query) use ($currentMonth, $currentYear) {
+  //     $query->where('kategori_diklat_id', 1)
+  //       ->whereMonth('tgl_mulai', $currentMonth)
+  //       ->whereYear('tgl_mulai', $currentYear)
+  //       ->orderBy('tgl_mulai', 'desc');
+  //   })
+  //     ->where('peserta', $data_karyawan_id)
+  //     ->with('diklats', 'users')
+  //     ->get();
 
-    if ($pesertaDiklats->isEmpty()) {
-      return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Tidak ada data diklat internal yang ditemukan untuk karyawan ini.'), Response::HTTP_NOT_FOUND);
-    }
+  //   if ($pesertaDiklats->isEmpty()) {
+  //     return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Tidak ada data diklat internal yang ditemukan untuk karyawan ini.'), Response::HTTP_NOT_FOUND);
+  //   }
 
-    $userName = $pesertaDiklats->first()->users;
-    $totalDurasi = 0;
-    $formattedData = $pesertaDiklats->map(function ($pesertaDiklat) use (&$totalDurasi) {
-      $diklat = $pesertaDiklat->diklats;
+  //   $userName = $pesertaDiklats->first()->users;
+  //   $totalDurasi = 0;
+  //   $formattedData = $pesertaDiklats->map(function ($pesertaDiklat) use (&$totalDurasi) {
+  //     $diklat = $pesertaDiklat->diklats;
 
-      // Tambahkan durasi diklat ke total
-      $totalDurasi += $diklat->durasi;
+  //     // Tambahkan durasi diklat ke total
+  //     $totalDurasi += $diklat->durasi;
 
-      return [
-        'id' => $diklat->id,
-        'tgl_mulai' => $diklat->tgl_mulai,
-        'tgl_selesai' => $diklat->tgl_selesai,
-        'durasi' => $diklat->durasi,
-        'kategori_diklat' => $diklat->kategori_diklats
-      ];
-    });
+  //     return [
+  //       'id' => $diklat->id,
+  //       'tgl_mulai' => $diklat->tgl_mulai,
+  //       'tgl_selesai' => $diklat->tgl_selesai,
+  //       'durasi' => $diklat->durasi,
+  //       'kategori_diklat' => $diklat->kategori_diklats
+  //     ];
+  //   });
 
-    // Response JSON dengan jadwal diklat yang diikuti dan total durasi
-    return response()->json([
-      'status' => Response::HTTP_OK,
-      'message' => "Data diklat internal dari karyawan '{$userName->nama}' berhasil ditampilkan.",
-      'data' => [
-        'user' => [
-          'id' => $userName->id,
-          'nama' => $userName->nama,
-          'username' => $userName->username,
-          'email_verified_at' => $userName->email_verified_at,
-          'data_karyawan_id' => $userName->data_karyawan_id,
-          'foto_profil' => $userName->foto_profil,
-          'data_completion_step' => $userName->data_completion_step,
-          'status_aktif' => $userName->status_aktif,
-          'created_at' => $userName->created_at,
-          'updated_at' => $userName->updated_at
-        ],
-        'unit_kerja' => $userName->data_karyawans->unit_kerjas,
-        'jadwal_diklat' => $formattedData,
-        'total_durasi' => $totalDurasi
-      ]
-    ], Response::HTTP_OK);
-  }
+  //   // Response JSON dengan jadwal diklat yang diikuti dan total durasi
+  //   return response()->json([
+  //     'status' => Response::HTTP_OK,
+  //     'message' => "Data diklat internal dari karyawan '{$userName->nama}' berhasil ditampilkan.",
+  //     'data' => [
+  //       'user' => [
+  //         'id' => $userName->id,
+  //         'nama' => $userName->nama,
+  //         'username' => $userName->username,
+  //         'email_verified_at' => $userName->email_verified_at,
+  //         'data_karyawan_id' => $userName->data_karyawan_id,
+  //         'foto_profil' => $userName->foto_profil,
+  //         'data_completion_step' => $userName->data_completion_step,
+  //         'status_aktif' => $userName->status_aktif,
+  //         'created_at' => $userName->created_at,
+  //         'updated_at' => $userName->updated_at
+  //       ],
+  //       'unit_kerja' => $userName->data_karyawans->unit_kerjas,
+  //       'jadwal_diklat' => $formattedData,
+  //       'total_durasi' => $totalDurasi
+  //     ]
+  //   ], Response::HTTP_OK);
+  // }
 
-  public function getCalculatedDiklatEksternal($data_karyawan_id)
-  {
-    if (!Gate::allows('view dataKaryawan')) {
-      return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
-    }
+  // public function getCalculatedDiklatEksternal($data_karyawan_id)
+  // {
+  //   if (!Gate::allows('view dataKaryawan')) {
+  //     return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+  //   }
 
-    $currentMonth = Carbon::now('Asia/Jakarta')->month;
-    $currentYear = Carbon::now('Asia/Jakarta')->year;
+  //   $currentMonth = Carbon::now('Asia/Jakarta')->month;
+  //   $currentYear = Carbon::now('Asia/Jakarta')->year;
 
-    // Step 1: Ambil semua peserta_diklat yang sesuai dengan data_karyawan_id dan diklat internal
-    $pesertaDiklats = PesertaDiklat::whereHas('diklats', function ($query) use ($currentMonth, $currentYear) {
-      $query->where('kategori_diklat_id', 2)
-        ->whereMonth('tgl_mulai', $currentMonth)
-        ->whereYear('tgl_mulai', $currentYear)
-        ->orderBy('tgl_mulai', 'desc');
-    })
-      ->where('peserta', $data_karyawan_id)
-      ->with('diklats', 'users')
-      ->get();
+  //   // Step 1: Ambil semua peserta_diklat yang sesuai dengan data_karyawan_id dan diklat internal
+  //   $pesertaDiklats = PesertaDiklat::whereHas('diklats', function ($query) use ($currentMonth, $currentYear) {
+  //     $query->where('kategori_diklat_id', 2)
+  //       ->whereMonth('tgl_mulai', $currentMonth)
+  //       ->whereYear('tgl_mulai', $currentYear)
+  //       ->orderBy('tgl_mulai', 'desc');
+  //   })
+  //     ->where('peserta', $data_karyawan_id)
+  //     ->with('diklats', 'users')
+  //     ->get();
 
-    if ($pesertaDiklats->isEmpty()) {
-      return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Tidak ada data diklat eksternal yang ditemukan untuk karyawan ini.'), Response::HTTP_NOT_FOUND);
-    }
+  //   if ($pesertaDiklats->isEmpty()) {
+  //     return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Tidak ada data diklat eksternal yang ditemukan untuk karyawan ini.'), Response::HTTP_NOT_FOUND);
+  //   }
 
-    $userName = $pesertaDiklats->first()->users;
-    $totalDurasi = 0;
-    $formattedData = $pesertaDiklats->map(function ($pesertaDiklat) use (&$totalDurasi) {
-      $diklat = $pesertaDiklat->diklats;
+  //   $userName = $pesertaDiklats->first()->users;
+  //   $totalDurasi = 0;
+  //   $formattedData = $pesertaDiklats->map(function ($pesertaDiklat) use (&$totalDurasi) {
+  //     $diklat = $pesertaDiklat->diklats;
 
-      // Tambahkan durasi diklat ke total
-      $totalDurasi += $diklat->durasi;
+  //     // Tambahkan durasi diklat ke total
+  //     $totalDurasi += $diklat->durasi;
 
-      return [
-        'id' => $diklat->id,
-        'tgl_mulai' => $diklat->tgl_mulai,
-        'tgl_selesai' => $diklat->tgl_selesai,
-        'durasi' => $diklat->durasi,
-        'kategori_diklat' => $diklat->kategori_diklats
-      ];
-    });
+  //     return [
+  //       'id' => $diklat->id,
+  //       'tgl_mulai' => $diklat->tgl_mulai,
+  //       'tgl_selesai' => $diklat->tgl_selesai,
+  //       'durasi' => $diklat->durasi,
+  //       'kategori_diklat' => $diklat->kategori_diklats
+  //     ];
+  //   });
 
-    // Response JSON dengan jadwal diklat yang diikuti dan total durasi
-    return response()->json([
-      'status' => Response::HTTP_OK,
-      'message' => "Data diklat eksternal dari karyawan '{$userName->nama}' berhasil ditampilkan.",
-      'data' => [
-        'user' => [
-          'id' => $userName->id,
-          'nama' => $userName->nama,
-          'username' => $userName->username,
-          'email_verified_at' => $userName->email_verified_at,
-          'data_karyawan_id' => $userName->data_karyawan_id,
-          'foto_profil' => $userName->foto_profil,
-          'data_completion_step' => $userName->data_completion_step,
-          'status_aktif' => $userName->status_aktif,
-          'created_at' => $userName->created_at,
-          'updated_at' => $userName->updated_at
-        ],
-        'unit_kerja' => $userName->data_karyawans->unit_kerjas,
-        'jadwal_diklat' => $formattedData,
-        'total_durasi' => $totalDurasi
-      ]
-    ], Response::HTTP_OK);
-  }
+  //   // Response JSON dengan jadwal diklat yang diikuti dan total durasi
+  //   return response()->json([
+  //     'status' => Response::HTTP_OK,
+  //     'message' => "Data diklat eksternal dari karyawan '{$userName->nama}' berhasil ditampilkan.",
+  //     'data' => [
+  //       'user' => [
+  //         'id' => $userName->id,
+  //         'nama' => $userName->nama,
+  //         'username' => $userName->username,
+  //         'email_verified_at' => $userName->email_verified_at,
+  //         'data_karyawan_id' => $userName->data_karyawan_id,
+  //         'foto_profil' => $userName->foto_profil,
+  //         'data_completion_step' => $userName->data_completion_step,
+  //         'status_aktif' => $userName->status_aktif,
+  //         'created_at' => $userName->created_at,
+  //         'updated_at' => $userName->updated_at
+  //       ],
+  //       'unit_kerja' => $userName->data_karyawans->unit_kerjas,
+  //       'jadwal_diklat' => $formattedData,
+  //       'total_durasi' => $totalDurasi
+  //     ]
+  //   ], Response::HTTP_OK);
+  // }
 
   public function getDataPresensi($data_karyawan_id)
   {
@@ -1733,6 +1733,27 @@ class DataKaryawanController extends Controller
 
     $role = $karyawan->users->roles->first();
 
+    // diklat calculated
+    $total_durasi_internal = PesertaDiklat::whereHas('diklats', function ($query) {
+      $query->where('kategori_diklat_id', 1); // 1 = Internal
+    })
+      ->where('peserta', $karyawan->users->id)
+      ->with('diklats')
+      ->get()
+      ->sum(function ($pesertaDiklat) {
+        return $pesertaDiklat->diklats->durasi;
+      });
+
+    $total_durasi_eksternal = PesertaDiklat::whereHas('diklats', function ($query) {
+      $query->where('kategori_diklat_id', 2); // 2 = Eksternal
+    })
+      ->where('peserta', $karyawan->users->id)
+      ->with('diklats')
+      ->get()
+      ->sum(function ($pesertaDiklat) {
+        return $pesertaDiklat->diklats->durasi;
+      });
+
     // $berkasFields = [
     //   'file_ktp' => $karyawan->file_ktp ?? null,
     //   'file_kk' => $karyawan->file_kk ?? null,
@@ -1840,6 +1861,8 @@ class DataKaryawanController extends Controller
       'masa_berlaku_sip' => $karyawan->masa_berlaku_sip,
       'tgl_berakhir_pks' => $karyawan->tgl_berakhir_pks,
       'masa_diklat' => $karyawan->masa_diklat,
+      'total_durasi_internal' => $total_durasi_internal,
+      'total_durasi_eksternal' => $total_durasi_eksternal,
       'status_reward_presensi' => $karyawan->status_reward_presensi,
       'created_at' => $karyawan->created_at,
       'updated_at' => $karyawan->updated_at
@@ -1869,6 +1892,27 @@ class DataKaryawanController extends Controller
     }
 
     $role = $karyawan->users->roles->first();
+
+    // diklat calculated
+    $total_durasi_internal = PesertaDiklat::whereHas('diklats', function ($query) {
+      $query->where('kategori_diklat_id', 1); // 1 = Internal
+    })
+      ->where('peserta', $data_karyawan_id)
+      ->with('diklats')
+      ->get()
+      ->sum(function ($pesertaDiklat) {
+        return $pesertaDiklat->diklats->durasi;
+      });
+
+    $total_durasi_eksternal = PesertaDiklat::whereHas('diklats', function ($query) {
+      $query->where('kategori_diklat_id', 2); // 2 = Eksternal
+    })
+      ->where('peserta', $data_karyawan_id)
+      ->with('diklats')
+      ->get()
+      ->sum(function ($pesertaDiklat) {
+        return $pesertaDiklat->diklats->durasi;
+      });
 
     // $berkasFields = [
     //   'file_ktp' => $karyawan->file_ktp ?? null,
@@ -1976,6 +2020,8 @@ class DataKaryawanController extends Controller
       'masa_berlaku_str' => $karyawan->masa_berlaku_str,
       'tgl_berakhir_pks' => $karyawan->tgl_berakhir_pks,
       'masa_diklat' => $karyawan->masa_diklat,
+      'total_durasi_internal' => $total_durasi_internal,
+      'total_durasi_eksternal' => $total_durasi_eksternal,
       'status_reward_presensi' => $karyawan->status_reward_presensi,
       'created_at' => $karyawan->created_at,
       'updated_at' => $karyawan->updated_at
