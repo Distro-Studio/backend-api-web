@@ -179,58 +179,34 @@ class KaryawanImport implements ToModel, WithHeadingRow, WithValidation
       $user_id = $createUser->id;
     }
 
-    if (!empty($row['jabatan'])) {
-      $jabatan = $this->Jabatan->where('nama_jabatan', $row['jabatan'])->first();
-      if (!$jabatan) {
-        throw new \Exception("Jabatan '" . $row['jabatan'] . "' tidak ditemukan.");
-      }
-    } else {
-      $jabatan = null;
+    $jabatan = $this->Jabatan->where('nama_jabatan', $row['jabatan'])->first();
+    if (!$jabatan) {
+      throw new \Exception("Jabatan '" . $row['jabatan'] . "' tidak ditemukan.");
     }
 
-    if (!empty($row['unit_kerja'])) {
-      $unit_kerja = $this->UnitKerja->where('nama_unit', $row['unit_kerja'])->first();
-      if (!$unit_kerja) {
-        throw new \Exception("Unit kerja '" . $row['unit_kerja'] . "' tidak ditemukan.");
-      }
-    } else {
-      $unit_kerja = null;
+    $unit_kerja = $this->UnitKerja->where('nama_unit', $row['unit_kerja'])->first();
+    if (!$unit_kerja) {
+      throw new \Exception("Unit kerja '" . $row['unit_kerja'] . "' tidak ditemukan.");
     }
 
-    if (!empty($row['kompetensi'])) {
-      $kompetensi = $this->Kompetensi->where('nama_kompetensi', $row['kompetensi'])->first();
-      if (!$kompetensi) {
-        throw new \Exception("Kompetensi '" . $row['kompetensi'] . "' tidak ditemukan.");
-      }
-    } else {
-      $kompetensi = null;
+    $kompetensi = $this->Kompetensi->where('nama_kompetensi', $row['kompetensi'])->first();
+    if (!$kompetensi) {
+      throw new \Exception("Kompetensi '" . $row['kompetensi'] . "' tidak ditemukan.");
     }
 
-    if (!empty($row['kelompok_gaji'])) {
-      $kelompok_gaji = $this->KelompokGaji->where('nama_kelompok', $row['kelompok_gaji'])->first();
-      if (!$kelompok_gaji) {
-        throw new \Exception("Kelompok gaji '" . $row['kelompok_gaji'] . "' tidak ditemukan.");
-      }
-    } else {
-      $kelompok_gaji = null;
+    $kelompok_gaji = $this->KelompokGaji->where('nama_kelompok', $row['kelompok_gaji'])->first();
+    if (!$kelompok_gaji) {
+      throw new \Exception("Kelompok gaji '" . $row['kelompok_gaji'] . "' tidak ditemukan.");
     }
 
-    if (!empty($row['kode_ptkp'])) {
-      $ptkp = $this->PTKP->where('kode_ptkp', $row['kode_ptkp'])->first();
-      if (!$ptkp) {
-        throw new \Exception("PTKP '" . $row['kode_ptkp'] . "' tidak ditemukan.");
-      }
-    } else {
-      $ptkp = null;
+    $ptkp = $this->PTKP->where('kode_ptkp', $row['kode_ptkp'])->first();
+    if (!$ptkp) {
+      throw new \Exception("PTKP '" . $row['kode_ptkp'] . "' tidak ditemukan.");
     }
 
-    if (!empty($row['status_karyawan'])) {
-      $status_karyawan = $this->StatusKaryawan->where('label', $row['status_karyawan'])->first();
-      if (!$status_karyawan) {
-        throw new \Exception("Status karyawan '" . $row['status_karyawan'] . "' tidak ditemukan.");
-      }
-    } else {
-      $status_karyawan = null;
+    $status_karyawan = $this->StatusKaryawan->where('label', $row['status_karyawan'])->first();
+    if (!$status_karyawan) {
+      throw new \Exception("Status karyawan '" . $row['status_karyawan'] . "' tidak ditemukan.");
     }
 
     if (!empty($row['agama'])) {
