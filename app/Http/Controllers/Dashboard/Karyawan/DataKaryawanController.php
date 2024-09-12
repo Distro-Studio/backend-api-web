@@ -1622,6 +1622,7 @@ class DataKaryawanController extends Controller
     ], Response::HTTP_OK);
   }
 
+  // TODO: Untuk RSKI, kalau udah ke product login email aja
   public function store(StoreDataKaryawanRequest $request)
   {
     if (!Gate::allows('create dataKaryawan')) {
@@ -1632,9 +1633,13 @@ class DataKaryawanController extends Controller
     $requestedRoleId = $request->input('role_id');
     $premis = $request->input('premi_id', []); // Mengambil daftar premi yang dipilih
 
-    // Generate password secara otomatis
-    $generatedPassword = RandomHelper::generatePassword();
     $generatedUsername = RandomHelper::generateUsername($data['nama']);
+    if (!empty($data['email'])) {
+      $generatedPassword = RandomHelper::generatePassword();
+      $passwordHash = Hash::make($generatedPassword);
+    } else {
+      $passwordHash = Hash::make('1234');
+    }
 
     DB::beginTransaction();
     try {
@@ -1643,7 +1648,7 @@ class DataKaryawanController extends Controller
         'status_aktif' => 1,
         'role_id' => $data['role_id'],
         'username' => $generatedUsername,
-        'password' => Hash::make($generatedPassword),
+        'password' => $passwordHash,
       ];
 
       $createUser = User::create($userData);
@@ -1696,7 +1701,9 @@ class DataKaryawanController extends Controller
 
       DB::commit();
 
-      AccountEmailJob::dispatch($data['email'], $generatedPassword, $data['nama']);
+      if (!empty($data['email'])) {
+        AccountEmailJob::dispatch($data['email'], $generatedPassword, $data['nama']);
+      }
 
       // Mail::to($data['email'])->send(new SendAccoundUsersMail($data['email'], $generatedPassword, $data['nama']));
       return response()->json(new KaryawanResource(Response::HTTP_OK, "Data karyawan '{$createDataKaryawan->users->nama}' berhasil dibuat.", $createDataKaryawan), Response::HTTP_OK);
