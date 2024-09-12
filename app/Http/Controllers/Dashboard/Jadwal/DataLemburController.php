@@ -592,6 +592,7 @@ class DataLemburController extends Controller
             'user_id' => $dataLembur->user_id, // Penerima notifikasi
             'message' => $message,
             'is_read' => false,
+            'created_at' => Carbon::now('Asia/Jakarta'),
         ]);
     }
 }

@@ -855,12 +855,14 @@ class DataTukarJadwalController extends Controller
     {
         $konversiNotif_tgl_mulai = Carbon::parse($jadwalPengajuan->tgl_mulai)->locale('id')->isoFormat('D MMMM YYYY');
         $message = "Jadwal Anda berhasil ditukar dengan karyawan {$userDitukar->nama} pada tanggal {$konversiNotif_tgl_mulai}.";
+        $timezone = Carbon::now('Asia/Jakarta');
         // Buat notifikasi untuk user_pengajuan
         Notifikasi::create([
             'kategori_notifikasi_id' => 2,
             'user_id' => $userPengajuan->id,
             'message' => $message,
             'is_read' => false,
+            'created_at' => $timezone,
         ]);
 
         $konversiNotif_tgl_mulai_ajuan = Carbon::parse($jadwalDitukar->tgl_mulai)->locale('id')->isoFormat('D MMMM YYYY');
@@ -871,6 +873,7 @@ class DataTukarJadwalController extends Controller
             'user_id' => $userDitukar->id, // Penerima notifikasi
             'message' => $messageDitukar,
             'is_read' => false,
+            'created_at' => $timezone,
         ]);
     }
 
@@ -878,6 +881,7 @@ class DataTukarJadwalController extends Controller
     {
         $userPengajuan = $tukarJadwal->user_pengajuans;
         $userDitukar = $tukarJadwal->user_ditukars;
+        $timezone = Carbon::now('Asia/Jakarta');
 
         if ($isApproved) {
             $messagePengajuan = "Verifikasi tahap 2 untuk pengajuan tukar jadwal Anda telah disetujui.";
@@ -897,6 +901,7 @@ class DataTukarJadwalController extends Controller
             'user_id' => $userPengajuan->id,
             'message' => $messagePengajuan,
             'is_read' => false,
+            'created_at' => $timezone,
         ]);
 
         // Notifikasi untuk pengguna yang ditukar jadwalnya
@@ -905,6 +910,7 @@ class DataTukarJadwalController extends Controller
             'user_id' => $userDitukar->id,
             'message' => $messageDitukar,
             'is_read' => false,
+            'created_at' => $timezone,
         ]);
     }
 
@@ -912,6 +918,7 @@ class DataTukarJadwalController extends Controller
     {
         $userPengajuan = $tukarJadwal->user_pengajuans;
         $userDitukar = $tukarJadwal->user_ditukars;
+        $timezone = Carbon::now('Asia/Jakarta');
 
         if ($isApproved) {
             $messagePengajuan = "Verifikasi tahap 2 untuk pengajuan tukar jadwal Anda telah disetujui.";
@@ -931,6 +938,7 @@ class DataTukarJadwalController extends Controller
             'user_id' => $userPengajuan->id,
             'message' => $messagePengajuan,
             'is_read' => false,
+            'created_at' => $timezone,
         ]);
 
         // Notifikasi untuk pengguna yang ditukar jadwalnya
@@ -939,6 +947,7 @@ class DataTukarJadwalController extends Controller
             'user_id' => $userDitukar->id,
             'message' => $messageDitukar,
             'is_read' => false,
+            'created_at' => $timezone,
         ]);
     }
 }

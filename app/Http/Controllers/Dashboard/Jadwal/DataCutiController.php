@@ -427,6 +427,7 @@ class DataCutiController extends Controller
             'user_id' => $data['user_id'],
             'message' => "{$dataCuti->users->nama}, anda mendapatkan cuti {$dataCuti->tipe_cutis->nama} dengan durasi {$dataCuti->durasi} hari yang dimulai pada {$konversiNotif_tgl_from} s/d {$konversiNotif_tgl_to}.",
             'is_read' => false,
+            'created_at' => Carbon::now('Asia/Jakarta'),
         ]);
 
         return response()->json(new CutiJadwalResource(Response::HTTP_OK, $message, $dataCuti), Response::HTTP_OK);
@@ -749,6 +750,7 @@ class DataCutiController extends Controller
             'user_id' => $cuti->user_id, // Penerima notifikasi
             'message' => $message,
             'is_read' => false,
+            'created_at' => Carbon::now('Asia/Jakarta'),
         ]);
     }
 
@@ -765,6 +767,7 @@ class DataCutiController extends Controller
             'user_id' => $cuti->user_id, // Penerima notifikasi
             'message' => $message,
             'is_read' => false,
+            'created_at' => Carbon::now('Asia/Jakarta'),
         ]);
     }
 
@@ -782,6 +785,7 @@ class DataCutiController extends Controller
                 'user_id' => $userId,
                 'message' => $message,
                 'is_read' => false,
+                'created_at' => Carbon::now('Asia/Jakarta'),
             ]);
         }
     }

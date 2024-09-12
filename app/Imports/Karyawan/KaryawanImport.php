@@ -148,15 +148,22 @@ class KaryawanImport implements ToModel, WithHeadingRow, WithValidation
   {
     $existingUser = $this->User->where('nama', $row['nama'])->first();
     if ($existingUser) {
-      $user_id = $existingUser->id;
+      throw new \Exception("Karyawan '" . $row['nama'] . "' sudah ada di sistem.");
+      // $user_id = $existingUser->id;
     } else {
-      // $password = RandomHelper::generatePassword();
       $username = RandomHelper::generateUsername($row['nama']);
 
       // Find role ID
       $role = $this->Role->where('name', $row['role'])->first();
       if (!$role) {
         throw new \Exception("Role '" . $row['role'] . "' tidak ditemukan.");
+      }
+
+      if (!empty($row['email'])) {
+        $generatedPassword = RandomHelper::generatePassword();
+        $passwordHash = Hash::make($generatedPassword);
+      } else {
+        $passwordHash = Hash::make('1234');
       }
 
       // Create new user
@@ -167,14 +174,16 @@ class KaryawanImport implements ToModel, WithHeadingRow, WithValidation
         'status_aktif' => 2,
         'data_completion_step' => 0,
         'role_id' => $role->id,
-        // 'password' => Hash::make($password),
-        'password' => Hash::make('1234'),
+        'password' => $passwordHash,
       ];
       $createUser = User::create($userData);
       $createUser->assignRole($role->name);
 
-      // Mail::to($row['email'])->send(new SendAccoundUsersMail($row['email'], $password, $row['nama']));
-      // AccountEmailJob::dispatch($row['email'], $password, $row['nama']);
+      // Mail::to($row['email'])->send(new SendAccoundUsersMail($row['email'], $generatedPassword, $row['nama']));
+      // AccountEmailJob::dispatch($row['email'], $generatedPassword, $row['nama']);
+      if (!empty($row['email'])) {
+        Mail::to($row['email'])->send(new SendAccoundUsersMail($row['email'], $generatedPassword, $row['nama']));
+      }
 
       $user_id = $createUser->id;
     }

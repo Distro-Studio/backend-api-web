@@ -527,6 +527,7 @@ class PenyesuaianGajiController extends Controller
       'user_id' => $user->id,
       'message' => $message,
       'is_read' => false,
+      'created_at' => Carbon::now('Asia/Jakarta'),
     ]);
   }
 }

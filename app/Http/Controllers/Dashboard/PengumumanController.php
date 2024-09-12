@@ -57,6 +57,7 @@ class PengumumanController extends Controller
                 'judul' => $request->judul,
                 'konten' => $request->konten,
                 'tgl_berakhir' => $tanggalBerakhir,
+                'created_at' => Carbon::now('Asia/Jakarta'),
             ]);
 
             return response()->json([

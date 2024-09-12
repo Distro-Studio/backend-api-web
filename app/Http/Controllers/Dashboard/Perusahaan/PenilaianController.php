@@ -455,6 +455,7 @@ class PenilaianController extends Controller
             'user_id' => $userDinilai->id,
             'message' => $message,
             'is_read' => false,
+            'created_at' => Carbon::now('Asia/Jakarta'),
         ]);
     }
 

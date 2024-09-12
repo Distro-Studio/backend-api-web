@@ -694,6 +694,7 @@ class DiklatController extends Controller
                 'user_id' => $user->id, // Penerima notifikasi
                 'message' => $message,
                 'is_read' => false,
+                'created_at' => Carbon::now('Asia/Jakarta'),
             ]);
         }
     }
