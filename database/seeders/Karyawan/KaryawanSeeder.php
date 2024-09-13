@@ -243,6 +243,8 @@ class KaryawanSeeder extends Seeder
                 "masa_berlaku_sip" => $tgl_str,
                 "tgl_berakhir_pks" => $tgl_keluar,
                 "masa_diklat" => null,
+                'bmi_value' => mt_rand(100, 400) / 10,
+                'bmi_ket' => "gate exchange truth breeze result apartment certainly noun attack figure tell season degree upon taught sight married molecular rocky driver exact related coal captain",
             ]);
 
             // Create Berkas records and associate them with DataKaryawan

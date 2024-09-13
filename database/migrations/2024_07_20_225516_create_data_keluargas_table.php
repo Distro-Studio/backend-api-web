@@ -21,6 +21,9 @@ return new class extends Migration
             $table->string('pekerjaan')->nullable();
             $table->string('no_hp')->nullable();
             $table->string('email')->nullable();
+            $table->foreignId('status_keluarga_id')->constrained('status_keluargas');
+            $table->boolean('is_bpjs')->default(1); // 1 = dapet potongan, 0 = ga dapet
+            $table->foreignId('verifikator_1')->nullable()->constrained('users');
             $table->timestamps();
         });
     }

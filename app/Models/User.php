@@ -257,4 +257,14 @@ class User extends Authenticatable
     {
         return $this->hasMany(RiwayatIzin::class, 'user_id', 'id');
     }
+
+    /**
+     * Get all of the verifikator_1_keluargas for the User
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function verifikator_1_keluargas(): HasMany
+    {
+        return $this->hasMany(DataKeluarga::class, 'verifikator_1', 'id');
+    }
 }

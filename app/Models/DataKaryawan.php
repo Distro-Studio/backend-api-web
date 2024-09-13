@@ -35,7 +35,8 @@ class DataKaryawan extends Model
         'ptkp_id' => 'integer',
         'masa_diklat' => 'integer',
         'verifikator_1' => 'integer',
-        'status_reward_presensi' => 'integer'
+        'status_reward_presensi' => 'integer',
+        'bmi_value' => 'decimal:1',
     ];
 
     public function setUangMakan($value)

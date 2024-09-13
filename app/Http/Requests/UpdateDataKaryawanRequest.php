@@ -63,9 +63,9 @@ class UpdateDataKaryawanRequest extends FormRequest
             'tahun_lulus' => 'required|numeric',
             'no_ijazah' => 'required',
 
-            'no_str' => 'required',
+            'no_str' => 'nullable',
             'masa_berlaku_str' => 'nullable|string',
-            'no_sip' => 'required',
+            'no_sip' => 'nullable',
             'masa_berlaku_sip' => 'nullable|string',
             'no_bpjsksh' => 'required',
             'no_bpjsktk' => 'required',
@@ -152,9 +152,9 @@ class UpdateDataKaryawanRequest extends FormRequest
             'tahun_lulus.numeric' => 'Tahun lulus karyawan tidak diperbolehkan mengandung selain angka.',
             'no_ijazah.required' => 'Nomor ijazah karyawan tidak diperbolehkan kosong.',
             
-            'no_str.required' => 'Nomor STR karyawan tidak diperbolehkan kosong.',
+            // 'no_str.required' => 'Nomor STR karyawan tidak diperbolehkan kosong.',
             'masa_berlaku_str.string' => 'Masa berlaku STR karyawan tidak diperbolehkan mengandung selain angka.',
-            'no_sip.required' => 'Nomor SIP karyawan tidak diperbolehkan kosong.',
+            // 'no_sip.required' => 'Nomor SIP karyawan tidak diperbolehkan kosong.',
             'masa_berlaku_sip.string' => 'Masa berlaku SIP karyawan hanya diperbolehkan mengandung angka dan huruf.',
             'no_bpjsksh.required' => 'Nomor BPJS Kesehatan karyawan tidak diperbolehkan kosong.',
             'no_bpjsktk.required' => 'Nomor BPJS Ketenagakerjaan karyawan tidak diperbolehkan kosong.',

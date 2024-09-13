@@ -66,7 +66,9 @@ return new class extends Migration
             $table->string('tgl_berakhir_pks')->nullable();
             $table->integer('masa_diklat')->nullable();
             $table->foreignId('verifikator_1')->nullable()->constrained('users');
-            $table->boolean('status_reward_presensi')->default(true);
+            $table->boolean('status_reward_presensi')->default(1);
+            $table->decimal('bmi_value', 65, 1)->nullable();
+            $table->string('bmi_ket')->nullable();
             $table->timestamps();
         });
     }
