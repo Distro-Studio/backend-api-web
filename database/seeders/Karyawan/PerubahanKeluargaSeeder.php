@@ -40,7 +40,7 @@ class PerubahanKeluargaSeeder extends Seeder
                 [
                     'data_keluarga_id' => $dataKeluargaId1,
                     'nama_keluarga' => 'Nama lama ' . $i,
-                    'hubungan' => 'Ayah',
+                    'hubungan' => 'Bapak',
                     'pendidikan_terakhir' => $pendidikan_terakhir,
                     'status_hidup' => rand(0, 1),
                     'pekerjaan' => 'Pekerjaan lama ' . $i,
@@ -53,7 +53,7 @@ class PerubahanKeluargaSeeder extends Seeder
                 [
                     'data_keluarga_id' => $dataKeluargaId1,
                     'nama_keluarga' => 'Nama Baru ' . $i,
-                    'hubungan' => 'Ayah',
+                    'hubungan' => 'Bapak Mertua',
                     'pendidikan_terakhir' => $pendidikan_terakhir,
                     'status_hidup' => rand(0, 1),
                     'pekerjaan' => 'Pekerjaan Baru ' . $i,
