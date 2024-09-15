@@ -135,6 +135,17 @@ class PelaporanController extends Controller
             }
         }
 
+        if (isset($filters['pendidikan_terakhir'])) {
+            $namaPendidikan = $filters['pendidikan_terakhir'];
+            $pelaporan->whereHas('user_pelapor.data_karyawans.kategori_pendidikans', function ($query) use ($namaPendidikan) {
+                if (is_array($namaPendidikan)) {
+                    $query->whereIn('id', $namaPendidikan);
+                } else {
+                    $query->where('id', '=', $namaPendidikan);
+                }
+            });
+        }
+
         if (isset($filters['jenis_karyawan'])) {
             $jenisKaryawan = $filters['jenis_karyawan'];
             if (is_array($jenisKaryawan)) {
@@ -159,8 +170,7 @@ class PelaporanController extends Controller
                 $query->whereHas('user_pelapor', function ($query) use ($searchTerm) {
                     $query->where('nama', 'like', $searchTerm);
                 })->orWhereHas('user_pelapor.data_karyawans', function ($query) use ($searchTerm) {
-                    $query->where('nik', 'like', $searchTerm)
-                        ->orWhere('pendidikan_terakhir', 'like', $searchTerm);
+                    $query->where('nik', 'like', $searchTerm);
                 });
             });
         }

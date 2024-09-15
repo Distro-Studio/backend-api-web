@@ -61,10 +61,10 @@ class PengumumanController extends Controller
             ]);
 
             return response()->json([
-                'status' => Response::HTTP_OK,
+                'status' => Response::HTTP_CREATED,
                 'message' => "Pengumuman '{$pengumuman->judul}' berhasil dibuat.",
                 'data' => $pengumuman
-            ], Response::HTTP_OK);
+            ], Response::HTTP_CREATED);
         } catch (\Exception $e) {
             return response()->json(new WithoutDataResource(Response::HTTP_INTERNAL_SERVER_ERROR, 'Terjadi kesalahan saat menyimpan pengumuman: ' . $e->getMessage()), Response::HTTP_INTERNAL_SERVER_ERROR);
         }

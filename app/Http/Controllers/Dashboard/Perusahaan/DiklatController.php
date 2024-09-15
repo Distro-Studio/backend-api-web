@@ -15,7 +15,6 @@ use Illuminate\Http\Request;
 use App\Helpers\RandomHelper;
 use App\Models\PesertaDiklat;
 use Illuminate\Http\Response;
-use App\Models\KategoriBerkas;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Helpers\StorageServerHelper;
@@ -23,7 +22,6 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Maatwebsite\Excel\Facades\Excel;
-use App\Exports\Perusahaan\DiklatExport;
 use App\Exports\Perusahaan\DiklatInternalExport;
 use App\Helpers\GenerateCertificateHelper;
 use App\Http\Requests\StoreDiklatRequest;
@@ -119,6 +117,7 @@ class DiklatController extends Controller
                 'status_diklat' => $diklat->status_diklats,
                 'deskripsi' => $diklat->deskripsi,
                 'kuota' => $diklat->kuota ?? null,
+                'total_peserta' => $diklat->total_peserta,
                 'tgl_mulai' => $diklat->tgl_mulai,
                 'tgl_selesai' => $diklat->tgl_selesai,
                 'jam_mulai' => $diklat->jam_mulai,
@@ -228,6 +227,7 @@ class DiklatController extends Controller
                 'status_diklat' => $diklat->status_diklats,
                 'deskripsi' => $diklat->deskripsi,
                 'kuota' => $diklat->kuota ?? null,
+                'total_peserta' => $diklat->total_peserta,
                 'tgl_mulai' => $diklat->tgl_mulai,
                 'tgl_selesai' => $diklat->tgl_selesai,
                 'jam_mulai' => $diklat->jam_mulai,
@@ -275,17 +275,11 @@ class DiklatController extends Controller
                 $dataupload = StorageServerHelper::uploadToServer($request, $random_filename);
                 // $gambarUrl = $dataupload['path'];
 
-                $kategoriBerkas = KategoriBerkas::where('label', 'System')->first();
-                if (!$kategoriBerkas) {
-                    throw new Exception('Kategori berkas tidak ditemukan.');
-                }
-
-                // Store in 'berkas' table
                 $berkas = Berkas::create([
                     'user_id' => $authUser->id,
                     'file_id' => $dataupload['id_file']['id'],
                     'nama' => $random_filename,
-                    'kategori_berkas_id' => $kategoriBerkas->id,
+                    'kategori_berkas_id' => 2, // umum
                     'status_berkas_id' => 2,
                     'path' => $dataupload['path'],
                     'tgl_upload' => now(),
@@ -307,8 +301,9 @@ class DiklatController extends Controller
             $durasi = $tglJamMulai->diffInSeconds($tglJamSelesai);
 
             if (Gate::allows('verifikasi2 diklat')) {
-                $statusDiklatId = 2;
+                $statusDiklatId = 4;
                 $data['verifikator_1'] = Auth::id();
+                $data['verifikator_2'] = Auth::id();
             } elseif (Gate::allows('verifikasi1 diklat')) {
                 $statusDiklatId = 2;
                 $data['verifikator_1'] = Auth::id();
@@ -330,8 +325,6 @@ class DiklatController extends Controller
                 'durasi' => $durasi,
                 'lokasi' => $data['lokasi'],
             ]);
-
-            // Buat dan simpan notifikasi untuk semua karyawan
             $this->createNotifikasiDiklat($diklat);
 
             DB::commit();
@@ -550,15 +543,6 @@ class DiklatController extends Controller
                         if ($dataKaryawan) {
                             $dataKaryawan->masa_diklat = $diklat->durasi;
                             $dataKaryawan->save();
-
-                            // Generate Certificate
-                            if ($diklat->kategori_diklat_id == 1) {
-                                $user = $dataKaryawan->users;
-                                GenerateCertificateHelper::generateCertificate($diklat, $user);
-                                Log::info("Peserta Diklat Internal '{$diklat->nama}': user_id {$userId} telah mendapatkan sertifikat.");
-                            }
-
-                            Log::info("Masa diklat dengan user_id {$userId} telah diupdate untuk diklat ID {$diklat->id}.");
                         } else {
                             Log::error("Data karyawan dengan user_id {$userId} tidak ditemukan saat mencoba update masa diklat untuk diklat ID {$diklat->id}.");
                         }
@@ -569,9 +553,6 @@ class DiklatController extends Controller
                 }
 
                 $message = "Verifikasi tahap 2 untuk Diklat '{$diklat->nama}' telah disetujui.";
-                if ($diklat->kategori_diklat_id == 1) {
-                    $message .= " Sertifikat telah dikirim ke masing-masing peserta.";
-                }
 
                 return response()->json(new WithoutDataResource(Response::HTTP_OK, $message), Response::HTTP_OK);
             } else {
@@ -590,6 +571,49 @@ class DiklatController extends Controller
             }
         } else {
             return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Aksi tidak valid.'), Response::HTTP_BAD_REQUEST);
+        }
+    }
+
+    public function generateCertificate($diklatId)
+    {
+        if (!Gate::allows('verifikasi3 diklat')) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
+
+        // Cari diklat berdasarkan ID
+        $diklat = Diklat::find($diklatId);
+        if (!$diklat) {
+            return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Diklat tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+        }
+
+        if ($diklat->status_diklat_id == 4) {
+            // Pembuatan sertifikat untuk diklat internal
+            if ($diklat->kategori_diklat_id == 1) {
+                $pesertaDiklat = PesertaDiklat::where('diklat_id', $diklatId)->pluck('peserta');
+
+                if ($pesertaDiklat->isNotEmpty()) {
+                    foreach ($pesertaDiklat as $userId) {
+                        $dataKaryawan = DataKaryawan::where('user_id', $userId)->first();
+                        if ($dataKaryawan) {
+                            $user = $dataKaryawan->users;
+                            GenerateCertificateHelper::generateCertificate($diklat, $user);
+                            Log::info("Sertifikat untuk Peserta Diklat Internal '{$diklat->nama}' dengan user_id {$userId} telah dibuat.");
+                        }
+                    }
+                    $diklat->certificate_published = 1;
+                    $diklat->certificate_verified_by = Auth::id();
+                    $diklat->save();
+
+                    $this->createNotifikasiSertifikat($diklat);
+                    return response()->json(new WithoutDataResource(Response::HTTP_OK, "Sertifikat untuk Diklat '{$diklat->nama}' berhasil dibuat."), Response::HTTP_OK);
+                } else {
+                    return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, "Tidak ada peserta untuk diklat '{$diklat->nama}'."), Response::HTTP_NOT_FOUND);
+                }
+            } else {
+                return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Diklat '{$diklat->nama}' bukan kategori diklat internal yang membutuhkan sertifikat dari RSKI."), Response::HTTP_BAD_REQUEST);
+            }
+        } else {
+            return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Diklat '{$diklat->nama}' belum mencapai status verifikasi tahap 2."), Response::HTTP_BAD_REQUEST);
         }
     }
 
@@ -636,8 +660,7 @@ class DiklatController extends Controller
     // Untuk verifikasi apakah karyawan benar" ikut diklat (dari absensi manual)
     public function fakeAssignDiklat($diklatId, $userId)
     {
-        // Hanya bisa dilakukan untuk permission verif 2
-        if (!Gate::allows('verifikasi2 diklat')) {
+        if (!Gate::allows('verifikasi3 diklat')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
@@ -682,7 +705,7 @@ class DiklatController extends Controller
     {
         $konversiNotif_jam_mulai = Carbon::parse(RandomHelper::convertToTimeString($diklat->jam_mulai))->format('H:i:s');
         $konversiNotif_tgl_mulai = Carbon::parse(RandomHelper::convertToDateString($diklat->tgl_mulai))->locale('id')->isoFormat('D MMMM YYYY');
-        $message = "Diklat baru berjudul {$diklat->nama} akan dilaksanakan pada tanggal {$konversiNotif_tgl_mulai} di lokasi {$diklat->lokasi} pada jam {$konversiNotif_jam_mulai}.";
+        $message = "Diklat baru berjudul '{$diklat->nama}' akan dilaksanakan pada tanggal {$konversiNotif_tgl_mulai} di lokasi {$diklat->lokasi} pada jam {$konversiNotif_jam_mulai}.";
 
         // Ambil semua karyawan
         $allUsers = User::where('nama', '!=', 'Super Admin')->get();
@@ -696,6 +719,29 @@ class DiklatController extends Controller
                 'is_read' => false,
                 'created_at' => Carbon::now('Asia/Jakarta'),
             ]);
+        }
+    }
+
+    private function createNotifikasiSertifikat($diklat)
+    {
+        // Ambil peserta diklat
+        $pesertaDiklat = PesertaDiklat::where('diklat_id', $diklat->id)->pluck('peserta');
+
+        if ($pesertaDiklat->isNotEmpty()) {
+            foreach ($pesertaDiklat as $userId) {
+                $dataKaryawan = DataKaryawan::where('user_id', $userId)->first();
+                if ($dataKaryawan) {
+                    $message = "Sertifikat anda untuk Diklat '{$diklat->nama}' telah dipublikasi dan tersedia untuk diunduh.";
+
+                    Notifikasi::create([
+                        'kategori_notifikasi_id' => 5,
+                        'user_id' => $dataKaryawan->user_id,
+                        'message' => $message,
+                        'is_read' => false,
+                        'created_at' => Carbon::now('Asia/Jakarta'),
+                    ]);
+                }
+            }
         }
     }
 }

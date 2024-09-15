@@ -50,8 +50,7 @@ return new class extends Migration
             $table->integer('tinggi_badan')->nullable();
             $table->integer('berat_badan')->nullable();
             // $table->enum('pendidikan_terakhir', ['SD', 'SMP', 'SMA', 'D1', 'D2', 'D3', 'D4', 'S1', 'S2', 'S3'])->nullable();
-            // $table->foreignId('pendidikan_terakhir')->nullable()->constrained('kategori_pendidikans');
-            $table->string('pendidikan_terakhir')->nullable();
+            $table->foreignId('pendidikan_terakhir')->nullable()->constrained('kategori_pendidikans');
             $table->string('asal_sekolah')->nullable();
             $table->string('no_ijazah')->nullable();
             $table->integer('tahun_lulus')->nullable();
@@ -67,8 +66,9 @@ return new class extends Migration
             $table->integer('masa_diklat')->nullable();
             $table->foreignId('verifikator_1')->nullable()->constrained('users');
             $table->boolean('status_reward_presensi')->default(1);
-            $table->decimal('bmi_value', 65, 1)->nullable();
-            $table->string('bmi_ket')->nullable();
+            $table->string('bmi_value', 50)->nullable();
+            $table->text('bmi_ket')->nullable();
+            $table->text('riwayat_penyakit')->nullable();
             $table->timestamps();
         });
     }

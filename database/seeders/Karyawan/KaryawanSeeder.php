@@ -168,7 +168,6 @@ class KaryawanSeeder extends Seeder
             'SMA Negeri 2 Jayapura',
             'SMA Negeri 1 Banjarmasin'
         ];
-        
         $unit_kerja_id = UnitKerja::pluck('id')->all();
         $jabatan_id = Jabatan::pluck('id')->all();
         $kompetensi_id = Kompetensi::pluck('id')->all();

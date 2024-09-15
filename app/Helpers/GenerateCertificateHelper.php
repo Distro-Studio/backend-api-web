@@ -42,16 +42,11 @@ class GenerateCertificateHelper
 			$file = new File($fullFilePath);
 			$dataupload = StorageServerHelper::multipleUploadToServer($file, $random_filename);
 
-			$kategoriBerkas = KategoriBerkas::where('label', 'System')->first();
-			if (!$kategoriBerkas) {
-				throw new Exception('Kategori berkas tidak ditemukan.');
-			}
-
 			$berkas = Berkas::create([
 				'user_id' => $user->id,
 				'file_id' => $dataupload['id_file']['id'],
 				'nama' => 'Sertifikat ' . $diklat->nama,
-				'kategori_berkas_id' => $kategoriBerkas->id,
+				'kategori_berkas_id' => 1,
 				'status_berkas_id' => 2,
 				'path' => $dataupload['path'],
 				'tgl_upload' => now(),

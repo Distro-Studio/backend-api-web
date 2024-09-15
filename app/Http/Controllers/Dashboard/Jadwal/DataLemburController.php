@@ -21,39 +21,6 @@ use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
 
 class DataLemburController extends Controller
 {
-    // public function getJadwalPengajuanLembur($userId)
-    // {
-    //     if (!Gate::allows('view tukarJadwal')) {
-    //         return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
-    //     }
-
-    //     $user = User::where('id', $userId)->where('nama', '!=', 'Super Admin')->where('status_aktif', 2)
-    //         ->get();
-    //     if (!$user) {
-    //         return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Karyawan pengajuan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
-    //     }
-
-    //     $jadwal = Jadwal::with('shifts')->where('user_id', $userId)->where('shift_id', '!=', 0)->get();
-    //     if ($jadwal->isEmpty()) {
-    //         return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Jadwal karyawan pengajuan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
-    //     }
-
-    //     $start_date = $jadwal->min('tgl_mulai');
-    //     $end_date = $jadwal->max('tgl_selesai');
-    //     $date_range = $this->generateDateRange($start_date, $end_date);
-
-    //     $user_schedule_array = $this->formatSchedules($jadwal, $date_range);
-
-    //     return response()->json([
-    //         'status' => Response::HTTP_OK,
-    //         'message' => "Detai jadwal dan karyawan lembur berhasil ditampilkan.",
-    //         'data' => [
-    //             'user' => $user,
-    //             'list_jadwal' => $user_schedule_array
-    //         ]
-    //     ], Response::HTTP_OK);
-    // }
-
     public function getJadwalPengajuanLembur($userId)
     {
         if (!Gate::allows('view tukarJadwal')) {
@@ -249,6 +216,17 @@ class DataLemburController extends Controller
             }
         }
 
+        if (isset($filters['pendidikan_terakhir'])) {
+            $namaPendidikan = $filters['pendidikan_terakhir'];
+            $lembur->whereHas('users.data_karyawans.kategori_pendidikans', function ($query) use ($namaPendidikan) {
+                if (is_array($namaPendidikan)) {
+                    $query->whereIn('id', $namaPendidikan);
+                } else {
+                    $query->where('id', '=', $namaPendidikan);
+                }
+            });
+        }
+
         if (isset($filters['jenis_karyawan'])) {
             $jenisKaryawan = $filters['jenis_karyawan'];
             if (is_array($jenisKaryawan)) {
@@ -273,8 +251,7 @@ class DataLemburController extends Controller
                 $query->whereHas('users', function ($query) use ($searchTerm) {
                     $query->where('nama', 'like', $searchTerm);
                 })->orWhereHas('users.data_karyawans', function ($query) use ($searchTerm) {
-                    $query->where('nik', 'like', $searchTerm)
-                        ->orWhere('pendidikan_terakhir', 'like', $searchTerm);
+                    $query->where('nik', 'like', $searchTerm);
                 });
             });
         }

@@ -58,6 +58,7 @@ class RoleSeeder extends Seeder
             'export diklat',
             'verifikasi1 diklat',
             'verifikasi2 diklat',
+            'verifikasi3 diklat',
 
             'create penggajianKaryawan',
             'edit penggajianKaryawan',

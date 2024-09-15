@@ -18,8 +18,12 @@ return new class extends Migration
             $table->string('nama');
             $table->foreignId('kategori_diklat_id')->constrained('kategori_diklats'); // 1 = Internal 2 = Eksternal
             $table->foreignId('status_diklat_id')->constrained('status_diklats');
+            $table->boolean('certificate_published')->nullable()->default(0); // 1 = Sudah publish 0 = Belum publish
+            $table->foreignId('certificate_verified_by')->nullable()->constrained('users');
             $table->string('deskripsi');
             $table->integer('kuota')->nullable();
+            $table->unsignedBigInteger('total_peserta')->nullable()->default(0);
+            $table->text('skp')->nullable();
             $table->string('tgl_mulai');
             $table->string('tgl_selesai');
             $table->string('jam_mulai');

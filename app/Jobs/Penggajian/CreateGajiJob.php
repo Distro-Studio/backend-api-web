@@ -265,7 +265,7 @@ class CreateGajiJob implements ShouldQueue
                 ->get();
 
             foreach ($premis as $premi) {
-                $premiAmount = $this->calculatedPremiDetail($premi, $penghasilanBruto, $dataKaryawan->gaji_pokok);
+                $premiAmount = $this->calculatedPremiDetail($premi, $penghasilanBruto, $dataKaryawan->gaji_pokok, $data_karyawan_id);
                 $details[] = [
                     'penggajian_id' => $penggajian->id,
                     'kategori_gaji_id' => $kategori_pengurang,
@@ -333,21 +333,45 @@ class CreateGajiJob implements ShouldQueue
                 Log::info("Maksimal rate: {$premi->maksimal_rate} premi ID: {$premi->id} sumber potongan: {$basisPengkali}");
             }
 
-            // Cek has_custom_formula true
-            if ($premi->has_custom_formula) {
-                if ($premi->jenis_premi == 0) { // Persentase
+            if ($premi->id == 1) { // BPJS Kesehatan
+                // Ambil jumlah keluarga yang terdaftar BPJS
+                $jumlahKeluarga = DB::table('data_keluargas')
+                    ->where('data_karyawan_id', $data_karyawan_id)
+                    ->where('is_bpjs', 1)
+                    ->count();
+
+                if ($jumlahKeluarga !== null && $jumlahKeluarga > 0) {
+                    $totalAnggotaBPJS = $jumlahKeluarga + 1;
+
+                    // Hitung premi BPJS Kesehatan
+                    $premi_bpjs_kes = ($premi->besaran_premi / 100) * $basisPengkaliRate;
+
+                    // Kalikan hasil premi dengan total anggota keluarga
+                    $premiAmount = $premi_bpjs_kes * $totalAnggotaBPJS;
+
+                    Log::info("Calculated BPJS Kesehatan premi: {$premiAmount} untuk karyawan ID: {$data_karyawan_id}, Total anggota BPJS: {$totalAnggotaBPJS}");
+                } else {
+                    // Jika tidak ada keluarga, hitung premi untuk karyawan
                     $premiAmount = ($premi->besaran_premi / 100) * $basisPengkaliRate;
-                } else {
-                    $premiAmount = $premi->besaran_premi;
+                    Log::info("Calculated BPJS Kesehatan premi untuk karyawan tanpa keluarga: {$premiAmount} untuk karyawan ID: {$data_karyawan_id}");
                 }
-                Log::info("Calculated custom premi: {$premiAmount} premi ID: {$premi->id}");
             } else {
-                if ($premi->jenis_premi == 0) { // Persentase
-                    $premiAmount = ($premi->besaran_premi / 100) * $basisPengkali;
+                // Cek has_custom_formula true
+                if ($premi->has_custom_formula) {
+                    if ($premi->jenis_premi == 0) { // Persentase
+                        $premiAmount = ($premi->besaran_premi / 100) * $basisPengkaliRate;
+                    } else {
+                        $premiAmount = $premi->besaran_premi;
+                    }
+                    Log::info("Calculated custom premi: {$premiAmount} premi ID: {$premi->id}");
                 } else {
-                    $premiAmount = $premi->besaran_premi;
+                    if ($premi->jenis_premi == 0) { // Persentase
+                        $premiAmount = ($premi->besaran_premi / 100) * $basisPengkali;
+                    } else {
+                        $premiAmount = $premi->besaran_premi;
+                    }
+                    Log::info("Calculated premi: {$premiAmount} premi ID: {$premi->id}");
                 }
-                Log::info("Calculated premi: {$premiAmount} premi ID: {$premi->id}");
             }
             $totalPremi += $premiAmount;
         }
@@ -356,7 +380,7 @@ class CreateGajiJob implements ShouldQueue
     }
 
     // buat itung detail gajis
-    private function calculatedPremiDetail($premi, $penghasilanBruto, $gajiPokok)
+    private function calculatedPremiDetail($premi, $penghasilanBruto, $gajiPokok, $data_karyawan_id)
     {
         $premiAmount = 0;
         $basisGaji = $penghasilanBruto;
@@ -376,21 +400,44 @@ class CreateGajiJob implements ShouldQueue
             Log::info("Maksimal rate: {$premi->maksimal_rate} premi ID: {$premi->id} sumber potongan: {$basisPengkali}");
         }
 
-        // Cek has_custom_formula true
-        if ($premi->has_custom_formula) {
-            if ($premi->jenis_premi == 0) { // Persentase
+        if ($premi->id == 1) { // BPJS Kesehatan
+            $jumlahKeluarga = DB::table('data_keluargas')
+                ->where('data_karyawan_id', $data_karyawan_id)
+                ->where('is_bpjs', 1)
+                ->count();
+
+            if ($jumlahKeluarga !== null && $jumlahKeluarga > 0) {
+                $totalAnggotaBPJS = $jumlahKeluarga + 1;
+
+                // Hitung premi BPJS Kesehatan
+                $premi_bpjs_kes = ($premi->besaran_premi / 100) * $basisPengkaliRate;
+
+                // Kalikan hasil premi dengan total anggota keluarga
+                $premiAmount = $premi_bpjs_kes * $totalAnggotaBPJS;
+
+                Log::info("Calculated BPJS Kesehatan premi: {$premiAmount} untuk karyawan ID: {$data_karyawan_id}, Total anggota BPJS: {$totalAnggotaBPJS}");
+            } else {
+                // Jika tidak ada keluarga, hitung premi untuk karyawan
                 $premiAmount = ($premi->besaran_premi / 100) * $basisPengkaliRate;
-            } else {
-                $premiAmount = $premi->besaran_premi;
+                Log::info("Calculated BPJS Kesehatan premi untuk karyawan tanpa keluarga: {$premiAmount} untuk karyawan ID: {$data_karyawan_id}");
             }
-            Log::info("Calculated custom premi: {$premiAmount} premi ID: {$premi->id}");
         } else {
-            if ($premi->jenis_premi == 0) { // Persentase
-                $premiAmount = ($premi->besaran_premi / 100) * $basisPengkali;
+            // Cek has_custom_formula true
+            if ($premi->has_custom_formula) {
+                if ($premi->jenis_premi == 0) { // Persentase
+                    $premiAmount = ($premi->besaran_premi / 100) * $basisPengkaliRate;
+                } else {
+                    $premiAmount = $premi->besaran_premi;
+                }
+                Log::info("Calculated custom premi: {$premiAmount} premi ID: {$premi->id}");
             } else {
-                $premiAmount = $premi->besaran_premi;
+                if ($premi->jenis_premi == 0) { // Persentase
+                    $premiAmount = ($premi->besaran_premi / 100) * $basisPengkali;
+                } else {
+                    $premiAmount = $premi->besaran_premi;
+                }
+                Log::info("Calculated premi: {$premiAmount} premi ID: {$premi->id}");
             }
-            Log::info("Calculated premi: {$premiAmount} premi ID: {$premi->id}");
         }
 
         return $premiAmount;

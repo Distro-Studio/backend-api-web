@@ -389,137 +389,6 @@ class DataKaryawanController extends Controller
     ], Response::HTTP_OK);
   }
 
-  // detail karyawan dashboard
-  // public function getCalculatedDiklatInternal($data_karyawan_id)
-  // {
-  //   if (!Gate::allows('view dataKaryawan')) {
-  //     return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
-  //   }
-
-  //   $currentMonth = Carbon::now('Asia/Jakarta')->month;
-  //   $currentYear = Carbon::now('Asia/Jakarta')->year;
-
-  //   // Step 1: Ambil semua peserta_diklat yang sesuai dengan data_karyawan_id dan diklat internal
-  //   $pesertaDiklats = PesertaDiklat::whereHas('diklats', function ($query) use ($currentMonth, $currentYear) {
-  //     $query->where('kategori_diklat_id', 1)
-  //       ->whereMonth('tgl_mulai', $currentMonth)
-  //       ->whereYear('tgl_mulai', $currentYear)
-  //       ->orderBy('tgl_mulai', 'desc');
-  //   })
-  //     ->where('peserta', $data_karyawan_id)
-  //     ->with('diklats', 'users')
-  //     ->get();
-
-  //   if ($pesertaDiklats->isEmpty()) {
-  //     return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Tidak ada data diklat internal yang ditemukan untuk karyawan ini.'), Response::HTTP_NOT_FOUND);
-  //   }
-
-  //   $userName = $pesertaDiklats->first()->users;
-  //   $totalDurasi = 0;
-  //   $formattedData = $pesertaDiklats->map(function ($pesertaDiklat) use (&$totalDurasi) {
-  //     $diklat = $pesertaDiklat->diklats;
-
-  //     // Tambahkan durasi diklat ke total
-  //     $totalDurasi += $diklat->durasi;
-
-  //     return [
-  //       'id' => $diklat->id,
-  //       'tgl_mulai' => $diklat->tgl_mulai,
-  //       'tgl_selesai' => $diklat->tgl_selesai,
-  //       'durasi' => $diklat->durasi,
-  //       'kategori_diklat' => $diklat->kategori_diklats
-  //     ];
-  //   });
-
-  //   // Response JSON dengan jadwal diklat yang diikuti dan total durasi
-  //   return response()->json([
-  //     'status' => Response::HTTP_OK,
-  //     'message' => "Data diklat internal dari karyawan '{$userName->nama}' berhasil ditampilkan.",
-  //     'data' => [
-  //       'user' => [
-  //         'id' => $userName->id,
-  //         'nama' => $userName->nama,
-  //         'username' => $userName->username,
-  //         'email_verified_at' => $userName->email_verified_at,
-  //         'data_karyawan_id' => $userName->data_karyawan_id,
-  //         'foto_profil' => $userName->foto_profil,
-  //         'data_completion_step' => $userName->data_completion_step,
-  //         'status_aktif' => $userName->status_aktif,
-  //         'created_at' => $userName->created_at,
-  //         'updated_at' => $userName->updated_at
-  //       ],
-  //       'unit_kerja' => $userName->data_karyawans->unit_kerjas,
-  //       'jadwal_diklat' => $formattedData,
-  //       'total_durasi' => $totalDurasi
-  //     ]
-  //   ], Response::HTTP_OK);
-  // }
-
-  // public function getCalculatedDiklatEksternal($data_karyawan_id)
-  // {
-  //   if (!Gate::allows('view dataKaryawan')) {
-  //     return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
-  //   }
-
-  //   $currentMonth = Carbon::now('Asia/Jakarta')->month;
-  //   $currentYear = Carbon::now('Asia/Jakarta')->year;
-
-  //   // Step 1: Ambil semua peserta_diklat yang sesuai dengan data_karyawan_id dan diklat internal
-  //   $pesertaDiklats = PesertaDiklat::whereHas('diklats', function ($query) use ($currentMonth, $currentYear) {
-  //     $query->where('kategori_diklat_id', 2)
-  //       ->whereMonth('tgl_mulai', $currentMonth)
-  //       ->whereYear('tgl_mulai', $currentYear)
-  //       ->orderBy('tgl_mulai', 'desc');
-  //   })
-  //     ->where('peserta', $data_karyawan_id)
-  //     ->with('diklats', 'users')
-  //     ->get();
-
-  //   if ($pesertaDiklats->isEmpty()) {
-  //     return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Tidak ada data diklat eksternal yang ditemukan untuk karyawan ini.'), Response::HTTP_NOT_FOUND);
-  //   }
-
-  //   $userName = $pesertaDiklats->first()->users;
-  //   $totalDurasi = 0;
-  //   $formattedData = $pesertaDiklats->map(function ($pesertaDiklat) use (&$totalDurasi) {
-  //     $diklat = $pesertaDiklat->diklats;
-
-  //     // Tambahkan durasi diklat ke total
-  //     $totalDurasi += $diklat->durasi;
-
-  //     return [
-  //       'id' => $diklat->id,
-  //       'tgl_mulai' => $diklat->tgl_mulai,
-  //       'tgl_selesai' => $diklat->tgl_selesai,
-  //       'durasi' => $diklat->durasi,
-  //       'kategori_diklat' => $diklat->kategori_diklats
-  //     ];
-  //   });
-
-  //   // Response JSON dengan jadwal diklat yang diikuti dan total durasi
-  //   return response()->json([
-  //     'status' => Response::HTTP_OK,
-  //     'message' => "Data diklat eksternal dari karyawan '{$userName->nama}' berhasil ditampilkan.",
-  //     'data' => [
-  //       'user' => [
-  //         'id' => $userName->id,
-  //         'nama' => $userName->nama,
-  //         'username' => $userName->username,
-  //         'email_verified_at' => $userName->email_verified_at,
-  //         'data_karyawan_id' => $userName->data_karyawan_id,
-  //         'foto_profil' => $userName->foto_profil,
-  //         'data_completion_step' => $userName->data_completion_step,
-  //         'status_aktif' => $userName->status_aktif,
-  //         'created_at' => $userName->created_at,
-  //         'updated_at' => $userName->updated_at
-  //       ],
-  //       'unit_kerja' => $userName->data_karyawans->unit_kerjas,
-  //       'jadwal_diklat' => $formattedData,
-  //       'total_durasi' => $totalDurasi
-  //     ]
-  //   ], Response::HTTP_OK);
-  // }
-
   public function getDataPresensi($data_karyawan_id)
   {
     if (!Gate::allows('view dataKaryawan')) {
@@ -795,6 +664,7 @@ class DataKaryawanController extends Controller
     ], Response::HTTP_OK);
   }
 
+  // keluarga section
   public function getDataKeluarga($data_karyawan_id)
   {
     if (!Gate::allows('view dataKaryawan')) {
@@ -817,6 +687,15 @@ class DataKaryawanController extends Controller
     $dataKaryawan = $keluarga->first()->data_karyawans;
     $user = $dataKaryawan->users;
 
+    $alasanDitolak = null;
+    $status_keluarga = 'Diverifikasi';
+    if ($keluarga->contains('status_keluarga_id', 1)) {
+      $status_keluarga = 'Menunggu';
+    } elseif ($keluarga->contains('status_keluarga_id', 3)) {
+      $status_keluarga = 'Ditolak';
+      $alasanDitolak = $keluarga->where('status_keluarga_id', 3)->sortByDesc('updated_at')->first()->alasan;
+    }
+
     // Format data keluarga
     $formattedData = $keluarga->map(function ($item) {
       return [
@@ -828,6 +707,10 @@ class DataKaryawanController extends Controller
         'pekerjaan' => $item->pekerjaan,
         'no_hp' => $item->no_hp,
         'email' => $item->email,
+        'status_keluarga' => $item->status_keluargas,
+        'is_bpjs' => $item->is_bpjs,
+        'created_at' => $item->created_at,
+        'updated_at' => $item->updated_at
       ];
     });
 
@@ -849,9 +732,66 @@ class DataKaryawanController extends Controller
           'updated_at' => $user->updated_at,
         ],
         'jumlah_keluarga' => $keluarga->count(),
+        'status_keluarga' => [
+          'status' => $status_keluarga,
+          'alasan' => $alasanDitolak,
+          'terakhir_diperbarui' => $keluarga->sortByDesc('updated_at')->first()->updated_at
+        ],
         'data_keluarga' => $formattedData,
       ],
     ], Response::HTTP_OK);
+  }
+
+  public function verifikasiKeluarga(Request $request, $data_karyawan_id)
+  {
+    if (!Gate::allows('edit dataKaryawan')) {
+      return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+    }
+
+    $karyawan = DataKaryawan::find($data_karyawan_id);
+    if (!$karyawan) {
+      return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data karyawan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+    }
+
+    $dataKeluargaList = DataKeluarga::where('data_karyawan_id', $data_karyawan_id)
+      ->where('status_keluarga_id', 1)
+      ->get();
+    if ($dataKeluargaList->isEmpty()) {
+      return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, "Tidak ada anggota keluarga yang perlu diverifikasi untuk karyawan '{$karyawan->users->nama}'."), Response::HTTP_NOT_FOUND);
+    }
+
+    foreach ($dataKeluargaList as $keluarga) {
+      $status_keluarga_id = $keluarga->status_keluarga_id;
+
+      // disetujui tahap 1
+      if ($request->has('verifikasi_disetujui') && $request->verifikasi_disetujui == 1) {
+        if ($status_keluarga_id == 1) {
+          $keluarga->status_keluarga_id = 2;
+          $keluarga->verifikator_1 = Auth::id();
+          $keluarga->save();
+
+          $this->createNotifikasiKeluarga($keluarga, 'disetujui');
+        } else {
+          return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Anggota keluarga dari karyawan '{$karyawan->users->nama}' tidak dalam status untuk disetujui."), Response::HTTP_BAD_REQUEST);
+        }
+      } else if ($request->has('verifikasi_ditolak') && $request->verifikasi_ditolak == 1) {
+        if ($status_keluarga_id == 1) {
+          $keluarga->status_keluarga_id = 3;
+          $keluarga->is_bpjs = 0;
+          $keluarga->verifikator_1 = Auth::id();
+          $keluarga->alasan = $request->input('alasan');
+          $keluarga->save();
+
+          $this->createNotifikasiKeluarga($keluarga, 'ditolak');
+        } else {
+          return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Anggota keluarga karyawan '{$karyawan->users->nama}' tidak dalam status untuk ditolak."), Response::HTTP_BAD_REQUEST);
+        }
+      } else {
+        return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Aksi tidak valid.'), Response::HTTP_BAD_REQUEST);
+      }
+    }
+
+    return response()->json(new WithoutDataResource(Response::HTTP_OK, "Verifikasi keluarga karyawan '{$karyawan->users->nama}' berhasil dilakukan."), Response::HTTP_OK);
   }
 
   // berkas section
@@ -864,7 +804,8 @@ class DataKaryawanController extends Controller
     // Ambil data berkas berdasarkan data_karyawan_id
     $berkas = Berkas::where('user_id', function ($query) use ($data_karyawan_id) {
       $query->select('id')->from('users')->where('data_karyawan_id', $data_karyawan_id);
-    })->get();
+    })->where('kategori_berkas_id', '!=', 3) // get berkas selain 'System'
+      ->get();
 
     if ($berkas->isEmpty()) {
       return response()->json([
@@ -936,7 +877,6 @@ class DataKaryawanController extends Controller
     ], Response::HTTP_OK);
   }
 
-  // ini berdasarkan data_karyawan_id
   public function verifikasiBerkas(Request $request, $data_karyawan_id)
   {
     if (!Gate::allows('verifikasi1 berkas')) {
@@ -976,7 +916,7 @@ class DataKaryawanController extends Controller
         if ($status_berkas_id == 1) {
           $berkas->status_berkas_id = 3; // Update status ke ditolak
           $berkas->verifikator_1 = Auth::id();
-          $berkas->alasan = 'Verifikasi ditolak karena: ' . $request->input('alasan', null); // Tambahkan alasan penolakan
+          $berkas->alasan = $request->input('alasan');
           $berkas->save();
 
           // Kirim notifikasi bahwa berkas telah ditolak
@@ -1255,7 +1195,7 @@ class DataKaryawanController extends Controller
         'id' => $penilaian->id,
         'jenis_penilaian' => $penilaian->jenis_penilaians,
         'user_penilai' => $penilaian->user_penilais,
-        'pertanyaan_jawaban' => json_decode($penilaian->pertanyaan_jawaban, true),
+        'pertanyaan_jawaban' => $penilaian->pertanyaan_jawaban,
         'total_pertanyaan' => $penilaian->total_pertanyaan,
         'rata_rata' => $penilaian->rata_rata,
         'created_at' => $penilaian->created_at,
@@ -1266,7 +1206,18 @@ class DataKaryawanController extends Controller
     // Format Data Utama
     $formattedData = [
       'id' => $userDinilai->data_karyawan_id,
-      'user' => $userDinilai,
+      'user' => [
+        'id' => $userDinilai->id,
+        'nama' => $userDinilai->nama,
+        'username' => $userDinilai->username,
+        'email_verified_at' => $userDinilai->email_verified_at,
+        'data_karyawan_id' => $userDinilai->data_karyawan_id,
+        'foto_profil' => $userDinilai->foto_profil,
+        'data_completion_step' => $userDinilai->data_completion_step,
+        'status_aktif' => $userDinilai->status_aktif,
+        'created_at' => $userDinilai->created_at,
+        'updated_at' => $userDinilai->updated_at
+      ],
       'jabatan' => $userDinilai->data_karyawans->jabatans,
       'list_penilaian' => $listPenilaian,
     ];
@@ -1306,6 +1257,7 @@ class DataKaryawanController extends Controller
         'status_diklat_id' => $diklat->status_diklats,
         'deskripsi' => $diklat->deskripsi,
         'kuota' => $diklat->kuota,
+        'total_peserta' => $diklat->total_peserta,
         'tgl_mulai' => $diklat->tgl_mulai,
         'tgl_selesai' => $diklat->tgl_selesai,
         'jam_mulai' => $diklat->jam_mulai,
@@ -1322,8 +1274,10 @@ class DataKaryawanController extends Controller
           'created_at' => $diklat->berkas_dokumen_eksternals->created_at,
           'updated_at' => $diklat->berkas_dokumen_eksternals->updated_at
         ] : null,
-        'verifikator_1' => $diklat->verifikator_1,
-        'verifikator_2' => $diklat->verifikator_2,
+        'verifikator_1' => $diklat->verifikator_1_diklats,
+        'verifikator_2' => $diklat->verifikator_2_diklats,
+        'certificate_published' => $diklat->certificate_published,
+        'certificate_verified_by' => $diklat->certificate_diklats,
         'alasan' => $diklat->alasan,
         'created_at' => $diklat->created_at,
         'updated_at' => $diklat->updated_at
@@ -1464,6 +1418,17 @@ class DataKaryawanController extends Controller
       }
     }
 
+    if (isset($filters['pendidikan_terakhir'])) {
+      $namaPendidikan = $filters['pendidikan_terakhir'];
+      $karyawan->whereHas('kategori_pendidikans', function ($query) use ($namaPendidikan) {
+        if (is_array($namaPendidikan)) {
+          $query->whereIn('id', $namaPendidikan);
+        } else {
+          $query->where('id', '=', $namaPendidikan);
+        }
+      });
+    }
+
     if (isset($filters['jenis_karyawan'])) {
       $jenisKaryawan = $filters['jenis_karyawan'];
       $karyawan->whereHas('unit_kerjas', function ($query) use ($jenisKaryawan) {
@@ -1496,8 +1461,7 @@ class DataKaryawanController extends Controller
       $karyawan->where(function ($query) use ($searchTerm) {
         $query->whereHas('users', function ($query) use ($searchTerm) {
           $query->where('nama', 'like', $searchTerm);
-        })->orWhere('nik', 'like', $searchTerm)
-          ->orWhere('pendidikan_terakhir', 'like', $searchTerm);
+        })->orWhere('nik', 'like', $searchTerm);
       });
     }
 
@@ -1728,15 +1692,32 @@ class DataKaryawanController extends Controller
 
     // Get data_karyawan_id from user
     $data_karyawan_id = $user->data_karyawan_id;
-
-    // Find karyawan by data_karyawan_id
     $karyawan = DataKaryawan::where('id', '!=', 1)->find($data_karyawan_id);
-
     if (!$karyawan) {
       return response()->json([
         'status' => Response::HTTP_NOT_FOUND,
         'message' => 'Data karyawan tidak ditemukan.',
       ], Response::HTTP_NOT_FOUND);
+    }
+
+    $keluargaList = DataKeluarga::where('data_karyawan_id', $data_karyawan_id)
+      ->get();
+
+    $statusKeluarga = false;
+    foreach ($keluargaList as $keluarga) {
+      if ($keluarga->status_keluarga_id == 1) {
+        $statusKeluarga = true; // Butuh verifikasi
+        break;
+      }
+    }
+
+    if (!$statusKeluarga) {
+      foreach ($keluargaList as $keluarga) {
+        if ($keluarga->status_keluarga_id == 2 || $keluarga->status_keluarga_id == 3) {
+          $statusKeluarga = false;
+          break;
+        }
+      }
     }
 
     $role = $karyawan->users->roles->first();
@@ -1873,6 +1854,10 @@ class DataKaryawanController extends Controller
       'total_durasi_internal' => $total_durasi_internal,
       'total_durasi_eksternal' => $total_durasi_eksternal,
       'status_reward_presensi' => $karyawan->status_reward_presensi,
+      'status_keluarga' => $statusKeluarga,
+      'bmi_value' => $karyawan->bmi_value,
+      'bmi_ket' => $karyawan->bmi_ket,
+      'riwayat_penyakit' => $karyawan->riwayat_penyakit,
       'created_at' => $karyawan->created_at,
       'updated_at' => $karyawan->updated_at
     ];
@@ -1890,14 +1875,32 @@ class DataKaryawanController extends Controller
       return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
     }
 
-    // Find karyawan by data_karyawan_id
     $karyawan = DataKaryawan::where('id', '!=', 1)->find($data_karyawan_id);
-
     if (!$karyawan) {
       return response()->json([
         'status' => Response::HTTP_NOT_FOUND,
         'message' => 'Data karyawan tidak ditemukan.',
       ], Response::HTTP_NOT_FOUND);
+    }
+
+    $keluargaList = DataKeluarga::where('data_karyawan_id', $data_karyawan_id)
+      ->get();
+
+    $statusKeluarga = false;
+    foreach ($keluargaList as $keluarga) {
+      if ($keluarga->status_keluarga_id == 1) {
+        $statusKeluarga = true; // Butuh verifikasi
+        break;
+      }
+    }
+
+    if (!$statusKeluarga) {
+      foreach ($keluargaList as $keluarga) {
+        if ($keluarga->status_keluarga_id == 2 || $keluarga->status_keluarga_id == 3) {
+          $statusKeluarga = false;
+          break;
+        }
+      }
     }
 
     $role = $karyawan->users->roles->first();
@@ -2033,6 +2036,10 @@ class DataKaryawanController extends Controller
       'total_durasi_internal' => $total_durasi_internal,
       'total_durasi_eksternal' => $total_durasi_eksternal,
       'status_reward_presensi' => $karyawan->status_reward_presensi,
+      'status_keluarga' => $statusKeluarga,
+      'bmi_value' => $karyawan->bmi_value,
+      'bmi_ket' => $karyawan->bmi_ket,
+      'riwayat_penyakit' => $karyawan->riwayat_penyakit,
       'created_at' => $karyawan->created_at,
       'updated_at' => $karyawan->updated_at
     ];
@@ -2178,6 +2185,15 @@ class DataKaryawanController extends Controller
       return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, "Proses ini tidak bisa dilanjutkan karena langkah pengisian data belum mencapai tahap akhir."), Response::HTTP_NOT_ACCEPTABLE);
     }
 
+    // Validasi data karyawan belom verif
+    $dataKeluargas = DataKeluarga::where('data_karyawan_id', $data_karyawan_id)->get();
+    // dd($dataKeluargas);
+    foreach ($dataKeluargas as $keluarga) {
+      if ($keluarga->status_keluarga_id != 2) {
+        return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, "Proses ini tidak bisa dilanjutkan karena terdapat data keluarga karyawan '{$user->nama}' yang belum diverivikasi."), Response::HTTP_NOT_ACCEPTABLE);
+      }
+    }
+
     if ($user->status_aktif === 1) {
       // Verifikasi data karyawan
       // $fieldsToCheck = [
@@ -2219,9 +2235,9 @@ class DataKaryawanController extends Controller
 
       // Jika semua data valid, update status_aktif menjadi 2
       $user->status_aktif = 2;
-      $karyawan->verifikator_1 = Auth::id(); // Masukkan auth user_id ke dalam verifikator_1
+      $karyawan->verifikator_1 = Auth::id();
       // $user->data_completion_step = 0;
-      $karyawan->save(); // Simpan perubahan pada data_karyawans
+      $karyawan->save();
       $message = "Karyawan '{$karyawan->users->nama}' berhasil diaktifkan.";
     } elseif ($user->status_aktif === 2) {
       $user->status_aktif = 3;
@@ -2278,6 +2294,32 @@ class DataKaryawanController extends Controller
     Notifikasi::create([
       'kategori_notifikasi_id' => 6, // Sesuaikan dengan kategori notifikasi yang sesuai
       'user_id' => $user->id, // Penerima notifikasi
+      'message' => $message,
+      'is_read' => false,
+      'created_at' => Carbon::now('Asia/Jakarta'),
+    ]);
+  }
+
+  private function createNotifikasiKeluarga($keluarga, $status)
+  {
+    // Dapatkan user terkait dengan berkas
+    $karyawan = $keluarga->data_karyawans;
+
+    if (!$karyawan || !$karyawan->users) {
+      throw new \Exception("User terkait dengan karyawan '{$karyawan->users->nama}' tidak ditemukan.");
+    }
+
+    // Siapkan pesan notifikasi berdasarkan status
+    if ($status == 'disetujui') {
+      $message = "Keluarga karyawan '{$karyawan->users->nama}' telah diverifikasi dan disetujui.";
+    } elseif ($status == 'ditolak') {
+      $message = "Keluarga karyawan '{$karyawan->users->nama}' telah ditolak. Alasan: {$keluarga->alasan}.";
+    }
+
+    // Buat notifikasi untuk user yang bersangkutan
+    Notifikasi::create([
+      'kategori_notifikasi_id' => 6, // Sesuaikan dengan kategori notifikasi yang sesuai
+      'user_id' => $karyawan->users->id, // Penerima notifikasi
       'message' => $message,
       'is_read' => false,
       'created_at' => Carbon::now('Asia/Jakarta'),

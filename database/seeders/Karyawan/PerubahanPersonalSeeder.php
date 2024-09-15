@@ -6,11 +6,10 @@ use Carbon\Carbon;
 use App\Models\DataKaryawan;
 use App\Models\KategoriAgama;
 use App\Models\KategoriDarah;
-use App\Models\StatusPerubahan;
+use App\Models\KategoriPendidikan;
 use Illuminate\Database\Seeder;
 use App\Models\RiwayatPerubahan;
 use App\Models\PerubahanPersonal;
-use App\Models\KategoriPendidikan;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 
 class PerubahanPersonalSeeder extends Seeder
@@ -18,12 +17,35 @@ class PerubahanPersonalSeeder extends Seeder
     public function run(): void
     {
         $dataKaryawans = DataKaryawan::all();
-        $statusPerubahans = StatusPerubahan::pluck('id')->all();
         $kategori_agama_id = KategoriAgama::pluck('id')->all();
         $kategori_darah_id = KategoriDarah::pluck('id')->all();
-        $kategori_pendidikan_id = KategoriPendidikan::pluck('id')->all();
+        $pendidikan_terakhir_option = KategoriPendidikan::pluck('id')->all();
 
-        $kolomPilihan = ['tempat_lahir', 'tgl_lahir', 'no_hp', 'jenis_kelamin', 'nik_ktp', 'no_kk', 'kategori_agama_id', 'kategori_darah_id', 'tinggi_badan', 'berat_badan', 'alamat', 'no_ijasah', 'tahun_lulus', 'pendidikan_terakhir', 'gelar_depan'];
+        $kolomPilihan = [
+            'tempat_lahir',
+            'tgl_lahir',
+            'no_hp',
+            'jenis_kelamin',
+            'nik_ktp',
+            'no_kk',
+            'kategori_agama_id',
+            'kategori_darah_id',
+            'tinggi_badan',
+            'berat_badan',
+            'alamat',
+            'no_ijasah',
+            'tahun_lulus',
+            'pendidikan_terakhir',
+            'gelar_depan'
+        ];
+
+        $tempat_lahir = [
+            'Jakarta',
+            'Bandung',
+            'Surabaya',
+            'Yogyakarta',
+            'Medan'
+        ];
 
         for ($i = 0; $i < 15; $i++) {
             // Pilih data karyawan secara acak
@@ -48,7 +70,7 @@ class PerubahanPersonalSeeder extends Seeder
                 'kolom' => $kolom,
                 'original_data' => $originalData,
                 'updated_data' => 'updated_data',
-                'status_perubahan_id' => $statusPerubahans[array_rand($statusPerubahans)],
+                'status_perubahan_id' => 1,
                 'verifikator_1' => null,
                 'alasan' => null,
                 'created_at' => Carbon::now(),
@@ -58,7 +80,7 @@ class PerubahanPersonalSeeder extends Seeder
             // Buat entry perubahan personal
             $perubahanPersonal = PerubahanPersonal::create([
                 'riwayat_perubahan_id' => $riwayatPerubahan->id,
-                'tempat_lahir' => ['Jakarta', 'Bandung', 'Surabaya', 'Yogyakarta', 'Medan'][array_rand(['Jakarta', 'Bandung', 'Surabaya', 'Yogyakarta', 'Medan'])],
+                'tempat_lahir' => $tempat_lahir[array_rand($tempat_lahir)],
                 'tgl_lahir' => Carbon::now()->subYears(rand(20, 50))->format('Y-m-d'),
                 'no_hp' => '08123456789' . $i,
                 'jenis_kelamin' => rand(0, 1),
@@ -71,7 +93,7 @@ class PerubahanPersonalSeeder extends Seeder
                 'alamat' => 'Jalan ' . $i,
                 'no_ijasah' => '123456789' . $i,
                 'tahun_lulus' => rand(1900, 2022),
-                'pendidikan_terakhir' => $kategori_pendidikan_id[array_rand($kategori_pendidikan_id)],
+                'pendidikan_terakhir' => $pendidikan_terakhir_option[array_rand($pendidikan_terakhir_option)],
                 'gelar_depan' => 'Dr.',
                 'created_at' => Carbon::now(),
                 'updated_at' => Carbon::now(),

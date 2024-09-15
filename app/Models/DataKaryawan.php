@@ -36,6 +36,7 @@ class DataKaryawan extends Model
         'masa_diklat' => 'integer',
         'verifikator_1' => 'integer',
         'status_reward_presensi' => 'integer',
+        'pendidikan_terakhir' => 'integer',
         'bmi_value' => 'decimal:1',
     ];
 

@@ -18,10 +18,13 @@ class Diklat extends Model
         'dokumen_eksternal' => 'integer',
         'kategori_diklat_id' => 'integer',
         'status_diklat_id' => 'integer',
+        'total_peserta' => 'integer',
         'kuota' => 'integer',
         'durasi' => 'integer',
         'verifikator_1' => 'integer',
         'verifikator_2' => 'integer',
+        'certificate_published' => 'integer',
+        'certificate_verified_by' => 'integer',
     ];
 
     /**
@@ -92,5 +95,15 @@ class Diklat extends Model
     public function verifikator_2_diklats(): BelongsTo
     {
         return $this->belongsTo(User::class, 'verifikator_2', 'id');
+    }
+
+    /**
+     * Get the certificate_diklats that owns the Diklat
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function certificate_diklats(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'certificate_verified_by', 'id');
     }
 }

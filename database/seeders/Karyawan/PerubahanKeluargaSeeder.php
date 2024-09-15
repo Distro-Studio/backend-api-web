@@ -6,7 +6,6 @@ use Carbon\Carbon;
 use App\Models\DataKaryawan;
 use App\Models\DataKeluarga;
 use App\Models\KategoriPendidikan;
-use App\Models\StatusPerubahan;
 use Illuminate\Database\Seeder;
 use App\Models\RiwayatPerubahan;
 use App\Models\PerubahanKeluarga;
@@ -17,15 +16,24 @@ class PerubahanKeluargaSeeder extends Seeder
     public function run(): void
     {
         $dataKaryawans = DataKaryawan::pluck('id')->all();
-        $statusPerubahans = StatusPerubahan::pluck('id')->all();
         $dataKeluargas = DataKeluarga::pluck('id')->all();
-        $kategoriPendidikans = KategoriPendidikan::pluck('id')->all();
+        $pendidikan_terakhir_option = KategoriPendidikan::pluck('id')->all();
+
+        $rand_kolom = [
+            'nama_keluarga',
+            'hubungan',
+            'pendidikan_terakhir',
+            'status_hidup',
+            'pekerjaan',
+            'no_hp',
+            'email'
+        ];
 
         for ($i = 0; $i < 10; $i++) {
             // Pilih data_karyawan_id, data_keluarga_id, dan pendidikan_terakhir secara acak
             $dataKaryawanId = $dataKaryawans[array_rand($dataKaryawans)];
             $dataKeluargaId1 = $dataKeluargas[array_rand($dataKeluargas)];
-            $dataPendidikanId = $kategoriPendidikans[array_rand($kategoriPendidikans)];
+            $pendidikan_terakhir = $pendidikan_terakhir_option[array_rand($pendidikan_terakhir_option)];
 
             // Buat contoh data perubahan untuk keluarga
             $oldFamilyData = [
@@ -33,7 +41,7 @@ class PerubahanKeluargaSeeder extends Seeder
                     'data_keluarga_id' => $dataKeluargaId1,
                     'nama_keluarga' => 'Nama lama ' . $i,
                     'hubungan' => 'Ayah',
-                    'pendidikan_terakhir' => $dataPendidikanId,
+                    'pendidikan_terakhir' => $pendidikan_terakhir,
                     'status_hidup' => rand(0, 1),
                     'pekerjaan' => 'Pekerjaan lama ' . $i,
                     'no_hp' => '08123456790' . $i,
@@ -46,7 +54,7 @@ class PerubahanKeluargaSeeder extends Seeder
                     'data_keluarga_id' => $dataKeluargaId1,
                     'nama_keluarga' => 'Nama Baru ' . $i,
                     'hubungan' => 'Ayah',
-                    'pendidikan_terakhir' => $dataPendidikanId,
+                    'pendidikan_terakhir' => $pendidikan_terakhir,
                     'status_hidup' => rand(0, 1),
                     'pekerjaan' => 'Pekerjaan Baru ' . $i,
                     'no_hp' => '08123456790' . $i,
@@ -58,10 +66,10 @@ class PerubahanKeluargaSeeder extends Seeder
             $riwayatPerubahan = RiwayatPerubahan::create([
                 'data_karyawan_id' => $dataKaryawanId,
                 'jenis_perubahan' => 'Keluarga',
-                'kolom' => ['nama_keluarga', 'hubungan', 'pendidikan_terakhir', 'status_hidup', 'pekerjaan', 'no_hp', 'email'][array_rand(['nama_keluarga', 'hubungan', 'pendidikan_terakhir', 'status_hidup', 'pekerjaan', 'no_hp', 'email'])],
+                'kolom' => $rand_kolom[array_rand($rand_kolom)],
                 'original_data' => json_encode($oldFamilyData),
                 'updated_data' => json_encode($newFamilyData),
-                'status_perubahan_id' => $statusPerubahans[array_rand($statusPerubahans)],
+                'status_perubahan_id' => 1,
                 'verifikator_1' => null,
                 'alasan' => null,
                 'created_at' => Carbon::now(),

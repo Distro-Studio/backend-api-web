@@ -114,9 +114,10 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::get('/detail-karyawan-jadwal/{data_karyawan_id}', [DataKaryawanController::class, 'getDataJadwal']);
             Route::get('/detail-karyawan-rekam-jejak/{data_karyawan_id}', [DataKaryawanController::class, 'getDataRekamJejak']);
             Route::get('/detail-karyawan-keluarga/{data_karyawan_id}', [DataKaryawanController::class, 'getDataKeluarga']);
+            Route::post('/detail-karyawan-keluarga/{data_karyawan_id}/verifikasi', [DataKaryawanController::class, 'verifikasiKeluarga']);
 
             Route::get('/detail-karyawan-dokumen/{data_karyawan_id}', [DataKaryawanController::class, 'getDataDokumen']);
-            Route::post('/detail-karyawan-dokumen/{berkasId}/verifikasi', [DataKaryawanController::class, 'verifikasiBerkas']);
+            Route::post('/detail-karyawan-dokumen/{data_karyawan_id}/verifikasi', [DataKaryawanController::class, 'verifikasiBerkas']);
 
             Route::get('/detail-karyawan-cuti/{data_karyawan_id}', [DataKaryawanController::class, 'getDataCuti']);
             Route::get('/detail-karyawan-tukar-jadwal/{data_karyawan_id}', [DataKaryawanController::class, 'getDataTukarJadwal']);
@@ -224,6 +225,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::delete('/diklat/{diklatId}/delete-peserta-diklat/{userId}', [DiklatController::class, 'fakeAssignDiklat']);
             Route::post('/diklat/{diklatId}/verifikasi-step-1', [DiklatController::class, 'verifikasiTahap1']);
             Route::post('/diklat/{diklatId}/verifikasi-step-2', [DiklatController::class, 'verifikasiTahap2']);
+            Route::post('/diklat/{diklatId}/certificates', [DiklatController::class, 'generateCertificate']);
             Route::post('/diklat/{diklatId}/verifikasi-diklat-eksternal', [DiklatController::class, 'verifikasiDiklatExternal']);
 
             // ! Pelaporan ===========>

@@ -29,6 +29,7 @@ return new class extends Migration
             $table->integer('tahun_lulus');
             $table->foreignId('pendidikan_terakhir')->constrained('kategori_pendidikans');
             $table->string('gelar_depan');
+            $table->text('riwayat_penyakit')->nullable();
             $table->timestamps();
         });
     }

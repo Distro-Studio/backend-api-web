@@ -35,14 +35,5 @@ class PremiSeeder extends Seeder
             'minimal_rate' => null,
             'maksimal_rate' => null
         ]);
-
-        Premi::create([
-            'nama_premi' => 'Jaminan Hari Tua',
-            'kategori_potongan_id' => 2,
-            'jenis_premi' => 0,
-            'besaran_premi' => 1,
-            'minimal_rate' => null,
-            'maksimal_rate' => null
-        ]);
     }
 }

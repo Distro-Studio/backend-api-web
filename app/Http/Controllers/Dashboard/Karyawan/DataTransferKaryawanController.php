@@ -161,6 +161,17 @@ class DataTransferKaryawanController extends Controller
             }
         }
 
+        if (isset($filters['pendidikan_terakhir'])) {
+            $namaPendidikan = $filters['pendidikan_terakhir'];
+            $transfer->whereHas('users.data_karyawans.kategori_pendidikans', function ($query) use ($namaPendidikan) {
+                if (is_array($namaPendidikan)) {
+                    $query->whereIn('id', $namaPendidikan);
+                } else {
+                    $query->where('id', '=', $namaPendidikan);
+                }
+            });
+        }
+
         if (isset($filters['jenis_karyawan'])) {
             $jenisKaryawan = $filters['jenis_karyawan'];
             if (is_array($jenisKaryawan)) {
@@ -196,8 +207,7 @@ class DataTransferKaryawanController extends Controller
                 $query->whereHas('users', function ($query) use ($searchTerm) {
                     $query->where('nama', 'like', $searchTerm);
                 })->orWhereHas('users.data_karyawans', function ($query) use ($searchTerm) {
-                    $query->where('nik', 'like', $searchTerm)
-                        ->orWhere('pendidikan_terakhir', 'like', $searchTerm);
+                    $query->where('nik', 'like', $searchTerm);
                 });
             });
         }
@@ -318,17 +328,11 @@ class DataTransferKaryawanController extends Controller
                 $dataupload = StorageServerHelper::uploadToServer($request, $random_filename);
                 $data['dokumen'] = $dataupload['path'];
 
-                $kategoriBerkas = KategoriBerkas::where('label', 'System')->first();
-                if (!$kategoriBerkas) {
-                    throw new Exception('Kategori berkas tidak ditemukan.');
-                }
-
-                // Store in 'berkas' table
                 $berkas = Berkas::create([
                     'user_id' => $data['user_id'],
                     'file_id' => $dataupload['id_file']['id'],
                     'nama' => $random_filename,
-                    'kategori_berkas_id' => $kategoriBerkas->id,
+                    'kategori_berkas_id' => 2, // umum
                     'status_berkas_id' => 2,
                     'path' => $dataupload['path'],
                     'tgl_upload' => now(),
