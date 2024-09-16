@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
@@ -11,10 +12,12 @@ class PengumumanSeeder extends Seeder
 {
     public function run()
     {
-        $currentDate = Carbon::now();
+        $currentDate = Carbon::now('Asia/Jakarta');
+        $user_ids = User::where('nama', '!=', 'Super Admin')->pluck('id')->all();
 
         $pengumumans = [
             [
+                'user_id' => $user_ids[array_rand($user_ids)],
                 'judul' => 'Pengumuman 1',
                 'konten' => 'Konten pengumuman 1',
                 'is_read' => false,
@@ -23,6 +26,7 @@ class PengumumanSeeder extends Seeder
                 'updated_at' => $currentDate,
             ],
             [
+                'user_id' => $user_ids[array_rand($user_ids)],
                 'judul' => 'Pengumuman 2',
                 'konten' => 'Konten pengumuman 2',
                 'is_read' => false,
@@ -31,6 +35,7 @@ class PengumumanSeeder extends Seeder
                 'updated_at' => $currentDate,
             ],
             [
+                'user_id' => $user_ids[array_rand($user_ids)],
                 'judul' => 'Pengumuman 3',
                 'konten' => 'Konten pengumuman 3',
                 'is_read' => false,
@@ -39,6 +44,7 @@ class PengumumanSeeder extends Seeder
                 'updated_at' => $currentDate,
             ],
             [
+                'user_id' => $user_ids[array_rand($user_ids)],
                 'judul' => 'Pengumuman 4',
                 'konten' => 'Konten pengumuman 4',
                 'is_read' => false,
@@ -47,6 +53,7 @@ class PengumumanSeeder extends Seeder
                 'updated_at' => $currentDate,
             ],
             [
+                'user_id' => $user_ids[array_rand($user_ids)],
                 'judul' => 'Pengumuman 5',
                 'konten' => 'Konten pengumuman 5',
                 'is_read' => false,
@@ -55,6 +62,7 @@ class PengumumanSeeder extends Seeder
                 'updated_at' => $currentDate,
             ],
             [
+                'user_id' => $user_ids[array_rand($user_ids)],
                 'judul' => 'Pengumuman 6',
                 'konten' => 'Konten pengumuman 6',
                 'is_read' => false,
@@ -63,6 +71,7 @@ class PengumumanSeeder extends Seeder
                 'updated_at' => $currentDate,
             ],
             [
+                'user_id' => $user_ids[array_rand($user_ids)],
                 'judul' => 'Pengumuman 7',
                 'konten' => 'Konten pengumuman 7',
                 'is_read' => false,
@@ -71,6 +80,7 @@ class PengumumanSeeder extends Seeder
                 'updated_at' => $currentDate,
             ],
             [
+                'user_id' => $user_ids[array_rand($user_ids)],
                 'judul' => 'Pengumuman 8',
                 'konten' => 'Konten pengumuman 8',
                 'is_read' => false,
@@ -79,6 +89,7 @@ class PengumumanSeeder extends Seeder
                 'updated_at' => $currentDate,
             ],
             [
+                'user_id' => $user_ids[array_rand($user_ids)],
                 'judul' => 'Pengumuman 9',
                 'konten' => 'Konten pengumuman 9',
                 'is_read' => false,
@@ -87,6 +98,7 @@ class PengumumanSeeder extends Seeder
                 'updated_at' => $currentDate,
             ],
             [
+                'user_id' => $user_ids[array_rand($user_ids)],
                 'judul' => 'Pengumuman 10',
                 'konten' => 'Konten pengumuman 10',
                 'is_read' => false,

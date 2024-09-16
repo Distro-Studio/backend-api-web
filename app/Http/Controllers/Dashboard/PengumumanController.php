@@ -3,8 +3,13 @@
 namespace App\Http\Controllers\Dashboard;
 
 use Carbon\Carbon;
+use App\Models\User;
+use App\Models\UnitKerja;
 use App\Models\Pengumuman;
+use App\Models\DataKaryawan;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Gate;
 use App\Http\Requests\StorePengumumanRequest;
@@ -27,6 +32,18 @@ class PengumumanController extends Controller
         $formattedData = $pengumuman->map(function ($pengumuman) {
             return [
                 'id' => $pengumuman->id,
+                'user' => [
+                    'id' => $pengumuman->users->id,
+                    'nama' => $pengumuman->users->nama,
+                    'username' => $pengumuman->users->username,
+                    'email_verified_at' => $pengumuman->users->email_verified_at,
+                    'data_karyawan_id' => $pengumuman->users->data_karyawan_id,
+                    'foto_profil' => $pengumuman->users->foto_profil,
+                    'data_completion_step' => $pengumuman->users->data_completion_step,
+                    'status_aktif' => $pengumuman->users->status_aktif,
+                    'created_at' => $pengumuman->users->created_at,
+                    'updated_at' => $pengumuman->users->updated_at
+                ],
                 'judul' => $pengumuman->judul,
                 'konten' => $pengumuman->konten,
                 'is_read' => $pengumuman->is_read,
@@ -38,7 +55,7 @@ class PengumumanController extends Controller
 
         return response()->json([
             'status' => Response::HTTP_OK,
-            'message' => 'Data pengumuman ditemukan untuk hari ini.',
+            'message' => 'Data pengumuman berhasil didapatkan.',
             'data' => $formattedData
         ], Response::HTTP_OK);
     }
@@ -49,23 +66,94 @@ class PengumumanController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
+        DB::beginTransaction();
         try {
-            // Konversi tgl_berakhir ke format Y-m-d
             $tanggalBerakhir = Carbon::parse($request->tgl_berakhir)->format('Y-m-d');
 
-            $pengumuman = Pengumuman::create([
-                'judul' => $request->judul,
-                'konten' => $request->konten,
-                'tgl_berakhir' => $tanggalBerakhir,
-                'created_at' => Carbon::now('Asia/Jakarta'),
-            ]);
+            $unitKerjaIds = $request->input('unit_kerja_id', []);
+            $userIds = $request->input('user_id', []);
+
+            // Validasi apakah salah satu dari unit_kerja_id atau user_id ada yang tidak kosong
+            if (empty($unitKerjaIds) && empty($userIds)) {
+                return response()->json([
+                    'status' => Response::HTTP_BAD_REQUEST,
+                    'message' => 'Anda harus mengisi Unit kerja atau pilih salah satu karyawan terlebih dahulu untuk membuat pengumuman.',
+                ], Response::HTTP_BAD_REQUEST);
+            }
+
+            // Jika unit_kerja_id ada isinya
+            if (!empty($unitKerjaIds)) {
+                // Ambil semua unit kerja berdasarkan unit_kerja_id yang dikirim dalam request
+                $unitKerjas = UnitKerja::whereIn('id', $unitKerjaIds)->get();
+
+                // Cek apakah ada unit_kerja_id yang tidak valid
+                $foundUnitKerjaIds = $unitKerjas->pluck('id')->toArray();
+                $invalidUnitKerjaIds = array_diff($unitKerjaIds, $foundUnitKerjaIds);
+                if (!empty($invalidUnitKerjaIds)) {
+                    DB::rollBack();
+                    Log::error('Unit kerja dengan ID ' . implode(', ', $invalidUnitKerjaIds) . ' tidak ditemukan atau tidak valid.');
+                    return response()->json([
+                        'status' => Response::HTTP_BAD_REQUEST,
+                        'message' => 'Tidak dapat melanjutkan proses. Terdapat unit kerja yang tidak valid.',
+                    ], Response::HTTP_BAD_REQUEST);
+                }
+
+                // Loop setiap unit kerja dan ambil semua users terkait dengan unit kerja tersebut
+                foreach ($unitKerjas as $unitKerja) {
+                    $users = DataKaryawan::where('unit_kerja_id', $unitKerja->id)
+                        ->with('users')
+                        ->get()
+                        ->pluck('users'); // Mengambil hanya users
+
+                    foreach ($users as $user) {
+                        Pengumuman::create([
+                            'user_id' => $user->id,
+                            'judul' => $request->judul,
+                            'konten' => $request->konten,
+                            'tgl_berakhir' => $tanggalBerakhir,
+                            'is_read' => 0,
+                            'created_at' => Carbon::now('Asia/Jakarta'),
+                        ]);
+                    }
+                }
+            }
+
+            // Jika user_id ada isinya
+            if (!empty($userIds)) {
+                $users = User::whereIn('id', $userIds)->get();
+
+                // Cek apakah ada user_id yang tidak valid
+                $foundUserIds = $users->pluck('id')->toArray();
+                $invalidUserIds = array_diff($userIds, $foundUserIds);
+                if (!empty($invalidUserIds)) {
+                    DB::rollBack();
+                    Log::error('User ID ' . implode(', ', $invalidUserIds) . ' tidak ditemukan atau tidak valid.');
+                    return response()->json([
+                        'status' => Response::HTTP_BAD_REQUEST,
+                        'message' => 'Tidak dapat melanjutkan proses. Terdapat karyawan yang tidak valid.',
+                    ], Response::HTTP_BAD_REQUEST);
+                }
+
+                foreach ($users as $user) {
+                    Pengumuman::create([
+                        'user_id' => $user->id,
+                        'judul' => $request->judul,
+                        'konten' => $request->konten,
+                        'tgl_berakhir' => $tanggalBerakhir,
+                        'is_read' => 0,
+                        'created_at' => Carbon::now('Asia/Jakarta'),
+                    ]);
+                }
+            }
+
+            DB::commit();
 
             return response()->json([
                 'status' => Response::HTTP_CREATED,
-                'message' => "Pengumuman '{$pengumuman->judul}' berhasil dibuat.",
-                'data' => $pengumuman
+                'message' => "Pengumuman '{$request->judul}' berhasil dibuat untuk unit kerja atau karyawan terkait.",
             ], Response::HTTP_CREATED);
         } catch (\Exception $e) {
+            DB::rollBack(); // Rollback transaksi jika terjadi kesalahan
             return response()->json(new WithoutDataResource(Response::HTTP_INTERNAL_SERVER_ERROR, 'Terjadi kesalahan saat menyimpan pengumuman: ' . $e->getMessage()), Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
@@ -84,6 +172,18 @@ class PengumumanController extends Controller
 
         $formattedData = [
             'id' => $pengumuman->id,
+            'user' => [
+                'id' => $pengumuman->users->id,
+                'nama' => $pengumuman->users->nama,
+                'username' => $pengumuman->users->username,
+                'email_verified_at' => $pengumuman->users->email_verified_at,
+                'data_karyawan_id' => $pengumuman->users->data_karyawan_id,
+                'foto_profil' => $pengumuman->users->foto_profil,
+                'data_completion_step' => $pengumuman->users->data_completion_step,
+                'status_aktif' => $pengumuman->users->status_aktif,
+                'created_at' => $pengumuman->users->created_at,
+                'updated_at' => $pengumuman->users->updated_at
+            ],
             'judul' => $pengumuman->judul,
             'konten' => $pengumuman->konten,
             'is_read' => $pengumuman->is_read,
@@ -116,6 +216,18 @@ class PengumumanController extends Controller
 
         $formattedData = [
             'id' => $pengumuman->id,
+            'user' => [
+                'id' => $pengumuman->users->id,
+                'nama' => $pengumuman->users->nama,
+                'username' => $pengumuman->users->username,
+                'email_verified_at' => $pengumuman->users->email_verified_at,
+                'data_karyawan_id' => $pengumuman->users->data_karyawan_id,
+                'foto_profil' => $pengumuman->users->foto_profil,
+                'data_completion_step' => $pengumuman->users->data_completion_step,
+                'status_aktif' => $pengumuman->users->status_aktif,
+                'created_at' => $pengumuman->users->created_at,
+                'updated_at' => $pengumuman->users->updated_at
+            ],
             'judul' => $pengumuman->judul,
             'konten' => $pengumuman->konten,
             'is_read' => $pengumuman->is_read,

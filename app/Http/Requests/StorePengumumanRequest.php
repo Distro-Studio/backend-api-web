@@ -28,6 +28,8 @@ class StorePengumumanRequest extends FormRequest
             'judul' => 'required|string|max:255',
             'konten' => 'required|string',
             'tgl_berakhir' => 'required|string',
+            'unit_kerja_id' => 'nullable',
+            'user_id' => 'nullable',
         ];
     }
 

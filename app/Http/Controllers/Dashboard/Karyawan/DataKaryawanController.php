@@ -45,6 +45,7 @@ use App\Http\Requests\UpdateDataKaryawanRequest;
 use App\Http\Requests\Excel_Import\ImportKaryawanRequest;
 use App\Http\Resources\Dashboard\Karyawan\KaryawanResource;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
+use App\Models\KategoriPendidikan;
 
 class DataKaryawanController extends Controller
 {
@@ -386,6 +387,27 @@ class DataKaryawanController extends Controller
       'status' => Response::HTTP_OK,
       'message' => 'Retrieving all karyawan for dropdown',
       'data' => $dataKaryawan
+    ], Response::HTTP_OK);
+  }
+
+  public function getAllPendidikan()
+  {
+    if (!Gate::allows('view dataKaryawan')) {
+      return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+    }
+
+    $kategori_pendidikan = KategoriPendidikan::all();
+    if ($kategori_pendidikan->isEmpty()) {
+      return response()->json([
+        'status' => Response::HTTP_NOT_FOUND,
+        'message' => 'Data pendidikan tidak ditemukan.',
+      ], Response::HTTP_NOT_FOUND);
+    }
+
+    return response()->json([
+      'status' => Response::HTTP_OK,
+      'message' => 'Retrieving all pendidikan for dropdown',
+      'data' => $kategori_pendidikan
     ], Response::HTTP_OK);
   }
 

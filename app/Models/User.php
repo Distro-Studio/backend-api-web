@@ -267,4 +267,14 @@ class User extends Authenticatable
     {
         return $this->hasMany(DataKeluarga::class, 'verifikator_1', 'id');
     }
+
+    /**
+     * Get all of the pengumumans for the User
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function pengumumans(): HasMany
+    {
+        return $this->hasMany(Pengumuman::class, 'user_id', 'id');
+    }
 }
