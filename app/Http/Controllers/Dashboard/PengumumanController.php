@@ -69,53 +69,14 @@ class PengumumanController extends Controller
         DB::beginTransaction();
         try {
             $tanggalBerakhir = Carbon::parse($request->tgl_berakhir)->format('Y-m-d');
-
-            $unitKerjaIds = $request->input('unit_kerja_id', []);
             $userIds = $request->input('user_id', []);
 
             // Validasi apakah salah satu dari unit_kerja_id atau user_id ada yang tidak kosong
-            if (empty($unitKerjaIds) && empty($userIds)) {
+            if (empty($userIds)) {
                 return response()->json([
                     'status' => Response::HTTP_BAD_REQUEST,
-                    'message' => 'Anda harus mengisi Unit kerja atau pilih salah satu karyawan terlebih dahulu untuk membuat pengumuman.',
+                    'message' => 'Anda harus memilih salah satu karyawan terlebih dahulu untuk membuat pengumuman.',
                 ], Response::HTTP_BAD_REQUEST);
-            }
-
-            // Jika unit_kerja_id ada isinya
-            if (!empty($unitKerjaIds)) {
-                // Ambil semua unit kerja berdasarkan unit_kerja_id yang dikirim dalam request
-                $unitKerjas = UnitKerja::whereIn('id', $unitKerjaIds)->get();
-
-                // Cek apakah ada unit_kerja_id yang tidak valid
-                $foundUnitKerjaIds = $unitKerjas->pluck('id')->toArray();
-                $invalidUnitKerjaIds = array_diff($unitKerjaIds, $foundUnitKerjaIds);
-                if (!empty($invalidUnitKerjaIds)) {
-                    DB::rollBack();
-                    Log::error('Unit kerja dengan ID ' . implode(', ', $invalidUnitKerjaIds) . ' tidak ditemukan atau tidak valid.');
-                    return response()->json([
-                        'status' => Response::HTTP_BAD_REQUEST,
-                        'message' => 'Tidak dapat melanjutkan proses. Terdapat unit kerja yang tidak valid.',
-                    ], Response::HTTP_BAD_REQUEST);
-                }
-
-                // Loop setiap unit kerja dan ambil semua users terkait dengan unit kerja tersebut
-                foreach ($unitKerjas as $unitKerja) {
-                    $users = DataKaryawan::where('unit_kerja_id', $unitKerja->id)
-                        ->with('users')
-                        ->get()
-                        ->pluck('users'); // Mengambil hanya users
-
-                    foreach ($users as $user) {
-                        Pengumuman::create([
-                            'user_id' => $user->id,
-                            'judul' => $request->judul,
-                            'konten' => $request->konten,
-                            'tgl_berakhir' => $tanggalBerakhir,
-                            'is_read' => 0,
-                            'created_at' => Carbon::now('Asia/Jakarta'),
-                        ]);
-                    }
-                }
             }
 
             // Jika user_id ada isinya
@@ -150,7 +111,7 @@ class PengumumanController extends Controller
 
             return response()->json([
                 'status' => Response::HTTP_CREATED,
-                'message' => "Pengumuman '{$request->judul}' berhasil dibuat untuk unit kerja atau karyawan terkait.",
+                'message' => "Pengumuman '{$request->judul}' berhasil dibuat untuk karyawan terkait.",
             ], Response::HTTP_CREATED);
         } catch (\Exception $e) {
             DB::rollBack(); // Rollback transaksi jika terjadi kesalahan

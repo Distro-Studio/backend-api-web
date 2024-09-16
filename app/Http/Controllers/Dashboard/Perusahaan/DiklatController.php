@@ -126,6 +126,8 @@ class DiklatController extends Controller
                 'lokasi' => $diklat->lokasi,
                 'list_peserta' => $pesertaList,
                 'alasan' => $diklat->alasan ?? null,
+                'certificate_published' => $diklat->certificate_published,
+                'certificate_verified_by' => $diklat->certificate_diklats,
                 'created_at' => $diklat->created_at,
                 'updated_at' => $diklat->updated_at
             ];
@@ -220,12 +222,14 @@ class DiklatController extends Controller
                 ];
             });
 
+            $path_berkas = env('STORAGE_SERVER_DOMAIN') . $diklat->berkas_dokumen_eksternals->path;
+
             return [
                 'id' => $diklat->id,
                 'nama_diklat' => $diklat->nama,
                 'kategori_diklat' => $diklat->kategori_diklats,
+                'path' => $path_berkas,
                 'status_diklat' => $diklat->status_diklats,
-                'path' => env('STORAGE_SERVER_DOMAIN') . $diklat->berkas_dokumen_eksternals->path,
                 'deskripsi' => $diklat->deskripsi,
                 'kuota' => $diklat->kuota ?? null,
                 'tgl_mulai' => $diklat->tgl_mulai,
@@ -236,6 +240,8 @@ class DiklatController extends Controller
                 'lokasi' => $diklat->lokasi,
                 'list_peserta' => $pesertaList,
                 'alasan' => $diklat->alasan ?? null,
+                'certificate_published' => $diklat->certificate_published,
+                'certificate_verified_by' => $diklat->certificate_diklats,
                 'created_at' => $diklat->created_at,
                 'updated_at' => $diklat->updated_at
             ];
@@ -243,7 +249,7 @@ class DiklatController extends Controller
 
         return response()->json([
             'status' => Response::HTTP_OK,
-            'message' => 'Data diklat eksternal berhasil ditampilkan.',
+            'message' => 'Data diklat ekstern al berhasil ditampilkan.',
             'data' => $formattedData,
             'pagination' => $paginationData
         ], Response::HTTP_OK);
@@ -256,6 +262,17 @@ class DiklatController extends Controller
         }
 
         $data = $request->validated();
+
+        $now = Carbon::now('Asia/Jakarta');
+        $hPlusOne = $now->addDay()->startOfDay();
+
+        $tglMulai = Carbon::createFromFormat('d-m-Y', $data['tgl_mulai'], 'Asia/Jakarta')->startOfDay();
+        if ($tglMulai->lessThan($hPlusOne)) {
+            return response()->json([
+                'status' => Response::HTTP_BAD_REQUEST,
+                'message' => 'Tanggal mulai harus diisi mulai H+1 dari hari ini.'
+            ], Response::HTTP_BAD_REQUEST);
+        }
 
         DB::beginTransaction();
         try {
@@ -296,9 +313,23 @@ class DiklatController extends Controller
                 StorageServerHelper::logout();
             }
 
-            $tglJamMulai = Carbon::createFromFormat('d-m-Y H:i:s', $data['tgl_mulai'] . ' ' . $data['jam_mulai']);
-            $tglJamSelesai = Carbon::createFromFormat('d-m-Y H:i:s', $data['tgl_selesai'] . ' ' . $data['jam_selesai']);
-            $durasi = $tglJamMulai->diffInSeconds($tglJamSelesai);
+            $jamMulai = Carbon::createFromFormat('H:i:s', $data['jam_mulai'], 'Asia/Jakarta');
+            $jamSelesai = Carbon::createFromFormat('H:i:s', $data['jam_selesai'], 'Asia/Jakarta');
+
+            // Cek apakah jam selesai lebih kecil dari jam mulai (berarti selesai keesokan hari)
+            if ($jamSelesai->lessThan($jamMulai)) {
+                $jamSelesai->addDay(); // Tambahkan 1 hari ke jam selesai
+            }
+
+            // Hitung selisih jam (dalam detik)
+            $selisihJam = $jamMulai->diffInSeconds($jamSelesai);
+
+            // Hitung total hari (selisih tanggal)
+            $tglMulai = Carbon::createFromFormat('d-m-Y', $data['tgl_mulai'], 'Asia/Jakarta');
+            $tglSelesai = Carbon::createFromFormat('d-m-Y', $data['tgl_selesai'], 'Asia/Jakarta');
+            $totalHari = $tglMulai->diffInDays($tglSelesai) + 1; // +1 untuk menghitung hari mulai
+
+            $durasi = $selisihJam * $totalHari;
 
             if (Gate::allows('verifikasi2 diklat')) {
                 $statusDiklatId = 4;
@@ -330,10 +361,10 @@ class DiklatController extends Controller
             DB::commit();
 
             return response()->json([
-                'status' => Response::HTTP_OK,
+                'status' => Response::HTTP_CREATED,
                 'message' => "Diklat '{$diklat->nama}' berhasil ditambahkan.",
                 'data' => $diklat,
-            ], Response::HTTP_OK);
+            ], Response::HTTP_CREATED);
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json([
@@ -576,7 +607,7 @@ class DiklatController extends Controller
 
     public function generateCertificate($diklatId)
     {
-        if (!Gate::allows('verifikasi3 diklat')) {
+        if (!Gate::allows('publikasi sertifikat')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
@@ -660,7 +691,7 @@ class DiklatController extends Controller
     // Untuk verifikasi apakah karyawan benar" ikut diklat (dari absensi manual)
     public function fakeAssignDiklat($diklatId, $userId)
     {
-        if (!Gate::allows('verifikasi3 diklat')) {
+        if (!Gate::allows('publikasi sertifikat')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
@@ -690,10 +721,6 @@ class DiklatController extends Controller
 
         // Hitung kembali jumlah peserta
         $jumlahPesertaTersisa = PesertaDiklat::where('diklat_id', $diklatId)->count();
-
-        // Update kuota
-        $diklat->kuota = $jumlahPesertaTersisa;
-        $diklat->save();
 
         return response()->json([
             'status' => Response::HTTP_OK,
