@@ -186,11 +186,11 @@ class DiklatController extends Controller
         }
 
         if ($limit == 0) {
-            $dataDiklat = $diklat->with('kategori_diklats', 'status_diklats', 'peserta_diklat.users')->get();
+            $dataDiklat = $diklat->with('kategori_diklats', 'status_diklats', 'peserta_diklat.users', 'berkas_dokumen_eksternals')->get();
             $paginationData = null;
         } else {
             $limit = is_numeric($limit) ? (int)$limit : 10;
-            $dataDiklat = $diklat->with('kategori_diklats', 'status_diklats', 'peserta_diklat.users')->paginate($limit);
+            $dataDiklat = $diklat->with('kategori_diklats', 'status_diklats', 'peserta_diklat.users', 'berkas_dokumen_eksternals')->paginate($limit);
 
             $paginationData = [
                 'links' => [
@@ -225,9 +225,9 @@ class DiklatController extends Controller
                 'nama_diklat' => $diklat->nama,
                 'kategori_diklat' => $diklat->kategori_diklats,
                 'status_diklat' => $diklat->status_diklats,
+                'path' => env('STORAGE_SERVER_DOMAIN') . $diklat->berkas_dokumen_eksternals->path,
                 'deskripsi' => $diklat->deskripsi,
                 'kuota' => $diklat->kuota ?? null,
-                'total_peserta' => $diklat->total_peserta,
                 'tgl_mulai' => $diklat->tgl_mulai,
                 'tgl_selesai' => $diklat->tgl_selesai,
                 'jam_mulai' => $diklat->jam_mulai,
