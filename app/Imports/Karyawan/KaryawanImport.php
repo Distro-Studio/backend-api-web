@@ -259,6 +259,21 @@ class KaryawanImport implements ToModel, WithHeadingRow, WithValidation
       $tahun_lulus = $row['tahun_lulus'];
     }
 
+    $weight = $row['berat_badan'];
+    $height = $row['tinggi_badan'] / 100; // Konversi cm ke meter
+    // Rumus BMI
+    $bmi = $weight / ($height * $height);
+    // Menentukan kategori BMI berdasarkan hasil perhitungan
+    if ($bmi < 18.5) {
+        $category = 'Berat badan kurang';
+    } elseif ($bmi >= 18.5 && $bmi <= 24.9) {
+        $category = 'Berat badan normal';
+    } elseif ($bmi >= 25 && $bmi <= 29.9) {
+        $category = 'Berat badan berlebih (overweight)';
+    } else {
+        $category = 'Obesitas';
+    }
+
     $dataKaryawan = DataKaryawan::create([
       'user_id' => $user_id,
       'email' => $row['email'],
@@ -297,6 +312,8 @@ class KaryawanImport implements ToModel, WithHeadingRow, WithValidation
       'kategori_darah_id' => $darah ? $darah->id : null,
       'tinggi_badan' => $row['tinggi_badan'],
       'berat_badan' => $row['berat_badan'],
+      'bmi_value' => $bmi,
+      'bmi_ket' => $category,
       'pendidikan_terakhir' => $row['pendidikan_terakhir'],
       'asal_sekolah' => $row['asal_sekolah'],
       'tahun_lulus' => $tahun_lulus,
