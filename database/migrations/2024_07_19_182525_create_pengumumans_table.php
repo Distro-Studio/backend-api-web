@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('pengumumans', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained('users');
+            $table->text('user_id');
             $table->string('judul');
             $table->text('konten');
             $table->boolean('is_read')->default(0);

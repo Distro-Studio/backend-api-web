@@ -38,7 +38,7 @@ class StorePengumumanRequest extends FormRequest
             'judul.required' => 'Judul pengumuman tidak diperbolehkan kosong.',
             'konten.required' => 'Konten pengumuman tidak diperbolehkan kosong.',
             'tgl_berakhir.required' => 'Tanggal berakhir pengumuman tidak diperbolehkan kosong.',
-            'user_id.required' => 'Silahkan pilih salah satu karyawan terlebih dahulu.',
+            'user_id.required' => 'Anda harus memilih setidaknya satu karyawan untuk membuat pengumuman.',
         ];
     }
 

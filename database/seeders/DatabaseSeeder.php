@@ -151,7 +151,7 @@ class DatabaseSeeder extends Seeder
       PertanyaanSeeder::class,
       PenilaianSeeder::class,
 
-      PengumumanSeeder::class,
+      // PengumumanSeeder::class,
       NotifikasiSeeder::class,
     ]);
   }

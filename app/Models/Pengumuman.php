@@ -14,7 +14,7 @@ class Pengumuman extends Model
 
     protected $casts = [
         'id' => 'integer',
-        'user_id' => 'integer',
+        'user_id' => 'array',
         'is_read' => 'integer'
     ];
 
