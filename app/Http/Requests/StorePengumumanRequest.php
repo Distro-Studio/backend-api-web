@@ -28,7 +28,7 @@ class StorePengumumanRequest extends FormRequest
             'judul' => 'required|string|max:255',
             'konten' => 'required|string',
             'tgl_berakhir' => 'required|string',
-            'user_id' => 'nullable',
+            'user_id' => 'required',
         ];
     }
 
@@ -38,6 +38,7 @@ class StorePengumumanRequest extends FormRequest
             'judul.required' => 'Judul pengumuman tidak diperbolehkan kosong.',
             'konten.required' => 'Konten pengumuman tidak diperbolehkan kosong.',
             'tgl_berakhir.required' => 'Tanggal berakhir pengumuman tidak diperbolehkan kosong.',
+            'user_id.required' => 'Silahkan pilih salah satu karyawan terlebih dahulu.',
         ];
     }
 
