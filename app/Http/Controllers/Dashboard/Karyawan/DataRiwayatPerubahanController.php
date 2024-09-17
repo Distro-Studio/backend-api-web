@@ -222,26 +222,26 @@ class DataRiwayatPerubahanController extends Controller
             $originalData = $data_perubahan->original_data;
             $updatedData = $data_perubahan->updated_data;
 
-            // if ($data_perubahan->jenis_perubahan === 'Keluarga') {
-            //     if (is_array($originalData)) {
-            //         foreach ($originalData as &$item) {
-            //             if (isset($item['pendidikan_terakhir'])) {
-            //                 $item['pendidikan_terakhir'] = KategoriPendidikan::find($item['pendidikan_terakhir']) ?? null;
-            //             }
-            //         }
-            //     }
+            if ($data_perubahan->jenis_perubahan === 'Keluarga') {
+                if (is_array($originalData)) {
+                    foreach ($originalData as &$item) {
+                        if (isset($item['pendidikan_terakhir'])) {
+                            $item['pendidikan_terakhir'] = KategoriPendidikan::find($item['pendidikan_terakhir']) ?? null;
+                        }
+                    }
+                }
 
-            //     if (is_array($updatedData)) {
-            //         foreach ($updatedData as &$item) {
-            //             if (isset($item['pendidikan_terakhir'])) {
-            //                 $item['pendidikan_terakhir'] = KategoriPendidikan::find($item['pendidikan_terakhir']) ?? null;
-            //             }
-            //         }
-            //     }
-            // }
+                if (is_array($updatedData)) {
+                    foreach ($updatedData as &$item) {
+                        if (isset($item['pendidikan_terakhir'])) {
+                            $item['pendidikan_terakhir'] = KategoriPendidikan::find($item['pendidikan_terakhir']) ?? null;
+                        }
+                    }
+                }
+            }
 
             if ($data_perubahan->jenis_perubahan === 'Personal') {
-                if (in_array($data_perubahan->kolom, ['kategori_agama_id', 'kategori_darah_id'])) {
+                if (in_array($data_perubahan->kolom, ['kategori_agama_id', 'kategori_darah_id', 'pendidikan_terakhir'])) {
                     if ($data_perubahan->kolom === 'kategori_agama_id') {
                         $originalData = KategoriAgama::find($originalData) ?? $originalData;
                         $updatedData = KategoriAgama::find($updatedData) ?? $updatedData;
