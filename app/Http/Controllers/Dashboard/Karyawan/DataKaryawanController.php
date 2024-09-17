@@ -1862,7 +1862,7 @@ class DataKaryawanController extends Controller
       'jenis_kelamin' => $karyawan->jenis_kelamin,
       'agama' => $karyawan->kategori_agamas,
       'golongan_darah' => $karyawan->kategori_darahs,
-      'pendidikan_terakhir' => $karyawan->pendidikan_terakhir,
+      'pendidikan_terakhir' => $karyawan->kategori_pendidikans,
       'asal_sekolah' => $karyawan->asal_sekolah,
       'tinggi_badan' => $karyawan->tinggi_badan,
       'berat_badan' => $karyawan->berat_badan,
@@ -2045,7 +2045,7 @@ class DataKaryawanController extends Controller
       'jenis_kelamin' => $karyawan->jenis_kelamin,
       'agama' => $karyawan->kategori_agamas, // agama_id
       'golongan_darah' => $karyawan->kategori_darahs, // golongan_darah_id
-      'pendidikan_terakhir' => $karyawan->pendidikan_terakhir,
+      'pendidikan_terakhir' => $karyawan->kategori_pendidikans,
       'asal_sekolah' => $karyawan->asal_sekolah,
       'tinggi_badan' => $karyawan->tinggi_badan,
       'berat_badan' => $karyawan->berat_badan,

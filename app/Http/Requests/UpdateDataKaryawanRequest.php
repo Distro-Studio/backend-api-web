@@ -70,7 +70,7 @@ class UpdateDataKaryawanRequest extends FormRequest
             'no_bpjsksh' => 'nullable',
             'no_bpjsktk' => 'nullable',
 
-            'pendidikan_terakhir' => 'nullable|string',
+            'pendidikan_terakhir' => 'nullable|exists:kategori_pendidikans,id',
             'asal_sekolah' => 'nullable|string',
             'tgl_diangkat' => 'nullable|string'
         ];
@@ -141,7 +141,7 @@ class UpdateDataKaryawanRequest extends FormRequest
             'masa_berlaku_str.string' => 'Masa berlaku STR karyawan tidak diperbolehkan mengandung selain angka.',
             'masa_berlaku_sip.string' => 'Masa berlaku SIP karyawan hanya diperbolehkan mengandung angka dan huruf.',
             
-            'pendidikan_terakhir.string' => 'Pendidikan terakhir karyawan tidak diperbolehkan mengandung selain huruf.',
+            'pendidikan_terakhir.exists' => 'Pendidikan terakhir karyawan tersebut tidak valid.',
             'asal_sekolah.string' => 'Asal sekolah karyawan tidak diperbolehkan mengandung selain huruf.',
             'tgl_diangkat.string' => 'Tanggal diangkat karyawan tidak diperbolehkan mengandung selain huruf.',
         ];
