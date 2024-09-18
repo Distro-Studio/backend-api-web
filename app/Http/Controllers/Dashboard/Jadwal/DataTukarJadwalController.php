@@ -772,6 +772,19 @@ class DataTukarJadwalController extends Controller
                         ->orWhere('user_id', $tukar_jadwal->user_ditukar)
                         ->delete();
                 }
+
+                // 1. get jadwal dulu
+                $jadwalPengajuan = Jadwal::findOrFail($tukar_jadwal->jadwal_pengajuan);
+                $jadwalDitukar = Jadwal::findOrFail($tukar_jadwal->jadwal_ditukar);
+
+                // 2. Tukar user_id antara jadwal_pengajuan dan jadwal_ditukar
+                $tempUserId = $jadwalPengajuan->user_id;
+                $jadwalPengajuan->user_id = $jadwalDitukar->user_id;
+                $jadwalDitukar->user_id = $tempUserId;
+
+                $jadwalPengajuan->save();
+                $jadwalDitukar->save();
+
                 $this->createNotifikasiVerifikasiTahap2($tukar_jadwal, true);
 
                 return response()->json(new WithoutDataResource(Response::HTTP_OK, "Verifikasi tahap 2 pertukaran jadwal dari '{$tukar_jadwal->user_pengajuans->nama}' telah disetujui."), Response::HTTP_OK);
@@ -782,7 +795,7 @@ class DataTukarJadwalController extends Controller
             if ($status_penukaran_id == 2) {
                 $tukar_jadwal->status_penukaran_id = 5;
                 $tukar_jadwal->verifikator_2 = Auth::id();
-                $tukar_jadwal->alasan = $request->input('alasan', null);
+                $tukar_jadwal->alasan = $request->input('alasan');
                 $tukar_jadwal->save();
 
                 $this->createNotifikasiVerifikasiTahap2($tukar_jadwal, false);
