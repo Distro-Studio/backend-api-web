@@ -45,4 +45,14 @@ class KategoriPendidikan extends Model
     {
         return $this->hasMany(PerubahanKeluarga::class, 'pendidikan_terakhir', 'id');
     }
+
+    /**
+     * Get all of the data_kelaurgas for the KategoriPendidikan
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function data_kelaurgas(): HasMany
+    {
+        return $this->hasMany(DataKeluarga::class, 'pendidikan_terakhir', 'id');
+    }
 }

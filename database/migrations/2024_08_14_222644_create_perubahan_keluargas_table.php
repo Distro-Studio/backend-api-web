@@ -22,6 +22,7 @@ return new class extends Migration
             $table->string('pekerjaan')->nullable();
             $table->string('no_hp')->nullable();
             $table->string('email')->nullable();
+            $table->boolean('is_bpjs')->default(1);
             $table->timestamps();
         });
     }

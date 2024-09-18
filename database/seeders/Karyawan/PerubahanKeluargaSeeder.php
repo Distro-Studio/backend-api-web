@@ -38,6 +38,7 @@ class PerubahanKeluargaSeeder extends Seeder
             // Buat contoh data perubahan untuk keluarga
             $oldFamilyData = [
                 [
+                    'data_karyawan_id' => $dataKaryawanId,
                     'data_keluarga_id' => $dataKeluargaId1,
                     'nama_keluarga' => 'Nama lama ' . $i,
                     'hubungan' => 'Bapak',
@@ -45,12 +46,14 @@ class PerubahanKeluargaSeeder extends Seeder
                     'status_hidup' => rand(0, 1),
                     'pekerjaan' => 'Pekerjaan lama ' . $i,
                     'no_hp' => '08123456790' . $i,
-                    'email' => 'keluarga_lama' . $i . '@example.com'
+                    'email' => 'keluarga_lama' . $i . '@example.com',
+                    'is_bpjs' => rand(0, 1)
                 ]
             ];
 
             $newFamilyData = [
                 [
+                    'data_karyawan_id' => $dataKaryawanId,
                     'data_keluarga_id' => $dataKeluargaId1,
                     'nama_keluarga' => 'Nama Baru ' . $i,
                     'hubungan' => 'Bapak Mertua',
@@ -58,7 +61,8 @@ class PerubahanKeluargaSeeder extends Seeder
                     'status_hidup' => rand(0, 1),
                     'pekerjaan' => 'Pekerjaan Baru ' . $i,
                     'no_hp' => '08123456790' . $i,
-                    'email' => 'keluarga_baru' . $i . '@example.com'
+                    'email' => 'keluarga_baru' . $i . '@example.com',
+                    'is_bpjs' => rand(0, 1)
                 ]
             ];
 
@@ -88,6 +92,7 @@ class PerubahanKeluargaSeeder extends Seeder
                     'pekerjaan' => $data['pekerjaan'],
                     'no_hp' => $data['no_hp'],
                     'email' => $data['email'],
+                    'is_bpjs' => rand(0, 1),
                     'created_at' => Carbon::now(),
                     'updated_at' => Carbon::now(),
                 ]);

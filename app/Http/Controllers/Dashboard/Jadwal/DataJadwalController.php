@@ -9,6 +9,7 @@ use App\Models\Shift;
 use App\Models\Jadwal;
 use App\Models\NonShift;
 use App\Models\HariLibur;
+use App\Models\TukarJadwal;
 use Illuminate\Http\Request;
 use App\Helpers\RandomHelper;
 use Illuminate\Http\Response;
@@ -577,6 +578,30 @@ class DataJadwalController extends Controller
                     Response::HTTP_FORBIDDEN,
                     'Anda hanya dapat mengatur jadwal untuk karyawan dalam unit kerja yang sama dengan anda.'
                 ), Response::HTTP_FORBIDDEN);
+            }
+        }
+
+        $tukarJadwal = TukarJadwal::where(function ($query) use ($userId) {
+            $query->whereHas('jadwal_pengajuans', function ($q) use ($userId) {
+                $q->where('user_id', $userId);
+            })
+                ->orWhereHas('jadwal_ditukars', function ($q) use ($userId) {
+                    $q->where('user_id', $userId);
+                });
+        })->whereNotIn('status_penukaran_id', [4, 5])
+            ->first();
+
+        if ($tukarJadwal) {
+            $jadwalPengajuanId = $tukarJadwal->jadwal_pengajuan;
+            $jadwalDitukarId = $tukarJadwal->jadwal_ditukar;
+
+            // Cek apakah jadwal yang sedang diupdate terlibat dalam penukaran
+            $existingJadwal = Jadwal::where('user_id', $userId)
+                ->whereIn('id', [$jadwalPengajuanId, $jadwalDitukarId])
+                ->first();
+
+            if ($existingJadwal) {
+                return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Jadwal ini sedang dalam proses penukaran dan tidak dapat diubah.'), Response::HTTP_BAD_REQUEST);
             }
         }
 

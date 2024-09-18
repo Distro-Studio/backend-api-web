@@ -219,7 +219,7 @@ class DataRiwayatPerubahanController extends Controller
             $relasiUser = $data_perubahan->data_karyawans->users ?? null;
             $relasiVerifikator = $data_perubahan->verifikator_1_users ?? null;
 
-            $originalData = $data_perubahan->original_data;
+            $originalData = $data_perubahan->original_data ?? null;
             $updatedData = $data_perubahan->updated_data;
 
             if ($data_perubahan->jenis_perubahan === 'Keluarga') {
@@ -363,28 +363,6 @@ class DataRiwayatPerubahanController extends Controller
                 // Decode first
                 $updatedFamilyData = is_string($riwayat->updated_data) ? json_decode($riwayat->updated_data, true) : $riwayat->updated_data;
 
-                // if (is_array($updatedFamilyData)) {
-                //     foreach ($updatedFamilyData as $update) {
-                //         $dataKeluarga = DataKeluarga::where('id', $update['data_keluarga_id'])
-                //             ->first();
-
-                //         if ($dataKeluarga) {
-                //             $updateData = [];
-
-                //             if (!is_null($update['nama_keluarga'])) $updateData['nama_keluarga'] = $update['nama_keluarga'];
-                //             if (!is_null($update['hubungan'])) $updateData['hubungan'] = $update['hubungan'];
-                //             if (!is_null($update['pendidikan_terakhir'])) $updateData['pendidikan_terakhir'] = $update['pendidikan_terakhir'];
-                //             if (!is_null($update['status_hidup'])) $updateData['status_hidup'] = $update['status_hidup'];
-                //             if (!is_null($update['pekerjaan'])) $updateData['pekerjaan'] = $update['pekerjaan'];
-                //             if (!is_null($update['no_hp'])) $updateData['no_hp'] = $update['no_hp'];
-                //             if (!is_null($update['email'])) $updateData['email'] = $update['email'];
-
-                //             if (!empty($updateData)) {
-                //                 $dataKeluarga->update($updateData);
-                //             }
-                //         }
-                //     }
-                // }
                 if (is_array($updatedFamilyData)) {
                     foreach ($updatedFamilyData as $update) {
                         if (!is_null($update['data_keluarga_id'])) {
@@ -400,6 +378,7 @@ class DataRiwayatPerubahanController extends Controller
                                 if (!is_null($update['pekerjaan'])) $updateData['pekerjaan'] = $update['pekerjaan'];
                                 if (!is_null($update['no_hp'])) $updateData['no_hp'] = $update['no_hp'];
                                 if (!is_null($update['email'])) $updateData['email'] = $update['email'];
+                                if (!is_null($update['is_bpjs'])) $updateData['is_bpjs'] = $update['is_bpjs'];
 
                                 if (!empty($updateData)) {
                                     $dataKeluarga->update($updateData);
@@ -410,13 +389,15 @@ class DataRiwayatPerubahanController extends Controller
                             if (!is_null($update['data_karyawan_id'])) {
                                 $newFamilyData = [
                                     'data_karyawan_id' => $update['data_karyawan_id'],
-                                    'nama_keluarga' => $update['nama_keluarga'] ?? null,
-                                    'hubungan' => $update['hubungan'] ?? null,
-                                    'pendidikan_terakhir' => $update['pendidikan_terakhir'] ?? null,
-                                    'status_hidup' => $update['status_hidup'] ?? null,
+                                    'nama_keluarga' => $update['nama_keluarga'],
+                                    'hubungan' => $update['hubungan'],
+                                    'pendidikan_terakhir' => $update['pendidikan_terakhir'],
+                                    'status_hidup' => $update['status_hidup'],
                                     'pekerjaan' => $update['pekerjaan'] ?? null,
                                     'no_hp' => $update['no_hp'] ?? null,
                                     'email' => $update['email'] ?? null,
+                                    'status_keluarga_id' => 1,
+                                    'is_bpjs' => $update['is_bpjs'],
                                 ];
 
                                 DataKeluarga::create($newFamilyData);

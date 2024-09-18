@@ -4,6 +4,7 @@ namespace Database\Seeders\Karyawan;
 
 use App\Models\DataKaryawan;
 use App\Models\DataKeluarga;
+use App\Models\KategoriPendidikan;
 use App\Models\StatusKeluarga;
 use Illuminate\Database\Seeder;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
@@ -15,7 +16,7 @@ class KeluargaKaryawanSeeder extends Seeder
      */
     public function run(): void
     {
-        $pendidikan = ['SMA', 'SMK', 'D4', 'D3', 'D2', 'D1', 'S1', 'S2', 'S3'];
+        $pendidikan = KategoriPendidikan::pluck('id')->all();
         $data_karyawan_ids = DataKaryawan::pluck('id')->all();
 
         foreach ($data_karyawan_ids as $karyawan_id) {

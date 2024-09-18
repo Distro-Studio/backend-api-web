@@ -879,8 +879,8 @@ class DataTukarJadwalController extends Controller
         $messageDitukar = "Jadwal Anda berhasil ditukar dengan karyawan {$userPengajuan->nama} pada tanggal {$konversiNotif_tgl_mulai_ajuan}.";
         // Buat notifikasi untuk user_ditukar
         Notifikasi::create([
-            'kategori_notifikasi_id' => 2, // Sesuaikan dengan kategori notifikasi yang sesuai
-            'user_id' => $userDitukar->id, // Penerima notifikasi
+            'kategori_notifikasi_id' => 2,
+            'user_id' => $userDitukar->id,
             'message' => $messageDitukar,
             'is_read' => false,
             'created_at' => $timezone,
@@ -907,7 +907,7 @@ class DataTukarJadwalController extends Controller
 
         // Notifikasi untuk pengguna yang mengajukan
         Notifikasi::create([
-            'kategori_notifikasi_id' => 3, // Sesuaikan dengan kategori notifikasi yang sesuai untuk verifikasi
+            'kategori_notifikasi_id' => 2,
             'user_id' => $userPengajuan->id,
             'message' => $messagePengajuan,
             'is_read' => false,
@@ -916,7 +916,7 @@ class DataTukarJadwalController extends Controller
 
         // Notifikasi untuk pengguna yang ditukar jadwalnya
         Notifikasi::create([
-            'kategori_notifikasi_id' => 3, // Sesuaikan dengan kategori notifikasi yang sesuai untuk verifikasi
+            'kategori_notifikasi_id' => 2,
             'user_id' => $userDitukar->id,
             'message' => $messageDitukar,
             'is_read' => false,
@@ -944,7 +944,7 @@ class DataTukarJadwalController extends Controller
 
         // Notifikasi untuk pengguna yang mengajukan
         Notifikasi::create([
-            'kategori_notifikasi_id' => 3, // Sesuaikan dengan kategori notifikasi yang sesuai untuk verifikasi
+            'kategori_notifikasi_id' => 2,
             'user_id' => $userPengajuan->id,
             'message' => $messagePengajuan,
             'is_read' => false,

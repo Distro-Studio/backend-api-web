@@ -18,7 +18,8 @@ class DataKeluarga extends Model
         'status_hidup' => 'integer',
         'status_keluarga_id' => 'integer',
         'is_bpjs' => 'integer',
-        'verifikator_1' => 'integer'
+        'verifikator_1' => 'integer',
+        'pendidikan_terakhir' => 'integer'
     ];
 
     /**
@@ -59,5 +60,15 @@ class DataKeluarga extends Model
     public function verifikator_1_users(): BelongsTo
     {
         return $this->belongsTo(User::class, 'verifikator_1', 'id');
+    }
+
+    /**
+     * Get the kategori_pendidikans that owns the DataKeluarga
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function kategori_pendidikans(): BelongsTo
+    {
+        return $this->belongsTo(KategoriPendidikan::class, 'pendidikan_terakhir', 'id');
     }
 }
