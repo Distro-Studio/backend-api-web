@@ -214,6 +214,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
             // ! Penyesuaian Gaji ===========>
             Route::post('/get-penyesuaian-gaji', [PenyesuaianGajiController::class, 'index']);
+            Route::post('/penyesuaian-bor', [PenyesuaianGajiController::class, 'penyesuaianBOR']);
             Route::get('/penyesuaian-gaji/export', [PenyesuaianGajiController::class, 'exportPenyesuaianGaji']);
             Route::apiResource('/penyesuaian-gaji', PenyesuaianGajiController::class);
             
