@@ -10,12 +10,13 @@ use Illuminate\Http\Request;
 use App\Helpers\RandomHelper;
 use Illuminate\Http\Response;
 use App\Models\PenyesuaianGaji;
+use App\Helpers\CalculateHelper;
+use App\Helpers\DetailGajiHelper;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Gate;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\Keuangan\PenyesuaianGajiExport;
-use App\Helpers\CalculateHelper;
 use App\Http\Requests\StorePenyesuaianGajiRequest;
 use App\Http\Requests\StorePenyesuaianGajiCustomRequest;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
@@ -601,6 +602,22 @@ class PenyesuaianGajiController extends Controller
       return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data penggajian tidak ditemukan.'), Response::HTTP_NOT_FOUND);
     }
 
+    $gaji_pokok = DetailGajiHelper::getDetailGajiByNamaDetail($penggajian->id, 'Gaji Pokok');
+    $tunjangan_jabatan = DetailGajiHelper::getDetailGajiByNamaDetail($penggajian->id, 'Tunjangan Jabatan');
+    $tunjangan_fungsional = DetailGajiHelper::getDetailGajiByNamaDetail($penggajian->id, 'Tunjangan Fungsional');
+    $tunjangan_khusus = DetailGajiHelper::getDetailGajiByNamaDetail($penggajian->id, 'Tunjangan Khusus');
+    $tunjangan_lainnya = DetailGajiHelper::getDetailGajiByNamaDetail($penggajian->id, 'Tunjangan Lainnya');
+    $bonusBOR = DetailGajiHelper::getDetailGajiByNamaDetail($penggajian->id, 'Bonus BOR');
+    $bonusPresensi = DetailGajiHelper::getDetailGajiByNamaDetail($penggajian->id, 'Bonus Presensi');
+    $bonusUangLembur = DetailGajiHelper::getDetailGajiByNamaDetail($penggajian->id, 'Uang Lembur');
+    $thr = DetailGajiHelper::getDetailGajiByNamaDetail($penggajian->id, 'THR');
+    $uang_makan = DetailGajiHelper::getDetailGajiByNamaDetail($penggajian->id, 'Uang Makan');
+    $koperasi = DetailGajiHelper::getDetailGajiByNamaDetail($penggajian->id, 'Koperasi');
+    $obat = DetailGajiHelper::getDetailGajiByNamaDetail($penggajian->id, 'Obat/Perawatan');
+    $totalTagihanPotongan = $koperasi + $obat;
+
+    $totalReward = $bonusBOR + $bonusPresensi + $bonusUangLembur;
+
     DB::beginTransaction();
     try {
       // Simpan penyesuaian gaji
@@ -619,31 +636,29 @@ class PenyesuaianGajiController extends Controller
       $bulanMulai = Carbon::parse(RandomHelper::convertSpecialDateFormat($request->bulan_mulai));
 
       if ($bulanMulai->month == $currentMonth && $bulanMulai->year == $currentYear) {
-        // Kurangi take home pay dengan besaran penyesuaian yang baru dibuat
         $penggajian->gaji_bruto += $request->besaran;
 
-        $totalPremi = CalculateHelper::calculatedPremi($penggajian->data_karyawans->id, $penggajian->gaji_bruto, $penggajian->data_karyawans->kelompok_gajis->gaji_pokok);
+        $brutoPremi = $gaji_pokok +
+          $tunjangan_jabatan +
+          $tunjangan_fungsional +
+          $tunjangan_khusus +
+          $tunjangan_lainnya;
+
+        $brutoTotal = $brutoPremi +
+          $thr +
+          $uang_makan +
+          $totalReward +
+          $request->besaran;
+
+        $totalPremi = CalculateHelper::calculatedPremi($penggajian->data_karyawans->id, $brutoPremi, $gaji_pokok);
 
         if ($currentMonth >= 1 && $currentMonth <= 11) {
-          $pph21 = CalculateHelper::calculatedPPH21ForMonths($penggajian->gaji_bruto, $penggajian->data_karyawans->ptkp_id);
+          $pph21 = CalculateHelper::calculatedPPH21ForMonths($brutoTotal, $penggajian->data_karyawans->ptkp_id);
         } else {
-          $bonusBOR = DetailGaji::where('penggajian_id', $penggajian->id)
-            ->where('nama_detail', 'Bonus BOR')
-            ->sum('besaran') ?: 0;
-          $bonusPresensi = DetailGaji::where('penggajian_id', $penggajian->id)
-            ->where('nama_detail', 'Bonus Presensi')
-            ->sum('besaran') ?: 0;
-          $bonusUangLembur = DetailGaji::where('penggajian_id', $penggajian->id)
-            ->where('nama_detail', 'Uang Lembur')
-            ->sum('besaran') ?: 0;
-
-          $totalReward = $bonusBOR + $bonusPresensi + $bonusUangLembur;
-          $dataKaryawan = $penggajian->data_karyawans;
-          $pph21 = CalculateHelper::calculatedPPH21ForDecember($dataKaryawan, $totalReward);
+          $pph21 = CalculateHelper::calculatedPPH21ForDecember($penggajian->data_karyawans->id, $totalPremi, $brutoTotal, $totalTagihanPotongan, $penggajian->data_karyawans->ptkp_id);
         }
 
         $takeHomePay = $penggajian->gaji_bruto - $totalPremi - $pph21;
-
         $penggajian->pph_21 = $pph21;
         $penggajian->take_home_pay = $takeHomePay;
         $penggajian->save();
@@ -688,6 +703,22 @@ class PenyesuaianGajiController extends Controller
       return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data penggajian tidak ditemukan.'), Response::HTTP_NOT_FOUND);
     }
 
+    $gaji_pokok = DetailGajiHelper::getDetailGajiByNamaDetail($penggajian->id, 'Gaji Pokok');
+    $tunjangan_jabatan = DetailGajiHelper::getDetailGajiByNamaDetail($penggajian->id, 'Tunjangan Jabatan');
+    $tunjangan_fungsional = DetailGajiHelper::getDetailGajiByNamaDetail($penggajian->id, 'Tunjangan Fungsional');
+    $tunjangan_khusus = DetailGajiHelper::getDetailGajiByNamaDetail($penggajian->id, 'Tunjangan Khusus');
+    $tunjangan_lainnya = DetailGajiHelper::getDetailGajiByNamaDetail($penggajian->id, 'Tunjangan Lainnya');
+    $bonusBOR = DetailGajiHelper::getDetailGajiByNamaDetail($penggajian->id, 'Bonus BOR');
+    $bonusPresensi = DetailGajiHelper::getDetailGajiByNamaDetail($penggajian->id, 'Bonus Presensi');
+    $bonusUangLembur = DetailGajiHelper::getDetailGajiByNamaDetail($penggajian->id, 'Uang Lembur');
+    $thr = DetailGajiHelper::getDetailGajiByNamaDetail($penggajian->id, 'THR');
+    $uang_makan = DetailGajiHelper::getDetailGajiByNamaDetail($penggajian->id, 'Uang Makan');
+    $koperasi = DetailGajiHelper::getDetailGajiByNamaDetail($penggajian->id, 'Koperasi');
+    $obat = DetailGajiHelper::getDetailGajiByNamaDetail($penggajian->id, 'Obat/Perawatan');
+    $totalTagihanPotongan = $koperasi + $obat;
+
+    $totalReward = $bonusBOR + $bonusPresensi + $bonusUangLembur;
+
     DB::beginTransaction();
     try {
       // Simpan penyesuaian gaji
@@ -707,9 +738,21 @@ class PenyesuaianGajiController extends Controller
 
       if ($bulanMulai->month == $currentMonth && $bulanMulai->year == $currentYear) {
         $penggajian->gaji_bruto -= $request->besaran;
-        
-        $totalPremi = CalculateHelper::calculatedPremi($penggajian->data_karyawans->id, $penggajian->gaji_bruto, $penggajian->data_karyawans->kelompok_gajis->gaji_pokok);
-        
+
+        $brutoPremi = $gaji_pokok +
+          $tunjangan_jabatan +
+          $tunjangan_fungsional +
+          $tunjangan_khusus +
+          $tunjangan_lainnya;
+
+        $brutoTotal = $brutoPremi +
+          $thr +
+          $uang_makan +
+          $totalReward -
+          $request->besaran;
+
+          $totalPremi = CalculateHelper::calculatedPremi($penggajian->data_karyawans->id, $brutoPremi, $gaji_pokok);
+
         if ($currentMonth >= 1 && $currentMonth <= 11) {
           // Kurangi take home pay dengan besaran penyesuaian yang baru dibuat
           $penggajian->take_home_pay -= $data['besaran'];
@@ -721,19 +764,9 @@ class PenyesuaianGajiController extends Controller
             'besaran' => $penyesuaianGaji->besaran
           ]);
         } else {
-          $bonusBOR = DetailGaji::where('penggajian_id', $penggajian->id)
-            ->where('nama_detail', 'Bonus BOR')
-            ->sum('besaran') ?: 0;
-          $bonusPresensi = DetailGaji::where('penggajian_id', $penggajian->id)
-            ->where('nama_detail', 'Bonus Presensi')
-            ->sum('besaran') ?: 0;
-          $bonusUangLembur = DetailGaji::where('penggajian_id', $penggajian->id)
-            ->where('nama_detail', 'Uang Lembur')
-            ->sum('besaran') ?: 0;
+          $dataKaryawan = $penggajian->data_karyawans->id;
+          $pph21 = CalculateHelper::calculatedPPH21ForDecember($dataKaryawan, $totalPremi, $brutoTotal, $totalTagihanPotongan, $penggajian->data_karyawans->ptkp_id);
 
-          $totalReward = $bonusBOR + $bonusPresensi + $bonusUangLembur;
-          $dataKaryawan = $penggajian->data_karyawans;
-          $pph21 = CalculateHelper::calculatedPPH21ForDecember($dataKaryawan, $totalReward);
           $takeHomePay = $penggajian->gaji_bruto - $totalPremi - $pph21;
 
           $penggajian->pph_21 = $pph21;

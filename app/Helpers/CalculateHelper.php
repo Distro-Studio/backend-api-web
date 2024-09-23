@@ -116,7 +116,7 @@ class CalculateHelper
         $potonganDetails = [];
 
         $tagihanPotongans = DB::table('tagihan_potongans')
-            ->where('data_karyawan_id', $dataKaryawan->data_karyawan_id)
+            ->where('data_karyawan_id', $dataKaryawan)
             ->where(function ($query) {
                 $query->where('sisa_tagihan', '>', 0)
                     ->orWhereNull('sisa_tagihan');
@@ -310,7 +310,7 @@ class CalculateHelper
         return $premiAmount;
     }
 
-    public static function calculatedPPH21ForMonths($penghasilanBrutoTotal, $ptkp_id)
+    public static function calculatedPPH21ForMonths($brutoTotal, $ptkp_id)
     {
         // Langkah 1: Ambil data PTKP dari data_karyawans
         $ptkp = DB::table('ptkps')->where('id', $ptkp_id)->first();
@@ -322,33 +322,32 @@ class CalculateHelper
         $ters = DB::table('ters')
             ->select('percentage')
             ->where('kategori_ter_id', $kategoriTer->id)
-            ->where('from_ter', '<=', $penghasilanBrutoTotal)
-            ->where('to_ter', '>=', $penghasilanBrutoTotal)
+            ->where('from_ter', '<=', $brutoTotal)
+            ->where('to_ter', '>=', $brutoTotal)
             ->first();
 
-        $pph21Bulanan = ($ters->percentage / 100) * $penghasilanBrutoTotal;
+        $pph21Bulanan = ($ters->percentage / 100) * $brutoTotal;
         return ceil($pph21Bulanan);
     }
 
-    public static function calculatedPPH21ForDecember($dataKaryawan, $reward, $penghasilanTHR = 0)
+    public static function calculatedPPH21ForDecember($dataKaryawan, $brutoTotal, $totalPremi, $totalTagihanPotongan, $ptkp_id)
     {
         // 1. Hitung bruto dan premi Desember
-        $penghasilanBrutoDesember = self::calculatedPenghasilanBrutoTotal($dataKaryawan, $reward, $penghasilanTHR = 0);
-        $totalPremiDesember = self::calculatedPremi($dataKaryawan->data_karyawan_id, $penghasilanBrutoDesember, $dataKaryawan->gaji_pokok);
-        $totalPotonganTagihanDesember = self::calculatedTagihanPotongan($dataKaryawan->data_karyawan_id);
-        $totalPotonganTagihan = $totalPotonganTagihanDesember['total_potongan_per_bulan'];
-        $currentYear = Carbon::now()->year;
+        $penghasilanBrutoDesember = $brutoTotal;
+        $totalPremiDesember = $totalPremi;
+        $totalPotonganTagihanDesember = $totalTagihanPotongan;
+        $currentYear = Carbon::now('Asia/Jakarta')->year;
 
         // 2. Jumlahkan bruto dan premi dari Januari hingga Desember
         $totalBruto = DB::table('penggajians')
-            ->where('data_karyawan_id', $dataKaryawan->data_karyawan_id)
+            ->where('data_karyawan_id', $dataKaryawan)
             ->whereYear('tgl_penggajian', $currentYear)
             ->sum('gaji_bruto') + $penghasilanBrutoDesember;
 
         $totalPremi = DB::table('penggajians')
-            ->where('data_karyawan_id', $dataKaryawan->data_karyawan_id)
+            ->where('data_karyawan_id', $dataKaryawan)
             ->whereYear('tgl_penggajian', $currentYear)
-            ->sum('total_premi') + $totalPremiDesember + $totalPotonganTagihan;
+            ->sum('total_premi') + $totalPremiDesember + $totalPotonganTagihanDesember;
 
         // 3. Kurangi total bruto dengan total premi
         $penghasilanNeto = $totalBruto - $totalPremi;
@@ -360,7 +359,7 @@ class CalculateHelper
 
         // 5. Kurangi dengan nilai PTKP
         $nilaiPTKP = DB::table('ptkps')
-            ->where('id', $dataKaryawan->ptkp_id)
+            ->where('id', $ptkp_id)
             ->value('nilai');
         $penghasilanKenaPajak = $penghasilanNetoSetelahBiayaJabatan - $nilaiPTKP;
 
@@ -369,7 +368,7 @@ class CalculateHelper
 
         // 7. Kurangi dengan jumlah PPh bulanan dari Januari hingga November
         $pph21BulananTotal = DB::table('penggajians')
-            ->where('data_karyawan_id', $dataKaryawan->data_karyawan_id)
+            ->where('data_karyawan_id', $dataKaryawan)
             ->whereBetween('tgl_penggajian', [Carbon::create($currentYear, 1, 1), Carbon::create($currentYear, 11, 30)])
             ->sum('pph_21');
         $pph21Desember = $pph21Tahunan - $pph21BulananTotal;
@@ -396,32 +395,16 @@ class CalculateHelper
         return $totalBOR;
     }
 
-    private function calculatedUangMakanSebulan($dataKaryawan)
+    public static function calculatedPenghasilanBrutoTotal($reward, $gaji_pokok, $tunjangan_jabatan, $tunjangan_fungsional, $tunjangan_khusus, $tunjangan_lainnya, $thr, $uang_makan)
     {
-        // Get current month and year
-        $currentMonth = Carbon::now('Asia/Jakarta')->month;
-        $currentYear = Carbon::now('Asia/Jakarta')->year;
-        $daysInMonth = Carbon::createFromDate($currentYear, $currentMonth)->daysInMonth;
-
-        $rate_uang_makan = $dataKaryawan->uang_makan;
-
-        if (!$rate_uang_makan || $rate_uang_makan == 0) {
-            return 0;
-        }
-
-        return $rate_uang_makan * $daysInMonth;
-    }
-
-    public static function calculatedPenghasilanBrutoTotal($dataKaryawan, $reward, $penghasilanTHR = 0)
-    {
-        return $dataKaryawan->gaji_pokok
+        return $gaji_pokok
             + $reward
-            + $penghasilanTHR
-            + $dataKaryawan->tunjangan_jabatan
-            + $dataKaryawan->tunjangan_fungsional
-            + $dataKaryawan->tunjangan_khusus
-            + $dataKaryawan->tunjangan_lainnya
-            + self::calculatedUangMakanSebulan($dataKaryawan);
+            + $thr
+            + $tunjangan_jabatan
+            + $tunjangan_fungsional
+            + $tunjangan_khusus
+            + $tunjangan_lainnya
+            + $uang_makan;
     }
 
     public static function calculatedPenghasilanBruto($dataKaryawan)

@@ -426,7 +426,8 @@ class CreateGajiJob implements ShouldQueue
                         ->where('id', $tagihan->id)
                         ->update([
                             'sisa_tagihan' => $sisaTagihan,
-                            'sisa_tenor' => $sisaTenor
+                            'sisa_tenor' => $sisaTenor,
+                            'status_tagihan_id' => 2
                         ]);
 
                     Log::info("Sisa tagihan untuk tagihan ID {$tagihan->id} setelah update: " . ($sisaTagihan ?? 'null'));
@@ -440,7 +441,8 @@ class CreateGajiJob implements ShouldQueue
                         ->where('id', $tagihan->id)
                         ->update([
                             'sisa_tagihan' => null,
-                            'sisa_tenor' => null
+                            'sisa_tenor' => null,
+                            'status_tagihan_id' => 3
                         ]);
 
                     Log::info("Tagihan ID {$tagihan->id} telah lunas, sisa_tagihan diset menjadi null.");
@@ -472,7 +474,8 @@ class CreateGajiJob implements ShouldQueue
                         ->where('id', $tagihan->id)
                         ->update([
                             'sisa_tagihan' => $sisaTagihan,
-                            'sisa_tenor' => $sisaTenor
+                            'sisa_tenor' => $sisaTenor,
+                            'status_tagihan_id' => 2
                         ]);
 
                     Log::info("Sisa tagihan untuk tagihan ID {$tagihan->id} setelah update: " . ($sisaTagihan ?? 'null'));
@@ -486,7 +489,8 @@ class CreateGajiJob implements ShouldQueue
                         ->where('id', $tagihan->id)
                         ->update([
                             'sisa_tagihan' => null,
-                            'sisa_tenor' => null
+                            'sisa_tenor' => null,
+                            'status_tagihan_id' => 3
                         ]);
 
                     Log::info("Tagihan ID {$tagihan->id} telah lunas, sisa_tagihan diset menjadi null.");
