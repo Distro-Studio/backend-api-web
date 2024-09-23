@@ -7,7 +7,7 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Http\Exceptions\HttpResponseException;
 
-class StorePenyesuaianGajiCustomRequest extends FormRequest
+class UpdatePendidikanRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -25,22 +25,15 @@ class StorePenyesuaianGajiCustomRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'nama_detail' => 'required|string',
-            'besaran' => 'required|numeric',
-            'bulan_mulai' => 'nullable|string',
-            'bulan_selesai' => 'nullable|string',
+            'label' => 'required|string'
         ];
     }
 
     public function messages()
     {
         return [
-            'nama_detail.required' => 'Nama pengurang gaji tidak diperbolehkan kosong.',
-            'nama_detail.string' => 'Nama pengurang gaji tidak diperbolehkan mengandung angka.',
-            'besaran.required' => 'Besaran pengurang gaji tidak diperbolehkan kosong.',
-            'besaran.numeric' => 'Besaran pengurang gaji tidak diperbolehkan mengandung huruf.',
-            'bulan_mulai.string' => 'Data tanggal mulai hanya diperbolehkan mengandung huruf dan angka.',
-            'bulan_selesai.string' => 'Data tanggal selesai hanya diperbolehkan mengandung huruf dan angka.',
+            'label.required' => 'Nama pendidikan tidak diperbolehkan kosong.',
+            'label.max' => 'Nama pendidikan melebihi batas maksimum panjang karakter.'
         ];
     }
 

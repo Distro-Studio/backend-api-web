@@ -372,6 +372,7 @@ class PenggajianController extends Controller
         ], Response::HTTP_OK);
     }
 
+    // ini v2
     public function showDetailGajiUser($penggajian_id)
     {
         if (!Gate::allows('view penggajianKaryawan')) {
@@ -398,7 +399,34 @@ class PenggajianController extends Controller
         $kelompokGaji = $dataKaryawan->kelompok_gajis;
         $ptkp = $dataKaryawan->ptkps;
 
-        $detailGajis = $penggajian->detail_gajis->map(function ($detail) {
+        // Kategori pendapatan tetap
+        $pendapatanTetapList = [
+            'Gaji Pokok',
+            'Tunjangan Jabatan',
+            'Tunjangan Fungsional',
+            'Tunjangan Khusus',
+            'Tunjangan Lainnya'
+        ];
+
+        $pendapatanTambahanList = [
+            'Uang Lembur',
+            'Uang Makan',
+            'Reward BOR',
+            'Reward Absensi',
+            'THR'
+        ];
+
+        $potonganTetapList = [
+            'PPh21',
+            'BPJS Kesehatan',
+            'BPJS Ketenagakerjaan',
+            'DPLK'
+        ];
+
+        // Filter pendapatan tetap
+        $pendapatanTetap = $penggajian->detail_gajis->filter(function ($detail) use ($pendapatanTetapList) {
+            return in_array($detail->nama_detail, $pendapatanTetapList);
+        })->map(function ($detail) {
             return [
                 'kategori_gaji' => $detail->kategori_gajis,
                 'nama_detail' => $detail->nama_detail,
@@ -407,6 +435,52 @@ class PenggajianController extends Controller
                 'updated_at' => $detail->updated_at
             ];
         });
+
+        // Filter pendapatan tambahan (selain pendapatan tetap)
+        $pendapatanTambahan = $penggajian->detail_gajis->filter(function ($detail) use ($pendapatanTambahanList, $pendapatanTetapList) {
+            return (in_array($detail->nama_detail, $pendapatanTambahanList) || $detail->kategori_gaji_id == 2)
+                && !in_array($detail->nama_detail, $pendapatanTetapList);
+        })->map(function ($detail) {
+            return [
+                'kategori_gaji' => $detail->kategori_gajis,
+                'nama_detail' => $detail->nama_detail,
+                'besaran' => $detail->besaran,
+                'created_at' => $detail->created_at,
+                'updated_at' => $detail->updated_at
+            ];
+        })->values();
+
+        $potonganTetap = $penggajian->detail_gajis->filter(function ($detail) use ($potonganTetapList) {
+            return in_array($detail->nama_detail, $potonganTetapList);
+        })->map(function ($detail) {
+            return [
+                'kategori_gaji' => $detail->kategori_gajis,
+                'nama_detail' => $detail->nama_detail,
+                'besaran' => $detail->besaran,
+                'created_at' => $detail->created_at,
+                'updated_at' => $detail->updated_at
+            ];
+        })->values();
+
+        $potonganTambahan = $penggajian->detail_gajis->filter(function ($detail) use ($potonganTetapList) {
+            return !in_array($detail->nama_detail, $potonganTetapList) && $detail->kategori_gaji_id == 3;
+        })->map(function ($detail) {
+            return [
+                'kategori_gaji' => $detail->kategori_gajis,
+                'nama_detail' => $detail->nama_detail,
+                'besaran' => $detail->besaran,
+                'created_at' => $detail->created_at,
+                'updated_at' => $detail->updated_at
+            ];
+        })->values();
+
+        $totalPendapatanTetap = $pendapatanTetap->sum('besaran');
+        $totalPendapatanTambahan = $pendapatanTambahan->sum('besaran');
+        $totalPendapatan = $totalPendapatanTetap + $totalPendapatanTambahan;
+
+        $totalPotonganTetap = $potonganTetap->sum('besaran');
+        $totalPotonganTambahan = $potonganTambahan->sum('besaran');
+        $totalPotongan = $totalPotonganTetap + $totalPotonganTambahan;
 
         $formattedData = [
             'user' => [
@@ -424,7 +498,16 @@ class PenggajianController extends Controller
             'unit_kerja' => $unitKerja,
             'kelompok_gaji' => $kelompokGaji,
             'ptkp' => $ptkp,
-            'detail_gaji' => $detailGajis,
+            'pendapatan' => [
+                'pendapatan_tetap' => $pendapatanTetap,
+                'pendapatan_tambahan' => $pendapatanTambahan,
+                'total_pendapatan' => $totalPendapatan,
+            ],
+            'potongan' => [
+                'potongan_tetap' => $potonganTetap,
+                'potongan_tambahan' => $potonganTambahan,
+                'total_potongan' => $totalPotongan,
+            ],
             'take_home_pay' => $penggajian->take_home_pay,
         ];
 

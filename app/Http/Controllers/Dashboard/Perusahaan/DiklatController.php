@@ -126,6 +126,7 @@ class DiklatController extends Controller
                 'lokasi' => $diklat->lokasi,
                 'list_peserta' => $pesertaList,
                 'alasan' => $diklat->alasan ?? null,
+                'skp' => $diklat->skp ?? null,
                 'certificate_published' => $diklat->certificate_published,
                 'certificate_verified_by' => $diklat->certificate_diklats,
                 'created_at' => $diklat->created_at,
@@ -240,6 +241,7 @@ class DiklatController extends Controller
                 'lokasi' => $diklat->lokasi,
                 'list_peserta' => $pesertaList,
                 'alasan' => $diklat->alasan ?? null,
+                'skp' => $diklat->skp ?? null,
                 'certificate_published' => $diklat->certificate_published,
                 'certificate_verified_by' => $diklat->certificate_diklats,
                 'created_at' => $diklat->created_at,
@@ -249,7 +251,7 @@ class DiklatController extends Controller
 
         return response()->json([
             'status' => Response::HTTP_OK,
-            'message' => 'Data diklat ekstern al berhasil ditampilkan.',
+            'message' => 'Data diklat eksternal berhasil ditampilkan.',
             'data' => $formattedData,
             'pagination' => $paginationData
         ], Response::HTTP_OK);

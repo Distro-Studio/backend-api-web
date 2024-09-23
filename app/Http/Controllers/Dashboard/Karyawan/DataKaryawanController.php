@@ -38,6 +38,7 @@ use Illuminate\Support\Facades\Hash;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\TemplateKaryawanExport;
 use App\Exports\Karyawan\KaryawanExport;
+use App\Helpers\CalculateBMIHelper;
 use App\Imports\Karyawan\KaryawanImport;
 use App\Http\Requests\StoreDataKaryawanRequest;
 use App\Jobs\EmailNotification\AccountEmailJob;
@@ -724,7 +725,7 @@ class DataKaryawanController extends Controller
         'id' => $item->id,
         'nama' => $item->nama_keluarga,
         'hubungan' => $item->hubungan,
-        'pendidikan_terakhir' => $item->pendidikan_terakhir,
+        'pendidikan_terakhir' => $item->kategori_pendidikans,
         'status_hidup' => $item->status_hidup,
         'pekerjaan' => $item->pekerjaan,
         'no_hp' => $item->no_hp,
@@ -770,12 +771,18 @@ class DataKaryawanController extends Controller
       return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
     }
 
+    $dataKeluargaIds = $request->input('data_keluarga_id', []);
+    if (empty($dataKeluargaIds)) {
+      return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Tidak ada anggota keluarga yang dipilih untuk verifikasi.'), Response::HTTP_BAD_REQUEST);
+    }
+
     $karyawan = DataKaryawan::find($data_karyawan_id);
     if (!$karyawan) {
       return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data karyawan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
     }
 
     $dataKeluargaList = DataKeluarga::where('data_karyawan_id', $data_karyawan_id)
+      ->whereIn('id', $dataKeluargaIds)
       ->where('status_keluarga_id', 1)
       ->get();
     if ($dataKeluargaList->isEmpty()) {
@@ -784,6 +791,10 @@ class DataKaryawanController extends Controller
 
     foreach ($dataKeluargaList as $keluarga) {
       $status_keluarga_id = $keluarga->status_keluarga_id;
+
+      if ($request->has('verifikasi_disetujui') && $request->has('verifikasi_ditolak')) {
+        return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Tidak dapat menyetujui dan menolak verifikasi pada saat yang bersamaan.'), Response::HTTP_BAD_REQUEST);
+      }
 
       // disetujui tahap 1
       if ($request->has('verifikasi_disetujui') && $request->verifikasi_disetujui == 1) {
@@ -1286,6 +1297,7 @@ class DataKaryawanController extends Controller
         'jam_selesai' => $diklat->jam_selesai,
         'durasi' => $diklat->durasi,
         'lokasi' => $diklat->lokasi,
+        'skp' => $diklat->skp ?? null,
         'dokumen_eksternal' => $diklat->berkas_dokumen_eksternals ? [
           'id' => $diklat->berkas_dokumen_eksternals->id,
           'nama_file' => $diklat->berkas_dokumen_eksternals->nama_file,
@@ -1581,7 +1593,7 @@ class DataKaryawanController extends Controller
         'jenis_kelamin' => $karyawan->jenis_kelamin,
         'agama' => $karyawan->kategori_agamas, // agama_id
         'golongan_darah' => $karyawan->kategori_darahs, // golongan_darah_id
-        'pendidikan_terakhir' => $karyawan->pendidikan_terakhir,
+        'pendidikan_terakhir' => $karyawan->kategori_pendidikans, // pendidikan_terakhir_id
         'asal_sekolah' => $karyawan->asal_sekolah,
         'tinggi_badan' => $karyawan->tinggi_badan,
         'berat_badan' => $karyawan->berat_badan,
@@ -1608,7 +1620,6 @@ class DataKaryawanController extends Controller
     ], Response::HTTP_OK);
   }
 
-  // TODO: Untuk RSKI, kalau udah ke product login email aja
   public function store(StoreDataKaryawanRequest $request)
   {
     if (!Gate::allows('create dataKaryawan')) {
@@ -2120,6 +2131,14 @@ class DataKaryawanController extends Controller
 
       $karyawan->update($data);
 
+      // Itung BMI berat dan tinggi badan kalo ada
+      if (!empty($data['berat_badan']) && !empty($data['tinggi_badan'])) {
+        $bmi_calculated = CalculateBMIHelper::calculateBMI($data['berat_badan'], $data['tinggi_badan']);
+        $karyawan->bmi_value = $bmi_calculated['bmi_value'];
+        $karyawan->bmi_ket = $bmi_calculated['bmi_ket'];
+        $karyawan->save();
+      }
+
       // Update potongan gaji (premi)
       $premis = $request->input('premi_id', []);
       DB::table('pengurang_gajis')->where('data_karyawan_id', $karyawan->id)->delete(); // Hapus potongan gaji yang lama
@@ -2145,7 +2164,6 @@ class DataKaryawanController extends Controller
       return response()->json([
         'status' => Response::HTTP_OK,
         'message' => "Data karyawan '{$karyawan->users->nama}' berhasil diperbarui."
-        // 'data' => $this->formatKaryawanData($karyawan),
       ], Response::HTTP_OK);
     } catch (Exception $e) {
       DB::rollBack();
@@ -2314,10 +2332,11 @@ class DataKaryawanController extends Controller
 
     // Buat notifikasi untuk user yang bersangkutan
     Notifikasi::create([
-      'kategori_notifikasi_id' => 6, // Sesuaikan dengan kategori notifikasi yang sesuai
-      'user_id' => $user->id, // Penerima notifikasi
+      'kategori_notifikasi_id' => 6,
+      'user_id' => $user->id,
       'message' => $message,
       'is_read' => false,
+      'is_verifikasi' => true,
       'created_at' => Carbon::now('Asia/Jakarta'),
     ]);
   }
@@ -2340,8 +2359,8 @@ class DataKaryawanController extends Controller
 
     // Buat notifikasi untuk user yang bersangkutan
     Notifikasi::create([
-      'kategori_notifikasi_id' => 6, // Sesuaikan dengan kategori notifikasi yang sesuai
-      'user_id' => $karyawan->users->id, // Penerima notifikasi
+      'kategori_notifikasi_id' => 6,
+      'user_id' => $karyawan->users->id,
       'message' => $message,
       'is_read' => false,
       'created_at' => Carbon::now('Asia/Jakarta'),

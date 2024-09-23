@@ -14,7 +14,7 @@ class CalculateHelper
         $thr = 0;
         // $tglMulaiKerja = Carbon::parse($dataKaryawan->tgl_masuk);
         $tglMulaiKerja = Carbon::parse(RandomHelper::convertToDateString($dataKaryawan->tgl_masuk));
-        $masaKerja = $tglMulaiKerja->diffInMonths(Carbon::now());
+        $masaKerja = $tglMulaiKerja->diffInMonths(Carbon::now('Asia/Jakarta'));
 
         if ($dataKaryawan->status_karyawan == "Tetap") {
             if ($masaKerja <= 12) {
@@ -58,21 +58,45 @@ class CalculateHelper
                 Log::info("Maksimal rate: {$premi->maksimal_rate} premi ID: {$premi->id} sumber potongan: {$basisPengkali}");
             }
 
-            // Cek has_custom_formula true
-            if ($premi->has_custom_formula) {
-                if ($premi->jenis_premi == 0) { // Persentase
+            if ($premi->id == 1) { // BPJS Kesehatan
+                // Ambil jumlah keluarga yang terdaftar BPJS
+                $jumlahKeluarga = DB::table('data_keluargas')
+                    ->where('data_karyawan_id', $data_karyawan_id)
+                    ->where('is_bpjs', 1)
+                    ->count();
+
+                if ($jumlahKeluarga !== null && $jumlahKeluarga > 0) {
+                    $totalAnggotaBPJS = $jumlahKeluarga + 1;
+
+                    // Hitung premi BPJS Kesehatan
+                    $premi_bpjs_kes = ($premi->besaran_premi / 100) * $basisPengkaliRate;
+
+                    // Kalikan hasil premi dengan total anggota keluarga
+                    $premiAmount = $premi_bpjs_kes * $totalAnggotaBPJS;
+
+                    Log::info("Calculated BPJS Kesehatan premi: {$premiAmount} untuk karyawan ID: {$data_karyawan_id}, Total anggota BPJS: {$totalAnggotaBPJS}");
+                } else {
+                    // Jika tidak ada keluarga, hitung premi untuk karyawan
                     $premiAmount = ($premi->besaran_premi / 100) * $basisPengkaliRate;
-                } else {
-                    $premiAmount = $premi->besaran_premi;
+                    Log::info("Calculated BPJS Kesehatan premi untuk karyawan tanpa keluarga: {$premiAmount} untuk karyawan ID: {$data_karyawan_id}");
                 }
-                Log::info("Calculated custom premi: {$premiAmount} premi ID: {$premi->id}");
             } else {
-                if ($premi->jenis_premi == 0) { // Persentase
-                    $premiAmount = ($premi->besaran_premi / 100) * $basisPengkali;
+                // Cek has_custom_formula true
+                if ($premi->has_custom_formula) {
+                    if ($premi->jenis_premi == 0) { // Persentase
+                        $premiAmount = ($premi->besaran_premi / 100) * $basisPengkaliRate;
+                    } else {
+                        $premiAmount = $premi->besaran_premi;
+                    }
+                    Log::info("Calculated custom premi: {$premiAmount} premi ID: {$premi->id}");
                 } else {
-                    $premiAmount = $premi->besaran_premi;
+                    if ($premi->jenis_premi == 0) { // Persentase
+                        $premiAmount = ($premi->besaran_premi / 100) * $basisPengkali;
+                    } else {
+                        $premiAmount = $premi->besaran_premi;
+                    }
+                    Log::info("Calculated premi: {$premiAmount} premi ID: {$premi->id}");
                 }
-                Log::info("Calculated premi: {$premiAmount} premi ID: {$premi->id}");
             }
             $totalPremi += $premiAmount;
         }
@@ -81,7 +105,7 @@ class CalculateHelper
     }
 
     // buat itung detail gajis
-    public static function calculatedPremiDetail($premi, $penghasilanBruto, $gajiPokok)
+    public static function calculatedPremiDetail($premi, $penghasilanBruto, $gajiPokok, $data_karyawan_id)
     {
         $premiAmount = 0;
         $basisGaji = $penghasilanBruto;
@@ -101,21 +125,44 @@ class CalculateHelper
             Log::info("Maksimal rate: {$premi->maksimal_rate} premi ID: {$premi->id} sumber potongan: {$basisPengkali}");
         }
 
-        // Cek has_custom_formula true
-        if ($premi->has_custom_formula) {
-            if ($premi->jenis_premi == 0) { // Persentase
+        if ($premi->id == 1) { // BPJS Kesehatan
+            $jumlahKeluarga = DB::table('data_keluargas')
+                ->where('data_karyawan_id', $data_karyawan_id)
+                ->where('is_bpjs', 1)
+                ->count();
+
+            if ($jumlahKeluarga !== null && $jumlahKeluarga > 0) {
+                $totalAnggotaBPJS = $jumlahKeluarga + 1;
+
+                // Hitung premi BPJS Kesehatan
+                $premi_bpjs_kes = ($premi->besaran_premi / 100) * $basisPengkaliRate;
+
+                // Kalikan hasil premi dengan total anggota keluarga
+                $premiAmount = $premi_bpjs_kes * $totalAnggotaBPJS;
+
+                Log::info("Calculated BPJS Kesehatan premi: {$premiAmount} untuk karyawan ID: {$data_karyawan_id}, Total anggota BPJS: {$totalAnggotaBPJS}");
+            } else {
+                // Jika tidak ada keluarga, hitung premi untuk karyawan
                 $premiAmount = ($premi->besaran_premi / 100) * $basisPengkaliRate;
-            } else {
-                $premiAmount = $premi->besaran_premi;
+                Log::info("Calculated BPJS Kesehatan premi untuk karyawan tanpa keluarga: {$premiAmount} untuk karyawan ID: {$data_karyawan_id}");
             }
-            Log::info("Calculated custom premi: {$premiAmount} premi ID: {$premi->id}");
         } else {
-            if ($premi->jenis_premi == 0) { // Persentase
-                $premiAmount = ($premi->besaran_premi / 100) * $basisPengkali;
+            // Cek has_custom_formula true
+            if ($premi->has_custom_formula) {
+                if ($premi->jenis_premi == 0) { // Persentase
+                    $premiAmount = ($premi->besaran_premi / 100) * $basisPengkaliRate;
+                } else {
+                    $premiAmount = $premi->besaran_premi;
+                }
+                Log::info("Calculated custom premi: {$premiAmount} premi ID: {$premi->id}");
             } else {
-                $premiAmount = $premi->besaran_premi;
+                if ($premi->jenis_premi == 0) { // Persentase
+                    $premiAmount = ($premi->besaran_premi / 100) * $basisPengkali;
+                } else {
+                    $premiAmount = $premi->besaran_premi;
+                }
+                Log::info("Calculated premi: {$premiAmount} premi ID: {$premi->id}");
             }
-            Log::info("Calculated premi: {$premiAmount} premi ID: {$premi->id}");
         }
 
         return $premiAmount;
@@ -205,23 +252,37 @@ class CalculateHelper
         return $totalBOR;
     }
 
+    private function calculatedUangMakanSebulan($dataKaryawan)
+    {
+        // Get current month and year
+        $currentMonth = Carbon::now('Asia/Jakarta')->month;
+        $currentYear = Carbon::now('Asia/Jakarta')->year;
+        $daysInMonth = Carbon::createFromDate($currentYear, $currentMonth)->daysInMonth;
+
+        $rate_uang_makan = $dataKaryawan->uang_makan;
+
+        if (!$rate_uang_makan || $rate_uang_makan == 0) {
+            return 0;
+        }
+
+        return $rate_uang_makan * $daysInMonth;
+    }
+
     public static function calculatedPenghasilanBruto($dataKaryawan, $reward, $penghasilanTHR = 0)
     {
         return $dataKaryawan->gaji_pokok
             + $reward
             + $penghasilanTHR
             + $dataKaryawan->tunjangan_jabatan
-            + $dataKaryawan->tunjangan_kompetensi
             + $dataKaryawan->tunjangan_fungsional
             + $dataKaryawan->tunjangan_khusus
             + $dataKaryawan->tunjangan_lainnya
-            + $dataKaryawan->uang_makan;
+            + self::calculatedUangMakanSebulan($dataKaryawan);
     }
 
     public static function calculatedTotalTunjangan($dataKaryawan)
     {
         return $dataKaryawan->tunjangan_jabatan
-            + $dataKaryawan->tunjangan_kompetensi
             + $dataKaryawan->tunjangan_fungsional
             + $dataKaryawan->tunjangan_khusus
             + $dataKaryawan->tunjangan_lainnya;

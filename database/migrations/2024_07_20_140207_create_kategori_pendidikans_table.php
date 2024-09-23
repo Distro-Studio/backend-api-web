@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('kategori_pendidikans', function (Blueprint $table) {
             $table->id();
             $table->string('label');
+            $table->softDeletes();
             $table->timestamps();
         });
     }

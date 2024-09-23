@@ -29,7 +29,8 @@ class StoreDiklatRequest extends FormRequest
             'tgl_selesai' => 'required|string',
             'jam_mulai' => 'required|string',
             'jam_selesai' => 'required|string',
-            'lokasi' => 'required|string|max:255',
+            'lokasi' => 'required|string',
+            'skp' => 'nullable|string',
         ];
     }
 
@@ -58,6 +59,7 @@ class StoreDiklatRequest extends FormRequest
             'jam_selesai.required' => 'Jam selesai diklat tidak diperbolehkan kosong.',
             'jam_selesai.string' => 'Jam selesai diklat harus berupa angka dan teks.',
             'lokasi.required' => 'Lokasi diklat tidak diperbolehkan kosong.',
+            'skp.string' => 'Skp diklat hanya diperbolehkan menggunakan angka dan huruf.',
         ];
     }
 

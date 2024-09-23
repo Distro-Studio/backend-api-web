@@ -232,93 +232,93 @@ class PenyesuaianGajiController extends Controller
     ], Response::HTTP_OK);
   }
 
-  public function store(StorePenyesuaianGajiRequest $request)
-  {
-    if (!Gate::allows('create penggajianKaryawan')) {
-      return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
-    }
+  // public function store(StorePenyesuaianGajiRequest $request)
+  // {
+  //   if (!Gate::allows('create penggajianKaryawan')) {
+  //     return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+  //   }
 
-    $data = $request->validated();
-    // dd($data);
+  //   $data = $request->validated();
+  //   // dd($data);
 
-    $kategori_penambah = DB::table('kategori_gajis')->where('label', 'Penambah')->value('id');
-    $kategori_pengurang = DB::table('kategori_gajis')->where('label', 'Pengurang')->value('id');
+  //   $kategori_penambah = DB::table('kategori_gajis')->where('label', 'Penambah')->value('id');
+  //   $kategori_pengurang = DB::table('kategori_gajis')->where('label', 'Pengurang')->value('id');
 
-    DB::beginTransaction();
-    try {
-      $responses = [];
+  //   DB::beginTransaction();
+  //   try {
+  //     $responses = [];
 
-      foreach ($data['penggajian_id'] as $penggajian_id) {
-        $currentMonth = Carbon::now()->month;
-        $currentYear = Carbon::now()->year;
+  //     foreach ($data['penggajian_id'] as $penggajian_id) {
+  //       $currentMonth = Carbon::now()->month;
+  //       $currentYear = Carbon::now()->year;
 
-        // Cek apakah penggajian_id valid
-        $penggajian = Penggajian::find($penggajian_id);
-        if (!$penggajian) {
-          return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data penggajian terkait tidak ditemukan.'), Response::HTTP_NOT_FOUND);
-        }
+  //       // Cek apakah penggajian_id valid
+  //       $penggajian = Penggajian::find($penggajian_id);
+  //       if (!$penggajian) {
+  //         return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data penggajian terkait tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+  //       }
 
-        // Validasi berdasarkan status_gaji_id
-        if ($penggajian->status_gaji_id == 2) { // Status 2 berarti penggajian sudah dipublikasikan
-          return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Penyesuaian gaji tidak dapat dilakukan karena penggajian sudah dipublikasikan.'), Response::HTTP_NOT_ACCEPTABLE);
-        }
+  //       // Validasi berdasarkan status_gaji_id
+  //       if ($penggajian->status_gaji_id == 2) { // Status 2 berarti penggajian sudah dipublikasikan
+  //         return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Penyesuaian gaji tidak dapat dilakukan karena penggajian sudah dipublikasikan.'), Response::HTTP_NOT_ACCEPTABLE);
+  //       }
 
-        // Tentukan kategori penyesuaian
-        if ($data['kategori_gaji'] == 1) {
-          $kategori = $kategori_penambah;
-          $message = "Penyesuaian gaji '{$data['nama_detail']}' berhasil dilakukan untuk penambah Take Home Pay.";
-        } else {
-          $kategori = $kategori_pengurang;
-          $message = "Penyesuaian gaji '{$data['nama_detail']}' berhasil dilakukan untuk pengurang Take Home Pay.";
-        }
+  //       // Tentukan kategori penyesuaian
+  //       if ($data['kategori_gaji'] == 1) {
+  //         $kategori = $kategori_penambah;
+  //         $message = "Penyesuaian gaji '{$data['nama_detail']}' berhasil dilakukan untuk penambah Take Home Pay.";
+  //       } else {
+  //         $kategori = $kategori_pengurang;
+  //         $message = "Penyesuaian gaji '{$data['nama_detail']}' berhasil dilakukan untuk pengurang Take Home Pay.";
+  //       }
 
-        $penyesuaianGaji = PenyesuaianGaji::create([
-          'penggajian_id' => $penggajian_id,
-          'kategori_gaji_id' => $kategori,
-          'nama_detail' => $data['nama_detail'],
-          'besaran' => $data['besaran'],
-          'bulan_mulai' => $data['bulan_mulai'],
-          'bulan_selesai' => $data['bulan_selesai']
-        ]);
+  //       $penyesuaianGaji = PenyesuaianGaji::create([
+  //         'penggajian_id' => $penggajian_id,
+  //         'kategori_gaji_id' => $kategori,
+  //         'nama_detail' => $data['nama_detail'],
+  //         'besaran' => $data['besaran'],
+  //         'bulan_mulai' => $data['bulan_mulai'],
+  //         'bulan_selesai' => $data['bulan_selesai']
+  //       ]);
 
-        // Cek apakah bulan mulai adalah bulan saat ini
-        $bulanMulai = Carbon::parse(RandomHelper::convertToDateString($data['bulan_mulai']));
-        if ($bulanMulai->month == $currentMonth && $bulanMulai->year == $currentYear) {
-          // Kurangi atau tambah take home pay sesuai dengan kategori
-          if ($kategori == $kategori_penambah) {
-            $penggajian->take_home_pay += $data['besaran'];
-          } else {
-            $penggajian->take_home_pay -= $data['besaran'];
-          }
-          $penggajian->save();
+  //       // Cek apakah bulan mulai adalah bulan saat ini
+  //       $bulanMulai = Carbon::parse(RandomHelper::convertToDateString($data['bulan_mulai']));
+  //       if ($bulanMulai->month == $currentMonth && $bulanMulai->year == $currentYear) {
+  //         // Kurangi atau tambah take home pay sesuai dengan kategori
+  //         if ($kategori == $kategori_penambah) {
+  //           $penggajian->take_home_pay += $data['besaran'];
+  //         } else {
+  //           $penggajian->take_home_pay -= $data['besaran'];
+  //         }
+  //         $penggajian->save();
 
-          // Simpan detail gaji ke tabel detail_gajis
-          DetailGaji::create([
-            'penggajian_id' => $penggajian_id,
-            'kategori_gaji_id' => $kategori,
-            'nama_detail' => $penyesuaianGaji->nama_detail,
-            'besaran' => $penyesuaianGaji->besaran
-          ]);
-        }
+  //         // Simpan detail gaji ke tabel detail_gajis
+  //         DetailGaji::create([
+  //           'penggajian_id' => $penggajian_id,
+  //           'kategori_gaji_id' => $kategori,
+  //           'nama_detail' => $penyesuaianGaji->nama_detail,
+  //           'besaran' => $penyesuaianGaji->besaran
+  //         ]);
+  //       }
 
-        // Kirim notifikasi kepada karyawan yang terkait
-        $this->createNotifikasiPenyesuaianGaji($penggajian, $penyesuaianGaji);
+  //       // Kirim notifikasi kepada karyawan yang terkait
+  //       $this->createNotifikasiPenyesuaianGaji($penggajian, $penyesuaianGaji);
 
-        $responses[] = $penyesuaianGaji;
-      }
+  //       $responses[] = $penyesuaianGaji;
+  //     }
 
-      DB::commit();
+  //     DB::commit();
 
-      return response()->json([
-        'status' => Response::HTTP_OK,
-        'message' => $message,
-        'data' => $responses
-      ], Response::HTTP_OK);
-    } catch (\Exception $e) {
-      DB::rollBack();
-      return response()->json(new WithoutDataResource(Response::HTTP_INTERNAL_SERVER_ERROR, 'Terjadi kesalahan saat menyimpan penyesuaian gaji: ' . $e->getMessage()), Response::HTTP_INTERNAL_SERVER_ERROR);
-    }
-  }
+  //     return response()->json([
+  //       'status' => Response::HTTP_OK,
+  //       'message' => $message,
+  //       'data' => $responses
+  //     ], Response::HTTP_OK);
+  //   } catch (\Exception $e) {
+  //     DB::rollBack();
+  //     return response()->json(new WithoutDataResource(Response::HTTP_INTERNAL_SERVER_ERROR, 'Terjadi kesalahan saat menyimpan penyesuaian gaji: ' . $e->getMessage()), Response::HTTP_INTERNAL_SERVER_ERROR);
+  //   }
+  // }
 
   public function exportPenyesuaianGaji()
   {
@@ -338,7 +338,255 @@ class PenyesuaianGajiController extends Controller
     }
   }
 
-  // Penyesuaian Gaji
+  // Penyesuaian gaji multi
+  // public function storePenyesuaianGajiPenambah(StorePenyesuaianGajiCustomRequest $request)
+  // {
+  //   if (!Gate::allows('create penggajianKaryawan')) {
+  //     return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+  //   }
+
+  //   $data = $request->validated();
+  //   $userIds = $request->input('user_id', []);
+
+  //   if (empty($userIds)) {
+  //     return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Silahkan pilih karyawan terlebih dahulu untuk melanjutkan proses penyesuaian penambahan gaji.'), Response::HTTP_BAD_REQUEST);
+  //   }
+
+  //   DB::beginTransaction();
+  //   try {
+  //     // Fetch data_karyawan_id from users table based on user_ids
+  //     $dataKaryawanIds = DB::table('users')
+  //       ->whereIn('id', $userIds)
+  //       ->pluck('data_karyawan_id')
+  //       ->toArray();
+
+  //     if (empty($dataKaryawanIds)) {
+  //       return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Proses tidak dapat dilanjutkan, Karena sistem tidak dapat menemukan data karyawan yang terkait.'), Response::HTTP_NOT_FOUND);
+  //     }
+
+  //     $currentMonth = Carbon::now('Asia/Jakarta')->month;
+  //     $currentYear = Carbon::now('Asia/Jakarta')->year;
+  //     $penggajianIds = DB::table('penggajians')
+  //       ->whereMonth('tgl_penggajian', $currentMonth)
+  //       ->whereYear('tgl_penggajian', $currentYear)
+  //       ->whereIn('data_karyawan_id', $dataKaryawanIds)
+  //       ->pluck('id', 'data_karyawan_id')
+  //       ->toArray();
+
+  //     if (empty($penggajianIds)) {
+  //       return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Proses tidak dapat dilanjutkan, Karena sistem tidak dapat menemukan data penggajian karyawan yang terkait.'), Response::HTTP_NOT_FOUND);
+  //     }
+
+  //     // Loop through each penggajian_id and create PenyesuaianGaji
+  //     foreach ($penggajianIds as $data_karyawan_id => $penggajian_id) {
+  //       $penyesuaianGaji = PenyesuaianGaji::create([
+  //         'penggajian_id' => $penggajian_id,
+  //         'kategori_gaji_id' => 2, // Penambah
+  //         'nama_detail' => $data['nama_detail'],
+  //         'besaran' => $data['besaran'],
+  //         'bulan_mulai' => $data['bulan_mulai'],
+  //         'bulan_selesai' => $data['bulan_selesai'],
+  //       ]);
+
+  //       $penggajian = Penggajian::find($penggajian_id);
+
+  //       // Check if the month and year match the current month
+  //       $bulanMulai = Carbon::parse(RandomHelper::convertSpecialDateFormat($data['bulan_mulai']));
+
+  //       if ($bulanMulai->month == $currentMonth && $bulanMulai->year == $currentYear) {
+  //         $penggajian->gaji_bruto += $request->besaran;
+
+  //         $totalPremi = CalculateHelper::calculatedPremi($penggajian->data_karyawans->id, $penggajian->gaji_bruto, $penggajian->data_karyawans->kelompok_gajis->gaji_pokok);
+
+  //         if ($currentMonth >= 1 && $currentMonth <= 11) {
+  //           $pph21 = CalculateHelper::calculatedPPH21ForMonths($penggajian->gaji_bruto, $penggajian->data_karyawans->ptkp_id);
+  //         } else {
+  //           $bonusBOR = DetailGaji::where('penggajian_id', $penggajian->id)
+  //             ->where('nama_detail', 'Bonus BOR')
+  //             ->sum('besaran') ?: 0;
+  //           $bonusPresensi = DetailGaji::where('penggajian_id', $penggajian->id)
+  //             ->where('nama_detail', 'Bonus Presensi')
+  //             ->sum('besaran') ?: 0;
+  //           $bonusUangLembur = DetailGaji::where('penggajian_id', $penggajian->id)
+  //             ->where('nama_detail', 'Uang Lembur')
+  //             ->sum('besaran') ?: 0;
+
+  //           $totalReward = $bonusBOR + $bonusPresensi + $bonusUangLembur;
+  //           $dataKaryawan = $penggajian->data_karyawans;
+  //           $pph21 = CalculateHelper::calculatedPPH21ForDecember($dataKaryawan, $totalReward);
+  //         }
+  //         $takeHomePay = $penggajian->gaji_bruto - $totalPremi - $pph21;
+
+  //         $penggajian->pph_21 = $pph21;
+  //         $penggajian->take_home_pay = $takeHomePay;
+  //         $penggajian->save();
+
+  //         // Update PPh21 in DetailGaji
+  //         DetailGaji::where('penggajian_id', $penggajian_id)->where('nama_detail', 'PPh21')->update(['besaran' => $pph21]);
+
+  //         // Save detail gaji for this adjustment
+  //         DetailGaji::create([
+  //           'penggajian_id' => $penggajian_id,
+  //           'kategori_gaji_id' => 2,
+  //           'nama_detail' => $penyesuaianGaji->nama_detail,
+  //           'besaran' => $penyesuaianGaji->besaran
+  //         ]);
+  //       }
+  //     }
+
+  //     $this->createNotifikasiPenyesuaianGaji($userIds, $penyesuaianGaji);
+
+  //     DB::commit();
+
+  //     return response()->json([
+  //       'status' => Response::HTTP_OK,
+  //       'message' => "Penambahan penggajian '{$data['nama_detail']}' berhasil dilakukan untuk semua karyawan terkait."
+  //     ], Response::HTTP_OK);
+  //   } catch (\Exception $e) {
+  //     DB::rollBack();
+  //     return response()->json(new WithoutDataResource(Response::HTTP_INTERNAL_SERVER_ERROR, 'Terjadi kesalahan saat menyimpan penyesuaian gaji: ' . $e->getMessage()), Response::HTTP_INTERNAL_SERVER_ERROR);
+  //   }
+  // }
+
+  // public function storePenyesuaianGajiPengurang(StorePenyesuaianGajiCustomRequest $request)
+  // {
+  //   if (!Gate::allows('create penggajianKaryawan')) {
+  //     return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+  //   }
+
+  //   $data = $request->validated();
+  //   $userIds = $request->input('user_id', []);
+
+  //   if (empty($userIds)) {
+  //     return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Silahkan pilih karyawan terlebih dahulu untuk melanjutkan proses penyesuaian pengurangan gaji.'), Response::HTTP_BAD_REQUEST);
+  //   }
+
+  //   DB::beginTransaction();
+  //   try {
+  //     // Fetch data_karyawan_id dari tabel users berdasarkan user_ids
+  //     $dataKaryawanIds = DB::table('users')
+  //       ->whereIn('id', $userIds)
+  //       ->pluck('data_karyawan_id')
+  //       ->toArray();
+
+  //     if (empty($dataKaryawanIds)) {
+  //       return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Proses tidak dapat dilanjutkan, Karena sistem tidak dapat menemukan data karyawan yang terkait.'), Response::HTTP_NOT_FOUND);
+  //     }
+
+  //     $currentMonth = Carbon::now('Asia/Jakarta')->month;
+  //     $currentYear = Carbon::now('Asia/Jakarta')->year;
+  //     $penggajianIds = DB::table('penggajians')
+  //       ->whereMonth('tgl_penggajian', $currentMonth)
+  //       ->whereYear('tgl_penggajian', $currentYear)
+  //       ->whereIn('data_karyawan_id', $dataKaryawanIds)
+  //       ->pluck('id', 'data_karyawan_id')
+  //       ->toArray();
+
+  //     if (empty($penggajianIds)) {
+  //       return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Proses tidak dapat dilanjutkan, Karena sistem tidak dapat menemukan data penggajian karyawan yang terkait.'), Response::HTTP_NOT_FOUND);
+  //     }
+
+  //     // Loop untuk setiap penggajian_id dan buat PenyesuaianGaji
+  //     foreach ($penggajianIds as $data_karyawan_id => $penggajian_id) {
+  //       $penyesuaianGaji = PenyesuaianGaji::create([
+  //         'penggajian_id' => $penggajian_id,
+  //         'kategori_gaji_id' => 3, // Pengurang
+  //         'nama_detail' => $data['nama_detail'],
+  //         'besaran' => $data['besaran'],
+  //         'bulan_mulai' => $data['bulan_mulai'],
+  //         'bulan_selesai' => $data['bulan_selesai'],
+  //       ]);
+
+  //       $penggajian = Penggajian::find($penggajian_id);
+
+  //       // Periksa apakah bulan dan tahun mulai sesuai dengan bulan dan tahun saat ini
+  //       $bulanMulai = Carbon::parse(RandomHelper::convertSpecialDateFormat($data['bulan_mulai']));
+
+  //       if ($bulanMulai->month == $currentMonth && $bulanMulai->year == $currentYear) {
+  //         $penggajian->gaji_bruto -= $request->besaran;
+
+  //         $totalPremi = CalculateHelper::calculatedPremi($penggajian->data_karyawans->id, $penggajian->gaji_bruto, $penggajian->data_karyawans->kelompok_gajis->gaji_pokok);
+
+  //         if ($currentMonth >= 1 && $currentMonth <= 11) {
+  //           $penggajian->take_home_pay -= $data['besaran'];
+  //           $penggajian->save();
+
+  //           DetailGaji::create([
+  //             'penggajian_id' => $penggajian_id,
+  //             'kategori_gaji_id' => 3,
+  //             'nama_detail' => $penyesuaianGaji->nama_detail,
+  //             'besaran' => $penyesuaianGaji->besaran
+  //           ]);
+  //         } else {
+  //           $bonusBOR = DetailGaji::where('penggajian_id', $penggajian->id)
+  //             ->where('nama_detail', 'Bonus BOR')
+  //             ->sum('besaran') ?: 0;
+  //           $bonusPresensi = DetailGaji::where('penggajian_id', $penggajian->id)
+  //             ->where('nama_detail', 'Bonus Presensi')
+  //             ->sum('besaran') ?: 0;
+  //           $bonusUangLembur = DetailGaji::where('penggajian_id', $penggajian->id)
+  //             ->where('nama_detail', 'Uang Lembur')
+  //             ->sum('besaran') ?: 0;
+
+  //           $totalReward = $bonusBOR + $bonusPresensi + $bonusUangLembur;
+  //           $dataKaryawan = $penggajian->data_karyawans;
+  //           $pph21 = CalculateHelper::calculatedPPH21ForDecember($dataKaryawan, $totalReward);
+  //           $takeHomePay = $penggajian->gaji_bruto - $totalPremi - $pph21;
+
+  //           $penggajian->pph_21 = $pph21;
+  //           $penggajian->take_home_pay = $takeHomePay;
+  //           $penggajian->save();
+
+  //           DetailGaji::where('penggajian_id', $penggajian->id)->where('nama_detail', 'PPh21')->update(['besaran' => $pph21]);
+
+  //           DetailGaji::create([
+  //             'penggajian_id' => $penggajian_id,
+  //             'kategori_gaji_id' => 3,
+  //             'nama_detail' => $penyesuaianGaji->nama_detail,
+  //             'besaran' => $penyesuaianGaji->besaran
+  //           ]);
+  //         }
+  //       }
+  //     }
+
+  //     // Kirim notifikasi tanpa query lagi
+  //     $this->createNotifikasiPenyesuaianGaji($userIds, $penyesuaianGaji);
+
+  //     DB::commit();
+
+  //     return response()->json([
+  //       'status' => Response::HTTP_OK,
+  //       'message' => "Pengurangan gaji '{$data['nama_detail']}' berhasil dilakukan untuk karyawan terkait."
+  //     ], Response::HTTP_OK);
+  //   } catch (\Exception $e) {
+  //     DB::rollBack();
+  //     return response()->json(new WithoutDataResource(Response::HTTP_INTERNAL_SERVER_ERROR, 'Terjadi kesalahan saat menyimpan penyesuaian gaji: ' . $e->getMessage()), Response::HTTP_INTERNAL_SERVER_ERROR);
+  //   }
+  // }
+
+  // private function createNotifikasiPenyesuaianGaji($userIds, $penyesuaianGaji)
+  // {
+  //   foreach ($userIds as $user_id) {
+  //     if ($penyesuaianGaji->kategori_gaji_id == 2) {
+  //       $message = "Anda telah mendapatkan penambahan gaji '{$penyesuaianGaji->nama_detail}', Silahkan lakukan pengecekkan kembali dan pastikan gaji anda telah sesuai.";
+  //     } else {
+  //       $message = "Anda telah mendapatkan pengurangan gaji '{$penyesuaianGaji->nama_detail}', Silahkan lakukan pengecekkan kembali dan pastikan gaji anda telah sesuai.";
+  //     }
+
+  //     // Buat notifikasi untuk user yang terkait
+  //     Notifikasi::create([
+  //       'kategori_notifikasi_id' => 9,
+  //       'user_id' => $user_id,
+  //       'message' => $message,
+  //       'is_read' => false,
+  //       'created_at' => Carbon::now('Asia/Jakarta'),
+  //     ]);
+  //   }
+  // }
+
+  // TODO: Penyesuaian BOR sama seperti penyesuaian penambah
+
+  // Penyesuaian gaji single
   public function storePenyesuaianGajiPenambah(StorePenyesuaianGajiCustomRequest $request, $penggajian_id)
   {
     if (!Gate::allows('create penggajianKaryawan')) {
@@ -366,9 +614,9 @@ class PenyesuaianGajiController extends Controller
       ]);
 
       // Cek apakah bulan mulai adalah bulan saat ini
-      $currentMonth = Carbon::now()->month;
-      $currentYear = Carbon::now()->year;
-      $bulanMulai = Carbon::parse(RandomHelper::convertToDateString($request->bulan_mulai));
+      $currentMonth = Carbon::now('Asia/Jakarta')->month;
+      $currentYear = Carbon::now('Asia/Jakarta')->year;
+      $bulanMulai = Carbon::parse(RandomHelper::convertSpecialDateFormat($request->bulan_mulai));
 
       if ($bulanMulai->month == $currentMonth && $bulanMulai->year == $currentYear) {
         // Kurangi take home pay dengan besaran penyesuaian yang baru dibuat
@@ -418,8 +666,7 @@ class PenyesuaianGajiController extends Controller
 
       return response()->json([
         'status' => Response::HTTP_OK,
-        'message' => "Penambahan penggajian '{$penyesuaianGaji->nama_detail}' berhasil dilakukan untuk karyawan '{$userName}'.",
-        'data' => $penyesuaianGaji
+        'message' => "Penambahan penggajian '{$penyesuaianGaji->nama_detail}' berhasil dilakukan untuk karyawan '{$userName}'."
       ], Response::HTTP_OK);
     } catch (\Exception $e) {
       DB::rollBack();
@@ -454,18 +701,25 @@ class PenyesuaianGajiController extends Controller
       ]);
 
       // Cek apakah bulan mulai adalah bulan saat ini
-      $currentMonth = Carbon::now()->month;
-      $currentYear = Carbon::now()->year;
-      $bulanMulai = Carbon::parse(RandomHelper::convertToDateString($request->bulan_mulai));
+      $currentMonth = Carbon::now('Asia/Jakarta')->month;
+      $currentYear = Carbon::now('Asia/Jakarta')->year;
+      $bulanMulai = Carbon::parse(RandomHelper::convertSpecialDateFormat($request->bulan_mulai));
 
       if ($bulanMulai->month == $currentMonth && $bulanMulai->year == $currentYear) {
-        // Kurangi take home pay dengan besaran penyesuaian yang baru dibuat
         $penggajian->gaji_bruto -= $request->besaran;
-
+        
         $totalPremi = CalculateHelper::calculatedPremi($penggajian->data_karyawans->id, $penggajian->gaji_bruto, $penggajian->data_karyawans->kelompok_gajis->gaji_pokok);
-
+        
         if ($currentMonth >= 1 && $currentMonth <= 11) {
-          $pph21 = CalculateHelper::calculatedPPH21ForMonths($penggajian->gaji_bruto, $penggajian->data_karyawans->ptkp_id);
+          // Kurangi take home pay dengan besaran penyesuaian yang baru dibuat
+          $penggajian->take_home_pay -= $data['besaran'];
+          $penggajian->save();
+          DetailGaji::create([
+            'penggajian_id' => $penggajian_id,
+            'kategori_gaji_id' => 3,
+            'nama_detail' => $penyesuaianGaji->nama_detail,
+            'besaran' => $penyesuaianGaji->besaran
+          ]);
         } else {
           $bonusBOR = DetailGaji::where('penggajian_id', $penggajian->id)
             ->where('nama_detail', 'Bonus BOR')
@@ -480,35 +734,32 @@ class PenyesuaianGajiController extends Controller
           $totalReward = $bonusBOR + $bonusPresensi + $bonusUangLembur;
           $dataKaryawan = $penggajian->data_karyawans;
           $pph21 = CalculateHelper::calculatedPPH21ForDecember($dataKaryawan, $totalReward);
+          $takeHomePay = $penggajian->gaji_bruto - $totalPremi - $pph21;
+
+          $penggajian->pph_21 = $pph21;
+          $penggajian->take_home_pay = $takeHomePay;
+          $penggajian->save();
+
+          DetailGaji::where('penggajian_id', $penggajian->id)->where('nama_detail', 'PPH21')->update(['besaran' => $pph21]);
+
+          // Simpan detail gaji ke tabel detail_gajis
+          DetailGaji::create([
+            'penggajian_id' => $penggajian_id,
+            'kategori_gaji_id' => 3,
+            'nama_detail' => $penyesuaianGaji->nama_detail,
+            'besaran' => $penyesuaianGaji->besaran
+          ]);
         }
-
-        $takeHomePay = $penggajian->gaji_bruto - $totalPremi - $pph21;
-
-        $penggajian->pph_21 = $pph21;
-        $penggajian->take_home_pay = $takeHomePay;
-        $penggajian->save();
-
-        DetailGaji::where('penggajian_id', $penggajian->id)->where('nama_detail', 'PPH21')->update(['besaran' => $pph21]);
-
-        // Simpan detail gaji ke tabel detail_gajis
-        DetailGaji::create([
-          'penggajian_id' => $penggajian_id,
-          'kategori_gaji_id' => 3,
-          'nama_detail' => $penyesuaianGaji->nama_detail,
-          'besaran' => $penyesuaianGaji->besaran
-        ]);
-
-        $this->createNotifikasiPenyesuaianGaji($penggajian, $penyesuaianGaji);
       }
+
+      $this->createNotifikasiPenyesuaianGaji($penggajian, $penyesuaianGaji);
 
       DB::commit();
 
       $userName = $penggajian->data_karyawans->users->nama;
-
       return response()->json([
         'status' => Response::HTTP_OK,
-        'message' => "Pengurangan penggajian '{$penyesuaianGaji->nama_detail}' berhasil dilakukan untuk karyawan '{$userName}'.",
-        'data' => $penyesuaianGaji
+        'message' => "Pengurangan penggajian '{$penyesuaianGaji->nama_detail}' berhasil dilakukan untuk karyawan '{$userName}'."
       ], Response::HTTP_OK);
     } catch (\Exception $e) {
       DB::rollBack();
@@ -518,13 +769,8 @@ class PenyesuaianGajiController extends Controller
 
   private function createNotifikasiPenyesuaianGaji($penggajian, $penyesuaianGaji)
   {
-    // Dapatkan user yang terkait dengan penggajian
     $user = $penggajian->data_karyawans->users;
 
-    // Siapkan pesan notifikasi
-    // if ($penyesuaianGaji->kategori_gaji_id == 1) {
-    //   $message = "Penyesuaian gaji untuk '{$penyesuaianGaji->nama_detail}' telah dilakukan, Silahkan lakukan pengecekkan kembali dan pastikan gaji anda telah sesuai.";
-    // }
     if ($penyesuaianGaji->kategori_gaji_id == 2) {
       $message = "Anda telah mendapatkan penambahan gaji '{$penyesuaianGaji->nama_detail}', Silahkan lakukan pengecekkan kembali dan pastikan gaji anda telah sesuai.";
     } else {

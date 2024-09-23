@@ -1,13 +1,13 @@
 <?php
 
-namespace App\Http\Requests;
+namespace App\Http\Requests\Excel_Import;
 
 use Illuminate\Http\Response;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Http\Exceptions\HttpResponseException;
 
-class StorePenyesuaianGajiCustomRequest extends FormRequest
+class ImportTagihanPotonganRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -25,22 +25,15 @@ class StorePenyesuaianGajiCustomRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'nama_detail' => 'required|string',
-            'besaran' => 'required|numeric',
-            'bulan_mulai' => 'nullable|string',
-            'bulan_selesai' => 'nullable|string',
+            'tagihan_potongan_file' => 'required|mimes:xlsx,xls,csv',
         ];
     }
 
     public function messages()
     {
         return [
-            'nama_detail.required' => 'Nama pengurang gaji tidak diperbolehkan kosong.',
-            'nama_detail.string' => 'Nama pengurang gaji tidak diperbolehkan mengandung angka.',
-            'besaran.required' => 'Besaran pengurang gaji tidak diperbolehkan kosong.',
-            'besaran.numeric' => 'Besaran pengurang gaji tidak diperbolehkan mengandung huruf.',
-            'bulan_mulai.string' => 'Data tanggal mulai hanya diperbolehkan mengandung huruf dan angka.',
-            'bulan_selesai.string' => 'Data tanggal selesai hanya diperbolehkan mengandung huruf dan angka.',
+            'tagihan_potongan_file.required' => 'Silahkan masukkan file data tagihan potongan terlebih dahulu.',
+            'tagihan_potongan_file.mimes' => 'File data tagihan potongan wajib berupa excel dan berekstensi .xlsx, .xls, .csv.',
         ];
     }
 

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Dashboard\Karyawan;
 
+use App\Helpers\CalculateBMIHelper;
 use App\Models\DataKaryawan;
 use App\Models\DataKeluarga;
 use Illuminate\Http\Request;
@@ -356,6 +357,16 @@ class DataRiwayatPerubahanController extends Controller
                 if ($dataKaryawan) {
                     $dataKaryawan->{$riwayat->kolom} = $riwayat->updated_data;
                     $dataKaryawan->save();
+
+                    if (isset($riwayat->updated_data['berat_badan']) && isset($riwayat->updated_data['tinggi_badan'])) {
+                        $bmiResult = CalculateBMIHelper::calculateBMI(
+                            $riwayat->updated_data['berat_badan'],
+                            $riwayat->updated_data['tinggi_badan']
+                        );
+                        $dataKaryawan->bmi_value = $bmiResult['bmi_value'];
+                        $dataKaryawan->bmi_ket = $bmiResult['bmi_ket'];
+                        $dataKaryawan->save();
+                    }
                 }
                 break;
 

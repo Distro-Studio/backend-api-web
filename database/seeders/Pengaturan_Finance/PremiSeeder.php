@@ -28,7 +28,7 @@ class PremiSeeder extends Seeder
         ]);
 
         Premi::create([
-            'nama_premi' => 'Iuran Pensiun',
+            'nama_premi' => 'BPJS',
             'kategori_potongan_id' => 2,
             'jenis_premi' => 1,
             'besaran_premi' => 150000,

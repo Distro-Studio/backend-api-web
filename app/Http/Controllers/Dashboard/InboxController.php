@@ -37,7 +37,26 @@ class InboxController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data notifikasi tidak ditemukan.'), Response::HTTP_NOT_FOUND);
         }
 
-        $formattedData = $notifikasi->map(function ($item) {
+        $notifikasiVerifikasi = $notifikasi->filter(function ($item) {
+            return $item->is_verifikasi == 1;
+        });
+        $notifikasiReguler = $notifikasi->filter(function ($item) {
+            return $item->is_verifikasi == 0;
+        });
+
+        $formattedVerifikasi = $notifikasiVerifikasi->map(function ($item) {
+            return [
+                'id' => $item->id,
+                'kategori_notifikasi' => $item->kategori_notifikasis,
+                'user' => $item->users,
+                'message' => $item->message,
+                'is_read' => $item->is_read,
+                'created_at' => $item->created_at,
+                'updated_at' => $item->updated_at
+            ];
+        });
+
+        $formattedReguler = $notifikasiReguler->map(function ($item) {
             return [
                 'id' => $item->id,
                 'kategori_notifikasi' => $item->kategori_notifikasis,
@@ -52,7 +71,10 @@ class InboxController extends Controller
         return response()->json([
             'status' => Response::HTTP_OK,
             'message' => 'Data notifikasi berhasil ditampilkan.',
-            'data' => $formattedData
+            'list_notifikasi' => [
+                'notifikasi_verifikasi' => $formattedVerifikasi,
+                'notifikasi_reguler' => $formattedReguler
+            ]
         ], Response::HTTP_OK);
     }
 

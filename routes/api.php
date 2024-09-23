@@ -12,6 +12,7 @@ use App\Http\Controllers\Dashboard\Karyawan\DataRiwayatPerubahanController;
 use App\Http\Controllers\Dashboard\Karyawan\DataTransferKaryawanController;
 use App\Http\Controllers\Dashboard\Keuangan\PenggajianController;
 use App\Http\Controllers\Dashboard\Keuangan\PenyesuaianGajiController;
+use App\Http\Controllers\Dashboard\Keuangan\TagihanPotonganController;
 use App\Http\Controllers\Dashboard\Keuangan\THRPenggajianController;
 use App\Http\Controllers\Dashboard\Pengaturan\Akun\PermissionsController;
 use App\Http\Controllers\Dashboard\Pengaturan\Akun\RolesController;
@@ -24,6 +25,7 @@ use App\Http\Controllers\Dashboard\Pengaturan\Finance\TER21Controller;
 use App\Http\Controllers\Dashboard\Pengaturan\Karyawan\JabatanController;
 use App\Http\Controllers\Dashboard\Pengaturan\Karyawan\KelompokGajiController;
 use App\Http\Controllers\Dashboard\Pengaturan\Karyawan\KompetensiController;
+use App\Http\Controllers\Dashboard\Pengaturan\Karyawan\PendidikanTerakhirController;
 use App\Http\Controllers\Dashboard\Pengaturan\Karyawan\PertanyaanController;
 use App\Http\Controllers\Dashboard\Pengaturan\Karyawan\UnitKerjaController;
 use App\Http\Controllers\Dashboard\Pengaturan\ManagemenWaktu\CutiController;
@@ -100,6 +102,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('/download-template-jadwal', [DataJadwalController::class, 'downloadJadwalTemplate']);
         Route::get('/download-template-karyawan', [DataKaryawanController::class, 'downloadKaryawanTemplate']);
         Route::get('/download-template-presensi', [DataPresensiController::class, 'downloadPresensiTemplate']);
+        Route::get('/download-template-tagihan-potongan', [TagihanPotonganController::class, 'downloadTagihanPotonganTemplate']);
 
         // TODO: ganti email di create & transfer karyawan
         Route::group(['prefix' => '/karyawan'], function () {
@@ -192,14 +195,19 @@ Route::middleware(['auth:sanctum'])->group(function () {
             // ! Penggajian ===========>
             Route::get('/calculated-info-penggajian', [PenggajianController::class, 'calculatedInfo']);
             Route::post('/get-penggajian', [PenggajianController::class, 'index']);
-
+            
             Route::post('/penggajian/export-penerimaan', [PenggajianController::class, 'exportRekapPenerimaanGaji']);
             Route::post('/penggajian/export-potongan', [PenggajianController::class, 'exportRekapPotonganGaji']);
             Route::post('/penggajian/export-bank', [PenggajianController::class, 'exportLaporanGajiBank']);
             Route::get('/penggajian/detail/{penggajian_id}', [PenggajianController::class, 'showDetailGajiUser']);
-
+            
+            // Penyesuaian gaji single
             Route::post('/penggajian/detail/{penggajian_id}/create-penambah-gaji', [PenyesuaianGajiController::class, 'storePenyesuaianGajiPenambah']);
             Route::post('/penggajian/detail/{penggajian_id}/create-pengurang-gaji', [PenyesuaianGajiController::class, 'storePenyesuaianGajiPengurang']);
+
+            // ? Penyesuaian gaji multi user_id
+            // Route::post('/penggajian/penyesuaian-penambah-gaji', [PenyesuaianGajiController::class, 'storePenyesuaianGajiPenambah']);
+            // Route::post('/penggajian/penyesuaian-pengurang-gaji', [PenyesuaianGajiController::class, 'storePenyesuaianGajiPengurang']);
 
             Route::apiResource('/penggajian', PenggajianController::class);
             Route::post('/publikasi-penggajian', [PenggajianController::class, 'publikasiPenggajian']);
@@ -208,11 +216,17 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::post('/get-penyesuaian-gaji', [PenyesuaianGajiController::class, 'index']);
             Route::get('/penyesuaian-gaji/export', [PenyesuaianGajiController::class, 'exportPenyesuaianGaji']);
             Route::apiResource('/penyesuaian-gaji', PenyesuaianGajiController::class);
-
+            
             // ! THR Penggajian ===========>
             Route::post('/get-thr', [THRPenggajianController::class, 'index']);
             Route::get('/run-thr/export', [THRPenggajianController::class, 'exportTHRPenggajian']);
             Route::apiResource('/run-thr', THRPenggajianController::class);
+            
+            // ! Tagihan Potongan ===========>
+            Route::post('/get-tagihan-potongan', [TagihanPotonganController::class, 'index']);
+            Route::post('/tagihan-potongan/export', [TagihanPotonganController::class, 'exportTagihanPotongan']);
+            Route::post('/tagihan-potongan/import', [TagihanPotonganController::class, 'importTagihanPotongan']);
+            Route::apiResource('/tagihan-potongan', TagihanPotonganController::class);
         });
 
         Route::group(['prefix' => '/perusahaan'], function () {
@@ -275,6 +289,10 @@ Route::middleware(['auth:sanctum'])->group(function () {
             // ! Unit Kerja ===========>
             Route::post('/unit-kerja/restore/{id}', [UnitKerjaController::class, 'restore']);
             Route::apiResource('/unit-kerja', UnitKerjaController::class);
+
+            // ! Kategori Pendidikan ===========>
+            Route::post('/pendidikan/restore/{id}', [PendidikanTerakhirController::class, 'restore']);
+            Route::apiResource('/pendidikan', PendidikanTerakhirController::class);
 
             // ! Pertanyaan ===========>
             Route::post('/pertanyaan/restore/{id}', [PertanyaanController::class, 'restore']);

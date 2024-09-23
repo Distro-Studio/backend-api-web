@@ -324,4 +324,14 @@ class DataKaryawan extends Model
     {
         return $this->belongsTo(Berkas::class, 'file_sertifikat', 'id');
     }
+
+    /**
+     * Get all of the tagihan_potongans for the DataKaryawan
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function tagihan_potongans(): HasMany
+    {
+        return $this->hasMany(TagihanPotongan::class, 'data_karyawan_id', 'id');
+    }
 }

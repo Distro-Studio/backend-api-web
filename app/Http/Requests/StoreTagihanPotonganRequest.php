@@ -7,7 +7,7 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Http\Exceptions\HttpResponseException;
 
-class StorePenyesuaianGajiCustomRequest extends FormRequest
+class StoreTagihanPotonganRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -17,15 +17,10 @@ class StorePenyesuaianGajiCustomRequest extends FormRequest
         return true;
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
-     */
     public function rules(): array
     {
         return [
-            'nama_detail' => 'required|string',
+            'kategori_tagihan_id' => 'required|integer|exists:kategori_tagihan_potongans,id',
             'besaran' => 'required|numeric',
             'bulan_mulai' => 'nullable|string',
             'bulan_selesai' => 'nullable|string',
@@ -35,8 +30,9 @@ class StorePenyesuaianGajiCustomRequest extends FormRequest
     public function messages()
     {
         return [
-            'nama_detail.required' => 'Nama pengurang gaji tidak diperbolehkan kosong.',
-            'nama_detail.string' => 'Nama pengurang gaji tidak diperbolehkan mengandung angka.',
+            'kategori_tagihan_id.required' => 'Kategori tagihan potongan tidak diperbolehkan kosong.',
+            'kategori_tagihan_id.integer' => 'Kategori tagihan potongan tidak diperbolehkan mengandung angka.',
+            'kategori_tagihan_id.exists' => 'Kategori tagihan potongan yang dipilih tidak valid.',
             'besaran.required' => 'Besaran pengurang gaji tidak diperbolehkan kosong.',
             'besaran.numeric' => 'Besaran pengurang gaji tidak diperbolehkan mengandung huruf.',
             'bulan_mulai.string' => 'Data tanggal mulai hanya diperbolehkan mengandung huruf dan angka.',

@@ -32,8 +32,8 @@ class ImportJadwalKaryawan extends FormRequest
     public function messages()
     {
         return [
-            'jadwal_karyawan_file.required' => 'Silahkan masukkan file data karyawan terlebih dahulu.',
-            'jadwal_karyawan_file.mimes' => 'File data karyawan wajib berupa excel dan berekstensi .xlsx, .xls, .csv.',
+            'jadwal_karyawan_file.required' => 'Silahkan masukkan file data jadwal karyawan terlebih dahulu.',
+            'jadwal_karyawan_file.mimes' => 'File data jadwal karyawan wajib berupa excel dan berekstensi .xlsx, .xls, .csv.',
         ];
     }
 

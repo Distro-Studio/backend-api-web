@@ -17,6 +17,7 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained('users'); // penerima
             $table->text('message');
             $table->boolean('is_read')->default(false); // true = read, false = unread
+            $table->boolean('is_verifikasi')->nullable();
             $table->timestamps();
         });
     }

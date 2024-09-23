@@ -33,7 +33,7 @@ class CreateGajiJob implements ShouldQueue
     // Ini v2 (detail gajis)
     public function handle(): void
     {
-        $currentDate = Carbon::now();
+        $currentDate = Carbon::now('Asia/Jakarta');
         $currentMonth = $currentDate->month;
         $currentYear = $currentDate->year;
 
@@ -60,7 +60,7 @@ class CreateGajiJob implements ShouldQueue
                 ->pluck('data_karyawan_id')
                 ->toArray();
         }
-        // Log::info("THR Karyawan IDs: " . implode(', ', $thrKaryawanIds));
+        Log::info("THR Karyawan IDs: " . implode(', ', $thrKaryawanIds));
 
         $query = DB::table('data_karyawans')
             ->join('kelompok_gajis', 'data_karyawans.kelompok_gaji_id', '=', 'kelompok_gajis.id')
@@ -71,13 +71,9 @@ class CreateGajiJob implements ShouldQueue
             ->select(
                 'data_karyawans.id as data_karyawan_id',
                 DB::raw('COALESCE(kelompok_gajis.besaran_gaji, 0) as gaji_pokok'),
-                // DB::raw('COALESCE(data_karyawans.tunjangan_jabatan, 0) as tunjangan_jabatan'), 
 
                 // TUNJANGAN JABATAN DIAMBIL DARI TABEL JABATAN
                 DB::raw('COALESCE(jabatans.tunjangan_jabatan, 0) as tunjangan_jabatan'),
-                // TUNJANGAN KOMPETENSI DIAMBIL DARI TABEL KOMPETENSI
-                DB::raw('COALESCE(kompetensis.tunjangan_kompetensi, 0) as tunjangan_kompetensi'),
-
                 DB::raw('COALESCE(data_karyawans.tunjangan_fungsional, 0) as tunjangan_fungsional'),
                 DB::raw('COALESCE(data_karyawans.tunjangan_khusus, 0) as tunjangan_khusus'),
                 DB::raw('COALESCE(data_karyawans.tunjangan_lainnya, 0) as tunjangan_lainnya'),
@@ -112,25 +108,32 @@ class CreateGajiJob implements ShouldQueue
             $rewardLembur = $this->calculatedLembur($dataKaryawan);
             $totalReward = $rewardBOR + $rewardBonusPresensi + $rewardLembur;
 
+            // uang makan sebulan
+            $uangMakanSebulan = $this->calculatedUangMakanSebulan($dataKaryawan);
+
+            // Potongan tagihan
+            $potonganTagihan = $this->calculatedTagihanPotongan($dataKaryawan);
+            $totalPotonganPerBulan = $potonganTagihan['total_potongan_per_bulan'];
+            $potonganDetails = $potonganTagihan['potongan_detail_gaji'];
+
             // Tentukan apakah THR perlu dihitung
             $penghasilanTHR = in_array($data_karyawan_id, $thrKaryawanIds) ? $this->calculatedTHR($dataKaryawan) : 0;
             Log::info("THR: " . $penghasilanTHR);
 
             // Hitung penghasilan THR, bruto, total tunjangan, dan total premi
-            $penghasilanBruto = $this->calculatedPenghasilanBruto($dataKaryawan, $totalReward, $penghasilanTHR);
+            $penghasilanBruto = $this->calculatedPenghasilanBruto($dataKaryawan, $totalReward, $penghasilanTHR, $uangMakanSebulan);
             $totalTunjangan = $this->calculatedTotalTunjangan($dataKaryawan);
             $totalPremi = $this->calculatedPremi($data_karyawan_id, $penghasilanBruto, $dataKaryawan->gaji_pokok);
 
             // Tentukan status penggajian
-            // $status_penggajian = $currentDate->greaterThanOrEqualTo($tgl_mulai) ? Penggajian::STATUS_PUBLISHED : Penggajian::STATUS_CREATED;
             $status_penggajian = $currentDate->greaterThanOrEqualTo($tgl_mulai) ? $statusSudahDipublikasi : $statusBelumDipublikasi;
 
             // Hitung PPh 21 bulanan dan PPh 21 Desember
-            $currentMonth = Carbon::now()->month;
+            $currentMonth = Carbon::now('Asia/Jakarta')->month;
             $penggajianData = [
                 'riwayat_penggajian_id' => $this->riwayat_penggajian_id,
                 'data_karyawan_id' => $data_karyawan_id,
-                'tgl_penggajian' => Carbon::now(),
+                'tgl_penggajian' => Carbon::now('Asia/Jakarta'),
                 'gaji_pokok' => $dataKaryawan->gaji_pokok,
                 'total_tunjangan' => $totalTunjangan,
                 'reward' => $totalReward,
@@ -142,14 +145,14 @@ class CreateGajiJob implements ShouldQueue
             if ($currentMonth >= 1 && $currentMonth <= 11) {
                 // Januari - November
                 $pph21Bulanan = $this->calculatedPPH21ForMonths($penghasilanBruto, $dataKaryawan->ptkp_id);
-                $takeHomePay = $penghasilanBruto - $totalPremi - $pph21Bulanan;
+                $takeHomePay = $penghasilanBruto - $totalPremi - $pph21Bulanan - $totalPotonganPerBulan;
                 $penggajianData['pph_21'] = $pph21Bulanan;
                 $penggajianData['take_home_pay'] = $takeHomePay;
 
                 $penggajian = Penggajian::updateOrCreate(
                     [
                         'data_karyawan_id' => $data_karyawan_id,
-                        'tgl_penggajian' => Carbon::now(),
+                        'tgl_penggajian' => Carbon::now('Asia/Jakarta'),
                     ],
                     $penggajianData
                 );
@@ -165,7 +168,7 @@ class CreateGajiJob implements ShouldQueue
                 $penggajian = Penggajian::updateOrCreate(
                     [
                         'data_karyawan_id' => $data_karyawan_id,
-                        'tgl_penggajian' => Carbon::now(),
+                        'tgl_penggajian' => Carbon::now('Asia/Jakarta'),
                     ],
                     $penggajianData
                 );
@@ -174,13 +177,6 @@ class CreateGajiJob implements ShouldQueue
             } else {
                 Log::error("Perhitungan tidak valid untuk karyawan ID {$data_karyawan_id}.");
             }
-
-            // calculatedPenyesuaianPenambah menambah take_home_pay
-            $penyesuaianPenambahDetails = $this->calculatedPenyesuaianPenambah($kategori_penambah, $penggajian->id, $penggajianData['take_home_pay']);
-            // calculatedPenyesuaianPengurang mengurangi take_home_pay
-            $penyesuaianPengurangDetails = $this->calculatedPenyesuaianPengurang($kategori_pengurang, $penggajian->id, $penggajianData['take_home_pay']);
-
-            $penggajian->update(['take_home_pay' => $penggajianData['take_home_pay']]);
 
             $details = [
                 [
@@ -210,12 +206,6 @@ class CreateGajiJob implements ShouldQueue
                 [
                     'penggajian_id' => $penggajian->id,
                     'kategori_gaji_id' => $kategori_penambah,
-                    'nama_detail' => 'Tunjangan Kompetensi',
-                    'besaran' => $dataKaryawan->tunjangan_kompetensi == 0 ? null : $dataKaryawan->tunjangan_kompetensi
-                ],
-                [
-                    'penggajian_id' => $penggajian->id,
-                    'kategori_gaji_id' => $kategori_penambah,
                     'nama_detail' => 'Tunjangan Lainnya',
                     'besaran' => $dataKaryawan->tunjangan_lainnya == 0 ? null : $dataKaryawan->tunjangan_lainnya
                 ],
@@ -229,18 +219,18 @@ class CreateGajiJob implements ShouldQueue
                     'penggajian_id' => $penggajian->id,
                     'kategori_gaji_id' => $kategori_penambah,
                     'nama_detail' => 'Uang Makan',
-                    'besaran' => $dataKaryawan->uang_makan == 0 ? null : $dataKaryawan->uang_makan
+                    'besaran' => $uangMakanSebulan == 0 ? null : $uangMakanSebulan
                 ],
                 [
                     'penggajian_id' => $penggajian->id,
                     'kategori_gaji_id' => $kategori_penambah,
-                    'nama_detail' => 'Bonus BOR',
+                    'nama_detail' => 'Reward BOR',
                     'besaran' => $rewardBOR == 0 ? null : $rewardBOR
                 ],
                 [
                     'penggajian_id' => $penggajian->id,
                     'kategori_gaji_id' => $kategori_penambah,
-                    'nama_detail' => 'Bonus Presensi',
+                    'nama_detail' => 'Reward Absensi',
                     'besaran' => $rewardBonusPresensi == 0 ? null : $rewardBonusPresensi
                 ],
                 [
@@ -252,7 +242,7 @@ class CreateGajiJob implements ShouldQueue
                 [
                     'penggajian_id' => $penggajian->id,
                     'kategori_gaji_id' => $kategori_pengurang,
-                    'nama_detail' => 'PPH21',
+                    'nama_detail' => 'PPh21',
                     'besaran' => $currentMonth == 12 ? ($pph21Desember == 0 ? null : $pph21Desember) : ($pph21Bulanan == 0 ? null : $pph21Bulanan)
                 ]
             ];
@@ -274,8 +264,14 @@ class CreateGajiJob implements ShouldQueue
                 ];
             }
 
-            // Gabungkan details penyesuaian gaji penambah dan pengurang ke dalam details gaji
-            $details = array_merge($details, $penyesuaianPenambahDetails, $penyesuaianPengurangDetails);
+            foreach ($potonganDetails as $detail) {
+                $details[] = [
+                    'penggajian_id' => $penggajian->id,
+                    'kategori_gaji_id' => $kategori_pengurang,
+                    'nama_detail' => $detail['nama_detail'],
+                    'besaran' => $detail['besaran'],
+                ];
+            }
 
             foreach ($details as $detail) {
                 DetailGaji::create($detail);
@@ -289,7 +285,7 @@ class CreateGajiJob implements ShouldQueue
         $thr = 0;
         // $tglMulaiKerja = Carbon::parse($dataKaryawan->tgl_masuk);
         $tglMulaiKerja = Carbon::parse(RandomHelper::convertToDateString($dataKaryawan->tgl_masuk));
-        $masaKerja = $tglMulaiKerja->diffInMonths(Carbon::now());
+        $masaKerja = $tglMulaiKerja->diffInMonths(Carbon::now('Asia/Jakarta'));
 
         if ($dataKaryawan->status_karyawan == "Tetap") {
             if ($masaKerja <= 12) {
@@ -334,26 +330,32 @@ class CreateGajiJob implements ShouldQueue
             }
 
             if ($premi->id == 1) { // BPJS Kesehatan
-                // Ambil jumlah keluarga yang terdaftar BPJS
-                $jumlahKeluarga = DB::table('data_keluargas')
+                // Ambil keluarga yang terdaftar BPJS
+                $dataKeluargas = DB::table('data_keluargas')
                     ->where('data_karyawan_id', $data_karyawan_id)
                     ->where('is_bpjs', 1)
-                    ->count();
+                    ->get();
 
-                if ($jumlahKeluarga !== null && $jumlahKeluarga > 0) {
-                    $totalAnggotaBPJS = $jumlahKeluarga + 1;
+                // Keluarga Inti
+                $keluargaInti = $dataKeluargas->whereIn('hubungan', ['Suami', 'Istri', 'Anak Ke-1', 'Anak Ke-2', 'Anak Ke-3']);
+                $keluargaLainnya = $dataKeluargas->whereIn('hubungan', ['Anak Ke-4', 'Anak Ke-5', 'Bapak', 'Ibu', 'Bapak Mertua', 'Ibu Mertua']);
 
-                    // Hitung premi BPJS Kesehatan
-                    $premi_bpjs_kes = ($premi->besaran_premi / 100) * $basisPengkaliRate;
+                // Hitung premi untuk karyawan
+                $premi_bpjs_kes = ($premi->besaran_premi / 100) * $basisPengkaliRate;
 
-                    // Kalikan hasil premi dengan total anggota keluarga
-                    $premiAmount = $premi_bpjs_kes * $totalAnggotaBPJS;
+                // Premi keluarga inti hanya dihitung sekali, tidak perlu hitung untuk setiap anggota
+                $totalPremiKeluargaInti = $keluargaInti->isNotEmpty() ? $premi_bpjs_kes : 0;
 
-                    Log::info("Calculated BPJS Kesehatan premi: {$premiAmount} untuk karyawan ID: {$data_karyawan_id}, Total anggota BPJS: {$totalAnggotaBPJS}");
+                // Hitung premi untuk keluarga lainnya (1% untuk setiap anggota keluarga lainnya)
+                $totalPremiKeluargaLainnya = $premi_bpjs_kes * $keluargaLainnya->count();
+
+                // Jika karyawan tidak memiliki keluarga BPJS, hanya hitung premi untuk karyawan saja
+                if ($dataKeluargas->isEmpty()) {
+                    $premiAmount = $premi_bpjs_kes;
+                    Log::info("Calculated BPJS Kesehatan premi: {$premiAmount} untuk karyawan ID: {$data_karyawan_id} tanpa keluarga BPJS.");
                 } else {
-                    // Jika tidak ada keluarga, hitung premi untuk karyawan
-                    $premiAmount = ($premi->besaran_premi / 100) * $basisPengkaliRate;
-                    Log::info("Calculated BPJS Kesehatan premi untuk karyawan tanpa keluarga: {$premiAmount} untuk karyawan ID: {$data_karyawan_id}");
+                    $premiAmount = $premi_bpjs_kes + $totalPremiKeluargaInti + $totalPremiKeluargaLainnya;
+                    Log::info("Calculated BPJS Kesehatan premi: {$premiAmount} untuk karyawan ID: {$data_karyawan_id}, Total premi keluarga inti: {$totalPremiKeluargaInti}, Total premi keluarga lainnya: {$totalPremiKeluargaLainnya}");
                 }
             } else {
                 // Cek has_custom_formula true
@@ -379,6 +381,135 @@ class CreateGajiJob implements ShouldQueue
         return $totalPremi;
     }
 
+    private function calculatedTagihanPotongan($dataKaryawan)
+    {
+        $totalPotonganPerBulan = 0;
+        $potonganDetails = [];
+
+        $tagihanPotongans = DB::table('tagihan_potongans')
+            ->where('data_karyawan_id', $dataKaryawan->data_karyawan_id)
+            ->where(function ($query) {
+                $query->where('sisa_tagihan', '>', 0)
+                    ->orWhereNull('sisa_tagihan');
+            })
+            ->get();
+
+        // Loop untuk menghitung potongan per bulan dan sisa tagihan
+        foreach ($tagihanPotongans as $tagihan) {
+            $sisaTenor = $tagihan->sisa_tenor ?? $tagihan->tenor;
+
+            // Case untuk tagihan dengan sisa_tagihan
+            if ($tagihan->sisa_tagihan > 0) {
+                // Jika sisa tenor lebih dari 1, bagi sisa tagihan dengan sisa tenor
+                if ($sisaTenor > 1) {
+                    $potonganPerBulan = round($tagihan->sisa_tagihan / $sisaTenor);
+                    $totalPotonganPerBulan += $potonganPerBulan;
+
+                    Log::info("Potongan per bulan untuk tagihan ID {$tagihan->id} (dari sisa tagihan): {$potonganPerBulan}");
+
+                    // Hitung sisa tagihan setelah pengurangan potongan per bulan
+                    $sisaTagihan = round($tagihan->sisa_tagihan - $potonganPerBulan);
+
+                    // Jika sisa tagihan adalah 0, simpan null
+                    if ($sisaTagihan <= 0) {
+                        $sisaTagihan = null;
+                    }
+
+                    $sisaTenor--;
+                    if ($sisaTenor <= 0) {
+                        $sisaTenor = null;
+                    }
+
+                    // Update sisa_tagihan dan sisa_tenor ke database
+                    DB::table('tagihan_potongans')
+                        ->where('id', $tagihan->id)
+                        ->update([
+                            'sisa_tagihan' => $sisaTagihan,
+                            'sisa_tenor' => $sisaTenor
+                        ]);
+
+                    Log::info("Sisa tagihan untuk tagihan ID {$tagihan->id} setelah update: " . ($sisaTagihan ?? 'null'));
+                } else {
+                    // Jika tenor kurang dari atau sama dengan 1, ambil langsung nilai sisa_tagihan
+                    $potonganPerBulan = $tagihan->sisa_tagihan;
+                    $totalPotonganPerBulan += $potonganPerBulan;
+
+                    // Set sisa_tagihan ke null jika tagihan lunas
+                    DB::table('tagihan_potongans')
+                        ->where('id', $tagihan->id)
+                        ->update([
+                            'sisa_tagihan' => null,
+                            'sisa_tenor' => null
+                        ]);
+
+                    Log::info("Tagihan ID {$tagihan->id} telah lunas, sisa_tagihan diset menjadi null.");
+                }
+            }
+            // Case untuk tagihan baru (tanpa sisa_tagihan)
+            else {
+                // Jika tenor lebih dari 1, bagi besaran dengan tenor
+                if ($sisaTenor > 1) {
+                    $potonganPerBulan = round($tagihan->besaran / $tagihan->tenor);
+                    $totalPotonganPerBulan += $potonganPerBulan;
+
+                    // Hitung sisa tagihan setelah pengurangan potongan per bulan
+                    $sisaTagihan = round($tagihan->besaran - $potonganPerBulan);
+
+                    // Jika sisa tagihan adalah 0, simpan null
+                    if ($sisaTagihan <= 0) {
+                        $sisaTagihan = null;
+                        Log::info("Tagihan ID {$tagihan->id} telah lunas, sisa_tagihan diset menjadi null.");
+                    }
+
+                    $sisaTenor--;
+                    if ($sisaTenor <= 0) {
+                        $sisaTenor = null;
+                    }
+
+                    // Update sisa_tagihan dan sisa_tenor ke database
+                    DB::table('tagihan_potongans')
+                        ->where('id', $tagihan->id)
+                        ->update([
+                            'sisa_tagihan' => $sisaTagihan,
+                            'sisa_tenor' => $sisaTenor
+                        ]);
+
+                    Log::info("Sisa tagihan untuk tagihan ID {$tagihan->id} setelah update: " . ($sisaTagihan ?? 'null'));
+                } else {
+                    // Jika tenor kurang dari atau sama dengan 1, ambil langsung nilai besaran
+                    $potonganPerBulan = $tagihan->besaran;
+                    $totalPotonganPerBulan += $potonganPerBulan;
+
+                    // Set sisa_tagihan ke null jika tagihan lunas
+                    DB::table('tagihan_potongans')
+                        ->where('id', $tagihan->id)
+                        ->update([
+                            'sisa_tagihan' => null,
+                            'sisa_tenor' => null
+                        ]);
+
+                    Log::info("Tagihan ID {$tagihan->id} telah lunas, sisa_tagihan diset menjadi null.");
+                }
+            }
+
+            Log::info("Total potongan per bulan untuk karyawan ID {$dataKaryawan->data_karyawan_id}: {$totalPotonganPerBulan}");
+
+            // Simpan detail potongan untuk setiap tagihan
+            if ($tagihan->kategori_tagihan_id == 1 || $tagihan->kategori_tagihan_id == 2) {
+                $namaDetail = $tagihan->kategori_tagihan_id == 1 ? 'Obat' : 'Koperasi';
+                $potonganDetails[] = [
+                    'nama_detail' => $namaDetail,
+                    'besaran' => $potonganPerBulan
+                ];
+            }
+        }
+
+        return [
+            'total_potongan_per_bulan' => $totalPotonganPerBulan,
+            'potongan_detail_gaji' => $potonganDetails
+        ];
+    }
+
     // buat itung detail gajis
     private function calculatedPremiDetail($premi, $penghasilanBruto, $gajiPokok, $data_karyawan_id)
     {
@@ -401,25 +532,32 @@ class CreateGajiJob implements ShouldQueue
         }
 
         if ($premi->id == 1) { // BPJS Kesehatan
-            $jumlahKeluarga = DB::table('data_keluargas')
+            // Ambil keluarga yang terdaftar BPJS
+            $dataKeluargas = DB::table('data_keluargas')
                 ->where('data_karyawan_id', $data_karyawan_id)
                 ->where('is_bpjs', 1)
-                ->count();
+                ->get();
 
-            if ($jumlahKeluarga !== null && $jumlahKeluarga > 0) {
-                $totalAnggotaBPJS = $jumlahKeluarga + 1;
+            // Keluarga Inti
+            $keluargaInti = $dataKeluargas->whereIn('hubungan', ['Suami', 'Istri', 'Anak Ke-1', 'Anak Ke-2', 'Anak Ke-3']);
+            $keluargaLainnya = $dataKeluargas->whereIn('hubungan', ['Anak Ke-4', 'Anak Ke-5', 'Bapak', 'Ibu', 'Bapak Mertua', 'Ibu Mertua']);
 
-                // Hitung premi BPJS Kesehatan
-                $premi_bpjs_kes = ($premi->besaran_premi / 100) * $basisPengkaliRate;
+            // Hitung premi untuk karyawan
+            $premi_bpjs_kes = ($premi->besaran_premi / 100) * $basisPengkaliRate;
 
-                // Kalikan hasil premi dengan total anggota keluarga
-                $premiAmount = $premi_bpjs_kes * $totalAnggotaBPJS;
+            // Premi keluarga inti hanya dihitung sekali, tidak perlu hitung untuk setiap anggota
+            $totalPremiKeluargaInti = $keluargaInti->isNotEmpty() ? $premi_bpjs_kes : 0;
 
-                Log::info("Calculated BPJS Kesehatan premi: {$premiAmount} untuk karyawan ID: {$data_karyawan_id}, Total anggota BPJS: {$totalAnggotaBPJS}");
+            // Hitung premi untuk keluarga lainnya (1% untuk setiap anggota keluarga lainnya)
+            $totalPremiKeluargaLainnya = $premi_bpjs_kes * $keluargaLainnya->count();
+
+            // Jika karyawan tidak memiliki keluarga BPJS, hanya hitung premi untuk karyawan saja
+            if ($dataKeluargas->isEmpty()) {
+                $premiAmount = $premi_bpjs_kes;
+                Log::info("Calculated BPJS Kesehatan premi: {$premiAmount} untuk karyawan ID: {$data_karyawan_id} tanpa keluarga BPJS.");
             } else {
-                // Jika tidak ada keluarga, hitung premi untuk karyawan
-                $premiAmount = ($premi->besaran_premi / 100) * $basisPengkaliRate;
-                Log::info("Calculated BPJS Kesehatan premi untuk karyawan tanpa keluarga: {$premiAmount} untuk karyawan ID: {$data_karyawan_id}");
+                $premiAmount = $premi_bpjs_kes + $totalPremiKeluargaInti + $totalPremiKeluargaLainnya;
+                Log::info("Calculated BPJS Kesehatan premi: {$premiAmount} untuk karyawan ID: {$data_karyawan_id}, Total premi keluarga inti: {$totalPremiKeluargaInti}, Total premi keluarga lainnya: {$totalPremiKeluargaLainnya}");
             }
         } else {
             // Cek has_custom_formula true
@@ -468,7 +606,9 @@ class CreateGajiJob implements ShouldQueue
         // 1. Hitung bruto dan premi Desember
         $penghasilanBrutoDesember = $this->calculatedPenghasilanBruto($dataKaryawan, $reward);
         $totalPremiDesember = $this->calculatedPremi($dataKaryawan->data_karyawan_id, $penghasilanBrutoDesember, $dataKaryawan->gaji_pokok);
-        $currentYear = Carbon::now()->year;
+        $totalPotonganTagihanDesember = $this->calculatedTagihanPotongan($dataKaryawan->data_karyawan_id);
+        $totalPotonganTagihan = $totalPotonganTagihanDesember['total_potongan_per_bulan'];
+        $currentYear = Carbon::now('Asia/Jakarta')->year;
 
         // 2. Jumlahkan bruto dan premi dari Januari hingga Desember
         $totalBruto = DB::table('penggajians')
@@ -479,7 +619,7 @@ class CreateGajiJob implements ShouldQueue
         $totalPremi = DB::table('penggajians')
             ->where('data_karyawan_id', $dataKaryawan->data_karyawan_id)
             ->whereYear('tgl_penggajian', $currentYear)
-            ->sum('total_premi') + $totalPremiDesember;
+            ->sum('total_premi') + $totalPremiDesember + $totalPotonganTagihan;
 
         // 3. Kurangi total bruto dengan total premi
         $penghasilanNeto = $totalBruto - $totalPremi;
@@ -527,51 +667,21 @@ class CreateGajiJob implements ShouldQueue
         return $totalBOR;
     }
 
-    // private function calculatedRewardPresensi($data_karyawan_id)
-    // {
-    //     // Ambil user_id yang sesuai dengan data_karyawan_id
-    //     $userId = DB::table('data_karyawans')
-    //         ->where('id', $data_karyawan_id)
-    //         ->value('user_id');
+    private function calculatedUangMakanSebulan($dataKaryawan)
+    {
+        // Get current month and year
+        $currentMonth = Carbon::now('Asia/Jakarta')->month;
+        $currentYear = Carbon::now('Asia/Jakarta')->year;
+        $daysInMonth = Carbon::createFromDate($currentYear, $currentMonth)->daysInMonth;
 
-    //     // Tentukan tanggal awal dan akhir bulan sebelumnya
-    //     $startDate = Carbon::now()->subMonth()->startOfMonth();
-    //     $endDate = Carbon::now()->subMonth()->endOfMonth();
+        $rate_uang_makan = $dataKaryawan->uang_makan;
 
-    //     // Ambil ID untuk kategori 'Tepat Waktu'
-    //     $kategoriTepatWaktuId = DB::table('kategori_presensis')->where('label', 'Tepat Waktu')->value('id');
+        if (!$rate_uang_makan || $rate_uang_makan == 0) {
+            return 0;
+        }
 
-    //     // Hitung jumlah presensi 'Tepat Waktu' dari tanggal 1 sampai akhir bulan sebelumnya
-    //     $presensiCount = DB::table('presensis')
-    //         ->where('data_karyawan_id', $data_karyawan_id)
-    //         ->where('kategori_presensi_id', $kategoriTepatWaktuId)
-    //         ->whereBetween('jam_masuk', [$startDate, $endDate])
-    //         ->count();
-    //     Log::info("Presensi tepat waktu terhitung: {$presensiCount}");
-
-    //     // Hitung jumlah hari dalam bulan sebelumnya
-    //     $totalDays = $startDate->daysInMonth;
-
-    //     // Memeriksa selain 'Cuti Tahunan' dan 'Cuti Besar'
-    //     $invalidCutiCount = DB::table('cutis')
-    //         ->join('tipe_cutis', 'cutis.tipe_cuti_id', '=', 'tipe_cutis.id')
-    //         ->where('cutis.user_id', $userId)
-    //         ->where('tipe_cutis.cuti_administratif', false)
-    //         ->where(function ($query) use ($startDate, $endDate) {
-    //             $query->whereBetween('tgl_from', [$startDate, $endDate])
-    //                 ->orWhereBetween('tgl_to', [$startDate, $endDate]);
-    //         })
-    //         ->count();
-    //     Log::info("Cuti selain 'Cuti Tahunan' dan 'Cuti Besar' terhitung: {$invalidCutiCount}");
-
-    //     // Jika tidak ada cuti selain 'Cuti Tahunan' dan 'Cuti Besar' dan presensi tepat waktu sama dengan jumlah hari dalam bulan sebelumnya, berikan bonus presensi
-    //     $bonusPresensi = 0;
-    //     if ($invalidCutiCount == 0 && $presensiCount == $totalDays) {
-    //         $bonusPresensi = 300000;
-    //     }
-
-    //     return $bonusPresensi;
-    // }
+        return $rate_uang_makan * $daysInMonth;
+    }
 
     // ini yg pake scheduller
     private function calculatedRewardPresensi($data_karyawan_id)
@@ -590,17 +700,16 @@ class CreateGajiJob implements ShouldQueue
         return $bonusPresensi;
     }
 
-    private function calculatedPenghasilanBruto($dataKaryawan, $reward, $penghasilanTHR)
+    private function calculatedPenghasilanBruto($dataKaryawan, $reward, $penghasilanTHR, $uangMakanSebulan)
     {
         return $dataKaryawan->gaji_pokok
             + $reward
             + $penghasilanTHR
             + $dataKaryawan->tunjangan_jabatan
-            + $dataKaryawan->tunjangan_kompetensi
             + $dataKaryawan->tunjangan_fungsional
             + $dataKaryawan->tunjangan_khusus
             + $dataKaryawan->tunjangan_lainnya
-            + $dataKaryawan->uang_makan;
+            + $uangMakanSebulan;
     }
 
     private function calculatedLembur($dataKaryawan)
@@ -616,9 +725,6 @@ class CreateGajiJob implements ShouldQueue
         // Loop melalui setiap record lembur
         foreach ($lemburRecords as $lembur) {
             if (!is_null($lembur->durasi)) {
-                // Konversi durasi menjadi menit
-                // $durasiLembur = Carbon::parse($lembur->durasi);
-                // $durasiMenit = ($durasiLembur->hour * 60) + $durasiLembur->minute;
                 $durasiMenit = $lembur->durasi / 60;
 
                 // Hitung bonus lembur untuk lembur ini dan tambahkan ke total
@@ -634,7 +740,6 @@ class CreateGajiJob implements ShouldQueue
     private function calculatedTotalTunjangan($dataKaryawan)
     {
         return $dataKaryawan->tunjangan_jabatan
-            + $dataKaryawan->tunjangan_kompetensi
             + $dataKaryawan->tunjangan_fungsional
             + $dataKaryawan->tunjangan_khusus
             + $dataKaryawan->tunjangan_lainnya;
@@ -657,87 +762,5 @@ class CreateGajiJob implements ShouldQueue
             }
         }
         return $pph21;
-    }
-
-    private function calculatedPenyesuaianPenambah($kategori_penambah, $penggajian_id, &$takeHomePay)
-    {
-        $details = [];
-
-        // Ambil data penyesuaian gaji penambah berdasarkan penggajian_id
-        $penyesuaianGajis = DB::table('penyesuaian_gajis')
-            ->where('penggajian_id', $penggajian_id)
-            ->where('kategori_gaji_id', $kategori_penambah)
-            ->get();
-
-        // Iterasi setiap penyesuaian gaji untuk validasi dan perhitungan
-        foreach ($penyesuaianGajis as $penyesuaianGaji) {
-            // $bulanMulai = $penyesuaianGaji->bulan_mulai ? Carbon::parse($penyesuaianGaji->bulan_mulai) : null;
-            // $bulanSelesai = $penyesuaianGaji->bulan_selesai ? Carbon::parse($penyesuaianGaji->bulan_selesai) : null;
-            $bulanMulai = $penyesuaianGaji->bulan_mulai ? Carbon::parse(RandomHelper::convertToDateString($penyesuaianGaji->bulan_mulai)) : null;
-            $bulanSelesai = $penyesuaianGaji->bulan_selesai ? Carbon::parse(RandomHelper::convertToDateString($penyesuaianGaji->bulan_selesai)) : null;
-            $currentDate = Carbon::now();
-
-            // Cek apakah saat ini berada pada rentang bulan mulai dan selesai atau jika null
-            if (
-                ($bulanMulai && $bulanSelesai && $currentDate->between($bulanMulai, $bulanSelesai)) ||
-                (!$bulanMulai && !$bulanSelesai) ||
-                ($bulanMulai && !$bulanSelesai && $currentDate->greaterThanOrEqualTo($bulanMulai)) ||
-                (!$bulanMulai && $bulanSelesai && $currentDate->lessThanOrEqualTo($bulanSelesai))
-            ) {
-                // Tambahkan take_home_pay dengan besaran penyesuaian gaji
-                $takeHomePay += $penyesuaianGaji->besaran;
-
-                // Tambahkan detail penyesuaian gaji ke array details
-                $details[] = [
-                    'penggajian_id' => $penggajian_id,
-                    'kategori_gaji_id' => $kategori_penambah,
-                    'nama_detail' => $penyesuaianGaji->nama_detail,
-                    'besaran' => $penyesuaianGaji->besaran
-                ];
-            }
-        }
-
-        return $details;
-    }
-
-    private function calculatedPenyesuaianPengurang($kategori_pengurang, $penggajian_id, &$takeHomePay)
-    {
-        $details = [];
-
-        // Ambil data penyesuaian gaji pengurang berdasarkan penggajian_id
-        $penyesuaianGajis = DB::table('penyesuaian_gajis')
-            ->where('penggajian_id', $penggajian_id)
-            ->where('kategori_gaji_id', $kategori_pengurang)
-            ->get();
-
-        // Iterasi setiap penyesuaian gaji untuk validasi dan perhitungan
-        foreach ($penyesuaianGajis as $penyesuaianGaji) {
-            // $bulanMulai = $penyesuaianGaji->bulan_mulai ? Carbon::parse($penyesuaianGaji->bulan_mulai) : null;
-            // $bulanSelesai = $penyesuaianGaji->bulan_selesai ? Carbon::parse($penyesuaianGaji->bulan_selesai) : null;
-            $bulanMulai = $penyesuaianGaji->bulan_mulai ? Carbon::parse(RandomHelper::convertToDateString($penyesuaianGaji->bulan_mulai)) : null;
-            $bulanSelesai = $penyesuaianGaji->bulan_selesai ? Carbon::parse(RandomHelper::convertToDateString($penyesuaianGaji->bulan_selesai)) : null;
-            $currentDate = Carbon::now();
-
-            // Cek apakah saat ini berada pada rentang bulan mulai dan selesai atau jika null
-            if (
-                ($bulanMulai && $bulanSelesai && $currentDate->between($bulanMulai, $bulanSelesai)) ||
-                (!$bulanMulai && !$bulanSelesai) ||
-                ($bulanMulai && !$bulanSelesai && $currentDate->greaterThanOrEqualTo($bulanMulai)) ||
-                (!$bulanMulai && $bulanSelesai && $currentDate->lessThanOrEqualTo($bulanSelesai))
-            ) {
-                // Kurangi take_home_pay dengan besaran penyesuaian gaji
-                $takeHomePay -= $penyesuaianGaji->besaran;
-
-                // Tambahkan detail penyesuaian gaji ke array details
-                $details[] = [
-                    'penggajian_id' => $penggajian_id,
-                    'kategori_gaji_id' => $kategori_pengurang,
-                    'nama_detail' => $penyesuaianGaji->nama_detail,
-                    'besaran' => $penyesuaianGaji->besaran
-                ];
-            }
-        }
-
-        return $details;
     }
 }

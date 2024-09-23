@@ -2,6 +2,7 @@
 
 namespace App\Imports\Karyawan;
 
+use App\Helpers\CalculateBMIHelper;
 use Carbon\Carbon;
 use App\Models\Ptkp;
 use App\Models\User;
@@ -56,7 +57,7 @@ class KaryawanImport implements ToModel, WithHeadingRow, WithValidation
   public function rules(): array
   {
     return [
-      'nama' => 'required|string|max:225',
+      'nama' => 'required|string',
       'email' => 'nullable|email|max:225|unique:data_karyawans,email',
       'role' => 'required',
       'no_rm' => 'required',
@@ -259,20 +260,10 @@ class KaryawanImport implements ToModel, WithHeadingRow, WithValidation
       $tahun_lulus = $row['tahun_lulus'];
     }
 
+    // itung bmi
     $weight = $row['berat_badan'];
-    $height = $row['tinggi_badan'] / 100; // Konversi cm ke meter
-    // Rumus BMI
-    $bmi = $weight / ($height * $height);
-    // Menentukan kategori BMI berdasarkan hasil perhitungan
-    if ($bmi < 18.5) {
-        $category = 'Berat badan kurang';
-    } elseif ($bmi >= 18.5 && $bmi <= 24.9) {
-        $category = 'Berat badan normal';
-    } elseif ($bmi >= 25 && $bmi <= 29.9) {
-        $category = 'Berat badan berlebih (overweight)';
-    } else {
-        $category = 'Obesitas';
-    }
+    $height = $row['tinggi_badan'];
+    $bmi_calculate = CalculateBMIHelper::calculateBMI($weight, $height);
 
     $dataKaryawan = DataKaryawan::create([
       'user_id' => $user_id,
@@ -312,8 +303,8 @@ class KaryawanImport implements ToModel, WithHeadingRow, WithValidation
       'kategori_darah_id' => $darah ? $darah->id : null,
       'tinggi_badan' => $row['tinggi_badan'],
       'berat_badan' => $row['berat_badan'],
-      'bmi_value' => $bmi,
-      'bmi_ket' => $category,
+      'bmi_value' => $bmi_calculate['bmi_value'],
+      'bmi_ket' => $bmi_calculate['bmi_ket'],
       'pendidikan_terakhir' => $row['pendidikan_terakhir'],
       'asal_sekolah' => $row['asal_sekolah'],
       'tahun_lulus' => $tahun_lulus,

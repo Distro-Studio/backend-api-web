@@ -64,6 +64,7 @@ class RoleSeeder extends Seeder
             'edit penggajianKaryawan',
             'view penggajianKaryawan',
             'export penggajianKaryawan',
+            'import penggajianKaryawan',
             'create thrKaryawan',
             'view thrKaryawan',
             'export thrKaryawan',
@@ -118,6 +119,10 @@ class RoleSeeder extends Seeder
             'edit permission',
             'view permission',
 
+            'create pendidikan', // 122
+            'edit pendidikan', // 123
+            'delete pendidikan', // 124
+            'view pendidikan', // 125
             'create unitKerja',
             'edit unitKerja',
             'delete unitKerja',

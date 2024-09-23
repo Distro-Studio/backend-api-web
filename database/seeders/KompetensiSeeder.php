@@ -29,14 +29,12 @@ class KompetensiSeeder extends Seeder
         ];
 
         foreach ($namaKompetensi as $nama_kompetensi) {
-            $total_tunjangan = rand(500000, 3000000);
             $created_at = Carbon::now()->subDays(rand(0, 365));
             $updated_at = Carbon::now();
 
             DB::table('kompetensis')->insert([
                 'nama_kompetensi' => $nama_kompetensi,
                 'jenis_kompetensi' => rand(0, 1),
-                'tunjangan_kompetensi' => $total_tunjangan,
                 'nilai_bor' => 120000,
                 'created_at' => $created_at,
                 'updated_at' => $updated_at,

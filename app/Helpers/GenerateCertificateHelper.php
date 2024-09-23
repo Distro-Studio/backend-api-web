@@ -6,7 +6,6 @@ use Exception;
 use App\Models\Berkas;
 use Illuminate\Http\File;
 use Illuminate\Support\Str;
-use App\Models\KategoriBerkas;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Log;
 use App\Helpers\StorageServerHelper;

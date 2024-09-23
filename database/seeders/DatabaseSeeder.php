@@ -15,6 +15,7 @@ use Database\Seeders\Constant\Kategori\KategoriNotifikasiSeeder;
 use Database\Seeders\Constant\Kategori\KategoriPendidikanSeeder;
 use Database\Seeders\Constant\Kategori\KategoriPotonganSeeder;
 use Database\Seeders\Constant\Kategori\KategoriPresensiSeeder;
+use Database\Seeders\Constant\Kategori\KategoriTagihanPotonganSeeder;
 use Database\Seeders\Constant\Kategori\KategoriTrackRecordSeeder;
 use Database\Seeders\Constant\Kategori\KategoriTransferKaryawanSeeder;
 use Database\Seeders\Constant\Kategori\KategoriTukarJadwalSeeder;
@@ -29,6 +30,7 @@ use Database\Seeders\Constant\Status\StatusLemburSeeder;
 use Database\Seeders\Constant\Status\StatusPresensiSeeder;
 use Database\Seeders\Constant\Status\StatusRiwayatIzinSeeder;
 use Database\Seeders\Constant\Status\StatusRiwayatPerubahanSeeder;
+use Database\Seeders\Constant\Status\StatusTagihanPotonganSeeder;
 use Database\Seeders\Constant\Status\StatusTukarJadwalSeeder;
 use Database\Seeders\JadwalKaryawan\CutiJadwalSeeder;
 use Illuminate\Database\Seeder;
@@ -49,6 +51,7 @@ use Database\Seeders\Karyawan\TrackRecordSeeder;
 use Database\Seeders\Karyawan\TransferKaryawanSeeder;
 use Database\Seeders\Keuangan\PenggajianSeeder;
 use Database\Seeders\Keuangan\RiwayatPenggajianSeeder;
+use Database\Seeders\Keuangan\TagihanPotonganSeeder;
 use Database\Seeders\Keuangan\TanggalGajiSeeder;
 use Database\Seeders\Keuangan\THRPenggajianSeeder;
 use Database\Seeders\Pengaturan_Managemen_Waktu\ShiftSeeder;
@@ -90,6 +93,7 @@ class DatabaseSeeder extends Seeder
       KategoriPotonganSeeder::class,
       KategoriPendidikanSeeder::class,
       KategoriDiklatSeeder::class,
+      KategoriTagihanPotonganSeeder::class,
       StatusBerkasSeeder::class,
       StatusRiwayatPerubahanSeeder::class,
       StatusDiklatSeeder::class,
@@ -100,6 +104,7 @@ class DatabaseSeeder extends Seeder
       StatusTukarJadwalSeeder::class,
       StatusRiwayatIzinSeeder::class,
       StatusKeluargaSeeder::class,
+      StatusTagihanPotonganSeeder::class,
 
       LokasiKantorSeeder::class,
       
@@ -140,6 +145,7 @@ class DatabaseSeeder extends Seeder
 
         /* ==== Keuangan ==== */
       TanggalGajiSeeder::class,
+      TagihanPotonganSeeder::class,
       // PenggajianSeeder::class,
       // RiwayatPenggajianSeeder::class,
       // THRPenggajianSeeder::class,
