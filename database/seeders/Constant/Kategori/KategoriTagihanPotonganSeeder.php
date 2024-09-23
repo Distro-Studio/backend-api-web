@@ -13,7 +13,7 @@ class KategoriTagihanPotonganSeeder extends Seeder
      */
     public function run(): void
     {
-        $kategori = ['Obat', 'Koperasi'];
+        $kategori = ['Obat/Perawatan', 'Koperasi'];
         foreach ($kategori as $kategori) {
             DB::table('kategori_tagihan_potongans')->insert([
                 'label' => $kategori,

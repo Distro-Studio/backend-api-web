@@ -121,8 +121,9 @@ class CreateGajiJob implements ShouldQueue
             Log::info("THR: " . $penghasilanTHR);
 
             // Hitung penghasilan THR, bruto, total tunjangan, dan total premi
-            $penghasilanBruto = $this->calculatedPenghasilanBruto($dataKaryawan, $totalReward, $penghasilanTHR, $uangMakanSebulan);
             $totalTunjangan = $this->calculatedTotalTunjangan($dataKaryawan);
+            $penghasilanBruto = $this->calculatedPenghasilanBruto($dataKaryawan, $totalTunjangan);
+            $penghasilanBrutoTotal = $this->calculatedPenghasilanBrutoTotal($dataKaryawan, $totalReward, $penghasilanTHR, $uangMakanSebulan);
             $totalPremi = $this->calculatedPremi($data_karyawan_id, $penghasilanBruto, $dataKaryawan->gaji_pokok);
 
             // Tentukan status penggajian
@@ -137,15 +138,15 @@ class CreateGajiJob implements ShouldQueue
                 'gaji_pokok' => $dataKaryawan->gaji_pokok,
                 'total_tunjangan' => $totalTunjangan,
                 'reward' => $totalReward,
-                'gaji_bruto' => $penghasilanBruto,
+                'gaji_bruto' => $penghasilanBrutoTotal,
                 'total_premi' => $totalPremi,
                 'status_gaji_id' => $status_penggajian
             ];
 
             if ($currentMonth >= 1 && $currentMonth <= 11) {
                 // Januari - November
-                $pph21Bulanan = $this->calculatedPPH21ForMonths($penghasilanBruto, $dataKaryawan->ptkp_id);
-                $takeHomePay = $penghasilanBruto - $totalPremi - $pph21Bulanan - $totalPotonganPerBulan;
+                $pph21Bulanan = $this->calculatedPPH21ForMonths($penghasilanBrutoTotal, $dataKaryawan->ptkp_id);
+                $takeHomePay = $penghasilanBrutoTotal - $totalPremi - $pph21Bulanan - $totalPotonganPerBulan;
                 $penggajianData['pph_21'] = $pph21Bulanan;
                 $penggajianData['take_home_pay'] = $takeHomePay;
 
@@ -161,7 +162,7 @@ class CreateGajiJob implements ShouldQueue
             } elseif ($currentMonth == 12) {
                 // Desember
                 $pph21Desember = $this->calculatedPPH21ForDecember($dataKaryawan, $totalReward);
-                $takeHomePayDesember = $penghasilanBruto - $totalPremi - $pph21Desember;
+                $takeHomePayDesember = $penghasilanBrutoTotal - $totalPremi - $pph21Desember;
                 $penggajianData['pph_21'] = $pph21Desember;
                 $penggajianData['take_home_pay'] = $takeHomePayDesember;
 
@@ -255,7 +256,7 @@ class CreateGajiJob implements ShouldQueue
                 ->get();
 
             foreach ($premis as $premi) {
-                $premiAmount = $this->calculatedPremiDetail($premi, $penghasilanBruto, $dataKaryawan->gaji_pokok, $data_karyawan_id);
+                $premiAmount = $this->calculatedPremiDetail($premi, $penghasilanBrutoTotal, $dataKaryawan->gaji_pokok, $data_karyawan_id);
                 $details[] = [
                     'penggajian_id' => $penggajian->id,
                     'kategori_gaji_id' => $kategori_pengurang,
@@ -496,7 +497,7 @@ class CreateGajiJob implements ShouldQueue
 
             // Simpan detail potongan untuk setiap tagihan
             if ($tagihan->kategori_tagihan_id == 1 || $tagihan->kategori_tagihan_id == 2) {
-                $namaDetail = $tagihan->kategori_tagihan_id == 1 ? 'Obat' : 'Koperasi';
+                $namaDetail = $tagihan->kategori_tagihan_id == 1 ? 'Obat/Perawatan' : 'Koperasi';
                 $potonganDetails[] = [
                     'nama_detail' => $namaDetail,
                     'besaran' => $potonganPerBulan
@@ -581,7 +582,7 @@ class CreateGajiJob implements ShouldQueue
         return $premiAmount;
     }
 
-    private function calculatedPPH21ForMonths($penghasilanBruto, $ptkp_id)
+    private function calculatedPPH21ForMonths($penghasilanBrutoTotal, $ptkp_id)
     {
         // Langkah 1: Ambil data PTKP dari data_karyawans
         $ptkp = DB::table('ptkps')->where('id', $ptkp_id)->first();
@@ -593,19 +594,19 @@ class CreateGajiJob implements ShouldQueue
         $ters = DB::table('ters')
             ->select('percentage')
             ->where('kategori_ter_id', $kategoriTer->id)
-            ->where('from_ter', '<=', $penghasilanBruto)
-            ->where('to_ter', '>=', $penghasilanBruto)
+            ->where('from_ter', '<=', $penghasilanBrutoTotal)
+            ->where('to_ter', '>=', $penghasilanBrutoTotal)
             ->first();
 
-        $pph21Bulanan = ($ters->percentage / 100) * $penghasilanBruto;
+        $pph21Bulanan = ($ters->percentage / 100) * $penghasilanBrutoTotal;
         return ceil($pph21Bulanan);
     }
 
-    private function calculatedPPH21ForDecember($dataKaryawan, $reward)
+    private function calculatedPPH21ForDecember($dataKaryawan, $reward, $penghasilanTHR, $uangMakanSebulan)
     {
         // 1. Hitung bruto dan premi Desember
-        $penghasilanBrutoDesember = $this->calculatedPenghasilanBruto($dataKaryawan, $reward);
-        $totalPremiDesember = $this->calculatedPremi($dataKaryawan->data_karyawan_id, $penghasilanBrutoDesember, $dataKaryawan->gaji_pokok);
+        $penghasilanBrutoTotalDesember = $this->calculatedPenghasilanBrutoTotal($dataKaryawan, $reward, $penghasilanTHR, $uangMakanSebulan);
+        $totalPremiDesember = $this->calculatedPremi($dataKaryawan->data_karyawan_id, $penghasilanBrutoTotalDesember, $dataKaryawan->gaji_pokok);
         $totalPotonganTagihanDesember = $this->calculatedTagihanPotongan($dataKaryawan->data_karyawan_id);
         $totalPotonganTagihan = $totalPotonganTagihanDesember['total_potongan_per_bulan'];
         $currentYear = Carbon::now('Asia/Jakarta')->year;
@@ -614,7 +615,7 @@ class CreateGajiJob implements ShouldQueue
         $totalBruto = DB::table('penggajians')
             ->where('data_karyawan_id', $dataKaryawan->data_karyawan_id)
             ->whereYear('tgl_penggajian', $currentYear)
-            ->sum('gaji_bruto') + $penghasilanBrutoDesember;
+            ->sum('gaji_bruto') + $penghasilanBrutoTotalDesember;
 
         $totalPremi = DB::table('penggajians')
             ->where('data_karyawan_id', $dataKaryawan->data_karyawan_id)
@@ -700,7 +701,7 @@ class CreateGajiJob implements ShouldQueue
         return $bonusPresensi;
     }
 
-    private function calculatedPenghasilanBruto($dataKaryawan, $reward, $penghasilanTHR, $uangMakanSebulan)
+    private function calculatedPenghasilanBrutoTotal($dataKaryawan, $reward, $penghasilanTHR, $uangMakanSebulan)
     {
         return $dataKaryawan->gaji_pokok
             + $reward
@@ -710,6 +711,12 @@ class CreateGajiJob implements ShouldQueue
             + $dataKaryawan->tunjangan_khusus
             + $dataKaryawan->tunjangan_lainnya
             + $uangMakanSebulan;
+    }
+
+    private function calculatedPenghasilanBruto($dataKaryawan, $totalTunjangan)
+    {
+        return $dataKaryawan->gaji_pokok
+            + $totalTunjangan;
     }
 
     private function calculatedLembur($dataKaryawan)
