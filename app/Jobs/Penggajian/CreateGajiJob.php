@@ -313,13 +313,12 @@ class CreateGajiJob implements ShouldQueue
 
         foreach ($premis as $premi) {
             $premiAmount = 0;
-            $basisGaji = $penghasilanBruto;
             if ($premi->kategori_potongan_id == 3) { // gaji bruto total
                 $basisPengkali = $penghasilanBrutoTotal;
             } else if ($premi->kategori_potongan_id == 2) { // gaji pokok
                 $basisPengkali = $gajiPokok;
             } else {
-                $basisPengkali = $basisGaji;
+                $basisPengkali = $penghasilanBruto;
             }
 
             // Terapkan minimal maksimal rate jika ada
@@ -521,13 +520,12 @@ class CreateGajiJob implements ShouldQueue
     private function calculatedPremiDetail($premi, $penghasilanBruto, $penghasilanBrutoTotal, $gajiPokok, $data_karyawan_id)
     {
         $premiAmount = 0;
-        $basisGaji = $penghasilanBruto;
         if ($premi->kategori_potongan_id == 3) { // gaji bruto total
             $basisPengkali = $penghasilanBrutoTotal;
         } else if ($premi->kategori_potongan_id == 2) { // gaji pokok
             $basisPengkali = $gajiPokok;
         } else {
-            $basisPengkali = $basisGaji;
+            $basisPengkali = $penghasilanBruto;
         }
 
         // Terapkan minimal maksimal rate jika ada
