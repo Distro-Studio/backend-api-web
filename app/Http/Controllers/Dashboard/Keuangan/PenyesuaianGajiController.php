@@ -501,7 +501,6 @@ class PenyesuaianGajiController extends Controller
   //   }
   // }
 
-  // TODO: Penyesuaian BOR sama seperti penyesuaian penambah
   public function penyesuaianBOR(Request $request)
   {
     if (!Gate::allows('create penggajianKaryawan')) {

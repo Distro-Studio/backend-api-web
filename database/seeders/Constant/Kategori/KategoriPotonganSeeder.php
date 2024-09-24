@@ -13,7 +13,7 @@ class KategoriPotonganSeeder extends Seeder
      */
     public function run(): void
     {
-        $kategori = ['Gaji Bruto', 'Gaji Pokok'];
+        $kategori = ['Gaji Bruto', 'Gaji Pokok', 'Gaji Total'];
 
         foreach ($kategori as $kategori) {
             DB::table('kategori_potongans')->insert([

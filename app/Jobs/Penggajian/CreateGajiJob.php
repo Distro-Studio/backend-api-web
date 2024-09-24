@@ -124,7 +124,7 @@ class CreateGajiJob implements ShouldQueue
             $totalTunjangan = $this->calculatedTotalTunjangan($dataKaryawan);
             $penghasilanBruto = $this->calculatedPenghasilanBruto($dataKaryawan, $totalTunjangan);
             $penghasilanBrutoTotal = $this->calculatedPenghasilanBrutoTotal($dataKaryawan, $totalReward, $penghasilanTHR, $uangMakanSebulan);
-            $totalPremi = $this->calculatedPremi($data_karyawan_id, $penghasilanBruto, $dataKaryawan->gaji_pokok);
+            $totalPremi = $this->calculatedPremi($data_karyawan_id, $penghasilanBruto, $penghasilanBrutoTotal, $dataKaryawan->gaji_pokok);
 
             // Tentukan status penggajian
             $status_penggajian = $currentDate->greaterThanOrEqualTo($tgl_mulai) ? $statusSudahDipublikasi : $statusBelumDipublikasi;
@@ -256,7 +256,7 @@ class CreateGajiJob implements ShouldQueue
                 ->get();
 
             foreach ($premis as $premi) {
-                $premiAmount = $this->calculatedPremiDetail($premi, $penghasilanBrutoTotal, $dataKaryawan->gaji_pokok, $data_karyawan_id);
+                $premiAmount = $this->calculatedPremiDetail($premi, $penghasilanBruto, $penghasilanBrutoTotal, $dataKaryawan->gaji_pokok, $data_karyawan_id);
                 $details[] = [
                     'penggajian_id' => $penggajian->id,
                     'kategori_gaji_id' => $kategori_pengurang,
@@ -300,7 +300,7 @@ class CreateGajiJob implements ShouldQueue
         return $thr;
     }
 
-    private function calculatedPremi($data_karyawan_id, $penghasilanBruto, $gajiPokok)
+    private function calculatedPremi($data_karyawan_id, $penghasilanBruto, $penghasilanBrutoTotal, $gajiPokok)
     {
         // Ambil data premi yang dipilih untuk karyawan ini dari tabel pengurang_gajis
         $premis = DB::table('pengurang_gajis')
@@ -314,7 +314,9 @@ class CreateGajiJob implements ShouldQueue
         foreach ($premis as $premi) {
             $premiAmount = 0;
             $basisGaji = $penghasilanBruto;
-            if ($premi->kategori_potongan_id == 2) { // gaji pokok
+            if ($premi->kategori_potongan_id == 3) { // gaji bruto total
+                $basisPengkali = $penghasilanBrutoTotal;
+            } else if ($premi->kategori_potongan_id == 2) { // gaji pokok
                 $basisPengkali = $gajiPokok;
             } else {
                 $basisPengkali = $basisGaji;
@@ -516,11 +518,13 @@ class CreateGajiJob implements ShouldQueue
     }
 
     // buat itung detail gajis
-    private function calculatedPremiDetail($premi, $penghasilanBruto, $gajiPokok, $data_karyawan_id)
+    private function calculatedPremiDetail($premi, $penghasilanBruto, $penghasilanBrutoTotal, $gajiPokok, $data_karyawan_id)
     {
         $premiAmount = 0;
         $basisGaji = $penghasilanBruto;
-        if ($premi->kategori_potongan_id == 2) { // gaji pokok
+        if ($premi->kategori_potongan_id == 3) { // gaji bruto total
+            $basisPengkali = $penghasilanBrutoTotal;
+        } else if ($premi->kategori_potongan_id == 2) { // gaji pokok
             $basisPengkali = $gajiPokok;
         } else {
             $basisPengkali = $basisGaji;
