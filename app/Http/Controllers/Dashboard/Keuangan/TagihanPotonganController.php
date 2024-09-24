@@ -100,7 +100,7 @@ class TagihanPotonganController extends Controller
 
         return response()->json([
             'status' => Response::HTTP_OK,
-            'message' => 'Data presensi berhasil ditampilkan.',
+            'message' => 'Data tagihan potongan berhasil ditampilkan.',
             'data' => $formattedData,
             'pagination' => $paginationData
         ], Response::HTTP_OK);
