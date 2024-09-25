@@ -72,7 +72,8 @@ class UpdateDataKaryawanRequest extends FormRequest
 
             'pendidikan_terakhir' => 'nullable|exists:kategori_pendidikans,id',
             'asal_sekolah' => 'nullable|string',
-            'tgl_diangkat' => 'nullable|string'
+            'tgl_diangkat' => 'nullable|string',
+            'riwayat_penyakit' => 'nullable|string',
         ];
     }
 
@@ -144,6 +145,7 @@ class UpdateDataKaryawanRequest extends FormRequest
             'pendidikan_terakhir.exists' => 'Pendidikan terakhir karyawan tersebut tidak valid.',
             'asal_sekolah.string' => 'Asal sekolah karyawan tidak diperbolehkan mengandung selain huruf.',
             'tgl_diangkat.string' => 'Tanggal diangkat karyawan tidak diperbolehkan mengandung selain huruf.',
+            'riwayat_penyakit.string' => 'Riwayat penyakit karyawan tidak diperbolehkan mengandung selain huruf.',
         ];
     }
 

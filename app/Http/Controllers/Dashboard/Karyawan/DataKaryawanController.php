@@ -787,15 +787,73 @@ class DataKaryawanController extends Controller
     ], Response::HTTP_OK);
   }
 
+  // ini untuk bulk verifikasi
+  // public function verifikasiKeluarga(Request $request, $data_karyawan_id)
+  // {
+  //   if (!Gate::allows('edit dataKaryawan')) {
+  //     return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+  //   }
+
+  //   $dataKeluargaIds = $request->input('data_keluarga_id', []);
+  //   if (empty($dataKeluargaIds)) {
+  //     return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Tidak ada anggota keluarga yang dipilih untuk verifikasi.'), Response::HTTP_BAD_REQUEST);
+  //   }
+
+  //   $karyawan = DataKaryawan::find($data_karyawan_id);
+  //   if (!$karyawan) {
+  //     return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data karyawan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+  //   }
+
+  //   $dataKeluargaList = DataKeluarga::where('data_karyawan_id', $data_karyawan_id)
+  //     ->whereIn('id', $dataKeluargaIds)
+  //     ->where('status_keluarga_id', 1)
+  //     ->get();
+  //   if ($dataKeluargaList->isEmpty()) {
+  //     return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, "Tidak ada anggota keluarga yang perlu diverifikasi untuk karyawan '{$karyawan->users->nama}'."), Response::HTTP_NOT_FOUND);
+  //   }
+
+  //   foreach ($dataKeluargaList as $keluarga) {
+  //     $status_keluarga_id = $keluarga->status_keluarga_id;
+
+  //     if ($request->has('verifikasi_disetujui') && $request->has('verifikasi_ditolak')) {
+  //       return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Tidak dapat menyetujui dan menolak verifikasi pada saat yang bersamaan.'), Response::HTTP_BAD_REQUEST);
+  //     }
+
+  //     // disetujui tahap 1
+  //     if ($request->has('verifikasi_disetujui') && $request->verifikasi_disetujui == 1) {
+  //       if ($status_keluarga_id == 1) {
+  //         $keluarga->status_keluarga_id = 2;
+  //         $keluarga->verifikator_1 = Auth::id();
+  //         $keluarga->save();
+
+  //         $this->createNotifikasiKeluarga($keluarga, 'disetujui');
+  //       } else {
+  //         return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Anggota keluarga dari karyawan '{$karyawan->users->nama}' tidak dalam status untuk disetujui."), Response::HTTP_BAD_REQUEST);
+  //       }
+  //     } else if ($request->has('verifikasi_ditolak') && $request->verifikasi_ditolak == 1) {
+  //       if ($status_keluarga_id == 1) {
+  //         $keluarga->status_keluarga_id = 3;
+  //         $keluarga->is_bpjs = 0;
+  //         $keluarga->verifikator_1 = Auth::id();
+  //         $keluarga->alasan = $request->input('alasan');
+  //         $keluarga->save();
+
+  //         $this->createNotifikasiKeluarga($keluarga, 'ditolak');
+  //       } else {
+  //         return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Anggota keluarga karyawan '{$karyawan->users->nama}' tidak dalam status untuk ditolak."), Response::HTTP_BAD_REQUEST);
+  //       }
+  //     } else {
+  //       return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Aksi tidak valid.'), Response::HTTP_BAD_REQUEST);
+  //     }
+  //   }
+
+  //   return response()->json(new WithoutDataResource(Response::HTTP_OK, "Verifikasi keluarga karyawan '{$karyawan->users->nama}' berhasil dilakukan."), Response::HTTP_OK);
+  // }
+
   public function verifikasiKeluarga(Request $request, $data_karyawan_id)
   {
     if (!Gate::allows('edit dataKaryawan')) {
       return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
-    }
-
-    $dataKeluargaIds = $request->input('data_keluarga_id', []);
-    if (empty($dataKeluargaIds)) {
-      return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Tidak ada anggota keluarga yang dipilih untuk verifikasi.'), Response::HTTP_BAD_REQUEST);
     }
 
     $karyawan = DataKaryawan::find($data_karyawan_id);
@@ -804,7 +862,6 @@ class DataKaryawanController extends Controller
     }
 
     $dataKeluargaList = DataKeluarga::where('data_karyawan_id', $data_karyawan_id)
-      ->whereIn('id', $dataKeluargaIds)
       ->where('status_keluarga_id', 1)
       ->get();
     if ($dataKeluargaList->isEmpty()) {
@@ -813,10 +870,6 @@ class DataKaryawanController extends Controller
 
     foreach ($dataKeluargaList as $keluarga) {
       $status_keluarga_id = $keluarga->status_keluarga_id;
-
-      if ($request->has('verifikasi_disetujui') && $request->has('verifikasi_ditolak')) {
-        return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Tidak dapat menyetujui dan menolak verifikasi pada saat yang bersamaan.'), Response::HTTP_BAD_REQUEST);
-      }
 
       // disetujui tahap 1
       if ($request->has('verifikasi_disetujui') && $request->verifikasi_disetujui == 1) {

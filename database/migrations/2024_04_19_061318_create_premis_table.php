@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('nama_premi');
             $table->foreignId('kategori_potongan_id')->constrained('kategori_potongans'); // 1: gaji bruto, 2: gaji pokok, 3: gaji total
-            $table->boolean('jenis_premi'); // 0: nominal, 1: persentase
+            $table->boolean('jenis_premi'); // 1: nominal, 0: persentase
             $table->integer('besaran_premi');
             $table->integer('minimal_rate')->nullable();
             $table->integer('maksimal_rate')->nullable();

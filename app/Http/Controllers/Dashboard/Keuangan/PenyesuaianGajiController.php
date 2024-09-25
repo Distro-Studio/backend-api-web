@@ -648,7 +648,7 @@ class PenyesuaianGajiController extends Controller
           $totalReward +
           $request->besaran;
 
-        $totalPremi = CalculateHelper::calculatedPremi($penggajian->data_karyawans->id, $brutoPremi, $gaji_pokok);
+        $totalPremi = CalculateHelper::calculatedPremi($penggajian->data_karyawans->id, $brutoPremi, $brutoTotal, $gaji_pokok);
 
         if ($currentMonth >= 1 && $currentMonth <= 11) {
           $pph21 = CalculateHelper::calculatedPPH21ForMonths($brutoTotal, $penggajian->data_karyawans->ptkp_id);
@@ -749,7 +749,7 @@ class PenyesuaianGajiController extends Controller
           $totalReward -
           $request->besaran;
 
-        $totalPremi = CalculateHelper::calculatedPremi($penggajian->data_karyawans->id, $brutoPremi, $gaji_pokok);
+        $totalPremi = CalculateHelper::calculatedPremi($penggajian->data_karyawans->id, $brutoPremi, $brutoTotal, $gaji_pokok);
 
         if ($currentMonth >= 1 && $currentMonth <= 11) {
           // Kurangi take home pay dengan besaran penyesuaian yang baru dibuat

@@ -28,7 +28,88 @@ class CalculateHelper
         return $thr;
     }
 
-    public static function calculatedPremi($data_karyawan_id, $penghasilanBruto, $gajiPokok)
+    // public static function calculatedPremi($data_karyawan_id, $penghasilanBruto, $gajiPokok)
+    // {
+    //     // Ambil data premi yang dipilih untuk karyawan ini dari tabel pengurang_gajis
+    //     $premis = DB::table('pengurang_gajis')
+    //         ->join('premis', 'pengurang_gajis.premi_id', '=', 'premis.id')
+    //         ->where('pengurang_gajis.data_karyawan_id', $data_karyawan_id)
+    //         ->select('premis.*')
+    //         ->get();
+
+    //     $totalPremi = 0;
+
+    //     foreach ($premis as $premi) {
+    //         $premiAmount = 0;
+    //         $basisGaji = $penghasilanBruto;
+    //         if ($premi->kategori_potongan_id == 2) { // gaji pokok
+    //             $basisPengkali = $gajiPokok;
+    //         } else {
+    //             $basisPengkali = $basisGaji;
+    //         }
+
+    //         // Terapkan minimal maksimal rate jika ada
+    //         if (!is_null($premi->minimal_rate)) {
+    //             $basisPengkaliRate = max($basisPengkali, $premi->minimal_rate);
+    //             Log::info("Minimal rate: {$premi->minimal_rate} premi ID: {$premi->id} sumber potongan: {$basisPengkali}");
+    //         }
+    //         if (!is_null($premi->maksimal_rate)) {
+    //             $basisPengkaliRate = min($basisPengkali, $premi->maksimal_rate);
+    //             Log::info("Maksimal rate: {$premi->maksimal_rate} premi ID: {$premi->id} sumber potongan: {$basisPengkali}");
+    //         }
+
+    //         if ($premi->id == 1) { // BPJS Kesehatan
+    //             // Ambil keluarga yang terdaftar BPJS
+    //             $dataKeluargas = DB::table('data_keluargas')
+    //                 ->where('data_karyawan_id', $data_karyawan_id)
+    //                 ->where('is_bpjs', 1)
+    //                 ->get();
+
+    //             // Keluarga Inti
+    //             $keluargaInti = $dataKeluargas->whereIn('hubungan', ['Suami', 'Istri', 'Anak Ke-1', 'Anak Ke-2', 'Anak Ke-3']);
+    //             $keluargaLainnya = $dataKeluargas->whereIn('hubungan', ['Anak Ke-4', 'Anak Ke-5', 'Bapak', 'Ibu', 'Bapak Mertua', 'Ibu Mertua']);
+
+    //             // Hitung premi untuk karyawan
+    //             $premi_bpjs_kes = ($premi->besaran_premi / 100) * $basisPengkaliRate;
+
+    //             // Premi keluarga inti hanya dihitung sekali, tidak perlu hitung untuk setiap anggota
+    //             $totalPremiKeluargaInti = $keluargaInti->isNotEmpty() ? $premi_bpjs_kes : 0;
+
+    //             // Hitung premi untuk keluarga lainnya (1% untuk setiap anggota keluarga lainnya)
+    //             $totalPremiKeluargaLainnya = $premi_bpjs_kes * $keluargaLainnya->count();
+
+    //             // Jika karyawan tidak memiliki keluarga BPJS, hanya hitung premi untuk karyawan saja
+    //             if ($dataKeluargas->isEmpty()) {
+    //                 $premiAmount = $premi_bpjs_kes;
+    //                 Log::info("Calculated BPJS Kesehatan premi: {$premiAmount} untuk karyawan ID: {$data_karyawan_id} tanpa keluarga BPJS.");
+    //             } else {
+    //                 $premiAmount = $premi_bpjs_kes + $totalPremiKeluargaInti + $totalPremiKeluargaLainnya;
+    //                 Log::info("Calculated BPJS Kesehatan premi: {$premiAmount} untuk karyawan ID: {$data_karyawan_id}, Total premi keluarga inti: {$totalPremiKeluargaInti}, Total premi keluarga lainnya: {$totalPremiKeluargaLainnya}");
+    //             }
+    //         } else {
+    //             // Cek has_custom_formula true
+    //             if ($premi->has_custom_formula) {
+    //                 if ($premi->jenis_premi == 0) { // Persentase
+    //                     $premiAmount = ($premi->besaran_premi / 100) * $basisPengkaliRate;
+    //                 } else {
+    //                     $premiAmount = $premi->besaran_premi;
+    //                 }
+    //                 Log::info("Calculated custom premi: {$premiAmount} premi ID: {$premi->id}");
+    //             } else {
+    //                 if ($premi->jenis_premi == 0) { // Persentase
+    //                     $premiAmount = ($premi->besaran_premi / 100) * $basisPengkali;
+    //                 } else {
+    //                     $premiAmount = $premi->besaran_premi;
+    //                 }
+    //                 Log::info("Calculated premi: {$premiAmount} premi ID: {$premi->id}");
+    //             }
+    //         }
+    //         $totalPremi += $premiAmount;
+    //     }
+
+    //     return $totalPremi;
+    // }
+    public static function calculatedPremi($data_karyawan_id, $penghasilanBruto, $penghasilanBrutoTotal, $gajiPokok)
     {
         // Ambil data premi yang dipilih untuk karyawan ini dari tabel pengurang_gajis
         $premis = DB::table('pengurang_gajis')
@@ -41,12 +122,15 @@ class CalculateHelper
 
         foreach ($premis as $premi) {
             $premiAmount = 0;
-            $basisGaji = $penghasilanBruto;
-            if ($premi->kategori_potongan_id == 2) { // gaji pokok
+            if ($premi->kategori_potongan_id == 3) { // gaji bruto total
+                $basisPengkali = $penghasilanBrutoTotal;
+            } else if ($premi->kategori_potongan_id == 2) { // gaji pokok
                 $basisPengkali = $gajiPokok;
             } else {
-                $basisPengkali = $basisGaji;
+                $basisPengkali = $penghasilanBruto;
             }
+
+            $basisPengkaliRate = $basisPengkali;
 
             // Terapkan minimal maksimal rate jika ada
             if (!is_null($premi->minimal_rate)) {
@@ -65,15 +149,11 @@ class CalculateHelper
                     ->where('is_bpjs', 1)
                     ->get();
 
-                // Keluarga Inti
-                $keluargaInti = $dataKeluargas->whereIn('hubungan', ['Suami', 'Istri', 'Anak Ke-1', 'Anak Ke-2', 'Anak Ke-3']);
+                // Keluarga Lainnya
                 $keluargaLainnya = $dataKeluargas->whereIn('hubungan', ['Anak Ke-4', 'Anak Ke-5', 'Bapak', 'Ibu', 'Bapak Mertua', 'Ibu Mertua']);
 
                 // Hitung premi untuk karyawan
                 $premi_bpjs_kes = ($premi->besaran_premi / 100) * $basisPengkaliRate;
-
-                // Premi keluarga inti hanya dihitung sekali, tidak perlu hitung untuk setiap anggota
-                $totalPremiKeluargaInti = $keluargaInti->isNotEmpty() ? $premi_bpjs_kes : 0;
 
                 // Hitung premi untuk keluarga lainnya (1% untuk setiap anggota keluarga lainnya)
                 $totalPremiKeluargaLainnya = $premi_bpjs_kes * $keluargaLainnya->count();
@@ -83,8 +163,8 @@ class CalculateHelper
                     $premiAmount = $premi_bpjs_kes;
                     Log::info("Calculated BPJS Kesehatan premi: {$premiAmount} untuk karyawan ID: {$data_karyawan_id} tanpa keluarga BPJS.");
                 } else {
-                    $premiAmount = $premi_bpjs_kes + $totalPremiKeluargaInti + $totalPremiKeluargaLainnya;
-                    Log::info("Calculated BPJS Kesehatan premi: {$premiAmount} untuk karyawan ID: {$data_karyawan_id}, Total premi keluarga inti: {$totalPremiKeluargaInti}, Total premi keluarga lainnya: {$totalPremiKeluargaLainnya}");
+                    $premiAmount = $premi_bpjs_kes + $totalPremiKeluargaLainnya;
+                    Log::info("Calculated BPJS Kesehatan premi: {$premiAmount} untuk karyawan ID: {$data_karyawan_id}, Total premi keluarga lainnya: {$premi_bpjs_kes}, Total premi keluarga lainnya: {$totalPremiKeluargaLainnya}");
                 }
             } else {
                 // Cek has_custom_formula true
@@ -240,15 +320,18 @@ class CalculateHelper
     }
 
     // buat itung detail gajis
-    public static function calculatedPremiDetail($premi, $penghasilanBruto, $gajiPokok, $data_karyawan_id)
+    public static function calculatedPremiDetail($premi, $penghasilanBruto, $penghasilanBrutoTotal, $gajiPokok, $data_karyawan_id)
     {
         $premiAmount = 0;
-        $basisGaji = $penghasilanBruto;
-        if ($premi->kategori_potongan_id == 2) { // gaji pokok
+        if ($premi->kategori_potongan_id == 3) { // gaji bruto total
+            $basisPengkali = $penghasilanBrutoTotal;
+        } else if ($premi->kategori_potongan_id == 2) { // gaji pokok
             $basisPengkali = $gajiPokok;
         } else {
-            $basisPengkali = $basisGaji;
+            $basisPengkali = $penghasilanBruto;
         }
+
+        $basisPengkaliRate = $basisPengkali;
 
         // Terapkan minimal maksimal rate jika ada
         if (!is_null($premi->minimal_rate)) {
@@ -268,14 +351,10 @@ class CalculateHelper
                 ->get();
 
             // Keluarga Inti
-            $keluargaInti = $dataKeluargas->whereIn('hubungan', ['Suami', 'Istri', 'Anak Ke-1', 'Anak Ke-2', 'Anak Ke-3']);
             $keluargaLainnya = $dataKeluargas->whereIn('hubungan', ['Anak Ke-4', 'Anak Ke-5', 'Bapak', 'Ibu', 'Bapak Mertua', 'Ibu Mertua']);
 
             // Hitung premi untuk karyawan
             $premi_bpjs_kes = ($premi->besaran_premi / 100) * $basisPengkaliRate;
-
-            // Premi keluarga inti hanya dihitung sekali, tidak perlu hitung untuk setiap anggota
-            $totalPremiKeluargaInti = $keluargaInti->isNotEmpty() ? $premi_bpjs_kes : 0;
 
             // Hitung premi untuk keluarga lainnya (1% untuk setiap anggota keluarga lainnya)
             $totalPremiKeluargaLainnya = $premi_bpjs_kes * $keluargaLainnya->count();
@@ -285,8 +364,8 @@ class CalculateHelper
                 $premiAmount = $premi_bpjs_kes;
                 Log::info("Calculated BPJS Kesehatan premi: {$premiAmount} untuk karyawan ID: {$data_karyawan_id} tanpa keluarga BPJS.");
             } else {
-                $premiAmount = $premi_bpjs_kes + $totalPremiKeluargaInti + $totalPremiKeluargaLainnya;
-                Log::info("Calculated BPJS Kesehatan premi: {$premiAmount} untuk karyawan ID: {$data_karyawan_id}, Total premi keluarga inti: {$totalPremiKeluargaInti}, Total premi keluarga lainnya: {$totalPremiKeluargaLainnya}");
+                $premiAmount = $premi_bpjs_kes + $totalPremiKeluargaLainnya;
+                Log::info("Calculated BPJS Kesehatan premi: {$premiAmount} untuk karyawan ID: {$data_karyawan_id}, Total premi keluarga lainnya: {$premi_bpjs_kes}, Total premi keluarga lainnya: {$totalPremiKeluargaLainnya}");
             }
         } else {
             // Cek has_custom_formula true

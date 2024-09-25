@@ -134,7 +134,6 @@ class TagihanPotonganController extends Controller
                 ->whereMonth('tgl_penggajian', $bulanMulai->month)
                 ->first();
 
-            // Cek apakah bulan_mulai adalah bulan saat ini (penggajian sudah dilakukan pada bulan ini)
             if ($bulanMulai->month === $currentDate->month && $bulanMulai->year === $currentDate->year) {
                 return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Pembuatan tagihan potongan tidak dapat diproses, karena penggajian sudah dilakukan pada '{$existingPenggajian->tgl_penggajian}'."), Response::HTTP_BAD_REQUEST);
             }
@@ -238,13 +237,14 @@ class TagihanPotonganController extends Controller
             ->whereMonth('tgl_penggajian', $bulanMulai->month)
             ->first();
 
-        if ($bulanMulai->month === $currentDate->month && $bulanMulai->year === $currentDate->year) {
-            return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Pembaruan tagihan potongan tidak dapat diproses, karena penggajian sudah dilakukan pada bulan ini."), Response::HTTP_BAD_REQUEST);
+        if (!$existingPenggajian) {
+            return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Pembuatan tagihan potongan tidak dapat diproses, karena periode saat ini belum dilakukan penggajian."), Response::HTTP_BAD_REQUEST);
         }
 
-        if ($existingPenggajian) {
+        if ($bulanMulai->month === $currentDate->month && $bulanMulai->year === $currentDate->year) {
             return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Pembaruan tagihan potongan tidak dapat diproses, karena penggajian sudah dilakukan pada '{$existingPenggajian->tgl_penggajian}'."), Response::HTTP_BAD_REQUEST);
         }
+
 
         $tagihanPotongan->update($data);
 

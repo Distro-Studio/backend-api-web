@@ -3,12 +3,15 @@
 namespace App\Http\Controllers\Dashboard\Keuangan;
 
 use Carbon\Carbon;
+use App\Models\Premi;
 use App\Models\Notifikasi;
 use App\Models\Penggajian;
 use App\Models\DataKaryawan;
 use Illuminate\Http\Request;
 use App\Helpers\RandomHelper;
 use Illuminate\Http\Response;
+use App\Helpers\CalculateHelper;
+use App\Helpers\DetailGajiHelper;
 use App\Models\RiwayatPenggajian;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
@@ -393,6 +396,18 @@ class PenggajianController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data penggajian tidak ditemukan.'), Response::HTTP_NOT_FOUND);
         }
 
+        $gaji_pokok = DetailGajiHelper::getDetailGajiByNamaDetail($penggajian->id, 'Gaji Pokok');
+        $tunjangan_jabatan = DetailGajiHelper::getDetailGajiByNamaDetail($penggajian->id, 'Tunjangan Jabatan');
+        $tunjangan_fungsional = DetailGajiHelper::getDetailGajiByNamaDetail($penggajian->id, 'Tunjangan Fungsional');
+        $tunjangan_khusus = DetailGajiHelper::getDetailGajiByNamaDetail($penggajian->id, 'Tunjangan Khusus');
+        $tunjangan_lainnya = DetailGajiHelper::getDetailGajiByNamaDetail($penggajian->id, 'Tunjangan Lainnya');
+
+        $brutoPremi = $gaji_pokok +
+            $tunjangan_jabatan +
+            $tunjangan_fungsional +
+            $tunjangan_khusus +
+            $tunjangan_lainnya;
+
         $dataKaryawan = $penggajian->data_karyawans;
         $user = $dataKaryawan->users;
         $unitKerja = $dataKaryawan->unit_kerjas;
@@ -416,12 +431,7 @@ class PenggajianController extends Controller
             'THR'
         ];
 
-        $potonganTetapList = [
-            'PPh21',
-            'BPJS Kesehatan',
-            'BPJS Ketenagakerjaan',
-            'DPLK'
-        ];
+        $potonganTetapList = Premi::pluck('nama_premi')->toArray();
 
         // Filter pendapatan tetap
         $pendapatanTetap = $penggajian->detail_gajis->filter(function ($detail) use ($pendapatanTetapList) {
@@ -452,15 +462,37 @@ class PenggajianController extends Controller
 
         $potonganTetap = $penggajian->detail_gajis->filter(function ($detail) use ($potonganTetapList) {
             return in_array($detail->nama_detail, $potonganTetapList);
-        })->map(function ($detail) {
+        })->map(function ($detail) use ($dataKaryawan, $brutoPremi) {
+            $keluargaTerkenaPotongan = [];
+
+            if ($detail->nama_detail == 'BPJS Kesehatan') {
+                // Ambil data keluarga yang terkena potongan 1% untuk BPJS
+                $dataKeluargas = DB::table('data_keluargas')
+                    ->where('data_karyawan_id', $dataKaryawan->id)
+                    ->where('is_bpjs', 1)
+                    ->whereIn('hubungan', ['Anak Ke-4', 'Anak Ke-5', 'Bapak', 'Ibu', 'Bapak Mertua', 'Ibu Mertua'])
+                    ->get();
+
+                $brutoPremi = ($brutoPremi > 12000000) ? 12000000 : $brutoPremi;
+                foreach ($dataKeluargas as $keluarga) {
+                    $besaranPotongan = 0.01 * $brutoPremi;
+                    $keluargaTerkenaPotongan[] = [
+                        'hubungan' => $keluarga->hubungan,
+                        'besaran' => $besaranPotongan
+                    ];
+                }
+            }
+
             return [
                 'kategori_gaji' => $detail->kategori_gajis,
                 'nama_detail' => $detail->nama_detail,
                 'besaran' => $detail->besaran,
+                'keluarga_terkena_potongan' => ($detail->nama_detail == 'BPJS Kesehatan') ? $keluargaTerkenaPotongan : null,
                 'created_at' => $detail->created_at,
                 'updated_at' => $detail->updated_at
             ];
         })->values();
+
 
         $potonganTambahan = $penggajian->detail_gajis->filter(function ($detail) use ($potonganTetapList) {
             return !in_array($detail->nama_detail, $potonganTetapList) && $detail->kategori_gaji_id == 3;
