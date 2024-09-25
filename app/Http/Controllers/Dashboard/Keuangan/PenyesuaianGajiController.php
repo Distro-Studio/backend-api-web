@@ -15,13 +15,11 @@ use App\Helpers\CalculateHelper;
 use App\Helpers\DetailGajiHelper;
 use App\Models\RiwayatPenggajian;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Gate;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Jobs\Penggajian\CreateGajiJob;
 use App\Exports\Keuangan\PenyesuaianGajiExport;
-use App\Http\Requests\StorePenyesuaianGajiRequest;
 use App\Http\Requests\StorePenyesuaianGajiCustomRequest;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
 
@@ -568,6 +566,7 @@ class PenyesuaianGajiController extends Controller
       $penggajians = Penggajian::where('riwayat_penggajian_id', $riwayatPenggajianId)->pluck('id');
 
       DetailGaji::whereIn('penggajian_id', $penggajians)->delete();
+      PenyesuaianGaji::whereIn('penggajian_id', $penggajians)->delete();
       Penggajian::where('riwayat_penggajian_id', $riwayatPenggajianId)->delete();
 
       CreateGajiJob::dispatch($data_karyawan_ids, $sertakan_bor, $riwayatPenggajian->id);

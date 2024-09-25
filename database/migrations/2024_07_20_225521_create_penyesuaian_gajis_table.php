@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('penyesuaian_gajis', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('penggajian_id')->constrained('penggajians');
+            $table->foreignId('penggajian_id')->constrained('penggajians')->onDelete('cascade');
             $table->foreignId('kategori_gaji_id')->constrained('kategori_gajis'); // 1 = Penghasilan Dasar, 2 = Penambah, 3 = Pengurang
             $table->string('nama_detail');
             $table->integer('besaran');
