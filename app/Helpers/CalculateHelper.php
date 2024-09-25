@@ -143,11 +143,22 @@ class CalculateHelper
             }
 
             if ($premi->id == 1) { // BPJS Kesehatan
-                // Ambil keluarga yang terdaftar BPJS
                 $dataKeluargas = DB::table('data_keluargas')
                     ->where('data_karyawan_id', $data_karyawan_id)
                     ->where('is_bpjs', 1)
+                    ->where('status_hidup', 1)
+                    ->whereNotNull('verifikator_1')
                     ->get();
+
+                // Validasi bahwa semua anggota keluarga memiliki status_keluarga_id = 2
+                $allVerified = $dataKeluargas->every(function ($keluarga) {
+                    return $keluarga->status_keluarga_id == 2;
+                });
+
+                // Jika tidak semua anggota keluarga terverifikasi, kosongkan $dataKeluargas
+                if (!$allVerified) {
+                    $dataKeluargas = collect(); // Membuatnya kosong
+                }
 
                 // Keluarga Lainnya
                 $keluargaLainnya = $dataKeluargas->whereIn('hubungan', ['Anak Ke-4', 'Anak Ke-5', 'Bapak', 'Ibu', 'Bapak Mertua', 'Ibu Mertua']);
@@ -348,7 +359,19 @@ class CalculateHelper
             $dataKeluargas = DB::table('data_keluargas')
                 ->where('data_karyawan_id', $data_karyawan_id)
                 ->where('is_bpjs', 1)
+                ->where('status_hidup', 1)
+                ->whereNotNull('verifikator_1')
                 ->get();
+
+            // Validasi bahwa semua anggota keluarga memiliki status_keluarga_id = 2
+            $allVerified = $dataKeluargas->every(function ($keluarga) {
+                return $keluarga->status_keluarga_id == 2;
+            });
+
+            // Jika tidak semua anggota keluarga terverifikasi, kosongkan $dataKeluargas
+            if (!$allVerified) {
+                $dataKeluargas = collect(); // Membuatnya kosong
+            }
 
             // Keluarga Inti
             $keluargaLainnya = $dataKeluargas->whereIn('hubungan', ['Anak Ke-4', 'Anak Ke-5', 'Bapak', 'Ibu', 'Bapak Mertua', 'Ibu Mertua']);

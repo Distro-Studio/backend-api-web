@@ -121,7 +121,7 @@ class TagihanPotonganController extends Controller
         $bulanSelesai = Carbon::createFromFormat('d-m-Y', $data['bulan_selesai'], 'Asia/Jakarta');
 
         // Menghitung jarak antara bulan_mulai dan bulan_selesai dalam bulan
-        $tenor = $bulanMulai->diffInMonths($bulanSelesai);
+        $tenor = $bulanMulai->diffInMonths($bulanSelesai) + 1;
 
         $currentDate = Carbon::now('Asia/Jakarta');
         if ($bulanMulai->year < $currentDate->year || ($bulanMulai->year == $currentDate->year && $bulanMulai->month < $currentDate->month)) {
@@ -134,8 +134,8 @@ class TagihanPotonganController extends Controller
                 ->whereMonth('tgl_penggajian', $bulanMulai->month)
                 ->first();
 
-            if ($bulanMulai->month === $currentDate->month && $bulanMulai->year === $currentDate->year) {
-                return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Pembuatan tagihan potongan tidak dapat diproses, karena penggajian sudah dilakukan pada '{$existingPenggajian->tgl_penggajian}'."), Response::HTTP_BAD_REQUEST);
+            if ($existingPenggajian) {
+                return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Pembuatan tagihan potongan tidak dapat diproses, karena penggajian sudah dilakukan pada bulan '{$bulanMulai->format('F Y')}'."), Response::HTTP_BAD_REQUEST);
             }
         }
 
@@ -270,7 +270,7 @@ class TagihanPotonganController extends Controller
         $file = $request->validated();
 
         try {
-            Excel::import(new TagihanPotonganImport, $file['tagihan_potongan_file']);
+            Excel::import(new TagihanPotonganImport, $file['tagihan']);
         } catch (\Exception $e) {
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya terjadi kesalahan. Pesan: ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
         }

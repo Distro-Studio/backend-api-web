@@ -25,15 +25,15 @@ class ImportTagihanPotonganRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'tagihan_potongan_file' => 'required|mimes:xlsx,xls,csv',
+            'tagihan' => 'required|mimes:xlsx,xls,csv',
         ];
     }
 
     public function messages()
     {
         return [
-            'tagihan_potongan_file.required' => 'Silahkan masukkan file data tagihan potongan terlebih dahulu.',
-            'tagihan_potongan_file.mimes' => 'File data tagihan potongan wajib berupa excel dan berekstensi .xlsx, .xls, .csv.',
+            'tagihan.required' => 'Silahkan masukkan file data tagihan potongan terlebih dahulu.',
+            'tagihan.mimes' => 'File data tagihan potongan wajib berupa excel dan berekstensi .xlsx, .xls, .csv.',
         ];
     }
 

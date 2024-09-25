@@ -336,7 +336,7 @@ class DataRiwayatPerubahanController extends Controller
             if ($status_perubahan_id == 1) {
                 $riwayat->status_perubahan_id = 3;
                 $riwayat->verifikator_1 = Auth::id();
-                $riwayat->alasan = $request->input('alasan', null);
+                $riwayat->alasan = $request->input('alasan');
                 $riwayat->save();
 
                 return response()->json(new WithoutDataResource(Response::HTTP_OK, "Verifikasi untuk riwayat perubahan '{$riwayat->kolom}' telah ditolak."), Response::HTTP_OK);
@@ -355,18 +355,31 @@ class DataRiwayatPerubahanController extends Controller
             case 'Personal':
                 $dataKaryawan = DataKaryawan::find($riwayat->data_karyawan_id);
                 if ($dataKaryawan) {
-                    $dataKaryawan->{$riwayat->kolom} = $riwayat->updated_data;
-                    $dataKaryawan->save();
+                    // Jika kolom yang diubah adalah tinggi_badan, ambil berat_badan dari data asli
+                    $bmiResult = null;
+                    if ($riwayat->kolom == 'tinggi_badan') {
+                        $updatedTinggiBadan = $riwayat->updated_data;
+                        $beratBadan = $dataKaryawan->berat_badan; // Ambil berat_badan dari data asli
+                        if ($beratBadan) {
+                            $bmiResult = CalculateBMIHelper::calculateBMI($beratBadan, $updatedTinggiBadan);
+                        }
+                    }
+                    // Jika kolom yang diubah adalah berat_badan, ambil tinggi_badan dari data asli
+                    elseif ($riwayat->kolom == 'berat_badan') {
+                        $updatedBeratBadan = $riwayat->updated_data;
+                        $tinggiBadan = $dataKaryawan->tinggi_badan; // Ambil tinggi_badan dari data asli
+                        if ($tinggiBadan) {
+                            $bmiResult = CalculateBMIHelper::calculateBMI($updatedBeratBadan, $tinggiBadan);
+                        }
+                    }
 
-                    if (isset($riwayat->updated_data['berat_badan']) && isset($riwayat->updated_data['tinggi_badan'])) {
-                        $bmiResult = CalculateBMIHelper::calculateBMI(
-                            $riwayat->updated_data['berat_badan'],
-                            $riwayat->updated_data['tinggi_badan']
-                        );
+                    // Update data sesuai dengan kolom yang diubah
+                    $dataKaryawan->{$riwayat->kolom} = $riwayat->updated_data;
+                    if ($bmiResult) {
                         $dataKaryawan->bmi_value = $bmiResult['bmi_value'];
                         $dataKaryawan->bmi_ket = $bmiResult['bmi_ket'];
-                        $dataKaryawan->save();
                     }
+                    $dataKaryawan->save();
                 }
                 break;
 

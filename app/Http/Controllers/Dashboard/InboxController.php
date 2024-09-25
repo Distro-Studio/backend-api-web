@@ -51,6 +51,7 @@ class InboxController extends Controller
                 'user' => $item->users,
                 'message' => $item->message,
                 'is_read' => $item->is_read,
+                'is_verifikasi' => $item->is_verifikasi,
                 'created_at' => $item->created_at,
                 'updated_at' => $item->updated_at
             ];
@@ -71,7 +72,7 @@ class InboxController extends Controller
         return response()->json([
             'status' => Response::HTTP_OK,
             'message' => 'Data notifikasi berhasil ditampilkan.',
-            'list_notifikasi' => [
+            'data' => [
                 'notifikasi_verifikasi' => $formattedVerifikasi,
                 'notifikasi_reguler' => $formattedReguler
             ]

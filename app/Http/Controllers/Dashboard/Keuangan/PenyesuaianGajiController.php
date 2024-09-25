@@ -641,18 +641,12 @@ class PenyesuaianGajiController extends Controller
           $tunjangan_khusus +
           $tunjangan_lainnya;
 
-        $brutoTotal = $brutoPremi +
-          $thr +
-          $uang_makan +
-          $totalReward +
-          $request->besaran;
-
-        $totalPremi = CalculateHelper::calculatedPremi($penggajian->data_karyawans->id, $brutoPremi, $brutoTotal, $gaji_pokok);
+        $totalPremi = CalculateHelper::calculatedPremi($penggajian->data_karyawans->id, $brutoPremi, $penggajian->gaji_bruto, $gaji_pokok);
 
         if ($currentMonth >= 1 && $currentMonth <= 11) {
-          $pph21 = CalculateHelper::calculatedPPH21ForMonths($brutoTotal, $penggajian->data_karyawans->ptkp_id);
+          $pph21 = CalculateHelper::calculatedPPH21ForMonths($penggajian->gaji_bruto, $penggajian->data_karyawans->ptkp_id);
         } else {
-          $pph21 = CalculateHelper::calculatedPPH21ForDecember($penggajian->data_karyawans->id, $totalPremi, $brutoTotal, $totalTagihanPotongan, $penggajian->data_karyawans->ptkp_id);
+          $pph21 = CalculateHelper::calculatedPPH21ForDecember($penggajian->data_karyawans->id, $penggajian->gaji_bruto, $totalPremi,  $totalTagihanPotongan, $penggajian->data_karyawans->ptkp_id);
         }
 
         $takeHomePay = $penggajian->gaji_bruto - $totalPremi - $pph21;
@@ -708,8 +702,6 @@ class PenyesuaianGajiController extends Controller
     $bonusBOR = DetailGajiHelper::getDetailGajiByNamaDetail($penggajian->id, 'Bonus BOR');
     $bonusPresensi = DetailGajiHelper::getDetailGajiByNamaDetail($penggajian->id, 'Bonus Presensi');
     $bonusUangLembur = DetailGajiHelper::getDetailGajiByNamaDetail($penggajian->id, 'Uang Lembur');
-    $thr = DetailGajiHelper::getDetailGajiByNamaDetail($penggajian->id, 'THR');
-    $uang_makan = DetailGajiHelper::getDetailGajiByNamaDetail($penggajian->id, 'Uang Makan');
     $koperasi = DetailGajiHelper::getDetailGajiByNamaDetail($penggajian->id, 'Koperasi');
     $obat = DetailGajiHelper::getDetailGajiByNamaDetail($penggajian->id, 'Obat/Perawatan');
     $totalTagihanPotongan = $koperasi + $obat;
@@ -742,13 +734,7 @@ class PenyesuaianGajiController extends Controller
           $tunjangan_khusus +
           $tunjangan_lainnya;
 
-        $brutoTotal = $brutoPremi +
-          $thr +
-          $uang_makan +
-          $totalReward -
-          $request->besaran;
-
-        $totalPremi = CalculateHelper::calculatedPremi($penggajian->data_karyawans->id, $brutoPremi, $brutoTotal, $gaji_pokok);
+        $totalPremi = CalculateHelper::calculatedPremi($penggajian->data_karyawans->id, $brutoPremi, $penggajian->gaji_bruto, $gaji_pokok);
 
         if ($currentMonth >= 1 && $currentMonth <= 11) {
           // Kurangi take home pay dengan besaran penyesuaian yang baru dibuat
@@ -762,7 +748,7 @@ class PenyesuaianGajiController extends Controller
           ]);
         } else {
           $dataKaryawan = $penggajian->data_karyawans->id;
-          $pph21 = CalculateHelper::calculatedPPH21ForDecember($dataKaryawan, $totalPremi, $brutoTotal, $totalTagihanPotongan, $penggajian->data_karyawans->ptkp_id);
+          $pph21 = CalculateHelper::calculatedPPH21ForDecember($dataKaryawan, $penggajian->gaji_bruto, $totalPremi,  $totalTagihanPotongan, $penggajian->data_karyawans->ptkp_id);
 
           $takeHomePay = $penggajian->gaji_bruto - $totalPremi - $pph21;
 

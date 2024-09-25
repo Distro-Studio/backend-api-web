@@ -70,7 +70,7 @@ class TagihanPotonganImport implements ToModel, WithHeadingRow, WithValidation
         $bulanSelesai = !empty($row['bulan_selesai']) ? Carbon::createFromFormat('d-m-Y', $row['bulan_selesai']) : null;
         $tenor = 0;
         if ($bulanMulai && $bulanSelesai) {
-            $tenor = $bulanMulai->diffInMonths($bulanSelesai);
+            $tenor = $bulanMulai->diffInMonths($bulanSelesai) + 1;
         }
 
         return new TagihanPotongan([

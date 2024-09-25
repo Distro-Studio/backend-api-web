@@ -10,7 +10,6 @@ use App\Models\DataKaryawan;
 use Illuminate\Http\Request;
 use App\Helpers\RandomHelper;
 use Illuminate\Http\Response;
-use App\Helpers\CalculateHelper;
 use App\Helpers\DetailGajiHelper;
 use App\Models\RiwayatPenggajian;
 use Illuminate\Support\Facades\DB;
@@ -464,23 +463,40 @@ class PenggajianController extends Controller
             return in_array($detail->nama_detail, $potonganTetapList);
         })->map(function ($detail) use ($dataKaryawan, $brutoPremi) {
             $keluargaTerkenaPotongan = [];
-
             if ($detail->nama_detail == 'BPJS Kesehatan') {
                 // Ambil data keluarga yang terkena potongan 1% untuk BPJS
                 $dataKeluargas = DB::table('data_keluargas')
                     ->where('data_karyawan_id', $dataKaryawan->id)
                     ->where('is_bpjs', 1)
                     ->whereIn('hubungan', ['Anak Ke-4', 'Anak Ke-5', 'Bapak', 'Ibu', 'Bapak Mertua', 'Ibu Mertua'])
+                    ->where('status_hidup', 1)
+                    ->whereNotNull('verifikator_1')
                     ->get();
 
+                // Validasi bahwa semua anggota keluarga memiliki status_keluarga_id = 2
+                $allVerified = $dataKeluargas->every(function ($keluarga) {
+                    return $keluarga->status_keluarga_id == 2;
+                });
+
+                // Jika tidak semua anggota keluarga terverifikasi, kosongkan $dataKeluargas
+                if (!$allVerified) {
+                    $dataKeluargas = collect(); // Membuatnya kosong
+                }
+
                 $brutoPremi = ($brutoPremi > 12000000) ? 12000000 : $brutoPremi;
+                $totalAnggota = $dataKeluargas->count() + 1; // +1 untuk karyawan sendiri (Personal)
+                $besaranPerIndividu = ceil($detail->besaran / $totalAnggota);
                 foreach ($dataKeluargas as $keluarga) {
-                    $besaranPotongan = 0.01 * $brutoPremi;
                     $keluargaTerkenaPotongan[] = [
                         'hubungan' => $keluarga->hubungan,
-                        'besaran' => $besaranPotongan
+                        'besaran' => $besaranPerIndividu
                     ];
                 }
+
+                $keluargaTerkenaPotongan[] = [
+                    'hubungan' => 'Pribadi',
+                    'besaran' => $besaranPerIndividu
+                ];
             }
 
             return [
