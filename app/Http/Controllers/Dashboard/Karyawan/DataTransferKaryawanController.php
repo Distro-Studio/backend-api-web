@@ -10,7 +10,6 @@ use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use App\Helpers\RandomHelper;
 use Illuminate\Http\Response;
-use App\Models\KategoriBerkas;
 use App\Models\TransferKaryawan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -22,6 +21,7 @@ use App\Exports\Karyawan\TransferExport;
 use App\Models\KategoriTransferKaryawan;
 use App\Jobs\EmailNotification\TransferEmailJob;
 use App\Http\Requests\StoreTransferKaryawanRequest;
+use App\Http\Requests\UpdateTransferKaryawanRequest;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
 use App\Http\Resources\Dashboard\Karyawan\TransferKaryawanResource;
 use Carbon\Carbon;
@@ -303,24 +303,23 @@ class DataTransferKaryawanController extends Controller
         // with server
         DB::beginTransaction();
         try {
+            // Ambil data user dan relasinya
+            $user = User::with('data_karyawans.unit_kerjas', 'data_karyawans.jabatans', 'data_karyawans.kelompok_gajis', 'roles')->find($data['user_id']);
+            if (!$user) {
+                throw new Exception('Pengguna tidak ditemukan.');
+            }
+
+            // Ambil unit kerja dan jabatan asal dari user yang dipilih
+            $data['unit_kerja_asal'] = $user->data_karyawans->unit_kerjas->id ?? $data['unit_kerja_asal'];
+            $data['jabatan_asal'] = $user->data_karyawans->jabatans->id ?? $data['jabatan_asal'];
+            $data['kelompok_gaji_asal'] = $user->data_karyawans->kelompok_gajis->id ?? $data['kelompok_gaji_asal'];
+            $data['role_asal'] = $user->roles->first()->id ?? $data['role_asal'];
+
+            if (is_null($data['unit_kerja_asal']) || is_null($data['jabatan_asal'])) {
+                throw new Exception('Unit kerja atau jabatan asal tidak ditemukan untuk pengguna ini.');
+            }
+
             if ($request->hasFile('dokumen')) {
-                // Ambil data user dan relasinya
-                $user = User::with('data_karyawans.unit_kerjas', 'data_karyawans.jabatans', 'data_karyawans.kelompok_gajis', 'roles')->find($data['user_id']);
-                if (!$user) {
-                    throw new Exception('Pengguna tidak ditemukan.');
-                }
-
-                // Ambil unit kerja dan jabatan asal dari user yang dipilih
-                $data['unit_kerja_asal'] = $user->data_karyawans->unit_kerjas->id ?? $data['unit_kerja_asal'];
-                $data['jabatan_asal'] = $user->data_karyawans->jabatans->id ?? $data['jabatan_asal'];
-                $data['kelompok_gaji_asal'] = $user->data_karyawans->kelompok_gajis->id ?? $data['kelompok_gaji_asal'];
-                $data['role_asal'] = $user->roles->first()->id ?? $data['role_asal'];
-
-                if (is_null($data['unit_kerja_asal']) || is_null($data['jabatan_asal'])) {
-                    throw new Exception('Unit kerja atau jabatan asal tidak ditemukan untuk pengguna ini.');
-                }
-
-                // Upload file using helper
                 StorageServerHelper::login();
 
                 $file = $request->file('dokumen');
@@ -341,12 +340,11 @@ class DataTransferKaryawanController extends Controller
                     'size' => $dataupload['size'],
                 ]);
                 Log::info('Berkas Transfer ' . $user->nama . ' berhasil di upload.');
+                StorageServerHelper::logout();
 
                 if (!$berkas) {
                     throw new Exception('Berkas gagal di upload');
                 }
-
-                StorageServerHelper::logout();
             }
 
             $transfer = TransferKaryawan::create($data);
@@ -395,6 +393,126 @@ class DataTransferKaryawanController extends Controller
             DB::commit();
 
             return response()->json(new TransferKaryawanResource(Response::HTTP_OK, "Berhasil melakukan transfer karyawan '{$users->nama}'.", $transfer), Response::HTTP_OK);
+        } catch (Exception $e) {
+            DB::rollBack();
+            return response()->json(new WithoutDataResource(Response::HTTP_INTERNAL_SERVER_ERROR, 'Error: ' . $e->getMessage()), Response::HTTP_BAD_REQUEST);
+        }
+    }
+
+
+
+    public function update(UpdateTransferKaryawanRequest $request, $id)
+    {
+        if (!Gate::allows('edit dataKaryawan')) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
+
+        // Langkah 1: Dapatkan data transfer berdasarkan id
+        $transfer = TransferKaryawan::find($id);
+        if (!$transfer) {
+            return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data transfer tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+        }
+
+        // Langkah 2: Ambil kolom tgl_mulai
+        $tgl_mulai_db = Carbon::createFromFormat('d-m-Y', $transfer->tgl_mulai)->startOfDay();
+        $today = Carbon::today('Asia/Jakarta');
+        if ($tgl_mulai_db->format('d-m-Y') <= $today->format('d-m-Y')) {
+            return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Transfer karyawan tidak dapat diperbarui, karena tanggal mulai sudah terlewat atau hari ini.'), Response::HTTP_BAD_REQUEST);
+        }
+
+        $data = $request->validated();
+
+        DB::beginTransaction();
+        try {
+            $user = User::with('data_karyawans.unit_kerjas', 'data_karyawans.jabatans', 'data_karyawans.kelompok_gajis', 'roles')->find($transfer->user_id);
+            if (!$user) {
+                throw new Exception('Pengguna tidak ditemukan.');
+            }
+
+            // Ambil unit kerja dan jabatan asal dari user yang dipilih
+            $data['unit_kerja_asal'] = $user->data_karyawans->unit_kerjas->id ?? $data['unit_kerja_asal'];
+            $data['jabatan_asal'] = $user->data_karyawans->jabatans->id ?? $data['jabatan_asal'];
+            $data['kelompok_gaji_asal'] = $user->data_karyawans->kelompok_gajis->id ?? $data['kelompok_gaji_asal'];
+            $data['role_asal'] = $user->roles->first()->id ?? $data['role_asal'];
+
+            if (is_null($data['unit_kerja_asal']) || is_null($data['jabatan_asal'])) {
+                throw new Exception('Unit kerja atau jabatan asal tidak ditemukan untuk pengguna ini.');
+            }
+
+            if ($request->hasFile('dokumen')) {
+                // Upload file using helper
+                StorageServerHelper::login();
+
+                $file = $request->file('dokumen');
+                $random_filename = Str::random(20);
+                $dataupload = StorageServerHelper::uploadToServer($request, $random_filename);
+                $data['dokumen'] = $dataupload['path'];
+
+                $berkas = Berkas::updateOrCreate([
+                    'user_id' => $transfer->user_id,
+                    'file_id' => $dataupload['id_file']['id'],
+                    'nama' => $random_filename,
+                    'kategori_berkas_id' => 2, // umum
+                    'status_berkas_id' => 2,
+                    'path' => $dataupload['path'],
+                    'tgl_upload' => now(),
+                    'nama_file' => $dataupload['nama_file'],
+                    'ext' => $dataupload['ext'],
+                    'size' => $dataupload['size'],
+                ]);
+                Log::info('Berkas Transfer ' . $user->nama . ' berhasil di diperbarui.');
+                StorageServerHelper::logout();
+
+                if (!$berkas) {
+                    throw new Exception('Berkas gagal di diperbarui');
+                }
+            }
+
+            $transfer->update($data);
+
+            $users = $transfer->users;
+            $unit_kerja_asals = $transfer->unit_kerja_asals->nama_unit ?? $user->data_karyawans->unit_kerjas->nama_unit;
+            $unit_kerja_tujuans = $transfer->unit_kerja_tujuans->nama_unit ?? $unit_kerja_asals;
+            $jabatan_asals = $transfer->jabatan_asals->nama_jabatan ?? $user->data_karyawans->jabatans->nama_jabatan;
+            $jabatan_tujuans = $transfer->jabatan_tujuans->nama_jabatan ?? $jabatan_asals;
+            $kelompok_gaji_asals = $transfer->kelompok_gaji_asals->nama_kelompok ?? $user->data_karyawans->kelompok_gajis->nama_kelompok;
+            $kelompok_gaji_tujuans = $transfer->kelompok_gaji_tujuans->nama_kelompok ?? $kelompok_gaji_asals;
+            $role_tujuans = $users->role_tujuans->name ?? $user->roles->first()->name;
+            $alasan = $transfer->alasan;
+            $tgl_mulai = $transfer->tgl_mulai;
+
+            $kategori_record_id = ($data['kategori_transfer_id'] == 1) ? 3 : 2;
+            TrackRecord::create([
+                'user_id' => $transfer->user_id,
+                'tgl_masuk' => $users->data_karyawans->tgl_masuk,
+                'tgl_keluar' => $users->data_karyawans->tgl_keluar,
+                'kategori_record_id' => $kategori_record_id,
+            ]);
+
+            $details = [
+                'nama' => $user->nama,
+                'email' => $user->data_karyawans->email,
+                'unit_kerja_asals' => $unit_kerja_asals,
+                'unit_kerja_tujuans' => $unit_kerja_tujuans,
+                'jabatan_asals' => $jabatan_asals,
+                'jabatan_tujuans' => $jabatan_tujuans,
+                'kelompok_gaji_asals' => $kelompok_gaji_asals,
+                'kelompok_gaji_tujuans' => $kelompok_gaji_tujuans,
+                'role_tujuans' => $role_tujuans,
+                'alasan' => $alasan,
+                'tgl_mulai' => RandomHelper::convertToDateTimeString($tgl_mulai),
+            ];
+
+            if ($request->has('beri_tahu_manajer_direktur') && $request->beri_tahu_manajer_direktur == 1) {
+                TransferEmailJob::dispatch('manager@example.com', ['direktur@example.com'], $details);
+            }
+            if ($request->has('beri_tahu_karyawan') && $request->beri_tahu_karyawan == 1) {
+                TransferEmailJob::dispatch($users->data_karyawans->email, [], $details);
+            }
+
+            DB::commit();
+
+            return response()->json(new TransferKaryawanResource(Response::HTTP_OK, "Berhasil memperbarui transfer karyawan '{$users->nama}'.", $transfer), Response::HTTP_OK);
         } catch (Exception $e) {
             DB::rollBack();
             return response()->json(new WithoutDataResource(Response::HTTP_INTERNAL_SERVER_ERROR, 'Error: ' . $e->getMessage()), Response::HTTP_BAD_REQUEST);

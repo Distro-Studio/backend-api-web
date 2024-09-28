@@ -11,12 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('jabatans', function (Blueprint $table) {
+        Schema::create('modul_verifikasis', function (Blueprint $table) {
             $table->id();
-            $table->string('nama_jabatan');
-            $table->boolean('is_struktural');
-            // $table->integer('tunjangan_jabatan');
-            $table->softDeletes();
+            $table->string('label');
+            $table->integer('max_order');
             $table->timestamps();
         });
     }
@@ -26,6 +24,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('jabatans');
+        Schema::dropIfExists('modul_verifikasis');
     }
 };

@@ -8,7 +8,9 @@ use App\Models\RiwayatIzin;
 use Illuminate\Http\Request;
 use App\Helpers\RandomHelper;
 use Illuminate\Http\Response;
+use App\Models\RelasiVerifikasi;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
@@ -219,6 +221,10 @@ class DataRiwayatPerizinanController extends Controller
         }
 
         $formattedData = $dataPerizinan->map(function ($dataPerizinan) {
+            $userId = $dataPerizinan->users->id ?? null;
+            $relasiVerifikasi = $userId ? RelasiVerifikasi::whereJsonContains('user_diverifikasi', (int) $userId)
+                ->where('modul_verifikasi', 4)
+                ->get() : collect();
             return [
                 'id' => $dataPerizinan->id,
                 'user' => [
@@ -238,6 +244,18 @@ class DataRiwayatPerizinanController extends Controller
                 'durasi' => $dataPerizinan->durasi,
                 'keterangan' => $dataPerizinan->keterangan,
                 'status_izin' => $dataPerizinan->status_izins,
+                'relasi_verifikasi' => $relasiVerifikasi->map(function ($verifikasi) {
+                    return [
+                        'id' => $verifikasi->id,
+                        'nama' => $verifikasi->nama,
+                        'verifikator' => $verifikasi->verifikator, // Nama verifikator
+                        'order' => $verifikasi->order,
+                        'user_diverifikasi' => $verifikasi->user_diverifikasi,
+                        'modul_verifikasi' => $verifikasi->modul_verifikasi,
+                        'created_at' => $verifikasi->created_at,
+                        'updated_at' => $verifikasi->updated_at
+                    ];
+                }),
                 'created_at' => $dataPerizinan->created_at,
                 'updated_at' => $dataPerizinan->updated_at
             ];
@@ -295,18 +313,48 @@ class DataRiwayatPerizinanController extends Controller
 
     public function verifikasiRiwayatIzin(Request $request, $izinId)
     {
-        if (!Gate::allows('verifikasi1 riwayatPerizinan')) {
-            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        // if (!Gate::allows('verifikasi1 riwayatPerizinan')) {
+        //     return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        // }
+
+        // 1. Dapatkan ID user yang login
+        $verifikatorId = Auth::id();
+
+        // 2. Dapatkan relasi_verifikasis, pastikan verifikator memiliki ID user yang sama
+        $relasiVerifikasi = RelasiVerifikasi::where('verifikator', $verifikatorId)
+            ->where('modul_verifikasi', 4)
+            ->first();
+        // dd($relasiVerifikasi);
+        if (!$relasiVerifikasi) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk verifikasi izin ini.'), Response::HTTP_FORBIDDEN);
         }
 
-        // Cari riwayat izin berdasarkan ID
+        // 3. Dapatkan izin berdasarkan ID
         $riwayat_izin = RiwayatIzin::find($izinId);
-
         if (!$riwayat_izin) {
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Riwayat perizinan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
         }
 
+        // 4. Dapatkan karyawan yang mengajukan izin dengan user_id di tabel izins
+        $pengajuIzinUserId = $riwayat_izin->user_id;
+        // dd($pengajuIzinUserId);
+
+        // 5. Samakan user_id pengajuan Izin dengan string array user_diverifikasi di tabel relasi_verifikasis
+        $userDiverifikasi = $relasiVerifikasi->user_diverifikasi;
+        if (!is_array($userDiverifikasi)) {
+            Log::warning('Kesalahan format data user diverifikasi pada verif 1 riwayat perizinan');
+            return response()->json(new WithoutDataResource(Response::HTTP_INTERNAL_SERVER_ERROR, 'Kesalahan format data user diverifikasi.'), Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+        if (!in_array($pengajuIzinUserId, $userDiverifikasi)) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak dapat memverifikasi izin ini karena karyawan tidak ada dalam daftar verifikasi Anda.'), Response::HTTP_FORBIDDEN);
+        }
+
+        // 6. Validasi nilai kolom order dan status_izin_id
         $status_izin_id = $riwayat_izin->status_izin_id;
+        // dd($status_izin_id);
+        if ($relasiVerifikasi->order != 1) {
+            return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Izin ini tidak dalam status untuk disetujui pada tahap 1.'), Response::HTTP_BAD_REQUEST);
+        }
 
         if ($request->has('verifikasi_pertama_disetujui') && $request->verifikasi_pertama_disetujui == 1) {
             if ($status_izin_id == 1) {
@@ -324,7 +372,7 @@ class DataRiwayatPerizinanController extends Controller
                     ->update(['status_reward_presensi' => false]);
 
                 // Buat dan simpan notifikasi
-                $this->createNotifikasiIzin($riwayat_izin, 'Disetujui');
+                $this->createNotifikasiIzin($verifikatorId, $riwayat_izin, 'Disetujui');
 
                 return response()->json(new WithoutDataResource(Response::HTTP_OK, "Verifikasi perizinan dari '{$riwayat_izin->users->nama}' telah disetujui."), Response::HTTP_OK);
             } else {
@@ -338,7 +386,7 @@ class DataRiwayatPerizinanController extends Controller
                 $riwayat_izin->save();
 
                 // Buat dan simpan notifikasi
-                $this->createNotifikasiIzin($riwayat_izin, 'Ditolak');
+                $this->createNotifikasiIzin($verifikatorId, $riwayat_izin, 'Ditolak');
 
                 return response()->json(new WithoutDataResource(Response::HTTP_OK, "Verifikasi perizinan dari '{$riwayat_izin->users->nama}' telah ditolak."), Response::HTTP_OK);
             } else {
@@ -349,18 +397,23 @@ class DataRiwayatPerizinanController extends Controller
         }
     }
 
-
-    private function createNotifikasiIzin($riwayat_izin, $status)
+    private function createNotifikasiIzin($verifikatorId, $riwayat_izin, $status)
     {
         $statusText = $status === 'Disetujui' ? 'Disetujui' : 'Ditolak';
         $verifikator = Auth::user()->nama;
         $konversiTgl = Carbon::parse(RandomHelper::convertToDateString($riwayat_izin->created_at))->locale('id')->isoFormat('D MMMM YYYY');
         $message = "Pengajuan perizinan Anda pada tanggal '{$konversiTgl}' telah '{$statusText}' oleh '{$verifikator}'.";
 
+        $userIds = [$riwayat_izin->user_id, $verifikatorId];
+        if (!in_array(1, $userIds)) {
+            $userIds[] = 1;
+        }
+        $userIdsJson = json_encode($userIds);
+
         // Buat notifikasi untuk user yang mengajukan cuti
         Notifikasi::create([
             'kategori_notifikasi_id' => 10,
-            'user_id' => $riwayat_izin->user_id, // Penerima notifikasi
+            'user_id' => $userIdsJson, // Penerima notifikasi
             'message' => $message,
             'is_read' => false,
             'created_at' => Carbon::now('Asia/Jakarta'),

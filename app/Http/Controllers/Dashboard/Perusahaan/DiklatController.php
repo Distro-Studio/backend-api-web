@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Dashboard\Perusahaan;
 
-use App\Exports\Perusahaan\DiklatEksternalExport;
 use Exception;
 use Carbon\Carbon;
 use App\Models\User;
@@ -15,6 +14,7 @@ use Illuminate\Http\Request;
 use App\Helpers\RandomHelper;
 use App\Models\PesertaDiklat;
 use Illuminate\Http\Response;
+use App\Models\RelasiVerifikasi;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Helpers\StorageServerHelper;
@@ -22,9 +22,10 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Maatwebsite\Excel\Facades\Excel;
-use App\Exports\Perusahaan\DiklatInternalExport;
-use App\Helpers\GenerateCertificateHelper;
 use App\Http\Requests\StoreDiklatRequest;
+use App\Helpers\GenerateCertificateHelper;
+use App\Exports\Perusahaan\DiklatInternalExport;
+use App\Exports\Perusahaan\DiklatEksternalExport;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
 
 class DiklatController extends Controller
@@ -110,6 +111,11 @@ class DiklatController extends Controller
                 ];
             });
 
+            $userId = $diklat->peserta_diklat->pluck('users.id')->first() ?? null;
+            $relasiVerifikasi = $userId ? RelasiVerifikasi::whereJsonContains('user_diverifikasi', (int) $userId)
+                ->where('modul_verifikasi', 4)
+                ->get() : collect();
+
             return [
                 'id' => $diklat->id,
                 'nama_diklat' => $diklat->nama,
@@ -129,6 +135,18 @@ class DiklatController extends Controller
                 'skp' => $diklat->skp ?? null,
                 'certificate_published' => $diklat->certificate_published,
                 'certificate_verified_by' => $diklat->certificate_diklats,
+                'relasi_verifikasi' => $relasiVerifikasi->map(function ($verifikasi) {
+                    return [
+                        'id' => $verifikasi->id,
+                        'nama' => $verifikasi->nama,
+                        'verifikator' => $verifikasi->verifikator, // Nama verifikator
+                        'order' => $verifikasi->order,
+                        'user_diverifikasi' => $verifikasi->user_diverifikasi,
+                        'modul_verifikasi' => $verifikasi->modul_verifikasi,
+                        'created_at' => $verifikasi->created_at,
+                        'updated_at' => $verifikasi->updated_at
+                    ];
+                }),
                 'created_at' => $diklat->created_at,
                 'updated_at' => $diklat->updated_at
             ];
@@ -225,6 +243,11 @@ class DiklatController extends Controller
 
             $path_berkas = env('STORAGE_SERVER_DOMAIN') . $diklat->berkas_dokumen_eksternals->path;
 
+            $userId = $diklat->peserta_diklat->pluck('users.id')->first() ?? null;
+            $relasiVerifikasi = $userId ? RelasiVerifikasi::whereJsonContains('user_diverifikasi', (int) $userId)
+                ->where('modul_verifikasi', 6) // 6 adalah modul verifikasi untuk diklat
+                ->get() : collect();
+
             return [
                 'id' => $diklat->id,
                 'nama_diklat' => $diklat->nama,
@@ -244,6 +267,18 @@ class DiklatController extends Controller
                 'skp' => $diklat->skp ?? null,
                 'certificate_published' => $diklat->certificate_published,
                 'certificate_verified_by' => $diklat->certificate_diklats,
+                'relasi_verifikasi' => $relasiVerifikasi->map(function ($verifikasi) {
+                    return [
+                        'id' => $verifikasi->id,
+                        'nama' => $verifikasi->nama,
+                        'verifikator' => $verifikasi->verifikator, // Nama verifikator
+                        'order' => $verifikasi->order,
+                        'user_diverifikasi' => $verifikasi->user_diverifikasi,
+                        'modul_verifikasi' => $verifikasi->modul_verifikasi,
+                        'created_at' => $verifikasi->created_at,
+                        'updated_at' => $verifikasi->updated_at
+                    ];
+                }),
                 'created_at' => $diklat->created_at,
                 'updated_at' => $diklat->updated_at
             ];
@@ -262,6 +297,8 @@ class DiklatController extends Controller
         if (!Gate::allows('create diklat')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
+
+        $verifikatorId = Auth::id();
 
         $data = $request->validated();
 
@@ -333,22 +370,11 @@ class DiklatController extends Controller
 
             $durasi = $selisihJam * $totalHari;
 
-            if (Gate::allows('verifikasi2 diklat')) {
-                $statusDiklatId = 4;
-                $data['verifikator_1'] = Auth::id();
-                $data['verifikator_2'] = Auth::id();
-            } elseif (Gate::allows('verifikasi1 diklat')) {
-                $statusDiklatId = 2;
-                $data['verifikator_1'] = Auth::id();
-            } else {
-                $statusDiklatId = 1;
-            }
-
             $diklat = Diklat::create([
                 'gambar' => $gambarId,
                 'nama' => $data['nama'],
                 'kategori_diklat_id' => 1,
-                'status_diklat_id' => $statusDiklatId,
+                'status_diklat_id' => 1,
                 'deskripsi' => $data['deskripsi'],
                 'kuota' => $data['kuota'],
                 'tgl_mulai' => $data['tgl_mulai'],
@@ -358,7 +384,7 @@ class DiklatController extends Controller
                 'durasi' => $durasi,
                 'lokasi' => $data['lokasi'],
             ]);
-            $this->createNotifikasiDiklat($diklat);
+            $this->createNotifikasiDiklat($verifikatorId, $diklat);
 
             DB::commit();
 
@@ -508,18 +534,47 @@ class DiklatController extends Controller
 
     public function verifikasiTahap1(Request $request, $diklatId)
     {
-        if (!Gate::allows('verifikasi1 diklat')) {
-            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        // if (!Gate::allows('verifikasi1 diklat')) {
+        //     return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        // }
+
+        // 1. Dapatkan ID user yang login
+        $verifikatorId = Auth::id();
+
+        // 2. Dapatkan relasi_verifikasis, pastikan verifikator memiliki ID user yang sama
+        $relasiVerifikasi = RelasiVerifikasi::where('verifikator', $verifikatorId)
+            ->where('modul_verifikasi', 5)
+            ->first();
+
+        if (!$relasiVerifikasi) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk memverifikasi diklat internal ini.'), Response::HTTP_FORBIDDEN);
         }
 
-        // Cari diklat berdasarkan ID
+        // 3. Cari diklat berdasarkan ID
         $diklat = Diklat::find($diklatId);
-
         if (!$diklat) {
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Diklat tidak ditemukan.'), Response::HTTP_NOT_FOUND);
         }
 
+        // 4. Dapatkan peserta diklat yang diverifikasi
+        $userIdPeserta = $diklat->peserta_diklat->pluck('users.id')->first();
+
+        // 5. Cocokkan user_id peserta dengan user_diverifikasi pada tabel relasi_verifikasis
+        $userDiverifikasi = $relasiVerifikasi->user_diverifikasi;
+        if (!is_array($userDiverifikasi)) {
+            Log::warning('Kesalahan format data user diverifikasi pada verif 1 diklat internal');
+            return response()->json(new WithoutDataResource(Response::HTTP_INTERNAL_SERVER_ERROR, 'Kesalahan format data user diverifikasi.'), Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+
+        if (!in_array($userIdPeserta, $userDiverifikasi)) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak dapat memverifikasi diklat internal ini karena peserta tidak ada dalam daftar verifikasi Anda.'), Response::HTTP_FORBIDDEN);
+        }
+
+        // 6. Validasi nilai kolom order dan status_diklat_id
         $status_diklat_id = $diklat->status_diklat_id;
+        if ($relasiVerifikasi->order != 1) {
+            return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Diklat internal ini tidak dalam status untuk disetujui pada tahap 1.'), Response::HTTP_BAD_REQUEST);
+        }
 
         if ($request->has('verifikasi_pertama_disetujui') && $request->verifikasi_pertama_disetujui == 1) {
             if ($status_diklat_id == 1) {
@@ -548,23 +603,53 @@ class DiklatController extends Controller
 
     public function verifikasiTahap2(Request $request, $diklatId)
     {
-        if (!Gate::allows('verifikasi2 diklat')) {
-            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        // if (!Gate::allows('verifikasi2 diklat')) {
+        //     return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        // }
+
+        // 1. Dapatkan ID user yang login
+        $verifikatorId = Auth::id();
+
+        // 2. Dapatkan relasi_verifikasis, pastikan verifikator memiliki ID user yang sama
+        $relasiVerifikasi = RelasiVerifikasi::where('verifikator', $verifikatorId)
+            ->where('modul_verifikasi', 5)
+            ->first();
+
+        if (!$relasiVerifikasi) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk memverifikasi diklat internal ini.'), Response::HTTP_FORBIDDEN);
         }
 
-        // Cari diklat berdasarkan ID
+        // 3. Cari diklat berdasarkan ID
         $diklat = Diklat::find($diklatId);
-
         if (!$diklat) {
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Diklat tidak ditemukan.'), Response::HTTP_NOT_FOUND);
         }
 
+
+        // 4. Dapatkan peserta diklat yang diverifikasi
+        $userIdPeserta = $diklat->peserta_diklat->pluck('users.id')->first();
+
+        // 5. Cocokkan user_id peserta dengan user_diverifikasi pada tabel relasi_verifikasis
+        $userDiverifikasi = $relasiVerifikasi->user_diverifikasi;
+        if (!is_array($userDiverifikasi)) {
+            Log::warning('Kesalahan format data user diverifikasi pada verif 2 diklat internal');
+            return response()->json(new WithoutDataResource(Response::HTTP_INTERNAL_SERVER_ERROR, 'Kesalahan format data user diverifikasi.'), Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+
+        if (!in_array($userIdPeserta, $userDiverifikasi)) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak dapat memverifikasi diklat internal ini karena peserta tidak ada dalam daftar verifikasi Anda.'), Response::HTTP_FORBIDDEN);
+        }
+
+        // 6. Validasi nilai kolom order dan status_diklat_id
         $status_diklat_id = $diklat->status_diklat_id;
+        if ($relasiVerifikasi->order != 2) {
+            return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Diklat internal ini tidak dalam status untuk disetujui pada tahap 2.'), Response::HTTP_BAD_REQUEST);
+        }
 
         if ($request->has('verifikasi_kedua_disetujui') && $request->verifikasi_kedua_disetujui == 1) {
             if ($status_diklat_id == 2) {
                 $diklat->status_diklat_id = 4;
-                $diklat->verifikator_2 = Auth::id();
+                $diklat->verifikator_2 = $verifikatorId;
                 $diklat->alasan = null;
                 $diklat->save();
 
@@ -595,8 +680,8 @@ class DiklatController extends Controller
             // Jika status_diklat_id = 2, maka bisa ditolak
             if ($status_diklat_id == 2) {
                 $diklat->status_diklat_id = 5;
-                $diklat->verifikator_2 = Auth::id();
-                $diklat->alasan = $request->input('alasan', null);
+                $diklat->verifikator_2 = $verifikatorId;
+                $diklat->alasan = $request->input('alasan');
                 $diklat->save();
                 return response()->json(new WithoutDataResource(Response::HTTP_OK, "Verifikasi tahap 2 untuk Diklat '{$diklat->nama}' telah ditolak."), Response::HTTP_OK);
             } else {
@@ -609,14 +694,42 @@ class DiklatController extends Controller
 
     public function generateCertificate($diklatId)
     {
-        if (!Gate::allows('publikasi sertifikat')) {
-            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        // if (!Gate::allows('publikasi sertifikat')) {
+        //     return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        // }
+
+        // 1. Dapatkan ID user yang login
+        $verifikatorId = Auth::id();
+
+        // 2. Dapatkan relasi_verifikasis, pastikan verifikator memiliki ID user yang sama
+        $relasiVerifikasi = RelasiVerifikasi::where('verifikator', $verifikatorId)
+            ->where('modul_verifikasi', 5)
+            ->first();
+        if (!$relasiVerifikasi) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk membuat sertifikat diklat internal ini.'), Response::HTTP_FORBIDDEN);
         }
 
-        // Cari diklat berdasarkan ID
+        // 3. Cari diklat berdasarkan ID
         $diklat = Diklat::find($diklatId);
         if (!$diklat) {
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Diklat tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+        }
+
+        // 4. Dapatkan peserta diklat yang diverifikasi
+        $userIdPeserta = $diklat->peserta_diklat->pluck('users.id')->first();
+
+        // 5. Cocokkan user_id peserta dengan user_diverifikasi pada tabel relasi_verifikasis
+        $userDiverifikasi = $relasiVerifikasi->user_diverifikasi;
+        if (!is_array($userDiverifikasi)) {
+            Log::warning('Kesalahan format data user diverifikasi pada generate sertifikat diklat internal.');
+            return response()->json(new WithoutDataResource(Response::HTTP_INTERNAL_SERVER_ERROR, 'Kesalahan format data user diverifikasi.'), Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+        if (!in_array($userIdPeserta, $userDiverifikasi)) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak dapat membuat sertifikat diklat internal ini karena peserta tidak ada dalam daftar verifikasi Anda.'), Response::HTTP_FORBIDDEN);
+        }
+
+        if ($diklat->status_diklat_id != 4) {
+            return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Anda tidak dapat membuat sertifikat '{$diklat->nama}' karena diklat belum mencapai status verifikasi tahap 2."), Response::HTTP_BAD_REQUEST);
         }
 
         if ($diklat->status_diklat_id == 4) {
@@ -637,7 +750,7 @@ class DiklatController extends Controller
                     $diklat->certificate_verified_by = Auth::id();
                     $diklat->save();
 
-                    $this->createNotifikasiSertifikat($diklat);
+                    $this->createNotifikasiSertifikat($verifikatorId, $diklat);
                     return response()->json(new WithoutDataResource(Response::HTTP_OK, "Sertifikat untuk Diklat '{$diklat->nama}' berhasil dibuat."), Response::HTTP_OK);
                 } else {
                     return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, "Tidak ada peserta untuk diklat '{$diklat->nama}'."), Response::HTTP_NOT_FOUND);
@@ -653,16 +766,47 @@ class DiklatController extends Controller
     // Untuk verifikasi diklat eksternal
     public function verifikasiDiklatExternal(Request $request, $diklatId)
     {
-        if (!Gate::allows('verifikasi1 diklat')) {
-            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        // if (!Gate::allows('verifikasi1 diklat')) {
+        //     return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        // }
+
+        // 1. Dapatkan ID user yang login
+        $verifikatorId = Auth::id();
+
+        // 2. Dapatkan relasi_verifikasis, pastikan verifikator memiliki ID user yang sama
+        $relasiVerifikasi = RelasiVerifikasi::where('verifikator', $verifikatorId)
+            ->where('modul_verifikasi', 6)
+            ->first();
+        if (!$relasiVerifikasi) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk memverifikasi diklat eksternal ini.'), Response::HTTP_FORBIDDEN);
         }
 
+        // 3. Cari diklat berdasarkan ID
         $diklat = Diklat::find($diklatId);
         if (!$diklat) {
-            return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Diklat eksternal tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+            return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Diklat tidak ditemukan.'), Response::HTTP_NOT_FOUND);
         }
 
+        // 4. Dapatkan peserta diklat yang diverifikasi
+        $userIdPeserta = $diklat->peserta_diklat->pluck('users.id')->first();
+
+        // 5. Cocokkan user_id peserta dengan user_diverifikasi pada tabel relasi_verifikasis
+        $userDiverifikasi = $relasiVerifikasi->user_diverifikasi;
+        if (!is_array($userDiverifikasi)) {
+            Log::warning('Kesalahan format data user diverifikasi pada verif 1 diklat eksternal.');
+            return response()->json(new WithoutDataResource(Response::HTTP_INTERNAL_SERVER_ERROR, 'Kesalahan format data user diverifikasi.'), Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+
+        if (!in_array($userIdPeserta, $userDiverifikasi)) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak dapat memverifikasi diklat eksternal ini karena peserta tidak ada dalam daftar verifikasi Anda.'), Response::HTTP_FORBIDDEN);
+        }
+
+        // 6. Validasi nilai kolom order dan status_diklat_id
         $status_diklat_id = $diklat->status_diklat_id;
+        if ($relasiVerifikasi->order != 1) {
+            return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Diklat eksternal ini tidak dalam status untuk disetujui pada tahap 1.'), Response::HTTP_BAD_REQUEST);
+        }
+
         if ($request->has('diklat_eksternal_disetujui') && $request->diklat_eksternal_disetujui == 1) {
             // Jika status_diklat_id = 1, maka bisa disetujui
             if ($status_diklat_id == 1) {
@@ -679,7 +823,7 @@ class DiklatController extends Controller
             if ($status_diklat_id == 2) {
                 $diklat->status_diklat_id = 5;
                 $diklat->verifikator_2 = Auth::id();
-                $diklat->alasan = $request->input('alasan', null);
+                $diklat->alasan = $request->input('alasan');
                 $diklat->save();
                 return response()->json(new WithoutDataResource(Response::HTTP_OK, "Verifikasi tahap 2 untuk Diklat Eksternal '{$diklat->nama}' telah ditolak."), Response::HTTP_OK);
             } else {
@@ -730,47 +874,51 @@ class DiklatController extends Controller
         ], Response::HTTP_OK);
     }
 
-    private function createNotifikasiDiklat($diklat)
+    private function createNotifikasiDiklat($verifikatorId, $diklat)
     {
         $konversiNotif_jam_mulai = Carbon::parse(RandomHelper::convertToTimeString($diklat->jam_mulai))->format('H:i:s');
         $konversiNotif_tgl_mulai = Carbon::parse(RandomHelper::convertToDateString($diklat->tgl_mulai))->locale('id')->isoFormat('D MMMM YYYY');
         $message = "Diklat baru berjudul '{$diklat->nama}' akan dilaksanakan pada tanggal {$konversiNotif_tgl_mulai} di lokasi {$diklat->lokasi} pada jam {$konversiNotif_jam_mulai}.";
 
         // Ambil semua karyawan
-        $allUsers = User::where('nama', '!=', 'Super Admin')->get();
-
-        // Buat notifikasi untuk setiap karyawan
-        foreach ($allUsers as $user) {
-            Notifikasi::create([
-                'kategori_notifikasi_id' => 4, // Sesuaikan dengan kategori notifikasi yang sesuai
-                'user_id' => $user->id, // Penerima notifikasi
-                'message' => $message,
-                'is_read' => false,
-                'created_at' => Carbon::now('Asia/Jakarta'),
-            ]);
+        $allUsers = User::pluck('id');
+        $userIds = $allUsers->toArray(); // Mengonversi ke array
+        if (!in_array($verifikatorId, $userIds)) {
+            $userIds[] = $verifikatorId;
         }
+        if (!in_array(1, $userIds)) {
+            $userIds[] = 1;
+        }
+
+        Notifikasi::create([
+            'kategori_notifikasi_id' => 4,
+            'user_id' => json_encode($userIds), // Penerima notifikasi
+            'message' => $message,
+            'is_read' => false,
+            'created_at' => Carbon::now('Asia/Jakarta'),
+        ]);
     }
 
-    private function createNotifikasiSertifikat($diklat)
+    private function createNotifikasiSertifikat($verifikatorId, $diklat)
     {
         // Ambil peserta diklat
         $pesertaDiklat = PesertaDiklat::where('diklat_id', $diklat->id)->pluck('peserta');
 
-        if ($pesertaDiklat->isNotEmpty()) {
-            foreach ($pesertaDiklat as $userId) {
-                $dataKaryawan = DataKaryawan::where('user_id', $userId)->first();
-                if ($dataKaryawan) {
-                    $message = "Sertifikat anda untuk Diklat '{$diklat->nama}' telah dipublikasi dan tersedia untuk diunduh.";
-
-                    Notifikasi::create([
-                        'kategori_notifikasi_id' => 5,
-                        'user_id' => $dataKaryawan->user_id,
-                        'message' => $message,
-                        'is_read' => false,
-                        'created_at' => Carbon::now('Asia/Jakarta'),
-                    ]);
-                }
-            }
+        // Tambahkan Super Admin ke dalam array peserta (misal Super Admin memiliki ID = 1)
+        $userIds = $pesertaDiklat->toArray();
+        if (!in_array($verifikatorId, $userIds)) {
+            $userIds[] = $verifikatorId;
         }
+        if (!in_array(1, $userIds)) {
+            $userIds[] = 1;
+        }
+
+        Notifikasi::create([
+            'kategori_notifikasi_id' => 5,
+            'user_id' => json_encode($userIds),
+            'message' => "Sertifikat Diklat '{$diklat->nama}' anda telah dipublikasi dan tersedia untuk diunduh.",
+            'is_read' => false,
+            'created_at' => Carbon::now('Asia/Jakarta'),
+        ]);
     }
 }

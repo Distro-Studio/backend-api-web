@@ -50,7 +50,7 @@ class JabatanSeeder extends Seeder
         for ($i = 0; $i < 30; $i++) {
             $nama_jabatan = $namaJabatan[rand(0, count($namaJabatan) - 1)];
             $is_struktural = rand(0, 1) == 1 ? true : false;
-            $tunjangan = rand(500000, 5000000);
+            // $tunjangan = rand(500000, 5000000);
             $created_at = Carbon::now()->subDays(rand(0, 365));
             $updated_at = Carbon::now();
 
@@ -59,7 +59,7 @@ class JabatanSeeder extends Seeder
                 DB::table('jabatans')->insert([
                     'nama_jabatan' => $nama_jabatan,
                     'is_struktural' => $is_struktural,
-                    'tunjangan_jabatan' => $tunjangan,
+                    // 'tunjangan_jabatan' => $tunjangan,
                     'created_at' => $created_at,
                     'updated_at' => $updated_at,
                 ]);

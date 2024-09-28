@@ -3,8 +3,9 @@
 namespace App\Http\Resources\Dashboard\User;
 
 use Illuminate\Http\Request;
-use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\Resources\Json\JsonResource;
 
 class UserResource extends JsonResource
 {
@@ -28,6 +29,22 @@ class UserResource extends JsonResource
         $data_karyawan = $this->data_karyawans;
         $role = $this->roles->first();
 
+        $potonganGaji = DB::table('pengurang_gajis')
+            ->join('premis', 'pengurang_gajis.premi_id', '=', 'premis.id')
+            ->where('pengurang_gajis.data_karyawan_id', $data_karyawan->id)
+            ->select(
+                'premis.id',
+                'premis.nama_premi',
+                'premis.kategori_potongan_id',
+                'premis.jenis_premi',
+                'premis.besaran_premi',
+                'premis.minimal_rate',
+                'premis.maksimal_rate',
+                'premis.created_at',
+                'premis.updated_at'
+            )
+            ->get();
+
         return [
             'status' => $this->status,
             'message' => $this->message,
@@ -35,6 +52,7 @@ class UserResource extends JsonResource
                 'id' => $this->id,
                 'nama' => $this->nama,
                 'email' => $data_karyawan ? $data_karyawan->email : null,
+                'username' => $this->username,
                 'foto_profil' => $this->foto_profil,
                 'status_aktif' => $this->status_aktif,
                 'data_completion_step' => $this->data_completion_step,
@@ -67,6 +85,7 @@ class UserResource extends JsonResource
                     'no_kk' => $data_karyawan->no_kk ?? null,
                     'alamat' => $data_karyawan->alamat ?? null,
                     'gelar_depan' => $data_karyawan->gelar_depan ?? null,
+                    'gelar_belakang' => $data_karyawan->gelar_belakang ?? null,
                     'no_hp' => $data_karyawan->no_hp ?? null,
                     'no_bpjsksh' => $data_karyawan->no_bpjsksh ?? null,
                     'no_bpjsktk' => $data_karyawan->no_bpjsktk ?? null,
@@ -76,9 +95,13 @@ class UserResource extends JsonResource
                     'jenis_kelamin' => $data_karyawan->jenis_kelamin ?? null,
                     'agama' => $data_karyawan->kategori_agamas ?? null, // agama_id
                     'golongan_darah' => $data_karyawan->kategori_darahs ?? null, // golongan_darah_id
+                    'asal_sekolah' => $data_karyawan->asal_sekolah ?? null,
                     'pendidikan_terakhir' => $data_karyawan->kategori_pendidikans ?? null, // pendidikan_terakhir_id
                     'tinggi_badan' => $data_karyawan->tinggi_badan ?? null,
                     'berat_badan' => $data_karyawan->berat_badan ?? null,
+                    'bmi_value' => $data_karyawan->bmi_value ?? null,
+                    'bmi_ket' => $data_karyawan->bmi_ket ?? null,
+                    'riwayat_penyakit' => $data_karyawan->riwayat_penyakit ?? null,
                     'no_ijazah' => $data_karyawan->no_ijazah ?? null,
                     'tahun_lulus' => $data_karyawan->tahun_lulus ?? null,
                     'no_str' => $data_karyawan->no_str ?? null,
@@ -95,8 +118,8 @@ class UserResource extends JsonResource
                     'created_at' => $role ? $role->created_at : null,
                     'updated_at' => $role ? $role->updated_at : null,
                 ],
-                // 'permissions' => $this->getAllPermissions(),
                 'permission' => $role ? $role->permissions->pluck('id') : [],
+                'potongan_gaji' => $potonganGaji,
                 'created_at' => $this->created_at,
                 'updated_at' => $this->updated_at,
             ]

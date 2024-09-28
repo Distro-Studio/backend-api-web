@@ -23,7 +23,7 @@ return new class extends Migration
             $table->foreignId('jabatan_id')->nullable()->constrained('jabatans');
             $table->foreignId('kompetensi_id')->nullable()->constrained('kompetensis');
 
-            // $table->integer('tunjangan_jabatan')->nullable();
+            $table->integer('tunjangan_jabatan')->nullable();
             $table->integer('tunjangan_fungsional')->nullable();
             $table->integer('tunjangan_khusus')->nullable();
             $table->integer('tunjangan_lainnya')->nullable();

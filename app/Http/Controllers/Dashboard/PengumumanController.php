@@ -4,9 +4,7 @@ namespace App\Http\Controllers\Dashboard;
 
 use Carbon\Carbon;
 use App\Models\User;
-use App\Models\UnitKerja;
 use App\Models\Pengumuman;
-use App\Models\DataKaryawan;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -36,6 +34,7 @@ class PengumumanController extends Controller
                 'judul' => $pengumuman->judul,
                 'konten' => $pengumuman->konten,
                 'is_read' => $pengumuman->is_read,
+                'tgl_mulai' => $pengumuman->tgl_mulai,
                 'tgl_berakhir' => $pengumuman->tgl_berakhir,
                 'created_at' => $pengumuman->created_at,
                 'updated_at' => $pengumuman->updated_at,
@@ -57,6 +56,7 @@ class PengumumanController extends Controller
 
         DB::beginTransaction();
         try {
+            $tanggalMulai = Carbon::parse($request->tgl_mulai)->format('Y-m-d');
             $tanggalBerakhir = Carbon::parse($request->tgl_berakhir)->format('Y-m-d');
             $userIds = $request->input('user_id', []);
 
@@ -77,6 +77,7 @@ class PengumumanController extends Controller
                 'user_id' => $userIds,
                 'judul' => $request->judul,
                 'konten' => $request->konten,
+                'tgl_mulai' => $tanggalMulai,
                 'tgl_berakhir' => $tanggalBerakhir,
                 'is_read' => 0,
                 'created_at' => Carbon::now('Asia/Jakarta'),
@@ -127,6 +128,7 @@ class PengumumanController extends Controller
             'judul' => $pengumuman->judul,
             'konten' => $pengumuman->konten,
             'is_read' => $pengumuman->is_read,
+            'tgl_mulai' => $pengumuman->tgl_mulai,
             'tgl_berakhir' => $pengumuman->tgl_berakhir,
             'created_at' => $pengumuman->created_at,
             'updated_at' => $pengumuman->updated_at,
@@ -171,6 +173,7 @@ class PengumumanController extends Controller
             'user_id' => $userIds,
             'judul' => $validatedData['judul'],
             'konten' => $validatedData['konten'],
+            'tgl_mulai' => Carbon::parse($validatedData['tgl_mulai'])->format('Y-m-d'),
             'tgl_berakhir' => Carbon::parse($validatedData['tgl_berakhir'])->format('Y-m-d'),
         ]);
 

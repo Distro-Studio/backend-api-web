@@ -16,7 +16,6 @@ class Notifikasi extends Model
     protected $casts = [
         'id' => 'integer',
         'kategori_notifikasi_id' => 'integer',
-        'user_id' => 'integer',
         'is_read' => 'integer',
         'is_verifikasi' => 'integer',
     ];

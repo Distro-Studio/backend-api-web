@@ -27,7 +27,7 @@ class StoreJabatanRequest extends FormRequest
         return [
             'nama_jabatan' => 'required|string|max:255|unique:jabatans,nama_jabatan',
             'is_struktural' => 'required|boolean',
-            'tunjangan_jabatan' => 'required|numeric'
+            // 'tunjangan_jabatan' => 'required|numeric'
         ];
     }
 

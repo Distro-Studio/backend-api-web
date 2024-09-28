@@ -16,6 +16,7 @@ use App\Helpers\DetailGajiHelper;
 use App\Models\RiwayatPenggajian;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Jobs\Penggajian\CreateGajiJob;
@@ -509,7 +510,6 @@ class PenyesuaianGajiController extends Controller
       ->select('tgl_mulai')
       ->orderBy('tgl_mulai', 'desc')
       ->first();
-
     if (!$jadwalPenggajian) {
       return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Tidak ada tanggal penggajian yang tersedia.'), Response::HTTP_BAD_REQUEST);
     }
@@ -548,7 +548,7 @@ class PenyesuaianGajiController extends Controller
     if ($riwayatPenggajian->status_gaji_id == 2) {
       return response()->json(new WithoutDataResource(
         Response::HTTP_BAD_REQUEST,
-        'Penyesuaian BOR tidak diperbolehkan karena penggajian sudah dipublikasi.'
+        'Penyesuaian ulang penggajian tidak diperbolehkan karena penggajian sudah dipublikasi.'
       ), Response::HTTP_BAD_REQUEST);
     }
 
@@ -556,9 +556,9 @@ class PenyesuaianGajiController extends Controller
       ->whereHas('users', function ($query) {
         $query->where('status_aktif', 2);
       })
+      ->where('status_karyawan_id', [1, 2, 3])
       ->pluck('id')
       ->toArray();
-
     $sertakan_bor = $request->has('bor') && $request->bor == 1;
 
     DB::beginTransaction();
@@ -576,11 +576,11 @@ class PenyesuaianGajiController extends Controller
       $periodeAt = Carbon::parse($riwayatPenggajian->periode)->locale('id')->isoFormat('MMMM Y');
       return response()->json([
         'status' => Response::HTTP_OK,
-        'message' => "Penyesuaian BOR berhasil dilakukan untuk semua karyawan pada periode '{$periodeAt}'. Segala bentuk penyesuaian gaji penambah atau pengurang telah di-reset."
+        'message' => "Penyesuaian ulang penggajian berhasil dilakukan untuk semua karyawan pada periode '{$periodeAt}'. Segala bentuk penyesuaian gaji penambah atau pengurang telah di-reset."
       ], Response::HTTP_OK);
     } catch (\Exception $e) {
       DB::rollBack();
-      return response()->json(new WithoutDataResource(Response::HTTP_INTERNAL_SERVER_ERROR, 'Terjadi kesalahan saat melakukan penyesuaian BOR: ' . $e->getMessage()), Response::HTTP_INTERNAL_SERVER_ERROR);
+      return response()->json(new WithoutDataResource(Response::HTTP_INTERNAL_SERVER_ERROR, 'Terjadi kesalahan saat melakukan Penyesuaian ulang penggajian: ' . $e->getMessage()), Response::HTTP_INTERNAL_SERVER_ERROR);
     }
   }
 
@@ -590,6 +590,8 @@ class PenyesuaianGajiController extends Controller
     if (!Gate::allows('create penggajianKaryawan')) {
       return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
     }
+
+    $verifikatorId = Auth::id();
 
     $data = $request->validated();
 
@@ -664,7 +666,7 @@ class PenyesuaianGajiController extends Controller
           'besaran' => $penyesuaianGaji->besaran
         ]);
 
-        $this->createNotifikasiPenyesuaianGaji($penggajian, $penyesuaianGaji);
+        $this->createNotifikasiPenyesuaianGaji($verifikatorId, $penggajian, $penyesuaianGaji);
       }
       DB::commit();
 
@@ -686,6 +688,7 @@ class PenyesuaianGajiController extends Controller
       return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
     }
 
+    $verifikatorId = Auth::id();
     $data = $request->validated();
 
     // Cek apakah penggajian_id valid
@@ -768,7 +771,7 @@ class PenyesuaianGajiController extends Controller
         }
       }
 
-      $this->createNotifikasiPenyesuaianGaji($penggajian, $penyesuaianGaji);
+      $this->createNotifikasiPenyesuaianGaji($verifikatorId, $penggajian, $penyesuaianGaji);
 
       DB::commit();
 
@@ -783,7 +786,7 @@ class PenyesuaianGajiController extends Controller
     }
   }
 
-  private function createNotifikasiPenyesuaianGaji($penggajian, $penyesuaianGaji)
+  private function createNotifikasiPenyesuaianGaji($verifikatorId, $penggajian, $penyesuaianGaji)
   {
     $user = $penggajian->data_karyawans->users;
 
@@ -793,10 +796,16 @@ class PenyesuaianGajiController extends Controller
       $message = "Anda telah mendapatkan pengurangan gaji '{$penyesuaianGaji->nama_detail}', Silahkan lakukan pengecekkan kembali dan pastikan gaji anda telah sesuai.";
     }
 
+    $userIds = [$user->id, $verifikatorId];
+    if (!in_array(1, $userIds)) {
+      $userIds[] = 1;
+    }
+    $userIdsJson = json_encode($userIds);
+
     // Buat notifikasi untuk user yang terkait
     Notifikasi::create([
       'kategori_notifikasi_id' => 9,
-      'user_id' => $user->id,
+      'user_id' => $userIdsJson,
       'message' => $message,
       'is_read' => false,
       'created_at' => Carbon::now('Asia/Jakarta'),

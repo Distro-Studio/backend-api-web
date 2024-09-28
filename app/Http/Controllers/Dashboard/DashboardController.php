@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
 use App\Models\HariLibur;
+use App\Models\Kompetensi;
 
 class DashboardController extends Controller
 {
@@ -141,6 +142,37 @@ class DashboardController extends Controller
         return response()->json([
             'status' => Response::HTTP_OK,
             'message' => "Kalkulasi jabatan berhasil.",
+            'data' => $result
+        ], Response::HTTP_OK);
+    }
+
+    public function calculatedKompetensi()
+    {
+        // Retrieve all positions
+        $kompetensis = Kompetensi::all();
+
+        if ($kompetensis->isEmpty()) {
+            return response()->json([
+                'status' => Response::HTTP_NOT_FOUND,
+                'message' => "Tidak ada data kompetensi yang tersedia.",
+            ], Response::HTTP_NOT_FOUND);
+        }
+
+        // Initialize an array to hold the results
+        $result = [];
+
+        // Iterate over each position and count the number of employees holding that position
+        foreach ($kompetensis as $kompetensi) {
+            $countKaryawan = DataKaryawan::where('kompetensi_id', $kompetensi->id)->count();
+            $result[] = [
+                'nama_kompetensi' => $kompetensi->nama_kompetensi,
+                'jumlah_karyawan' => $countKaryawan,
+            ];
+        }
+
+        return response()->json([
+            'status' => Response::HTTP_OK,
+            'message' => "Kalkulasi profesi berhasil.",
             'data' => $result
         ], Response::HTTP_OK);
     }

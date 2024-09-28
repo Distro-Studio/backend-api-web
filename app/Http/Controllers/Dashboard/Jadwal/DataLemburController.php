@@ -12,10 +12,12 @@ use Illuminate\Http\Request;
 use App\Helpers\RandomHelper;
 use Illuminate\Http\Response;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\Jadwal\LemburJadwalExport;
 use App\Http\Requests\StoreLemburKaryawanRequest;
+use App\Http\Requests\UpdateLemburKaryawanRequest;
 use App\Http\Resources\Dashboard\Jadwal\LemburJadwalResource;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
 
@@ -360,6 +362,7 @@ class DataLemburController extends Controller
         }
 
         $data = $request->validated();
+        $verifikatorId = Auth::id();
 
         $user = User::find($data['user_id']);
         if (!$user) {
@@ -382,8 +385,8 @@ class DataLemburController extends Controller
             // Validasi tanggal mulai tidak boleh hari ini, atau hari yang sudah terlewat
             $tgl_mulai = Carbon::createFromFormat('d-m-Y', $data['tgl_pengajuan'])->startOfDay();
             $today = Carbon::today();
-            if ($tgl_mulai->lte($today)) {
-                return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Tanggal pengajuan tidak boleh hari ini, atau hari yang sudah terlewat.'), Response::HTTP_BAD_REQUEST);
+            if ($tgl_mulai->lt($today)) {
+                return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Tanggal pengajuan tidak boleh hari yang sudah terlewat.'), Response::HTTP_BAD_REQUEST);
             }
         } else {
             return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Jenis karyawan tidak valid.'), Response::HTTP_BAD_REQUEST);
@@ -400,7 +403,7 @@ class DataLemburController extends Controller
         $successMessage = "Lembur karyawan '{$dataLembur->users->nama}' berhasil ditambahkan.";
 
         // Buat dan simpan notifikasi
-        $this->createNotifikasiLembur($dataLembur);
+        $this->createNotifikasiLembur($verifikatorId, $dataLembur);
 
         return response()->json(new LemburJadwalResource(Response::HTTP_OK, $successMessage, $dataLembur), Response::HTTP_OK);
     }
@@ -556,17 +559,23 @@ class DataLemburController extends Controller
         return $user_schedule_array;
     }
 
-    private function createNotifikasiLembur($dataLembur)
+    private function createNotifikasiLembur($verifikatorId, $dataLembur)
     {
         $timeString = RandomHelper::convertToTimeString($dataLembur->durasi);
         $durasi = RandomHelper::convertTimeStringToSeconds($timeString);
         $durasi_jam = RandomHelper::convertToHoursMinutes($durasi);
 
+        $userIds = [$dataLembur->user_id, $verifikatorId];
+        if (!in_array(1, $userIds)) {
+            $userIds[] = 1;
+        }
+        $userIdsJson = json_encode($userIds);
+
         $message = "{$dataLembur->users->nama}, Anda mendapatkan pengajuan lembur dengan durasi {$durasi_jam}.";
 
         Notifikasi::create([
             'kategori_notifikasi_id' => 3,
-            'user_id' => $dataLembur->user_id, // Penerima notifikasi
+            'user_id' => $userIdsJson, // Penerima notifikasi
             'message' => $message,
             'is_read' => false,
             'created_at' => Carbon::now('Asia/Jakarta'),

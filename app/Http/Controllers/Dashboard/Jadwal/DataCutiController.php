@@ -12,7 +12,9 @@ use App\Models\TukarJadwal;
 use Illuminate\Http\Request;
 use App\Helpers\RandomHelper;
 use Illuminate\Http\Response;
+use App\Models\RelasiVerifikasi;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
@@ -239,6 +241,11 @@ class DataCutiController extends Controller
         }
 
         $formattedData = $dataCuti->map(function ($dataCuti) {
+            $userId = $dataCuti->users->id ?? null;
+            $relasiVerifikasi = $userId ? RelasiVerifikasi::whereJsonContains('user_diverifikasi', (int) $userId)
+                ->where('modul_verifikasi', 3)
+                ->get() : collect();
+
             return [
                 'id' => $dataCuti->id,
                 'user' => [
@@ -261,6 +268,18 @@ class DataCutiController extends Controller
                 'durasi' => $dataCuti->durasi,
                 'status_cuti' => $dataCuti->status_cutis,
                 'alasan' => $cuti->alasan ?? null,
+                'relasi_verifikasi' => $relasiVerifikasi->map(function ($verifikasi) {
+                    return [
+                        'id' => $verifikasi->id,
+                        'nama' => $verifikasi->nama,
+                        'verifikator' => $verifikasi->verifikator, // Nama verifikator
+                        'order' => $verifikasi->order,
+                        'user_diverifikasi' => $verifikasi->user_diverifikasi,
+                        'modul_verifikasi' => $verifikasi->modul_verifikasi,
+                        'created_at' => $verifikasi->created_at,
+                        'updated_at' => $verifikasi->updated_at
+                    ];
+                }),
                 'created_at' => $dataCuti->created_at,
                 'updated_at' => $dataCuti->updated_at
             ];
@@ -281,6 +300,7 @@ class DataCutiController extends Controller
         }
 
         $data = $request->validated();
+        $verifikatorId = Auth::id();
 
         // Cek cuti sama
         $cutiExist = Cuti::where('user_id', $data['user_id'])
@@ -288,7 +308,6 @@ class DataCutiController extends Controller
             ->where('tgl_to', Carbon::createFromFormat('d-m-Y', $data['tgl_to'])->format('d-m-Y'))
             ->exists();
         // dd($cutiExist);
-
         if ($cutiExist) {
             return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Karyawan tersebut sudah memiliki cuti yang diajukan pada tanggal '{$data['tgl_from']}'."), Response::HTTP_BAD_REQUEST);
         }
@@ -313,7 +332,7 @@ class DataCutiController extends Controller
         }
 
         // Ambil semua data cuti dengan tipe_cuti_id dan user_id yang sama pada tahun berjalan
-        $currentYear = Carbon::now()->year;
+        $currentYear = Carbon::now('Asia/Jakarta')->year;
         $cutiRecords = Cuti::where('user_id', $data['user_id'])
             ->where('tipe_cuti_id', $data['tipe_cuti_id'])
             ->where(function ($query) use ($currentYear) {
@@ -379,7 +398,7 @@ class DataCutiController extends Controller
                             $jadwalPengajuan->user_id = $tukarJadwal->user_pengajuan;
                             $jadwalPengajuan->save();
 
-                            $this->createNotifikasiJadwalKembali($jadwalPengajuan->user_id, $jadwalPengajuan->id);
+                            $this->createNotifikasiJadwalKembali($verifikatorId, $jadwalPengajuan->user_id, $jadwalPengajuan->id);
                         }
 
                         // Kembalikan user_id dari jadwal_ditukar ke user_ditukar
@@ -388,7 +407,7 @@ class DataCutiController extends Controller
                             $jadwalDitukar->user_id = $tukarJadwal->user_ditukar;
                             $jadwalDitukar->save();
 
-                            $this->createNotifikasiJadwalKembali($jadwalDitukar->user_id, $jadwalDitukar->id);
+                            $this->createNotifikasiJadwalKembali($verifikatorId, $jadwalDitukar->user_id, $jadwalDitukar->id);
                         }
 
                         // Hapus tukar jadwal setelah dikembalikan
@@ -403,11 +422,11 @@ class DataCutiController extends Controller
                 }
             }
 
-            $data['verifikator_1'] = Auth::id();
-            $data['verifikator_2'] = Auth::id();
+            $data['verifikator_1'] = $verifikatorId;
+            $data['verifikator_2'] = $verifikatorId;
         } elseif (Gate::allows('verifikasi1 cutiKaryawan')) {
             $statusCutiId = 2;
-            $data['verifikator_1'] = Auth::id();
+            $data['verifikator_1'] = $verifikatorId;
         } else {
             $statusCutiId = 1;
         }
@@ -431,12 +450,14 @@ class DataCutiController extends Controller
         $konversiNotif_tgl_from = Carbon::parse($dataCuti->tgl_from)->locale('id')->isoFormat('D MMMM YYYY');
         $konversiNotif_tgl_to = Carbon::parse($dataCuti->tgl_to)->locale('id')->isoFormat('D MMMM YYYY');
 
+        $userIdsArray = [$dataCuti->user_id, $verifikatorId];
         // Menyimpan notifikasi ke tabel notifikasis
         Notifikasi::create([
             'kategori_notifikasi_id' => 1,
-            'user_id' => $data['user_id'],
-            'message' => "{$dataCuti->users->nama}, anda mendapatkan cuti {$dataCuti->tipe_cutis->nama} dengan durasi {$dataCuti->durasi} hari yang dimulai pada {$konversiNotif_tgl_from} s/d {$konversiNotif_tgl_to}.",
+            'user_id' => json_encode($userIdsArray),
+            'message' => "{$dataCuti->users->nama}, mendapatkan cuti {$dataCuti->tipe_cutis->nama} dengan durasi {$dataCuti->durasi} hari yang dimulai pada {$konversiNotif_tgl_from} s/d {$konversiNotif_tgl_to}.",
             'is_read' => false,
+            'is_verifikasi' => true,
             'created_at' => Carbon::now('Asia/Jakarta'),
         ]);
 
@@ -588,30 +609,123 @@ class DataCutiController extends Controller
         }
     }
 
+    // public function verifikasiTahap1(Request $request, $cutiId)
+    // {
+    //     if (!Gate::allows('verifikasi1 cutiKaryawan')) {
+    //         return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+    //     }
+
+    //     // Cari cuti berdasarkan ID
+    //     $cuti = Cuti::find($cutiId);
+
+    //     if (!$cuti) {
+    //         return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Cuti tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+    //     }
+
+    //     $status_cuti_id = $cuti->status_cuti_id;
+
+    //     if ($request->has('verifikasi_pertama_disetujui') && $request->verifikasi_pertama_disetujui == 1) {
+    //         if ($status_cuti_id == 1) {
+    //             $cuti->status_cuti_id = 2; // Update status ke tahap 1 disetujui
+    //             $cuti->verifikator_1 = Auth::id();
+    //             $cuti->alasan = null;
+    //             $cuti->save();
+
+    //             // Buat dan simpan notifikasi
+    //             $this->createNotifikasiCutiTahap1($cuti, 'Disetujui');
+
+    //             // Cek apakah cuti_administratif pada tipe_cutis adalah true atau false
+    //             if (!$cuti->tipe_cutis->cuti_administratif) {
+    //                 // Jika cuti_administratif = false, lakukan update status_reward_presensi menjadi false
+    //                 $user_id = $cuti->user_id;
+    //                 $data_karyawan_id = DB::table('data_karyawans')
+    //                     ->where('user_id', $user_id)
+    //                     ->value('id');
+
+    //                 DB::table('data_karyawans')
+    //                     ->where('id', $data_karyawan_id)
+    //                     ->update(['status_reward_presensi' => false]);
+    //             }
+
+    //             return response()->json(new WithoutDataResource(Response::HTTP_OK, "Verifikasi tahap 1 untuk Cuti '{$cuti->tipe_cutis->nama}' telah disetujui."), Response::HTTP_OK);
+    //         } else {
+    //             return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Cuti '{$cuti->tipe_cutis->nama}' tidak dalam status untuk disetujui pada tahap 1."), Response::HTTP_BAD_REQUEST);
+    //         }
+    //     } elseif ($request->has('verifikasi_pertama_ditolak') && $request->verifikasi_pertama_ditolak == 1) {
+    //         if ($status_cuti_id == 1) {
+    //             $cuti->status_cuti_id = 3; // Update status ke tahap 1 ditolak
+    //             $cuti->verifikator_1 = Auth::id();
+    //             $cuti->alasan = $request->input('alasan', null);
+    //             $cuti->save();
+
+    //             // Buat dan simpan notifikasi
+    //             $this->createNotifikasiCutiTahap1($cuti, 'Ditolak');
+
+
+    //             return response()->json(new WithoutDataResource(Response::HTTP_OK, "Verifikasi tahap 1 untuk Cuti '{$cuti->tipe_cutis->nama}' telah ditolak."), Response::HTTP_OK);
+    //         } else {
+    //             return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Cuti '{$cuti->tipe_cutis->nama}' tidak dalam status untuk ditolak pada tahap 1."), Response::HTTP_BAD_REQUEST);
+    //         }
+    //     } else {
+    //         return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Aksi tidak valid.'), Response::HTTP_BAD_REQUEST);
+    //     }
+    // }
+
     public function verifikasiTahap1(Request $request, $cutiId)
     {
-        if (!Gate::allows('verifikasi1 cutiKaryawan')) {
-            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        // if (!Gate::allows('verifikasi1 cutiKaryawan')) {
+        //     return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        // }
+
+        // 1. Dapatkan ID user yang login
+        $verifikatorId = Auth::id();
+
+        // 2. Dapatkan relasi_verifikasis, pastikan verifikator memiliki ID user yang sama
+        $relasiVerifikasi = RelasiVerifikasi::where('verifikator', $verifikatorId)
+            ->where('modul_verifikasi', 3) // 3 adalah modul cuti
+            ->first();
+        // dd($relasiVerifikasi);
+        if (!$relasiVerifikasi) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk verifikasi cuti ini.'), Response::HTTP_FORBIDDEN);
         }
 
-        // Cari cuti berdasarkan ID
+        // 3. Dapatkan cuti berdasarkan ID
         $cuti = Cuti::find($cutiId);
-
+        // dd($cuti);
         if (!$cuti) {
-            return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Cuti tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+            return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data cuti tidak ditemukan.'), Response::HTTP_NOT_FOUND);
         }
 
+        // 4. Dapatkan karyawan yang mengajukan cuti dengan user_id di tabel cutis
+        $pengajuCutiUserId = $cuti->user_id;
+        // dd($pengajuCutiUserId);
+
+        // 5. Samakan user_id pengajuan cuti dengan string array user_diverifikasi di tabel relasi_verifikasis
+        $userDiverifikasi = $relasiVerifikasi->user_diverifikasi;
+        if (!is_array($userDiverifikasi)) {
+            Log::warning('Kesalahan format data user diverifikasi pada verif 1 cuti');
+            return response()->json(new WithoutDataResource(Response::HTTP_INTERNAL_SERVER_ERROR, 'Kesalahan format data user diverifikasi.'), Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+        if (!in_array($pengajuCutiUserId, $userDiverifikasi)) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak dapat memverifikasi cuti ini karena karyawan tidak ada dalam daftar verifikasi Anda.'), Response::HTTP_FORBIDDEN);
+        }
+
+        // 6. Validasi nilai kolom order dan status_cuti_id
         $status_cuti_id = $cuti->status_cuti_id;
+        // dd($status_cuti_id);
+        if ($relasiVerifikasi->order != 1) {
+            return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Cuti ini tidak dalam status untuk disetujui pada tahap 1.'), Response::HTTP_BAD_REQUEST);
+        }
 
         if ($request->has('verifikasi_pertama_disetujui') && $request->verifikasi_pertama_disetujui == 1) {
             if ($status_cuti_id == 1) {
                 $cuti->status_cuti_id = 2; // Update status ke tahap 1 disetujui
-                $cuti->verifikator_1 = Auth::id();
+                $cuti->verifikator_1 = $verifikatorId;
                 $cuti->alasan = null;
                 $cuti->save();
 
                 // Buat dan simpan notifikasi
-                $this->createNotifikasiCutiTahap1($cuti, 'Disetujui');
+                $this->createNotifikasiCutiTahap1($verifikatorId, $cuti, 'Disetujui');
 
                 // Cek apakah cuti_administratif pada tipe_cutis adalah true atau false
                 if (!$cuti->tipe_cutis->cuti_administratif) {
@@ -633,12 +747,12 @@ class DataCutiController extends Controller
         } elseif ($request->has('verifikasi_pertama_ditolak') && $request->verifikasi_pertama_ditolak == 1) {
             if ($status_cuti_id == 1) {
                 $cuti->status_cuti_id = 3; // Update status ke tahap 1 ditolak
-                $cuti->verifikator_1 = Auth::id();
-                $cuti->alasan = $request->input('alasan', null);
+                $cuti->verifikator_1 = $verifikatorId;
+                $cuti->alasan = $request->input('alasan');
                 $cuti->save();
 
                 // Buat dan simpan notifikasi
-                $this->createNotifikasiCutiTahap1($cuti, 'Ditolak');
+                $this->createNotifikasiCutiTahap1($verifikatorId, $cuti, 'Ditolak');
 
 
                 return response()->json(new WithoutDataResource(Response::HTTP_OK, "Verifikasi tahap 1 untuk Cuti '{$cuti->tipe_cutis->nama}' telah ditolak."), Response::HTTP_OK);
@@ -652,23 +766,54 @@ class DataCutiController extends Controller
 
     public function verifikasiTahap2(Request $request, $cutiId)
     {
-        if (!Gate::allows('verifikasi2 cutiKaryawan')) {
-            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        // if (!Gate::allows('verifikasi2 cutiKaryawan')) {
+        //     return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        // }
+
+        // 1. Dapatkan ID user yang login
+        $verifikatorId = Auth::id();
+
+        // 2. Dapatkan relasi_verifikasis, pastikan verifikator memiliki ID user yang sama
+        $relasiVerifikasi = RelasiVerifikasi::where('verifikator', $verifikatorId)
+            ->where('modul_verifikasi', 3) // 3 adalah modul cuti
+            ->first();
+        // dd($relasiVerifikasi);
+        if (!$relasiVerifikasi) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk verifikasi cuti ini.'), Response::HTTP_FORBIDDEN);
         }
 
-        // Cari cuti berdasarkan ID
+        // 3. Dapatkan cuti berdasarkan ID
         $cuti = Cuti::find($cutiId);
-
+        // dd($cuti);
         if (!$cuti) {
-            return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Cuti tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+            return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data cuti tidak ditemukan.'), Response::HTTP_NOT_FOUND);
         }
 
+        // 4. Dapatkan karyawan yang mengajukan cuti dengan user_id di tabel cutis
+        $pengajuCutiUserId = $cuti->user_id;
+        // dd($pengajuCutiUserId);
+
+        // 5. Samakan user_id pengajuan cuti dengan string array user_diverifikasi di tabel relasi_verifikasis
+        $userDiverifikasi = $relasiVerifikasi->user_diverifikasi;
+        if (!is_array($userDiverifikasi)) {
+            Log::warning('Kesalahan format data user diverifikasi pada verif 2 cuti');
+            return response()->json(new WithoutDataResource(Response::HTTP_INTERNAL_SERVER_ERROR, 'Kesalahan format data user diverifikasi.'), Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+        if (!in_array($pengajuCutiUserId, $userDiverifikasi)) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak dapat memverifikasi cuti ini karena karyawan tidak ada dalam daftar verifikasi Anda.'), Response::HTTP_FORBIDDEN);
+        }
+
+        // 6. Validasi nilai kolom order dan status_cuti_id
         $status_cuti_id = $cuti->status_cuti_id;
+        // dd($status_cuti_id);
+        if ($relasiVerifikasi->order != 2) {
+            return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Cuti ini tidak dalam status untuk disetujui pada tahap 2.'), Response::HTTP_BAD_REQUEST);
+        }
 
         if ($request->has('verifikasi_kedua_disetujui') && $request->verifikasi_kedua_disetujui == 1) {
             if ($status_cuti_id == 2) {
                 $cuti->status_cuti_id = 4;
-                $cuti->verifikator_2 = Auth::id();
+                $cuti->verifikator_2 = $verifikatorId;
                 $cuti->alasan = null;
                 $cuti->save();
 
@@ -699,7 +844,7 @@ class DataCutiController extends Controller
                                 $jadwalPengajuan->user_id = $tukarJadwal->user_pengajuan;
                                 $jadwalPengajuan->save();
 
-                                $this->createNotifikasiJadwalKembali($jadwalPengajuan->user_id, $jadwalPengajuan->id);
+                                $this->createNotifikasiJadwalKembali($verifikatorId, $jadwalPengajuan->user_id, $jadwalPengajuan->id);
                             }
 
                             // Kembalikan user_id dari jadwal_ditukar ke user_ditukar
@@ -708,7 +853,7 @@ class DataCutiController extends Controller
                                 $jadwalDitukar->user_id = $tukarJadwal->user_ditukar;
                                 $jadwalDitukar->save();
 
-                                $this->createNotifikasiJadwalKembali($jadwalDitukar->user_id, $jadwalDitukar->id);
+                                $this->createNotifikasiJadwalKembali($verifikatorId, $jadwalDitukar->user_id, $jadwalDitukar->id);
                             }
 
                             // Hapus tukar jadwal setelah dikembalikan
@@ -723,7 +868,7 @@ class DataCutiController extends Controller
                     }
                 }
 
-                $this->createNotifikasiCutiTahap2($cuti, 'Disetujui');
+                $this->createNotifikasiCutiTahap2($verifikatorId, $cuti, 'Disetujui');
 
                 return response()->json(new WithoutDataResource(Response::HTTP_OK, "Verifikasi tahap 2 untuk Cuti '{$cuti->tipe_cutis->nama}' telah disetujui."), Response::HTTP_OK);
             } else {
@@ -732,11 +877,11 @@ class DataCutiController extends Controller
         } elseif ($request->has('verifikasi_kedua_ditolak') && $request->verifikasi_kedua_ditolak == 1) {
             if ($status_cuti_id == 2) {
                 $cuti->status_cuti_id = 5;
-                $cuti->verifikator_2 = Auth::id();
-                $cuti->alasan = $request->input('alasan', null);
+                $cuti->verifikator_2 = $verifikatorId;
+                $cuti->alasan = $request->input('alasan');
                 $cuti->save();
 
-                $this->createNotifikasiCutiTahap2($cuti, 'Ditolak');
+                $this->createNotifikasiCutiTahap2($verifikatorId, $cuti, 'Ditolak');
 
                 return response()->json(new WithoutDataResource(Response::HTTP_OK, "Verifikasi tahap 2 untuk Cuti '{$cuti->tipe_cutis->nama}' telah ditolak."), Response::HTTP_OK);
             } else {
@@ -747,41 +892,53 @@ class DataCutiController extends Controller
         }
     }
 
-    private function createNotifikasiCutiTahap1($cuti, $status)
+    private function createNotifikasiCutiTahap1($verifikatorId, $cuti, $status)
     {
         $statusText = $status === 'Disetujui' ? 'Disetujui' : 'Ditolak';
-        $verifikator = Auth::user()->nama;
+        $penerima_notif = $cuti->users->nama;
         $konversiTgl = Carbon::parse(RandomHelper::convertToDateString($cuti->tgl_mulai))->locale('id')->isoFormat('D MMMM YYYY');
-        $message = "Pengajuan cuti '{$cuti->tipe_cutis->nama}' Anda pada tanggal '{$konversiTgl}' telah '{$statusText}' tahap 1 oleh '{$verifikator}'.";
+        $message = "Pengajuan cuti '{$cuti->tipe_cutis->nama}' dari '{$penerima_notif}' pada tanggal '{$konversiTgl}' telah '{$statusText}' tahap 1.";
+
+        $userIds = [$cuti->user_id, $verifikatorId];
+        if (!in_array(1, $userIds)) {
+            $userIds[] = 1;
+        }
+        $userIdsJson = json_encode($userIds);
 
         // Buat notifikasi untuk user yang mengajukan cuti
         Notifikasi::create([
             'kategori_notifikasi_id' => 1,
-            'user_id' => $cuti->user_id, // Penerima notifikasi
+            'user_id' => $userIdsJson,
             'message' => $message,
             'is_read' => false,
             'created_at' => Carbon::now('Asia/Jakarta'),
         ]);
     }
 
-    private function createNotifikasiCutiTahap2($cuti, $status)
+    private function createNotifikasiCutiTahap2($verifikatorId, $cuti, $status)
     {
         $statusText = $status === 'Disetujui' ? 'Disetujui' : 'Ditolak';
-        $verifikator = Auth::user()->nama;
+        $penerima_notif = $cuti->users->nama;
         $konversiTgl = Carbon::parse(RandomHelper::convertToDateString($cuti->tgl_mulai))->locale('id')->isoFormat('D MMMM YYYY');
-        $message = "Pengajuan cuti '{$cuti->tipe_cutis->nama}' Anda pada tanggal '{$konversiTgl}' telah '{$statusText}' tahap 2 oleh '{$verifikator}'.";
+        $message = "Pengajuan cuti '{$cuti->tipe_cutis->nama}' dari '{$penerima_notif}' pada tanggal '{$konversiTgl}' telah '{$statusText}' tahap 2.";
+
+        $userIds = [$cuti->user_id, $verifikatorId];
+        if (!in_array(1, $userIds)) {
+            $userIds[] = 1;
+        }
+        $userIdsJson = json_encode($userIds);
 
         // Buat notifikasi untuk user yang mengajukan cuti
         Notifikasi::create([
             'kategori_notifikasi_id' => 1,
-            'user_id' => $cuti->user_id, // Penerima notifikasi
+            'user_id' => $userIdsJson,
             'message' => $message,
             'is_read' => false,
             'created_at' => Carbon::now('Asia/Jakarta'),
         ]);
     }
 
-    private function createNotifikasiJadwalKembali($userId, $jadwalId)
+    private function createNotifikasiJadwalKembali($verifikatorId, $userId, $jadwalId)
     {
         $jadwal = Jadwal::find($jadwalId);
 
@@ -790,9 +947,16 @@ class DataCutiController extends Controller
             $tglSelesai = Carbon::createFromFormat('Y-m-d', $jadwal->tgl_selesai)->locale('id')->isoFormat('D MMMM YYYY');
             $message = "Jadwal anda dari tanggal {$tglMulai} hingga {$tglSelesai} telah dikembalikan ke status semula.";
 
+            $userIds = [$userId, $verifikatorId];
+            if (!in_array(1, $userIds)) {
+                $userIds[] = 1;
+            }
+            $userIdsJson = json_encode($userIds);
+            // dd($verifikatorId);
+
             Notifikasi::create([
                 'kategori_notifikasi_id' => 2,
-                'user_id' => $userId,
+                'user_id' => $userIdsJson,
                 'message' => $message,
                 'is_read' => false,
                 'created_at' => Carbon::now('Asia/Jakarta'),

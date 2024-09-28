@@ -27,6 +27,7 @@ class StorePengumumanRequest extends FormRequest
         return [
             'judul' => 'required|string|max:255',
             'konten' => 'required|string',
+            'tgl_mulai' => 'required|string',
             'tgl_berakhir' => 'required|string',
             'user_id' => 'required',
         ];
@@ -37,6 +38,7 @@ class StorePengumumanRequest extends FormRequest
         return [
             'judul.required' => 'Judul pengumuman tidak diperbolehkan kosong.',
             'konten.required' => 'Konten pengumuman tidak diperbolehkan kosong.',
+            'tgl_mulai.required' => 'Tanggal mulai pengumuman tidak diperbolehkan kosong.',
             'tgl_berakhir.required' => 'Tanggal berakhir pengumuman tidak diperbolehkan kosong.',
             'user_id.required' => 'Anda harus memilih setidaknya satu karyawan untuk membuat pengumuman.',
         ];

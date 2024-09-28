@@ -51,6 +51,36 @@ use App\Models\KategoriTagihanPotongan;
 
 class DataKaryawanController extends Controller
 {
+  public function resetCredentials(Request $request)
+  {
+    if (!Gate::allows('edit dataKaryawan')) {
+      return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+    }
+
+    // 1. Get user_id dari request
+    $userId = $request->input('user_id');
+    $user = User::find($userId);
+    if (!$user) {
+      return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Pengguna akun tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+    }
+
+    // 2. Pengecualian 'Super Admin'
+    if ($user->id == 1 || $user->nama === 'Super Admin') {
+      return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Tidak diperbolehkan mereset password untuk akun Super Admin.'), Response::HTTP_FORBIDDEN);
+    }
+
+    // 3. Reset password
+    $newPassword = '1234';
+    $hashedPassword = Hash::make($newPassword);
+    $user->password = $hashedPassword;
+    $user->save();
+
+    return response()->json([
+      'status' => Response::HTTP_OK,
+      'message' => "Berhasil melakukan reset password untuk karyawan '{$user->nama}'.",
+    ], Response::HTTP_OK);
+  }
+
   public function getAllDataUserNonShift()
   {
     if (!Gate::allows('view dataKaryawan')) {
@@ -856,6 +886,8 @@ class DataKaryawanController extends Controller
       return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
     }
 
+    $verifikatorId = Auth::id();
+
     $karyawan = DataKaryawan::find($data_karyawan_id);
     if (!$karyawan) {
       return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data karyawan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
@@ -878,7 +910,7 @@ class DataKaryawanController extends Controller
           $keluarga->verifikator_1 = Auth::id();
           $keluarga->save();
 
-          $this->createNotifikasiKeluarga($keluarga, 'disetujui');
+          $this->createNotifikasiKeluarga($verifikatorId, $keluarga, 'disetujui');
         } else {
           return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Anggota keluarga dari karyawan '{$karyawan->users->nama}' tidak dalam status untuk disetujui."), Response::HTTP_BAD_REQUEST);
         }
@@ -890,7 +922,7 @@ class DataKaryawanController extends Controller
           $keluarga->alasan = $request->input('alasan');
           $keluarga->save();
 
-          $this->createNotifikasiKeluarga($keluarga, 'ditolak');
+          $this->createNotifikasiKeluarga($verifikatorId, $keluarga, 'ditolak');
         } else {
           return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Anggota keluarga karyawan '{$karyawan->users->nama}' tidak dalam status untuk ditolak."), Response::HTTP_BAD_REQUEST);
         }
@@ -991,6 +1023,8 @@ class DataKaryawanController extends Controller
       return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
     }
 
+    $verifikatorId = Auth::id();
+
     // Cari user berdasarkan data_karyawan_id
     $user = User::where('data_karyawan_id', $data_karyawan_id)->first();
 
@@ -1016,7 +1050,7 @@ class DataKaryawanController extends Controller
           $berkas->save();
 
           // Kirim notifikasi bahwa berkas telah diverifikasi
-          $this->createNotifikasiBerkas($berkas, 'disetujui');
+          $this->createNotifikasiBerkas($verifikatorId, $berkas, 'disetujui');
         } else {
           return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Berkas '{$berkas->nama}' tidak dalam status untuk disetujui."), Response::HTTP_BAD_REQUEST);
         }
@@ -1028,7 +1062,7 @@ class DataKaryawanController extends Controller
           $berkas->save();
 
           // Kirim notifikasi bahwa berkas telah ditolak
-          $this->createNotifikasiBerkas($berkas, 'ditolak');
+          $this->createNotifikasiBerkas($verifikatorId, $berkas, 'ditolak');
         } else {
           return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Berkas '{$berkas->nama}' tidak dalam status untuk ditolak."), Response::HTTP_BAD_REQUEST);
         }
@@ -1344,11 +1378,16 @@ class DataKaryawanController extends Controller
       return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
     }
 
-    // Ambil semua peserta_diklat yang sesuai dengan data_karyawan_id tanpa filter tambahan
-    $pesertaDiklats = PesertaDiklat::where('peserta', $data_karyawan_id)
+    // Ambil user yang memiliki data_karyawan_id
+    $user = User::where('data_karyawan_id', $data_karyawan_id)->first();
+    if (!$user || $user->id == 1 || $user->nama == 'Super Admin') {
+      return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Pengguna tidak ditemukan atau tidak valid.'), Response::HTTP_NOT_FOUND);
+    }
+
+    // Ambil peserta_diklat yang berelasi dengan user tersebut
+    $pesertaDiklats = PesertaDiklat::where('peserta', $user->id)
       ->with('diklats', 'diklats.berkas_dokumen_eksternals', 'users')
       ->get();
-
     if ($pesertaDiklats->isEmpty()) {
       return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Tidak ada data diklat yang ditemukan untuk karyawan ini.'), Response::HTTP_NOT_FOUND);
     }
@@ -1393,7 +1432,6 @@ class DataKaryawanController extends Controller
       ];
     });
 
-    // Response JSON dengan semua kolom dari jadwal diklat yang diikuti dan total durasi
     return response()->json([
       'status' => Response::HTTP_OK,
       'message' => "Data diklat dari karyawan '{$userName->nama}' berhasil ditampilkan.",
@@ -1421,6 +1459,9 @@ class DataKaryawanController extends Controller
     if (!Gate::allows('view dataKaryawan')) {
       return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
     }
+
+    $loggedInUser = auth()->user();
+    $isSuperAdmin = $loggedInUser->id == 1 || $loggedInUser->nama == 'Super Admin';
 
     // Per page
     $limit = $request->input('limit', 10);
@@ -1604,7 +1645,7 @@ class DataKaryawanController extends Controller
       ], Response::HTTP_NOT_FOUND);
     }
 
-    $formattedData = $dataKaryawan->map(function ($karyawan) {
+    $formattedData = $dataKaryawan->map(function ($karyawan) use ($isSuperAdmin) {
       $dataKeluargas = $karyawan->data_keluargas;
       $ayah = $dataKeluargas->where('hubungan', 'Ayah')->first();
       $ibu = $dataKeluargas->where('hubungan', 'Ibu')->first();
@@ -1626,13 +1667,13 @@ class DataKaryawanController extends Controller
           'created_at' => $karyawan->users->created_at,
           'updated_at' => $karyawan->users->updated_at
         ],
-        'role' => [
+        'role' => $isSuperAdmin ? [
           'id' => $role->id,
           'name' => $role->name,
           'deskripsi' => $role->deskripsi,
           'created_at' => $role->created_at,
           'updated_at' => $role->updated_at
-        ], // role_id
+        ] : null,
         'email' => $karyawan->email,
         'nik' => $karyawan->nik,
         'no_rm' => $karyawan->no_rm,
@@ -1830,6 +1871,9 @@ class DataKaryawanController extends Controller
 
     $role = $karyawan->users->roles->first();
 
+    $loggedInUser = auth()->user();
+    $isSuperAdmin = $loggedInUser->id == 1 || $loggedInUser->nama == 'Super Admin';
+
     // diklat calculated
     $total_durasi_internal = PesertaDiklat::whereHas('diklats', function ($query) {
       $query->where('kategori_diklat_id', 1); // 1 = Internal
@@ -1851,30 +1895,6 @@ class DataKaryawanController extends Controller
         return $pesertaDiklat->diklats->durasi;
       });
 
-    // $berkasFields = [
-    //   'file_ktp' => $karyawan->file_ktp ?? null,
-    //   'file_kk' => $karyawan->file_kk ?? null,
-    //   'file_sip' => $karyawan->file_sip ?? null,
-    //   'file_bpjs_kesehatan' => $karyawan->file_bpjsksh ?? null,
-    //   'file_bpjs_ketenagakerjaan' => $karyawan->file_bpjsktk ?? null,
-    //   'file_ijazah' => $karyawan->file_ijazah ?? null,
-    //   'file_sertifikat' => $karyawan->file_sertifikat ?? null,
-    // ];
-
-    // $baseUrl = env('STORAGE_SERVER_DOMAIN');
-
-    // $formattedPaths = [];
-    // foreach ($berkasFields as $field => $berkasId) {
-    //   $berkas = Berkas::where('id', $berkasId)->first();
-    //   if ($berkas) {
-    //     $extension = StorageServerHelper::getExtensionFromMimeType($berkas->ext);
-    //     // $formattedPaths[$field] = $baseUrl . $berkas->path . '.' . $extension;
-    //     $formattedPaths[$field] = $baseUrl . $berkas->path;
-    //   } else {
-    //     $formattedPaths[$field] = null;
-    //   }
-    // }
-
     // Format the karyawan data
     $formattedData = [
       'id' => $karyawan->id,
@@ -1890,13 +1910,13 @@ class DataKaryawanController extends Controller
         'created_at' => $karyawan->users->created_at,
         'updated_at' => $karyawan->users->updated_at
       ],
-      'role' => [
+      'role' => $isSuperAdmin ? [
         'id' => $role->id,
         'name' => $role->name,
         'deskripsi' => $role->deskripsi,
         'created_at' => $role->created_at,
         'updated_at' => $role->updated_at
-      ],
+      ] : null,
       'potongan_gaji' => DB::table('pengurang_gajis')
         ->join('premis', 'pengurang_gajis.premi_id', '=', 'premis.id')
         ->where('pengurang_gajis.data_karyawan_id', $karyawan->id)
@@ -2013,6 +2033,9 @@ class DataKaryawanController extends Controller
 
     $role = $karyawan->users->roles->first();
 
+    $loggedInUser = auth()->user();
+    $isSuperAdmin = $loggedInUser->id == 1 || $loggedInUser->nama == 'Super Admin';
+
     // diklat calculated
     $total_durasi_internal = PesertaDiklat::whereHas('diklats', function ($query) {
       $query->where('kategori_diklat_id', 1); // 1 = Internal
@@ -2072,13 +2095,13 @@ class DataKaryawanController extends Controller
         'created_at' => $karyawan->users->created_at,
         'updated_at' => $karyawan->users->updated_at
       ],
-      'role' => [
+      'role' => $isSuperAdmin ? [
         'id' => $role->id,
         'name' => $role->name,
         'deskripsi' => $role->deskripsi,
         'created_at' => $role->created_at,
         'updated_at' => $role->updated_at
-      ], // role_id
+      ] : null, // role_id
       'potongan_gaji' => DB::table('pengurang_gajis')
         ->join('premis', 'pengurang_gajis.premi_id', '=', 'premis.id')
         ->where('pengurang_gajis.data_karyawan_id', $karyawan->id)
@@ -2393,7 +2416,7 @@ class DataKaryawanController extends Controller
     return null;
   }
 
-  private function createNotifikasiBerkas($berkas, $status)
+  private function createNotifikasiBerkas($verifikatorId, $berkas, $status)
   {
     // Dapatkan user terkait dengan berkas
     $user = $berkas->users;
@@ -2405,10 +2428,16 @@ class DataKaryawanController extends Controller
       $message = "Berkas {$berkas->nama} Anda telah ditolak. Alasan: {$berkas->alasan}.";
     }
 
+    $userIds = [$user->id, $verifikatorId];
+    if (!in_array(1, $userIds)) {
+      $userIds[] = 1;
+    }
+    $userIdsJson = json_encode($userIds);
+
     // Buat notifikasi untuk user yang bersangkutan
     Notifikasi::create([
       'kategori_notifikasi_id' => 6,
-      'user_id' => $user->id,
+      'user_id' => $userIdsJson,
       'message' => $message,
       'is_read' => false,
       'is_verifikasi' => true,
@@ -2416,7 +2445,7 @@ class DataKaryawanController extends Controller
     ]);
   }
 
-  private function createNotifikasiKeluarga($keluarga, $status)
+  private function createNotifikasiKeluarga($verifikatorId, $keluarga, $status)
   {
     // Dapatkan user terkait dengan berkas
     $karyawan = $keluarga->data_karyawans;
@@ -2432,10 +2461,16 @@ class DataKaryawanController extends Controller
       $message = "Keluarga karyawan '{$karyawan->users->nama}' telah ditolak. Alasan: {$keluarga->alasan}.";
     }
 
+    $userIds = [$karyawan->users->id, $verifikatorId];
+    if (!in_array(1, $userIds)) {
+      $userIds[] = 1;
+    }
+    $userIdsJson = json_encode($userIds);
+
     // Buat notifikasi untuk user yang bersangkutan
     Notifikasi::create([
-      'kategori_notifikasi_id' => 6,
-      'user_id' => $karyawan->users->id,
+      'kategori_notifikasi_id' => 12,
+      'user_id' => $userIdsJson,
       'message' => $message,
       'is_read' => false,
       'created_at' => Carbon::now('Asia/Jakarta'),

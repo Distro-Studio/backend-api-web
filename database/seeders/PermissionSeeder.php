@@ -39,6 +39,7 @@ class PermissionSeeder extends Seeder
             'Pengumuman' => ['create pengumuman', 'edit pengumuman', 'delete pengumuman', 'view pengumuman'],
 
             // Master setting
+            'Verifikasi Master' => ['create masterVerifikasi', 'edit masterVerifikasi', 'delete masterVerifikasi', 'view masterVerifikasi'],
             'Verifikasi Data' => ['verifikasi verifikator1', 'verifikasi verifikator2'],
             'Pengaturan Role' => ['create role', 'edit role', 'view role'],
             'Pengaturan Permission' => ['edit permission', 'delete permission', 'view permission'],

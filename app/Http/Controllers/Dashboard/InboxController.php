@@ -6,7 +6,6 @@ use App\Models\Notifikasi;
 use Illuminate\Http\Response;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Gate;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
 
 class InboxController extends Controller
@@ -14,7 +13,7 @@ class InboxController extends Controller
     public function calculatedUnread()
     {
         $user = Auth::user();
-        $unreadCount = Notifikasi::where('user_id', $user->id)
+        $unreadCount = Notifikasi::whereJsonContains('user_id', $user->id)
             ->where('is_read', false)
             ->count();
 
@@ -28,11 +27,16 @@ class InboxController extends Controller
     public function index()
     {
         $user = Auth::user();
-        $notifikasi = Notifikasi::where('user_id', $user->id)
-            ->orderBy('is_read', 'asc')
-            ->orderBy('created_at', 'desc')
-            ->get();
-
+        if ($user->nama === 'Super Admin' || $user->id === 1) {
+            $notifikasi = Notifikasi::orderBy('is_read', 'asc')
+                ->orderBy('created_at', 'desc')
+                ->get();
+        } else {
+            $notifikasi = Notifikasi::whereJsonContains('user_id', $user->id)
+                ->orderBy('is_read', 'asc')
+                ->orderBy('created_at', 'desc')
+                ->get();
+        }
         if ($notifikasi->isEmpty()) {
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data notifikasi tidak ditemukan.'), Response::HTTP_NOT_FOUND);
         }
@@ -67,7 +71,7 @@ class InboxController extends Controller
                 'created_at' => $item->created_at,
                 'updated_at' => $item->updated_at
             ];
-        });
+        })->values();
 
         return response()->json([
             'status' => Response::HTTP_OK,
@@ -83,7 +87,7 @@ class InboxController extends Controller
     {
         $user = Auth::user();
         $notifikasi = Notifikasi::where('id', $id)
-            ->where('user_id', $user->id)
+            ->whereJsonContains('user_id', $user->id)
             ->first();
 
         if (!$notifikasi) {
@@ -116,7 +120,7 @@ class InboxController extends Controller
     public function destroyRead()
     {
         $user = Auth::user();
-        $deletedCount = Notifikasi::where('user_id', $user->id)
+        $deletedCount = Notifikasi::whereJsonContains('user_id', $user->id)
             ->where('is_read', true)
             ->delete();
 

@@ -22,6 +22,7 @@ return new class extends Migration
             $table->foreignId('verifikator_1')->nullable()->constrained('users');
             $table->foreignId('verifikator_2')->nullable()->constrained('users');
             $table->text('alasan')->nullable();
+            $table->boolean('acc_user_ditukar')->nullable()->default(false);
             $table->softDeletes();
             $table->timestamps();
         });

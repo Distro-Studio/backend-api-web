@@ -66,14 +66,13 @@ class CreateGajiJob implements ShouldQueue
             ->join('kelompok_gajis', 'data_karyawans.kelompok_gaji_id', '=', 'kelompok_gajis.id')
             ->leftJoin('penggajians', 'data_karyawans.id', '=', 'penggajians.data_karyawan_id')
             ->join('status_karyawans', 'data_karyawans.status_karyawan_id', '=', 'status_karyawans.id')
-            ->join('jabatans', 'data_karyawans.jabatan_id', '=', 'jabatans.id')
             ->leftJoin('kompetensis', DB::raw('COALESCE(data_karyawans.kompetensi_id, 0)'), '=', 'kompetensis.id')
             ->select(
                 'data_karyawans.id as data_karyawan_id',
                 DB::raw('COALESCE(kelompok_gajis.besaran_gaji, 0) as gaji_pokok'),
 
                 // TUNJANGAN JABATAN DIAMBIL DARI TABEL JABATAN
-                DB::raw('COALESCE(jabatans.tunjangan_jabatan, 0) as tunjangan_jabatan'),
+                DB::raw('COALESCE(data_karyawans.tunjangan_jabatan, 0) as tunjangan_jabatan'),
                 DB::raw('COALESCE(data_karyawans.tunjangan_fungsional, 0) as tunjangan_fungsional'),
                 DB::raw('COALESCE(data_karyawans.tunjangan_khusus, 0) as tunjangan_khusus'),
                 DB::raw('COALESCE(data_karyawans.tunjangan_lainnya, 0) as tunjangan_lainnya'),

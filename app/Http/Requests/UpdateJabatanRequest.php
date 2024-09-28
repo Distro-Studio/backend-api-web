@@ -27,7 +27,7 @@ class UpdateJabatanRequest extends FormRequest
         return [
             'nama_jabatan' => 'required|string|max:255',
             'is_struktural' => 'required|boolean',
-            'tunjangan_jabatan' => 'required|numeric'
+            // 'tunjangan_jabatan' => 'required|numeric'
         ];
     }
 

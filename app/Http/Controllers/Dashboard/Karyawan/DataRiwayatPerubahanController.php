@@ -2,7 +2,8 @@
 
 namespace App\Http\Controllers\Dashboard\Karyawan;
 
-use App\Helpers\CalculateBMIHelper;
+use Carbon\Carbon;
+use App\Models\Notifikasi;
 use App\Models\DataKaryawan;
 use App\Models\DataKeluarga;
 use Illuminate\Http\Request;
@@ -10,8 +11,10 @@ use App\Helpers\RandomHelper;
 use App\Models\KategoriAgama;
 use App\Models\KategoriDarah;
 use Illuminate\Http\Response;
+use App\Models\RelasiVerifikasi;
 use App\Models\RiwayatPerubahan;
 use App\Models\KategoriPendidikan;
+use App\Helpers\CalculateBMIHelper;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
@@ -256,6 +259,11 @@ class DataRiwayatPerubahanController extends Controller
                 }
             }
 
+            $userId = $data_perubahan->data_karyawans->users->id ?? null;
+            $relasiVerifikasi = $userId ? RelasiVerifikasi::whereJsonContains('user_diverifikasi', (int) $userId)
+                ->where('modul_verifikasi', 1)
+                ->get() : collect();
+
             return [
                 'id' => $data_perubahan->id,
                 'user' => $relasiUser ? [
@@ -287,6 +295,18 @@ class DataRiwayatPerubahanController extends Controller
                     'updated_at' => $relasiVerifikator->updated_at
                 ] : null,
                 'alasan' => $data_perubahan->alasan ?? null,
+                'relasi_verifikasi' => $relasiVerifikasi->map(function ($verifikasi) {
+                    return [
+                        'id' => $verifikasi->id,
+                        'nama' => $verifikasi->nama,
+                        'verifikator' => $verifikasi->verifikator, // Nama verifikator
+                        'order' => $verifikasi->order,
+                        'user_diverifikasi' => $verifikasi->user_diverifikasi,
+                        'modul_verifikasi' => $verifikasi->modul_verifikasi,
+                        'created_at' => $verifikasi->created_at,
+                        'updated_at' => $verifikasi->updated_at
+                    ];
+                }),
                 'created_at' => $data_perubahan->created_at,
                 'updated_at' => $data_perubahan->updated_at
             ];
@@ -302,18 +322,46 @@ class DataRiwayatPerubahanController extends Controller
 
     public function verifikasiPerubahan(Request $request, $id)
     {
-        if (!Gate::allows('verifikasi1 riwayatPerubahan')) {
-            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        // if (!Gate::allows('verifikasi1 riwayatPerubahan')) {
+        //     return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        // }
+
+        // 1. Dapatkan ID user yang login
+        $verifikatorId = Auth::id();
+
+        // 2. Dapatkan relasi_verifikasis, pastikan verifikator memiliki ID user yang sama
+        $relasiVerifikasi = RelasiVerifikasi::where('verifikator', $verifikatorId)
+            ->where('modul_verifikasi', 1) // 1 adalah modul verifikasi perubahan data
+            ->first();
+
+        if (!$relasiVerifikasi) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk verifikasi perubahan data ini.'), Response::HTTP_FORBIDDEN);
         }
 
-        // Cari riwayat perubahan berdasarkan ID
+        // 3. Dapatkan riwayat perubahan berdasarkan ID
         $riwayat = RiwayatPerubahan::find($id);
-
         if (!$riwayat) {
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Riwayat perubahan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
         }
 
+        // 4. Dapatkan karyawan yang mengajukan perubahan dengan user_id di tabel data_karyawans
+        $pengajuPerubahanUserId = $riwayat->data_karyawans->user_id;
+
+        // 5. Samakan user_id pengajuan perubahan dengan string array user_diverifikasi di tabel relasi_verifikasis
+        $userDiverifikasi = $relasiVerifikasi->user_diverifikasi;
+        if (!is_array($userDiverifikasi)) {
+            Log::warning('Kesalahan format data user diverifikasi pada verif 1 perubahan data');
+            return response()->json(new WithoutDataResource(Response::HTTP_INTERNAL_SERVER_ERROR, 'Kesalahan format data user diverifikasi.'), Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+        if (!in_array($pengajuPerubahanUserId, $userDiverifikasi)) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak dapat memverifikasi perubahan ini karena karyawan tidak ada dalam daftar verifikasi Anda.'), Response::HTTP_FORBIDDEN);
+        }
+
+        // 6. Validasi nilai kolom order dan status_perubahan_id
         $status_perubahan_id = $riwayat->status_perubahan_id;
+        if ($relasiVerifikasi->order != 1) {
+            return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Perubahan ini tidak dalam status untuk disetujui pada tahap 1.'), Response::HTTP_BAD_REQUEST);
+        }
 
         // Logika verifikasi disetujui
         if ($request->has('verifikasi_disetujui') && $request->verifikasi_disetujui == 1) {
@@ -325,6 +373,7 @@ class DataRiwayatPerubahanController extends Controller
 
                 // Lakukan pembaruan data pada tabel asli
                 $this->updateOriginalData($riwayat);
+                $this->createNotifikasiPerubahan($verifikatorId, $riwayat, 'Disetujui');
 
                 return response()->json(new WithoutDataResource(Response::HTTP_OK, "Verifikasi untuk riwayat perubahan '{$riwayat->kolom}' telah disetujui."), Response::HTTP_OK);
             } else {
@@ -338,6 +387,7 @@ class DataRiwayatPerubahanController extends Controller
                 $riwayat->verifikator_1 = Auth::id();
                 $riwayat->alasan = $request->input('alasan');
                 $riwayat->save();
+                $this->createNotifikasiPerubahan($verifikatorId, $riwayat, 'Ditolak');
 
                 return response()->json(new WithoutDataResource(Response::HTTP_OK, "Verifikasi untuk riwayat perubahan '{$riwayat->kolom}' telah ditolak."), Response::HTTP_OK);
             } else {
@@ -435,5 +485,26 @@ class DataRiwayatPerubahanController extends Controller
                 Log::warning('No action taken for jenis_perubahan: ' . $riwayat->jenis_perubahan);
                 break;
         }
+    }
+
+    private function createNotifikasiPerubahan($verifikatorId, $riwayat, $status)
+    {
+        $statusText = $status === 'Disetujui' ? 'Disetujui' : 'Ditolak';
+        $message = "Perubahan data anda telah '{$statusText}', silahkan lakukan cek data terbaru anda.";
+
+        $userIds = [$riwayat->data_karyawans->user_id, $verifikatorId];
+        if (!in_array(1, $userIds)) {
+            $userIds[] = 1;
+        }
+        $userIdsJson = json_encode($userIds);
+
+        // Buat notifikasi untuk user yang terkait dengan perubahan data
+        Notifikasi::create([
+            'kategori_notifikasi_id' => 11,
+            'user_id' => $userIdsJson,
+            'message' => $message,
+            'is_read' => false,
+            'created_at' => Carbon::now('Asia/Jakarta'),
+        ]);
     }
 }

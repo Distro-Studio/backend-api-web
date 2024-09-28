@@ -67,13 +67,26 @@ class RekapGajiPotonganSheet implements FromCollection, WithHeadings, WithMappin
             ->join('data_karyawans', 'penggajians.data_karyawan_id', '=', 'data_karyawans.id')
             ->select(
                 'data_karyawans.id as data_karyawan',
-                'penyesuaian_gajis.nama_detail as nama_detail',
-                'penyesuaian_gajis.besaran as besaran'
+                DB::raw('SUM(penyesuaian_gajis.besaran) as total_penyesuaian')
             )
             ->where('data_karyawans.unit_kerja_id', $this->unit_kerja_id)
             ->where('penyesuaian_gajis.kategori_gaji_id', 3)
             ->whereMonth('penyesuaian_gajis.created_at', $this->month)
             ->whereYear('penyesuaian_gajis.created_at', $this->year)
+            ->groupBy('data_karyawans.id')
+            ->get()
+            ->keyBy('data_karyawan');
+        $tagihanPotonganData = DB::table('tagihan_potongans')
+            ->join('data_karyawans', 'tagihan_potongans.data_karyawan_id', '=', 'data_karyawans.id')
+            ->join('kategori_tagihan_potongans', 'tagihan_potongans.kategori_tagihan_id', '=', 'kategori_tagihan_potongans.id')
+            ->select(
+                'data_karyawans.id as data_karyawan',
+                'kategori_tagihan_potongans.label as nama_tagihan',
+                'tagihan_potongans.besaran as besaran_tagihan'
+            )
+            ->where('data_karyawans.unit_kerja_id', $this->unit_kerja_id)
+            ->whereMonth('tagihan_potongans.created_at', $this->month)
+            ->whereYear('tagihan_potongans.created_at', $this->year)
             ->get()
             ->groupBy('data_karyawan');
 
@@ -89,6 +102,7 @@ class RekapGajiPotonganSheet implements FromCollection, WithHeadings, WithMappin
                 'gaji_bruto' => $firstDetail->gaji_bruto ?? 0,
                 'pph_21' => $firstDetail->pph_21 ?? 0,
                 'total_premi' => $firstDetail->total_premi ?? 0,
+                'total_penyesuaian' => $penyesuaianGajiData[$karyawanId]->total_penyesuaian ?? 0,
                 'take_home_pay' => $firstDetail->take_home_pay ?? 0,
             ];
 
@@ -98,9 +112,9 @@ class RekapGajiPotonganSheet implements FromCollection, WithHeadings, WithMappin
                 }
             }
 
-            if (isset($penyesuaianGajiData[$karyawanId])) {
-                foreach ($penyesuaianGajiData[$karyawanId] as $penyesuaian) {
-                    $data[$penyesuaian->nama_detail] = $penyesuaian->besaran;
+            if (isset($tagihanPotonganData[$karyawanId])) {
+                foreach ($tagihanPotonganData[$karyawanId] as $tagihan) {
+                    $data[$tagihan->nama_tagihan] = $tagihan->besaran_tagihan;
                 }
             }
 
@@ -122,13 +136,11 @@ class RekapGajiPotonganSheet implements FromCollection, WithHeadings, WithMappin
             })
             ->toArray();
 
-        // Add unique headings from penyesuaian_gajis
-        $penyesuaianHeadings = DB::table('penyesuaian_gajis')
-            ->where('kategori_gaji_id', 3)
+        $tagihanHeadings = DB::table('kategori_tagihan_potongans')
             ->distinct()
-            ->pluck('nama_detail')
+            ->pluck('label')
             ->map(function ($item) {
-                return 'pengurang_' . str_replace(' ', '_', strtolower($item));
+                return 'tagihan_' . str_replace(' ', '_', strtolower($item));
             })
             ->toArray();
 
@@ -142,10 +154,11 @@ class RekapGajiPotonganSheet implements FromCollection, WithHeadings, WithMappin
                     'gaji_bruto',
                     'pph_21',
                     'total_premi',
+                    'total_penyesuaian_gaji',
                     'take_home_pay',
                 ],
                 $pengurangHeadings,
-                $penyesuaianHeadings
+                $tagihanHeadings
             )
         ];
 
@@ -160,6 +173,7 @@ class RekapGajiPotonganSheet implements FromCollection, WithHeadings, WithMappin
             $row['gaji_bruto'],
             $row['pph_21'],
             $row['total_premi'],
+            $row['total_penyesuaian'],
             $row['take_home_pay'],
         ];
 
@@ -168,18 +182,15 @@ class RekapGajiPotonganSheet implements FromCollection, WithHeadings, WithMappin
             ->distinct()
             ->pluck('premis.nama_premi')
             ->toArray();
-
         foreach ($pengurangHeadings as $heading) {
             $mappedRow[] = $row[$heading] ?? 0;
         }
 
-        $penyesuaianHeadings = DB::table('penyesuaian_gajis')
-            ->where('kategori_gaji_id', 3)
+        $tagihanHeadings = DB::table('kategori_tagihan_potongans')
             ->distinct()
-            ->pluck('nama_detail')
+            ->pluck('label')
             ->toArray();
-
-        foreach ($penyesuaianHeadings as $heading) {
+        foreach ($tagihanHeadings as $heading) {
             $mappedRow[] = $row[$heading] ?? 0;
         }
 

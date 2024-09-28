@@ -15,7 +15,7 @@ class Jabatan extends Model
     protected $casts = [
         'id' => 'integer',
         'is_struktural' => 'integer',
-        'tunjangan_jabatan' => 'integer',
+        // 'tunjangan_jabatan' => 'integer',
     ];
 
     /**

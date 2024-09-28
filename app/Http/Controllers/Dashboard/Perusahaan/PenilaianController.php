@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Dashboard\Perusahaan;
 
 use Carbon\Carbon;
 use App\Models\User;
+use App\Models\Jawaban;
 use App\Models\Penilaian;
 use App\Models\Notifikasi;
 use App\Models\Pertanyaan;
@@ -12,6 +13,7 @@ use App\Helpers\RandomHelper;
 use Illuminate\Http\Response;
 use App\Models\JenisPenilaian;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\Perusahaan\PenilaianExport;
@@ -307,6 +309,8 @@ class PenilaianController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
+        $verifikatorId = Auth::id();
+
         $data = $request->validated();
 
         $jenisPenilaianId = $data['jenis_penilaian_id'];
@@ -361,7 +365,7 @@ class PenilaianController extends Controller
         ]);
 
         // Kirim notifikasi kepada user yang dinilai
-        $this->createNotifikasiPenilaian($penilaian);
+        $this->createNotifikasiPenilaian($verifikatorId, $penilaian);
 
         return response()->json([
             'status' => Response::HTTP_CREATED,
@@ -451,18 +455,24 @@ class PenilaianController extends Controller
         }
     }
 
-    private function createNotifikasiPenilaian($penilaian)
+    private function createNotifikasiPenilaian($verifikatorId, $penilaian)
     {
         // Dapatkan user yang dinilai
         $userDinilai = $penilaian->user_dinilais;
 
         // Siapkan pesan notifikasi
-        $message = "Anda memiliki penilaian {$penilaian->jenis_penilaians->nama}, Silakan cek detail penilaian Anda.";
+        $message = "Anda memiliki penilaian '{$penilaian->jenis_penilaians->nama}', Silakan cek detail penilaian Anda.";
+
+        $userIds = [$userDinilai->id, $verifikatorId];
+        if (!in_array(1, $userIds)) {
+            $userIds[] = 1; // Tambahkan Super Admin (ID = 1)
+        }
+        $userIdsJson = json_encode($userIds);
 
         // Buat notifikasi untuk user yang dinilai
         Notifikasi::create([
             'kategori_notifikasi_id' => 7,
-            'user_id' => $userDinilai->id,
+            'user_id' => $userIdsJson,
             'message' => $message,
             'is_read' => false,
             'created_at' => Carbon::now('Asia/Jakarta'),

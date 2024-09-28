@@ -119,6 +119,10 @@ class RoleSeeder extends Seeder
             'edit permission',
             'view permission',
 
+            'create masterVerifikasi', // 127
+            'edit masterVerifikasi', // 128
+            'delete masterVerifikasi', // 129
+            'view masterVerifikasi', // 130
             'create pendidikan', // 122
             'edit pendidikan', // 123
             'delete pendidikan', // 124

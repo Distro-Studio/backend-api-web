@@ -31,8 +31,10 @@ class PenggajianController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
-        $currentMonth = Carbon::now()->month;
-        $currentYear = Carbon::now()->year;
+        $verifikatorId = Auth::id();
+
+        $currentMonth = Carbon::now('Asia/Jakarta')->month;
+        $currentYear = Carbon::now('Asia/Jakarta')->year;
 
         // Ambil jadwal penggajian dari tabel jadwal_penggajians
         $jadwalPenggajian = DB::table('jadwal_penggajians')
@@ -87,7 +89,7 @@ class PenggajianController extends Controller
                     }
 
                     // Buat dan simpan notifikasi untuk setiap penggajian yang dipublikasikan
-                    $this->createNotifikasiPenggajian($penggajian, $periode);
+                    $this->createNotifikasiPenggajian($verifikatorId, $penggajian, $periode);
                 }
             } else {
                 return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Publikasi penggajian hanya dapat dilakukan dari tanggal '{$tgl_penggajian->format('Y-m-d')}' hingga tanggal '{$tgl_mulai->format('Y-m-d')}'."), Response::HTTP_BAD_REQUEST);
@@ -197,6 +199,7 @@ class PenggajianController extends Controller
             ->whereHas('users', function ($query) {
                 $query->where('status_aktif', 2);
             })
+            ->where('status_karyawan_id', [1, 2, 3])
             ->pluck('id')
             ->toArray();
         $sertakan_bor = $request->has('bor') && $request->bor == 1;
@@ -220,7 +223,7 @@ class PenggajianController extends Controller
         if ($currentDateTime->lessThan($awalBulan) || $currentDateTime->greaterThan($tgl_akhir)) {
             return response()->json(new WithoutDataResource(
                 Response::HTTP_BAD_REQUEST,
-                "Tanggal penggajian hanya dapat dilakukan mulai tanggal 1 hingga tanggal '{$tgl_mulai->format('d-m-Y')}' sampai jam 23:59."
+                "Penggajian hanya dapat dilakukan mulai tanggal 1 hingga tanggal '{$tgl_mulai->format('d-m-Y')}' sampai jam 23:59."
             ), Response::HTTP_BAD_REQUEST);
         }
 
@@ -350,6 +353,7 @@ class PenggajianController extends Controller
                     'created_at' => $user->created_at,
                     'updated_at' => $user->updated_at
                 ],
+                'nik' => $dataKaryawan->nik,
                 'unit_kerja' => $unitKerja,
                 'kelompok_gaji' => $kelompokGaji,
                 'gaji_bruto' => $penggajian->gaji_bruto,
@@ -643,17 +647,23 @@ class PenggajianController extends Controller
         return response()->json(new WithoutDataResource(Response::HTTP_OK, 'Data laporan penggajian setoran bank berhasil di download.'), Response::HTTP_OK);
     }
 
-    private function createNotifikasiPenggajian($penggajian, $periode)
+    private function createNotifikasiPenggajian($verifikatorId, $penggajian, $periode)
     {
         if ($penggajian->data_karyawans && $penggajian->data_karyawans->users) {
             $user = $penggajian->data_karyawans->users;
 
             $message = "Penggajian untuk periode {$periode} telah dipublikasikan. Silakan cek slip gaji Anda.";
 
+            $userIds = [$user->id, $verifikatorId];
+            if (!in_array(1, $userIds)) {
+                $userIds[] = 1;
+            }
+            $userIdsJson = json_encode($userIds);
+
             // Buat notifikasi untuk karyawan yang bersangkutan
             Notifikasi::create([
                 'kategori_notifikasi_id' => 5, // Sesuaikan dengan kategori notifikasi yang sesuai
-                'user_id' => $user->id, // Penerima notifikasi
+                'user_id' => $userIdsJson,
                 'message' => $message,
                 'is_read' => false,
                 'created_at' => Carbon::now('Asia/Jakarta')

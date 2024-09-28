@@ -38,6 +38,7 @@ class UpdateDataKaryawanRequest extends FormRequest
             // Step 2
             'kelompok_gaji_id' => 'required|integer|exists:kelompok_gajis,id',
             'no_rekening' => 'required|numeric',
+            'tunjangan_jabatan' => 'required|numeric',
             'tunjangan_fungsional' => 'required|numeric',
             'tunjangan_khusus' => 'required|numeric',
             'tunjangan_lainnya' => 'required|numeric',
@@ -113,6 +114,9 @@ class UpdateDataKaryawanRequest extends FormRequest
             'no_rekening.numeric' => 'Nomor rekening karyawan tidak diperbolehkan mengandung huruf.',
             'tunjangan_fungsional.required' => 'Tunjangan fungsional karyawan tidak diperbolehkan kosong.',
             'tunjangan_fungsional.numeric' => 'Tunjangan fungsional karyawan tidak diperbolehkan mengandung huruf.',
+            'tunjangan_jabatan.required' => 'Tunjangan jabatan karyawan tidak diperbolehkan kosong.',
+            'tunjangan_jabatan.numeric' => 'Tunjangan jabatan karyawan tidak diperbolehkan mengandung huruf.',
+            'tunjangan_jabatan.max' => 'Tunjangan jabatan karyawan melebihi batas maksimum panjang karakter.',
             'tunjangan_khusus.required' => 'Tunjangan khusus karyawan tidak diperbolehkan kosong.',
             'tunjangan_khusus.numeric' => 'Tunjangan khusus karyawan tidak diperbolehkan mengandung huruf.',
             'tunjangan_lainnya.required' => 'Tunjangan karyawan lainya tidak diperbolehkan kosong.',

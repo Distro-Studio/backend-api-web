@@ -106,6 +106,8 @@ class DatabaseSeeder extends Seeder
       StatusKeluargaSeeder::class,
       StatusTagihanPotonganSeeder::class,
 
+      ModulVerifikasiSeeder::class,
+
       LokasiKantorSeeder::class,
       
       /* ==== Pengaturan Karyawan ==== */
