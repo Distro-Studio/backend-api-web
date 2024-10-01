@@ -33,7 +33,7 @@ class StoreTransferKaryawanRequest extends FormRequest
             'role_tujuan' => 'nullable|integer|exists:roles,id',
             'kategori_transfer_id' => 'required|integer|exists:kategori_transfer_karyawans,id',
             'alasan' => 'required|string',
-            'dokumen' => 'required|file|max:10240|mimes:pdf,doc,docx,xls,xlsx,csv,txt,zip,rar',
+            'dokumen' => 'required|file|max:10240|mimes:pdf',
         ];
     }
 
@@ -59,8 +59,8 @@ class StoreTransferKaryawanRequest extends FormRequest
             'alasan.required' => 'Alasan transfer karyawan tidak diperbolehkan kosong.',
             'alasan.string' => 'Alasan transfer karyawan tidak diperbolehkan mengandung angka atau karakter lainnya.',
             'dokumen.required' => 'Dokumen transfer karyawan tidak diperbolehkan kosong.',
-            'dokumen.file' => 'Dokumen yang diperbolehkan berupa berkas file .PDF, .XLS, .XLSX, .CSV, .DOC, .DOCX, .ZIP, dan .RAR',
-            'dokumen.mimes' => 'Dokumen yang diperbolehkan berupa berkas file .PDF, .XLS, .XLSX, .CSV, .DOC, .DOCX, .ZIP, dan .RAR',
+            'dokumen.file' => 'Dokumen yang diperbolehkan berupa berkas file .PDF',
+            'dokumen.mimes' => 'Dokumen yang diperbolehkan berupa berkas file .PDF',
             'dokumen.max' => 'Dokumen yang diunggah harus kurang dari 10 MB.',
             // 'role_id.integer' => 'Data role yang valid adalah berupa satuan angka.',
             // 'role_id.exists' => 'Role yang dipilih tidak valid.',

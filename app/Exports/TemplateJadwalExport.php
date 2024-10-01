@@ -17,7 +17,7 @@ class TemplateJadwalExport implements FromArray, WithHeadings
     public function headings(): array
     {
         return [
-            'nama',
+            'nomor_induk_karyawan',
             'tanggal_mulai',
             'tanggal_selesai',
             'shift'

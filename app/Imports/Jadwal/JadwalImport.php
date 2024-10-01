@@ -2,6 +2,7 @@
 
 namespace App\Imports\Jadwal;
 
+use App\Models\DataKaryawan;
 use App\Models\Jadwal;
 use App\Models\User;
 use App\Models\Shift;
@@ -15,18 +16,18 @@ class JadwalImport implements ToModel, WithHeadingRow, WithValidation
 {
     use Importable;
 
-    private $User;
+    private $DataKaryawan;
     private $Shift;
     public function __construct()
     {
-        $this->User = User::select('id', 'nama')->get();
+        $this->DataKaryawan = DataKaryawan::select('id', 'nik', 'user_id')->get();
         $this->Shift = Shift::select('id', 'nama')->get();
     }
 
     public function rules(): array
     {
         return [
-            'nama' => 'required',
+            'nomor_induk_karyawan' => 'required',
             'tanggal_mulai' => 'required|string',
             'tanggal_selesai' => 'string',
             'shift' => 'required'
@@ -36,7 +37,7 @@ class JadwalImport implements ToModel, WithHeadingRow, WithValidation
     public function customValidationMessages()
     {
         return [
-            'nama.required' => 'Silahkan masukkan nama karyawan terlebih dahulu.',
+            'nomor_induk_karyawan.required' => 'Silahkan masukkan nomor induk karyawan karyawan terlebih dahulu.',
             'tanggal_mulai.required' => 'Tanggal mulai jadwal karyawan tidak diperbolehkan kosong.',
             'tanggal_mulai.string' => 'Tanggal mulai jadwal karyawan wajib berisi tanggal.',
             'tanggal_selesai.string' => 'Tanggal selesai jadwal karyawan wajib berisi tanggal.',
@@ -46,9 +47,9 @@ class JadwalImport implements ToModel, WithHeadingRow, WithValidation
 
     public function model(array $row)
     {
-        $users = $this->User->where('nama', $row['nama'])->first();
-        if (!$users) {
-            throw new \Exception("Karyawan '" . $row['nama'] . "' tidak ditemukan.");
+        $dataKaryawan = $this->DataKaryawan->where('nik', $row['nomor_induk_karyawan'])->first();
+        if (!$dataKaryawan) {
+            throw new \Exception("Karyawan dengan NIK '" . $row['nomor_induk_karyawan'] . "' tidak ditemukan.");
         }
 
         $shifts = $this->Shift->where('nama', $row['shift'])->first();
@@ -62,7 +63,7 @@ class JadwalImport implements ToModel, WithHeadingRow, WithValidation
         $tgl_selesai_formatted = $tgl_selesai->format('Y-m-d');
 
         return new Jadwal([
-            'user_id' => $users->id,
+            'user_id' => $dataKaryawan->user_id,
             'tgl_mulai' => $tgl_mulai_formatted,
             'tgl_selesai' => $tgl_selesai_formatted,
             'shift_id' => $shifts->id,

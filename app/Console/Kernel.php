@@ -2,13 +2,13 @@
 
 namespace App\Console;
 
+use App\Console\Commands\ResetMasaDiklat;
 use App\Console\Commands\UpdateAndResetReward;
 use App\Console\Commands\UpdateAutoPublishPenggajian;
 use DateTimeZone;
 use Carbon\Carbon;
 use Illuminate\Console\Scheduling\Schedule;
 use App\Console\Commands\UpdateDataKaryawanTransfer;
-use App\Console\Commands\UpdateMasaDiklatKaryawan;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 
 class Kernel extends ConsoleKernel
@@ -17,7 +17,7 @@ class Kernel extends ConsoleKernel
         UpdateDataKaryawanTransfer::class,
         UpdateAutoPublishPenggajian::class,
         UpdateAndResetReward::class,
-        UpdateMasaDiklatKaryawan::class
+        ResetMasaDiklat::class
     ];
 
     /**
@@ -28,7 +28,7 @@ class Kernel extends ConsoleKernel
         // Update transfer karyawan
         $schedule->command('app:update-data-karyawan-transfer')
             ->timezone('Asia/Jakarta')
-            ->dailyAt('01:00');
+            ->dailyAt('23:59');
 
         // Update published payroll
         $schedule->command('app:update-auto-publish-penggajian')
@@ -40,10 +40,10 @@ class Kernel extends ConsoleKernel
             ->timezone('Asia/Jakarta')
             ->monthlyOn(Carbon::now()->endOfMonth()->day, '00:00');
 
-        // Update masa diklat karyawan
-        // $schedule->command('app:update-data-karyawan-transfer')
-        //     ->timezone('Asia/Jakarta')
-        //     ->dailyAt('23:00');
+        // Reset masa diklat
+        $schedule->command('app:reset-masa-diklat')
+            ->timezone('Asia/Jakarta')
+            ->yearlyOn(12, 31, '23:59');
     }
 
     /**

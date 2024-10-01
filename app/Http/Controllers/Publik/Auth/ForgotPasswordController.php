@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Mail;
 use App\Http\Requests\VerifyOTPRequest;
 use App\Http\Requests\SendingOTPRequest;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
+use Illuminate\Support\Facades\Log;
 
 class ForgotPasswordController extends Controller
 {
@@ -21,7 +22,6 @@ class ForgotPasswordController extends Controller
         $user = User::whereHas('data_karyawans', function ($query) use ($data) {
             $query->where('email', $data['email']);
         })->first();
-
         if (!$user) {
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Pengguna dengan email tersebut tidak ditemukan.'), Response::HTTP_NOT_FOUND);
         }
@@ -35,6 +35,7 @@ class ForgotPasswordController extends Controller
         // Kirim email dengan OTP
         $nama_user = $user->nama;
         Mail::to($data['email'])->send(new SendOTPAccount($nama_user, $otp));
+        Log::info("| Auth | - OTP successfully sent to email: {$data['email']}.");
 
         return response()->json(new WithoutDataResource(Response::HTTP_OK, 'Kode OTP berhasil dikirim, Silahkan cek inbox atau spam di email anda.'), Response::HTTP_OK);
     }
@@ -46,7 +47,6 @@ class ForgotPasswordController extends Controller
         $user = User::whereHas('data_karyawans', function ($query) use ($data) {
             $query->where('email', $data['email']);
         })->first();
-
         if (!$user) {
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Pengguna dengan email tersebut tidak ditemukan.'), Response::HTTP_NOT_FOUND);
         }
@@ -59,6 +59,8 @@ class ForgotPasswordController extends Controller
         if (!Hash::check($data['kode_otp'], $user->remember_token)) {
             return response()->json(new WithoutDataResource(Response::HTTP_UNAUTHORIZED, 'Kode OTP tidak valid.'), Response::HTTP_UNAUTHORIZED);
         }
+
+        Log::info("| Auth | - OTP successfully verified for user ID: {$user->id}, Name: {$user->nama}.");
 
         return response()->json(new WithoutDataResource(Response::HTTP_OK, 'Kode OTP valid. Silakan lanjutkan untuk mengatur ulang kata sandi.'), Response::HTTP_OK);
     }

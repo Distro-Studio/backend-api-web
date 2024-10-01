@@ -11,6 +11,7 @@ use App\Helpers\RandomHelper;
 use App\Models\KategoriAgama;
 use App\Models\KategoriDarah;
 use Illuminate\Http\Response;
+use App\Models\ModulVerifikasi;
 use App\Models\RelasiVerifikasi;
 use App\Models\RiwayatPerubahan;
 use App\Models\KategoriPendidikan;
@@ -264,6 +265,46 @@ class DataRiwayatPerubahanController extends Controller
                 ->where('modul_verifikasi', 1)
                 ->get() : collect();
 
+            // Mendapatkan max order dari modul_verifikasis untuk jenis perubahan (modul_verifikasi = 1)
+            $modulVerifikasi = ModulVerifikasi::where('id', 1)->first();
+            $maxOrder = $modulVerifikasi ? $modulVerifikasi->max_order : 0;
+
+            // Lakukan loop sebanyak max order
+            $formattedRelasiVerifikasi = [];
+            for ($i = 1; $i <= $maxOrder; $i++) {
+                $verifikasiForOrder = $relasiVerifikasi->firstWhere('order', $i);
+                $formattedRelasiVerifikasi[] = $verifikasiForOrder ? [
+                    'id' => $verifikasiForOrder->id,
+                    'nama' => $verifikasiForOrder->nama,
+                    'verifikator' => [
+                        'id' => $verifikasiForOrder->users->id,
+                        'nama' => $verifikasiForOrder->users->nama,
+                        'username' => $verifikasiForOrder->users->username,
+                        'email_verified_at' => $verifikasiForOrder->users->email_verified_at,
+                        'data_karyawan_id' => $verifikasiForOrder->users->data_karyawan_id,
+                        'foto_profil' => $verifikasiForOrder->users->foto_profil,
+                        'data_completion_step' => $verifikasiForOrder->users->data_completion_step,
+                        'status_aktif' => $verifikasiForOrder->users->status_aktif,
+                        'created_at' => $verifikasiForOrder->users->created_at,
+                        'updated_at' => $verifikasiForOrder->users->updated_at
+                    ],
+                    'order' => $verifikasiForOrder->order,
+                    'user_diverifikasi' => $verifikasiForOrder->user_diverifikasi,
+                    'modul_verifikasi' => $verifikasiForOrder->modul_verifikasi,
+                    'created_at' => $verifikasiForOrder->created_at,
+                    'updated_at' => $verifikasiForOrder->updated_at
+                ] : [
+                    'id' => null,
+                    'nama' => null,
+                    'verifikator' => null,
+                    'order' => $i,
+                    'user_diverifikasi' => null,
+                    'modul_verifikasi' => null,
+                    'created_at' => null,
+                    'updated_at' => null
+                ];
+            }
+
             return [
                 'id' => $data_perubahan->id,
                 'user' => $relasiUser ? [
@@ -295,18 +336,7 @@ class DataRiwayatPerubahanController extends Controller
                     'updated_at' => $relasiVerifikator->updated_at
                 ] : null,
                 'alasan' => $data_perubahan->alasan ?? null,
-                'relasi_verifikasi' => $relasiVerifikasi->map(function ($verifikasi) {
-                    return [
-                        'id' => $verifikasi->id,
-                        'nama' => $verifikasi->nama,
-                        'verifikator' => $verifikasi->verifikator, // Nama verifikator
-                        'order' => $verifikasi->order,
-                        'user_diverifikasi' => $verifikasi->user_diverifikasi,
-                        'modul_verifikasi' => $verifikasi->modul_verifikasi,
-                        'created_at' => $verifikasi->created_at,
-                        'updated_at' => $verifikasi->updated_at
-                    ];
-                }),
+                'relasi_verifikasi' => $formattedRelasiVerifikasi,
                 'created_at' => $data_perubahan->created_at,
                 'updated_at' => $data_perubahan->updated_at
             ];
@@ -322,46 +352,51 @@ class DataRiwayatPerubahanController extends Controller
 
     public function verifikasiPerubahan(Request $request, $id)
     {
-        // if (!Gate::allows('verifikasi1 riwayatPerubahan')) {
-        //     return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
-        // }
-
         // 1. Dapatkan ID user yang login
         $verifikatorId = Auth::id();
 
-        // 2. Dapatkan relasi_verifikasis, pastikan verifikator memiliki ID user yang sama
-        $relasiVerifikasi = RelasiVerifikasi::where('verifikator', $verifikatorId)
-            ->where('modul_verifikasi', 1) // 1 adalah modul verifikasi perubahan data
-            ->first();
-
-        if (!$relasiVerifikasi) {
-            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk verifikasi perubahan data ini.'), Response::HTTP_FORBIDDEN);
-        }
-
-        // 3. Dapatkan riwayat perubahan berdasarkan ID
+        // 2. Dapatkan riwayat perubahan berdasarkan ID
         $riwayat = RiwayatPerubahan::find($id);
         if (!$riwayat) {
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Riwayat perubahan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
         }
 
-        // 4. Dapatkan karyawan yang mengajukan perubahan dengan user_id di tabel data_karyawans
-        $pengajuPerubahanUserId = $riwayat->data_karyawans->user_id;
+        // 3. Jika pengguna bukan Super Admin, lakukan pengecekan relasi verifikasi
+        if (!Auth::user()->hasRole('Super Admin')) {
+            // Dapatkan relasi_verifikasis, pastikan verifikator memiliki ID user yang sama
+            $relasiVerifikasi = RelasiVerifikasi::where('verifikator', $verifikatorId)
+                ->where('modul_verifikasi', 1)
+                ->where('order', 1)
+                ->first();
 
-        // 5. Samakan user_id pengajuan perubahan dengan string array user_diverifikasi di tabel relasi_verifikasis
-        $userDiverifikasi = $relasiVerifikasi->user_diverifikasi;
-        if (!is_array($userDiverifikasi)) {
-            Log::warning('Kesalahan format data user diverifikasi pada verif 1 perubahan data');
-            return response()->json(new WithoutDataResource(Response::HTTP_INTERNAL_SERVER_ERROR, 'Kesalahan format data user diverifikasi.'), Response::HTTP_INTERNAL_SERVER_ERROR);
-        }
-        if (!in_array($pengajuPerubahanUserId, $userDiverifikasi)) {
-            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak dapat memverifikasi perubahan ini karena karyawan tidak ada dalam daftar verifikasi Anda.'), Response::HTTP_FORBIDDEN);
+            if (!$relasiVerifikasi) {
+                return response()->json([
+                    'status' => Response::HTTP_NOT_FOUND,
+                    'message' => "Anda tidak memiliki hak akses untuk verifikasi riwayat perubahan data dengan modul '{$relasiVerifikasi->modul_verifikasis->label}'.",
+                    'relasi_verifikasi' => null,
+                ], Response::HTTP_NOT_FOUND);
+            }
+
+            // 4. Dapatkan karyawan yang mengajukan perubahan dengan user_id di tabel data_karyawans
+            $pengajuPerubahanUserId = $riwayat->data_karyawans->user_id;
+
+            // 5. Samakan user_id pengajuan perubahan dengan string array user_diverifikasi di tabel relasi_verifikasis
+            $userDiverifikasi = $relasiVerifikasi->user_diverifikasi;
+            if (!is_array($userDiverifikasi)) {
+                Log::warning('Kesalahan format data user diverifikasi pada verif 1 perubahan data');
+                return response()->json(new WithoutDataResource(Response::HTTP_INTERNAL_SERVER_ERROR, 'Kesalahan format data user diverifikasi.'), Response::HTTP_INTERNAL_SERVER_ERROR);
+            }
+            if (!in_array($pengajuPerubahanUserId, $userDiverifikasi)) {
+                return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak dapat memverifikasi perubahan ini karena karyawan tidak ada dalam daftar verifikasi Anda.'), Response::HTTP_FORBIDDEN);
+            }
+
+            // 6. Validasi nilai kolom order dan status_perubahan_id
+            if ($relasiVerifikasi->order != 1) {
+                return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Perubahan ini tidak dalam status untuk disetujui pada tahap 1.'), Response::HTTP_BAD_REQUEST);
+            }
         }
 
-        // 6. Validasi nilai kolom order dan status_perubahan_id
         $status_perubahan_id = $riwayat->status_perubahan_id;
-        if ($relasiVerifikasi->order != 1) {
-            return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Perubahan ini tidak dalam status untuk disetujui pada tahap 1.'), Response::HTTP_BAD_REQUEST);
-        }
 
         // Logika verifikasi disetujui
         if ($request->has('verifikasi_disetujui') && $request->verifikasi_disetujui == 1) {

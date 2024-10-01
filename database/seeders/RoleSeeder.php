@@ -112,6 +112,10 @@ class RoleSeeder extends Seeder
             'view dataKaryawan',
             'import dataKaryawan',
             'export dataKaryawan',
+            'create transferKaryawan', // 131
+            'edit transferKaryawan', // 132
+            'view transferKaryawan', // 133
+            'export transferKaryawan', // 134
 
             'create role',
             'edit role',
@@ -127,6 +131,10 @@ class RoleSeeder extends Seeder
             'edit pendidikan', // 123
             'delete pendidikan', // 124
             'view pendidikan', // 125
+            'edit pelatihanKaryawan', // 135
+            'delete pelatihanKaryawan', // 136
+            'view pelatihanKaryawan', // 137
+            'create pelatihanKaryawan', // 138
             'create unitKerja',
             'edit unitKerja',
             'delete unitKerja',

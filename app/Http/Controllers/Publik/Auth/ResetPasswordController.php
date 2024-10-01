@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Publik\Auth;
 
 use App\Models\User;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Hash;
 use App\Http\Requests\ResetPasswordRequest;
@@ -18,7 +19,6 @@ class ResetPasswordController extends Controller
         $user = User::whereHas('data_karyawans', function ($query) use ($data) {
             $query->where('email', $data['email']);
         })->first();
-
         if (!$user) {
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Pengguna dengan email tersebut tidak ditemukan.'), Response::HTTP_NOT_FOUND);
         }
@@ -36,6 +36,8 @@ class ResetPasswordController extends Controller
         $user->remember_token = null;
         $user->remember_token_expired_at = null;
         $user->save();
+
+        Log::info("| Auth | - New password set for user ID: {$user->id}, Name: {$user->nama}.");
 
         return response()->json(new WithoutDataResource(Response::HTTP_OK, 'Kata sandi baru anda berhasil diubah.'), Response::HTTP_OK);
     }

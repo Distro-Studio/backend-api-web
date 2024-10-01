@@ -30,7 +30,7 @@ class DataTransferKaryawanController extends Controller
 {
     public function getAllKategoriTransfer()
     {
-        if (!Gate::allows('view dataKaryawan')) {
+        if (!Gate::allows('view transferKaryawan')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
@@ -44,7 +44,7 @@ class DataTransferKaryawanController extends Controller
 
     public function index(Request $request)
     {
-        if (!Gate::allows('view dataKaryawan')) {
+        if (!Gate::allows('view transferKaryawan')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
@@ -286,7 +286,7 @@ class DataTransferKaryawanController extends Controller
 
     public function store(StoreTransferKaryawanRequest $request)
     {
-        if (!Gate::allows('create dataKaryawan')) {
+        if (!Gate::allows('create transferKaryawan')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
@@ -399,11 +399,9 @@ class DataTransferKaryawanController extends Controller
         }
     }
 
-
-
     public function update(UpdateTransferKaryawanRequest $request, $id)
     {
-        if (!Gate::allows('edit dataKaryawan')) {
+        if (!Gate::allows('edit transferKaryawan')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
@@ -466,6 +464,8 @@ class DataTransferKaryawanController extends Controller
                 if (!$berkas) {
                     throw new Exception('Berkas gagal di diperbarui');
                 }
+            } else if (is_string($request->input('dokumen'))) {
+                unset($data['dokumen']);
             }
 
             $transfer->update($data);
@@ -521,7 +521,7 @@ class DataTransferKaryawanController extends Controller
 
     public function exportTransferKaryawan()
     {
-        if (!Gate::allows('export dataKaryawan')) {
+        if (!Gate::allows('export transferKaryawan')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 

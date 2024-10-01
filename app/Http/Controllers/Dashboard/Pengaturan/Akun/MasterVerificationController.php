@@ -95,9 +95,11 @@ class MasterVerificationController extends Controller
             ->where('modul_verifikasi', $data['modul_verifikasi'])
             ->first();
         if ($existingVerification) {
+            $existingVerifikator = User::find($data['verifikator']);
+            $labelModulVerifikasi = $modulVerifikasi->label;
             return response()->json([
                 'status' => Response::HTTP_CONFLICT,
-                'message' => "Kombinasi verifikator dengan order yang sama sudah ada. Verifikator ID '{$data['verifikator']}' dengan order '{$data['order']}' sudah terdaftar.",
+                'message' => "Kombinasi verifikator dengan order dan modul verifikasi yang sama sudah ada. Verifikator '{$existingVerifikator->nama}' dengan level verifikasi '{$data['order']}' dan modul verifikasi '{$labelModulVerifikasi}' sudah terdaftar.",
             ], Response::HTTP_CONFLICT);
         }
 
@@ -222,13 +224,40 @@ class MasterVerificationController extends Controller
     protected function formatData(Collection $collection)
     {
         return $collection->transform(function ($verification) {
+            $userIds = $verification->user_diverifikasi;
+            $diverifiedUsers = User::whereIn('id', $userIds)->get();
+            $formattedDiverifiedUsers = $diverifiedUsers->map(function ($user) {
+                return [
+                    'id' => $user->id,
+                    'nama' => $user->nama,
+                    'username' => $user->username,
+                    'email_verified_at' => $user->email_verified_at,
+                    'data_karyawan_id' => $user->data_karyawan_id,
+                    'foto_profil' => $user->foto_profil,
+                    'data_completion_step' => $user->data_completion_step,
+                    'status_aktif' => $user->status_aktif,
+                    'created_at' => $user->created_at,
+                    'updated_at' => $user->updated_at
+                ];
+            });
             return [
                 'id' => $verification->id,
                 'name' => $verification->nama,
-                'user' => $verification->users,
+                'verifikator' => [
+                    'id' => $verification->users->id,
+                    'nama' => $verification->users->nama,
+                    'username' => $verification->users->username,
+                    'email_verified_at' => $verification->users->email_verified_at,
+                    'data_karyawan_id' => $verification->users->data_karyawan_id,
+                    'foto_profil' => $verification->users->foto_profil,
+                    'data_completion_step' => $verification->users->data_completion_step,
+                    'status_aktif' => $verification->users->status_aktif,
+                    'created_at' => $verification->users->created_at,
+                    'updated_at' => $verification->users->updated_at
+                ],
                 'modul_verifikasi' => $verification->modul_verifikasis,
                 'order' => $verification->order,
-                'user_diverifikasi' => $verification->user_diverifikasi,
+                'user_diverifikasi' => $formattedDiverifiedUsers,
                 'created_at' => $verification->created_at,
                 'updated_at' => $verification->updated_at,
             ];

@@ -17,8 +17,7 @@ class TemplateImportPresensiExport implements FromArray, WithHeadings
     public function headings(): array
     {
         return [
-            'nama',
-            'nik_ktp',
+            'nomor_induk_karyawan',
             'jam_masuk',
             'jam_keluar',
             'tanggal_masuk',

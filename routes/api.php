@@ -26,6 +26,7 @@ use App\Http\Controllers\Dashboard\Pengaturan\Finance\TER21Controller;
 use App\Http\Controllers\Dashboard\Pengaturan\Karyawan\JabatanController;
 use App\Http\Controllers\Dashboard\Pengaturan\Karyawan\KelompokGajiController;
 use App\Http\Controllers\Dashboard\Pengaturan\Karyawan\KompetensiController;
+use App\Http\Controllers\Dashboard\Pengaturan\Karyawan\MateriPelatihanController;
 use App\Http\Controllers\Dashboard\Pengaturan\Karyawan\PendidikanTerakhirController;
 use App\Http\Controllers\Dashboard\Pengaturan\Karyawan\PertanyaanController;
 use App\Http\Controllers\Dashboard\Pengaturan\Karyawan\UnitKerjaController;
@@ -286,6 +287,9 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::post('/jabatan/restore/{id}', [JabatanController::class, 'restore']);
             Route::apiResource('/jabatan', JabatanController::class);
 
+            // ! Materi Pelatihan
+            Route::apiResource('/materi-pelatihan', MateriPelatihanController::class);
+            
             // ! Kelompok Gaji ===========>
             Route::post('/kelompok-gaji/restore/{id}', [KelompokGajiController::class, 'restore']);
             Route::apiResource('/kelompok-gaji', KelompokGajiController::class);

@@ -10,7 +10,6 @@ use App\Models\NonShift;
 use App\Models\Presensi;
 use App\Models\DataKaryawan;
 use App\Models\LokasiKantor;
-use App\Models\StatusPresensi;
 use App\Models\KategoriPresensi;
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\Importable;
@@ -22,33 +21,34 @@ class PresensiImport implements ToModel, WithHeadingRow, WithValidation
     use Importable;
 
     private $User;
+    private $DataKaryawan;
     private $KategoriPresensi;
     public function __construct()
     {
         $this->User = User::select('id', 'nama')->get();
+        $this->DataKaryawan = DataKaryawan::select('id', 'nik', 'user_id')->get();
         $this->KategoriPresensi = KategoriPresensi::select('id', 'label')->get();
     }
 
     public function rules(): array
     {
         return [
-            'nama' => 'required|string|max:225',
-            'nik_ktp' => 'required|numeric',
+            'nomor_induk_karyawan' => 'required',
             'jam_masuk' => 'required',
             'jam_keluar' => 'required',
+            'tanggal_masuk' => 'required',
+            'jenis_karyawan' => 'required',
         ];
     }
 
     public function customValidationMessages()
     {
         return [
-            'nama.required' => 'Nama karyawan tidak diperbolehkan kosong.',
-            'nama.string' => 'Nama karyawan tidak diperbolehkan mengandung angka.',
-            'nama.max' => 'Nama karyawan melebihi batas maksimum panjang karakter.',
-            'nik_ktp.required' => 'NIK KTP karyawan tidak diperbolehkan kosong.',
-            'nik_ktp.numeric' => 'NIK KTP karyawan tidak diperbolehkan mengandung huruf.',
-            'jam_masuk.required' => 'Tanggal presensi masuk tidak diperbolehkan kosong.',
-            'jam_keluar.required' => 'Tanggal presensi keluar tidak diperbolehkan kosong.',
+            'nomor_induk_karyawan.required' => 'Nomor induk karyawan tidak diperbolehkan kosong.',
+            'jam_masuk.required' => 'Jam presensi masuk tidak diperbolehkan kosong.',
+            'jam_keluar.required' => 'Jam presensi keluar tidak diperbolehkan kosong.',
+            'tanggal_masuk.required' => 'Tanggal presensi masuk tidak diperbolehkan kosong.',
+            'jenis_karyawan.required' => 'Jenis karyawan tidak diperbolehkan kosong, dan hanya dapat diisi shift atau non-shift.',
         ];
     }
 
@@ -201,17 +201,9 @@ class PresensiImport implements ToModel, WithHeadingRow, WithValidation
     public function model(array $row)
     {
         // Mendapatkan data user berdasarkan nama
-        $user = $this->User->where('nama', $row['nama'])->first();
-        if (!$user) {
-            throw new \Exception("Nama karyawan '{$row['nama']}' tidak tersedia dalam database.");
-        }
-
-        // Mendapatkan data karyawan berdasarkan user_id dan NIK KTP
-        $data_karyawan = DataKaryawan::where('user_id', $user->id)
-            ->where('nik_ktp', $row['nik_ktp'])
-            ->first();
+        $data_karyawan = $this->DataKaryawan->where('nik', $row['nomor_induk_karyawan'])->first();
         if (!$data_karyawan) {
-            throw new \Exception("NIK KTP dari karyawan '{$row['nama']}' tidak sesuai dengan database.");
+            throw new \Exception("Karyawan dengan NIK '" . $row['nomor_induk_karyawan'] . "' tidak ditemukan.");
         }
 
         // Mendapatkan data lokasi kantor
@@ -228,7 +220,7 @@ class PresensiImport implements ToModel, WithHeadingRow, WithValidation
         $durasi = $jam_keluar->diffInSeconds($jam_masuk);
 
         // Memeriksa apakah data presensi sudah ada
-        $existingPresensi = Presensi::where('user_id', $user->id)
+        $existingPresensi = Presensi::where('user_id', $data_karyawan->user_id)
             ->where('jam_masuk', $jam_masuk->format('H:i:s'))
             ->where('jam_keluar', $jam_keluar->format('H:i:s'))
             ->first();
@@ -264,7 +256,7 @@ class PresensiImport implements ToModel, WithHeadingRow, WithValidation
             }
 
             // Mendapatkan jadwal berdasarkan user, shift, dan tanggal masuk dari excel
-            $jadwal = Jadwal::where('user_id', $user->id)
+            $jadwal = Jadwal::where('user_id', $data_karyawan->user_id)
                 ->where('shift_id', $shift->id)
                 ->whereDate('tgl_mulai', '<=', $tanggal_masuk)
                 ->whereDate('tgl_selesai', '>=', $tanggal_masuk)
@@ -273,7 +265,7 @@ class PresensiImport implements ToModel, WithHeadingRow, WithValidation
             // Jika jadwal tidak ditemukan, buat jadwal baru
             if (!$jadwal) {
                 $jadwal = Jadwal::create([
-                    'user_id' => $user->id,
+                    'user_id' => $data_karyawan->user_id,
                     'shift_id' => $shift->id,
                     'tgl_mulai' => $tanggal_masuk->format('Y-m-d'),
                     'tgl_selesai' => $tanggal_masuk->format('Y-m-d')
@@ -285,7 +277,7 @@ class PresensiImport implements ToModel, WithHeadingRow, WithValidation
 
             // Mengembalikan instance dari model Presensi dengan data yang sesuai
             return new Presensi([
-                'user_id' => $user->id,
+                'user_id' => $data_karyawan->user_id,
                 'data_karyawan_id' => $data_karyawan->id,
                 'jadwal_id' => $jadwal->id,
                 'jam_masuk' => $jam_masuk->format('H:i:s'),
@@ -319,7 +311,7 @@ class PresensiImport implements ToModel, WithHeadingRow, WithValidation
 
             // Mengembalikan instance dari model Presensi dengan data yang sesuai
             return new Presensi([
-                'user_id' => $user->id,
+                'user_id' => $data_karyawan->user_id,
                 'data_karyawan_id' => $data_karyawan->id,
                 'jadwal_id' => null,
                 'jam_masuk' => $jam_masuk->format('H:i:s'),
