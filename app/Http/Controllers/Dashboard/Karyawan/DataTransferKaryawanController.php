@@ -446,19 +446,27 @@ class DataTransferKaryawanController extends Controller
                 $dataupload = StorageServerHelper::uploadToServer($request, $random_filename);
                 $data['dokumen'] = $dataupload['path'];
 
-                $berkas = Berkas::updateOrCreate([
-                    'user_id' => $transfer->user_id,
-                    'file_id' => $dataupload['id_file']['id'],
-                    'nama' => $random_filename,
-                    'kategori_berkas_id' => 2, // umum
-                    'status_berkas_id' => 2,
-                    'path' => $dataupload['path'],
-                    'tgl_upload' => now(),
-                    'nama_file' => $dataupload['nama_file'],
-                    'ext' => $dataupload['ext'],
-                    'size' => $dataupload['size'],
-                ]);
+                $berkas = Berkas::updateOrCreate(
+                    [
+                        'user_id' => $transfer->user_id,
+                        'file_id' => $dataupload['id_file']['id'],
+                        'nama' => $random_filename,
+                        'kategori_berkas_id' => 2, // umum
+                        'status_berkas_id' => 2,
+                        'path' => $dataupload['path'],
+                        'tgl_upload' => now(),
+                        'nama_file' => $dataupload['nama_file'],
+                        'ext' => $dataupload['ext'],
+                        'size' => $dataupload['size'],
+                    ]
+                );
                 Log::info('Berkas Transfer ' . $user->nama . ' berhasil di diperbarui.');
+
+                // $berkasLama = Berkas::where('user_id', $transfer->user_id)->first();
+                // if ($berkasLama) {
+                //     $berkasLama->delete();
+                // }
+
                 StorageServerHelper::logout();
 
                 if (!$berkas) {

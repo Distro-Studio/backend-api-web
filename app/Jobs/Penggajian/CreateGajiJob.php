@@ -5,6 +5,7 @@ namespace App\Jobs\Penggajian;
 use Carbon\Carbon;
 use App\Models\Lembur;
 use App\Models\DetailGaji;
+use App\Models\Notifikasi;
 use App\Models\Penggajian;
 use App\Helpers\RandomHelper;
 use Illuminate\Bus\Queueable;

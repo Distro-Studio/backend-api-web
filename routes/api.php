@@ -10,6 +10,9 @@ use App\Http\Controllers\Dashboard\Jadwal\DataTukarJadwalController;
 use App\Http\Controllers\Dashboard\Karyawan\DataKaryawanController;
 use App\Http\Controllers\Dashboard\Karyawan\DataRiwayatPerubahanController;
 use App\Http\Controllers\Dashboard\Karyawan\DataTransferKaryawanController;
+use App\Http\Controllers\Dashboard\Karyawan\DetailKaryawan\Berkas\Karyawan_BerkasController;
+use App\Http\Controllers\Dashboard\Karyawan\DetailKaryawan\Karyawan_DetailController;
+use App\Http\Controllers\Dashboard\Karyawan\DetailKaryawan\Keluarga\Karyawan_KeluargaController;
 use App\Http\Controllers\Dashboard\Keuangan\PenggajianController;
 use App\Http\Controllers\Dashboard\Keuangan\PenyesuaianGajiController;
 use App\Http\Controllers\Dashboard\Keuangan\TagihanPotonganController;
@@ -36,6 +39,7 @@ use App\Http\Controllers\Dashboard\Pengaturan\ManagemenWaktu\LokasiKantorControl
 use App\Http\Controllers\Dashboard\Pengaturan\ManagemenWaktu\NonShiftController;
 use App\Http\Controllers\Dashboard\Pengaturan\ManagemenWaktu\ShiftController;
 use App\Http\Controllers\Dashboard\PengumumanController;
+use App\Http\Controllers\Dashboard\Perusahaan\AboutHospitalController;
 use App\Http\Controllers\Dashboard\Perusahaan\DiklatController;
 use App\Http\Controllers\Dashboard\Perusahaan\JenisPenilaianController;
 use App\Http\Controllers\Dashboard\Perusahaan\PenilaianController;
@@ -119,21 +123,25 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::get('/detail-karyawan-user/{user_id}', [DataKaryawanController::class, 'showByUserId']);
             Route::get('/detail-karyawan/{data_karyawan_id}', [DataKaryawanController::class, 'showByDataKaryawanId']);
 
-            Route::get('/detail-karyawan-presensi/{data_karyawan_id}', [DataKaryawanController::class, 'getDataPresensi']);
-            Route::get('/detail-karyawan-jadwal/{data_karyawan_id}', [DataKaryawanController::class, 'getDataJadwal']);
-            Route::get('/detail-karyawan-rekam-jejak/{data_karyawan_id}', [DataKaryawanController::class, 'getDataRekamJejak']);
-            Route::get('/detail-karyawan-keluarga/{data_karyawan_id}', [DataKaryawanController::class, 'getDataKeluarga']);
-            Route::post('/detail-karyawan-keluarga/{data_karyawan_id}/verifikasi', [DataKaryawanController::class, 'verifikasiKeluarga']);
+            Route::get('/detail-karyawan-presensi/{data_karyawan_id}', [Karyawan_DetailController::class, 'getDataPresensi']);
+            Route::get('/detail-karyawan-jadwal/{data_karyawan_id}', [Karyawan_DetailController::class, 'getDataJadwal']);
+            Route::get('/detail-karyawan-rekam-jejak/{data_karyawan_id}', [Karyawan_DetailController::class, 'getDataRekamJejak']);
 
-            Route::get('/detail-karyawan-dokumen/{data_karyawan_id}', [DataKaryawanController::class, 'getDataDokumen']);
-            Route::post('/detail-karyawan-dokumen/{data_karyawan_id}/verifikasi', [DataKaryawanController::class, 'verifikasiBerkas']);
+            // ! Data Keluarga Section ===========>
+            Route::get('/detail-karyawan-keluarga/{data_karyawan_id}', [Karyawan_KeluargaController::class, 'getDataKeluarga']);
+            Route::post('/detail-karyawan-keluarga/{data_karyawan_id}/update-keluarga/{keluarga_id}', [Karyawan_KeluargaController::class, 'updateDataKeluarga']);
+            Route::post('/detail-karyawan-keluarga/{data_karyawan_id}/verifikasi', [Karyawan_KeluargaController::class, 'verifikasiKeluarga']);
 
-            Route::get('/detail-karyawan-cuti/{data_karyawan_id}', [DataKaryawanController::class, 'getDataCuti']);
-            Route::get('/detail-karyawan-tukar-jadwal/{data_karyawan_id}', [DataKaryawanController::class, 'getDataTukarJadwal']);
-            Route::get('/detail-karyawan-lembur/{data_karyawan_id}', [DataKaryawanController::class, 'getDataLembur']);
-            Route::get('/detail-karyawan-feedback-penilaian/{data_karyawan_id}', [DataKaryawanController::class, 'getDataFeedbackPenilaian']);
+            // ! Data Berkas Section ===========>
+            Route::get('/detail-karyawan-dokumen/{data_karyawan_id}', [Karyawan_BerkasController::class, 'getDataDokumen']);
+            Route::post('/detail-karyawan-dokumen/{data_karyawan_id}/verifikasi', [Karyawan_BerkasController::class, 'verifikasiBerkas']);
 
-            Route::get('/detail-karyawan-diklat/{data_karyawan_id}', [DataKaryawanController::class, 'getDataDiklat']);
+            Route::get('/detail-karyawan-cuti/{data_karyawan_id}', [Karyawan_DetailController::class, 'getDataCuti']);
+            Route::get('/detail-karyawan-tukar-jadwal/{data_karyawan_id}', [Karyawan_DetailController::class, 'getDataTukarJadwal']);
+            Route::get('/detail-karyawan-lembur/{data_karyawan_id}', [Karyawan_DetailController::class, 'getDataLembur']);
+            Route::get('/detail-karyawan-feedback-penilaian/{data_karyawan_id}', [Karyawan_DetailController::class, 'getDataFeedbackPenilaian']);
+
+            Route::get('/detail-karyawan-diklat/{data_karyawan_id}', [Karyawan_DetailController::class, 'getDataDiklat']);
 
             Route::apiResource('/data-karyawan', DataKaryawanController::class);
 
@@ -247,7 +255,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::post('/diklat/{diklatId}/verifikasi-step-1', [DiklatController::class, 'verifikasiTahap1']);
             Route::post('/diklat/{diklatId}/verifikasi-step-2', [DiklatController::class, 'verifikasiTahap2']);
             Route::post('/diklat/{diklatId}/certificates', [DiklatController::class, 'generateCertificate']);
-            Route::post('/diklat/{diklatId}/verifikasi-diklat-eksternal', [DiklatController::class, 'verifikasiDiklatExternal']);
+            Route::post('/diklat/{diklatId}/verifikasi-diklat-eksternal-step-1', [DiklatController::class, 'verifikasiDiklatExternal_t1']);
+            Route::post('/diklat/{diklatId}/verifikasi-diklat-eksternal-step-2', [DiklatController::class, 'verifikasiDiklatExternal_t2']);
 
             // ! Pelaporan ===========>
             // Route::post('/get-data-pelaporan', [PelaporanController::class, 'index']);
@@ -283,13 +292,17 @@ Route::middleware(['auth:sanctum'])->group(function () {
             // ! Master Verification ===========>
             Route::apiResource('/master-verifikasi', MasterVerificationController::class);
 
+            // ! About RSKI ===========>
+            Route::get('/about-hospitals/{id}', [AboutHospitalController::class, 'index']);
+            Route::post('/about-hospitals/{id}', [AboutHospitalController::class, 'update']);
+
             // ! Jabatan ===========>
             Route::post('/jabatan/restore/{id}', [JabatanController::class, 'restore']);
             Route::apiResource('/jabatan', JabatanController::class);
 
             // ! Materi Pelatihan
             Route::apiResource('/materi-pelatihan', MateriPelatihanController::class);
-            
+
             // ! Kelompok Gaji ===========>
             Route::post('/kelompok-gaji/restore/{id}', [KelompokGajiController::class, 'restore']);
             Route::apiResource('/kelompok-gaji', KelompokGajiController::class);

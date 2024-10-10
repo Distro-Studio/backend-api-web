@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('notifikasis', function (Blueprint $table) {
             $table->id();
             $table->foreignId('kategori_notifikasi_id')->constrained('kategori_notifikasis');
-            $table->text('user_id'); // penerima
+            $table->foreignId('user_id')->constrained('users'); // penerima
             $table->text('message');
             $table->boolean('is_read')->default(false); // true = read, false = unread
             $table->boolean('is_verifikasi')->default(false);

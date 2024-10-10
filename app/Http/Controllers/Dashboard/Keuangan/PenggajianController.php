@@ -13,6 +13,7 @@ use Illuminate\Http\Response;
 use App\Helpers\DetailGajiHelper;
 use App\Models\RiwayatPenggajian;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
@@ -30,8 +31,6 @@ class PenggajianController extends Controller
         if (!Gate::allows('create penggajianKaryawan')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
-
-        $verifikatorId = Auth::id();
 
         $currentMonth = Carbon::now('Asia/Jakarta')->month;
         $currentYear = Carbon::now('Asia/Jakarta')->year;
@@ -89,7 +88,7 @@ class PenggajianController extends Controller
                     }
 
                     // Buat dan simpan notifikasi untuk setiap penggajian yang dipublikasikan
-                    $this->createNotifikasiPenggajian($verifikatorId, $penggajian, $periode);
+                    $this->createNotifikasiPenggajianPublish($penggajian, $periode);
                 }
             } else {
                 return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Publikasi penggajian hanya dapat dilakukan dari tanggal '{$tgl_penggajian->format('Y-m-d')}' hingga tanggal '{$tgl_mulai->format('Y-m-d')}'."), Response::HTTP_BAD_REQUEST);
@@ -264,18 +263,20 @@ class PenggajianController extends Controller
                 'status_gaji_id' => $status_riwayat_gaji,
                 'jenis_riwayat' => $jenisRiwayat,
                 'created_by' => Auth::id(),
-                'submitted_by' => null
+                'submitted_by' => null,
+                'created_at' => Carbon::now('Asia/Jakarta'),
             ]);
 
             // Dispatch the job to handle the calculation in the background
             CreateGajiJob::dispatch($data_karyawan_ids, $sertakan_bor, $riwayatPenggajian->id);
 
+            $this->createNotifikasiPenggajian($riwayatPenggajian, $periode);
+
             DB::commit();
             $periodeAt = Carbon::parse($riwayatPenggajian->periode)->locale('id')->isoFormat('MMMM Y');
             return response()->json([
                 'status' => Response::HTTP_OK,
-                'message' => "Riwayat penggajian karyawan berhasil disimpan untuk periode '{$periodeAt}'.",
-                'data' => $riwayatPenggajian
+                'message' => "Riwayat penggajian karyawan berhasil disimpan untuk periode '{$periodeAt}'."
             ], Response::HTTP_OK);
         } catch (\Exception $e) {
             // Rollback transaksi jika terjadi kesalahan
@@ -647,27 +648,53 @@ class PenggajianController extends Controller
         return response()->json(new WithoutDataResource(Response::HTTP_OK, 'Data laporan penggajian setoran bank berhasil di download.'), Response::HTTP_OK);
     }
 
-    private function createNotifikasiPenggajian($verifikatorId, $penggajian, $periode)
+    private function createNotifikasiPenggajian($riwayatPenggajian, $periode)
     {
-        if ($penggajian->data_karyawans && $penggajian->data_karyawans->users) {
-            $user = $penggajian->data_karyawans->users;
+        $created_at = Carbon::parse($riwayatPenggajian->created_at)->format('d-m-Y H:i:s');
+        $messageSuperAdmin = "Notifikasi untuk Super Admin: Penggajian pada periode {$periode} telah dibuat oleh '{$riwayatPenggajian->created_users->nama}' pada {$created_at}.";
+        Notifikasi::create([
+            'kategori_notifikasi_id' => 5,
+            'user_id' => 1,
+            'message' => $messageSuperAdmin,
+            'is_read' => false,
+            'created_at' => Carbon::now('Asia/Jakarta'),
+        ]);
+    }
 
-            $message = "Penggajian untuk periode {$periode} telah dipublikasikan. Silakan cek slip gaji Anda.";
+    private function createNotifikasiPenggajianPublish($penggajian, $periode)
+    {
+        try {
+            if ($penggajian->data_karyawans && $penggajian->data_karyawans->users) {
+                $user = $penggajian->data_karyawans->users;
 
-            $userIds = [$user->id, $verifikatorId];
-            if (!in_array(1, $userIds)) {
-                $userIds[] = 1;
+                // Pesan untuk user biasa
+                $message = "Penggajian untuk periode {$periode} telah dipublikasikan. Silakan cek slip gaji Anda.";
+
+                // Pesan khusus untuk Super Admin
+                $messageSuperAdmin = "Notifikasi untuk Super Admin: Penggajian untuk karyawan pada periode {$periode} telah dipublikasikan.";
+
+                $userIds = [$user->id, 1]; // Daftar user_id, termasuk user dan Super Admin
+
+                foreach ($userIds as $userId) {
+                    // Jika user_id adalah 1 (Super Admin), gunakan pesan khusus
+                    $messageToSend = $userId === 1 ? $messageSuperAdmin : $message;
+
+                    // Buat notifikasi untuk user atau Super Admin
+                    Notifikasi::create([
+                        'kategori_notifikasi_id' => 5, // Sesuaikan dengan kategori notifikasi yang sesuai
+                        'user_id' => $userId,
+                        'message' => $messageToSend,
+                        'is_read' => false,
+                        'created_at' => Carbon::now('Asia/Jakarta'),
+                    ]);
+                }
             }
-            $userIdsJson = json_encode($userIds);
-
-            // Buat notifikasi untuk karyawan yang bersangkutan
-            Notifikasi::create([
-                'kategori_notifikasi_id' => 5, // Sesuaikan dengan kategori notifikasi yang sesuai
-                'user_id' => $userIdsJson,
-                'message' => $message,
-                'is_read' => false,
-                'created_at' => Carbon::now('Asia/Jakarta')
-            ]);
+        } catch (\Exception $e) {
+            Log::error('| Penggajian | - Error function createNotifikasiPenggajianPublish: ' . $e->getMessage());
+            return response()->json([
+                'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
+                'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 }

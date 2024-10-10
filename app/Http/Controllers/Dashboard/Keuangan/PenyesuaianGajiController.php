@@ -15,6 +15,7 @@ use App\Helpers\CalculateHelper;
 use App\Helpers\DetailGajiHelper;
 use App\Models\RiwayatPenggajian;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
@@ -591,8 +592,6 @@ class PenyesuaianGajiController extends Controller
       return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
     }
 
-    $verifikatorId = Auth::id();
-
     $data = $request->validated();
 
     // Cek apakah penggajian_id valid
@@ -666,7 +665,7 @@ class PenyesuaianGajiController extends Controller
           'besaran' => $penyesuaianGaji->besaran
         ]);
 
-        $this->createNotifikasiPenyesuaianGaji($verifikatorId, $penggajian, $penyesuaianGaji);
+        $this->createNotifikasiPenyesuaianGaji($penggajian, $penyesuaianGaji);
       }
       DB::commit();
 
@@ -688,7 +687,6 @@ class PenyesuaianGajiController extends Controller
       return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
     }
 
-    $verifikatorId = Auth::id();
     $data = $request->validated();
 
     // Cek apakah penggajian_id valid
@@ -771,7 +769,7 @@ class PenyesuaianGajiController extends Controller
         }
       }
 
-      $this->createNotifikasiPenyesuaianGaji($verifikatorId, $penggajian, $penyesuaianGaji);
+      $this->createNotifikasiPenyesuaianGaji($penggajian, $penyesuaianGaji);
 
       DB::commit();
 
@@ -786,29 +784,41 @@ class PenyesuaianGajiController extends Controller
     }
   }
 
-  private function createNotifikasiPenyesuaianGaji($verifikatorId, $penggajian, $penyesuaianGaji)
+  private function createNotifikasiPenyesuaianGaji($penggajian, $penyesuaianGaji)
   {
-    $user = $penggajian->data_karyawans->users;
+    try {
+      $user = $penggajian->data_karyawans->users;
 
-    if ($penyesuaianGaji->kategori_gaji_id == 2) {
-      $message = "Anda telah mendapatkan penambahan gaji '{$penyesuaianGaji->nama_detail}', Silahkan lakukan pengecekkan kembali dan pastikan gaji anda telah sesuai.";
-    } else {
-      $message = "Anda telah mendapatkan pengurangan gaji '{$penyesuaianGaji->nama_detail}', Silahkan lakukan pengecekkan kembali dan pastikan gaji anda telah sesuai.";
+      // Cek apakah penyesuaian gaji adalah penambahan atau pengurangan
+      if ($penyesuaianGaji->kategori_gaji_id == 2) {
+        $message = "'{$user->nama}' telah mendapatkan penambahan gaji '{$penyesuaianGaji->nama_detail}', Silahkan lakukan pengecekkan kembali dan pastikan gaji anda telah sesuai.";
+        $messageSuperAdmin = "Notifikasi untuk Super Admin: Karyawan '{$user->nama}' telah mendapatkan penambahan gaji '{$penyesuaianGaji->nama_detail}'.";
+      } else {
+        $message = "'{$user->nama}' telah mendapatkan pengurangan gaji '{$penyesuaianGaji->nama_detail}', Silahkan lakukan pengecekkan kembali dan pastikan gaji anda telah sesuai.";
+        $messageSuperAdmin = "Notifikasi untuk Super Admin: Karyawan '{$user->nama}' telah mendapatkan pengurangan gaji '{$penyesuaianGaji->nama_detail}'.";
+      }
+
+      // Kirim notifikasi ke user dan Super Admin (user_id = 1)
+      $userIds = [$user->id, 1];
+      foreach ($userIds as $userId) {
+        // Tentukan pesan untuk user atau Super Admin
+        $messageToSend = $userId === 1 ? $messageSuperAdmin : $message;
+
+        // Buat notifikasi untuk user atau Super Admin
+        Notifikasi::create([
+          'kategori_notifikasi_id' => 9,
+          'user_id' => $userId,
+          'message' => $messageToSend,
+          'is_read' => false,
+          'created_at' => Carbon::now('Asia/Jakarta'),
+        ]);
+      }
+    } catch (\Exception $e) {
+      Log::error('| Gaji | - Error function createNotifikasiPenyesuaianGaji: ' . $e->getMessage());
+      return response()->json([
+        'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
+        'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
+      ], Response::HTTP_INTERNAL_SERVER_ERROR);
     }
-
-    $userIds = [$user->id, $verifikatorId];
-    if (!in_array(1, $userIds)) {
-      $userIds[] = 1;
-    }
-    $userIdsJson = json_encode($userIds);
-
-    // Buat notifikasi untuk user yang terkait
-    Notifikasi::create([
-      'kategori_notifikasi_id' => 9,
-      'user_id' => $userIdsJson,
-      'message' => $message,
-      'is_read' => false,
-      'created_at' => Carbon::now('Asia/Jakarta'),
-    ]);
   }
 }

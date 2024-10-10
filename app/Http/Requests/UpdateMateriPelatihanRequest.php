@@ -27,8 +27,14 @@ class UpdateMateriPelatihanRequest extends FormRequest
         return [
             'judul' => 'required|string|max:255',
             'deskripsi' => 'required|string',
-            'dokumen.*' => $this->hasFile('dokumen')
-                ? 'nullable|file|max:10240|mimes:pdf, pptx, docx'
+            'dokumen_materi_1' => $this->hasFile('dokumen_materi_1')
+                ? 'nullable|file|max:10240|mimes:pdf,pptx,docx'
+                : 'nullable',
+            'dokumen_materi_2' => $this->hasFile('dokumen_materi_2')
+                ? 'nullable|file|max:10240|mimes:pdf,pptx,docx'
+                : 'nullable',
+            'dokumen_materi_3' => $this->hasFile('dokumen_materi_3')
+                ? 'nullable|file|max:10240|mimes:pdf,pptx,docx'
                 : 'nullable',
         ];
     }
@@ -41,9 +47,15 @@ class UpdateMateriPelatihanRequest extends FormRequest
             'judul.max' => 'Judul materi pelatihan tidak diperbolehkan mengandung selain angka dan huruf.',
             'deskripsi.required' => 'Deskripsi materi pelatihan tidak diperbolehkan kosong.',
             'deskripsi.string' => 'Deskripsi materi pelatihan tidak diperbolehkan mengandung selain angka dan huruf.',
-            'dokumen.file' => 'Dokumen materi harus berupa file.',
-            'dokumen.max' => 'Dokumen materi maksimal 10 MB.',
-            'dokumen.mimes' => 'Dokumen materi harus berupa PDF, PPTX, DOCX.',
+            'dokumen_materi_1.file' => 'Dokumen materi harus berupa file.',
+            'dokumen_materi_1.max' => 'Dokumen materi 1 tidak boleh lebih dari 10 MB.',
+            'dokumen_materi_1.mimes' => 'Dokumen materi 1 harus berupa file PDF, PPTX, atau DOCX.',
+            'dokumen_materi_2.file' => 'Dokumen materi harus berupa file.',
+            'dokumen_materi_2.max' => 'Dokumen materi 2 tidak boleh lebih dari 10 MB.',
+            'dokumen_materi_2.mimes' => 'Dokumen materi 2 harus berupa file PDF, PPTX, atau DOCX.',
+            'dokumen_materi_3.file' => 'Dokumen materi harus berupa file.',
+            'dokumen_materi_3.max' => 'Dokumen materi 3 tidak boleh lebih dari 10 MB.',
+            'dokumen_materi_3.mimes' => 'Dokumen materi 3 harus berupa file PDF, PPTX, atau DOCX.',
         ];
     }
 

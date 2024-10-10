@@ -60,6 +60,7 @@ use Database\Seeders\Pengaturan_Managemen_Waktu\JadwalNonShiftSeeder;
 use Database\Seeders\Pengaturan_Managemen_Waktu\LokasiKantorSeeder;
 use Database\Seeders\Pengaturan_Managemen_Waktu\NonShiftSeeder;
 use Database\Seeders\Pengaturan_Managemen_Waktu\TipeCutiSeeder;
+use Database\Seeders\Perusahaan\AboutHospitalSeeder;
 use Database\Seeders\Perusahaan\DiklatSeeder;
 use Database\Seeders\Perusahaan\JenisPenilaianSeeder;
 use Database\Seeders\Perusahaan\PelaporanSeeder;
@@ -158,6 +159,7 @@ class DatabaseSeeder extends Seeder
       JenisPenilaianSeeder::class,
       PertanyaanSeeder::class,
       PenilaianSeeder::class,
+      AboutHospitalSeeder::class,
 
       // PengumumanSeeder::class,
       NotifikasiSeeder::class,

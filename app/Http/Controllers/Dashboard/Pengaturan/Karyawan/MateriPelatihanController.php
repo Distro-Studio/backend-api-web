@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Dashboard\Pengaturan\Karyawan;
 
-use Exception;
 use App\Models\Berkas;
 use Illuminate\Support\Str;
 use Illuminate\Http\Response;
@@ -40,7 +39,7 @@ class MateriPelatihanController extends Controller
                     'id' => $pelatihan->id,
                     'judul' => $pelatihan->judul,
                     'deskripsi' => $pelatihan->deskripsi,
-                    'user' => [
+                    'user' =>  [
                         'id' => $pelatihan->created_users->id,
                         'nama' => $pelatihan->created_users->nama,
                         'username' => $pelatihan->created_users->username,
@@ -111,21 +110,19 @@ class MateriPelatihanController extends Controller
 
             $data = $request->validated();
 
-            // Mulai transaksi database
             DB::beginTransaction();
             try {
                 StorageServerHelper::login();
-                $berkasFields = ['dokumen_materi_1', 'dokumen_materi_2', 'dokumen_materi_3'];
-                $berkasIds = [null, null, null];
+                $berkasIds = [
+                    'dokumen_materi_1' => null,
+                    'dokumen_materi_2' => null,
+                    'dokumen_materi_3' => null,
+                ];
 
-                // Cek apakah dokumen ada dan merupakan array
-                if ($request->hasFile('dokumen')) {
-                    $files = $request->file('dokumen');
-
-                    // Iterasi untuk setiap dokumen sesuai jumlahnya, maksimal 3 dokumen
-                    foreach ($files as $index => $file) {
-                        if ($index >= 3) break;
-
+                // Proses penyimpanan berkas satu per satu, sesuai dengan field yang diterima (dokumen_materi_1, dokumen_materi_2, dokumen_materi_3)
+                foreach ($berkasIds as $field => $value) {
+                    if ($request->hasFile($field)) {
+                        $file = $request->file($field);
                         $random_filename = Str::random(20);
                         $dataupload = StorageServerHelper::multipleUploadToServer($file, $random_filename);
 
@@ -134,7 +131,7 @@ class MateriPelatihanController extends Controller
                             'user_id' => $data['user_id'],
                             'file_id' => $dataupload['id_file']['id'],
                             'nama' => $random_filename,
-                            'kategori_berkas_id' => 2,
+                            'kategori_berkas_id' => 5,
                             'status_berkas_id' => 2,
                             'path' => $dataupload['path'],
                             'tgl_upload' => now(),
@@ -143,9 +140,9 @@ class MateriPelatihanController extends Controller
                             'size' => $dataupload['size'],
                         ]);
 
-                        // Simpan ID berkas ke urutan dokumen_materi_1, 2, atau 3
-                        $berkasIds[$index] = $berkas->id;
-                        Log::info('Berkas dokumen ke-' . ($index + 1) . ' berhasil diupload.');
+                        // Simpan ID berkas ke urutan yang sesuai
+                        $berkasIds[$field] = $berkas->id;
+                        Log::info("Berkas dokumen pada kolom {$field} berhasil diupload.");
                     }
                 }
 
@@ -156,9 +153,9 @@ class MateriPelatihanController extends Controller
                     'judul' => $data['judul'],
                     'deskripsi' => $data['deskripsi'],
                     'pj_materi' => $data['user_id'],
-                    'dokumen_materi_1' => $berkasIds[0],
-                    'dokumen_materi_2' => $berkasIds[1],
-                    'dokumen_materi_3' => $berkasIds[2],
+                    'dokumen_materi_1' => $berkasIds['dokumen_materi_1'],
+                    'dokumen_materi_2' => $berkasIds['dokumen_materi_2'],
+                    'dokumen_materi_3' => $berkasIds['dokumen_materi_3'],
                 ]);
 
                 DB::commit();
@@ -285,26 +282,19 @@ class MateriPelatihanController extends Controller
                 StorageServerHelper::login();
                 $berkasIds = [$data_pelatihan->dokumen_materi_1, $data_pelatihan->dokumen_materi_2, $data_pelatihan->dokumen_materi_3];
 
-                // Cek apakah dokumen ada dan merupakan array
-                if ($request->hasFile('dokumen')) {
-                    $files = $request->file('dokumen');
-
-                    // Iterasi untuk setiap dokumen sesuai jumlahnya, maksimal 3 dokumen
-                    foreach ($files as $index => $file) {
-                        if ($index >= 3) break;
-
+                // Iterasi untuk setiap field dokumen yang ada
+                foreach ($berkasFields as $index => $field) {
+                    if ($request->hasFile($field)) {
+                        $file = $request->file($field);
                         $random_filename = Str::random(20);
                         $dataupload = StorageServerHelper::multipleUploadToServer($file, $random_filename);
 
-                        // Simpan data berkas ke tabel berkas
-                        $berkas = Berkas::updateOrCreate(
+                        $berkas = Berkas::create(
                             [
                                 'user_id' => $data_pelatihan->pj_materi,
                                 'nama' => $random_filename,
-                            ],
-                            [
                                 'file_id' => $dataupload['id_file']['id'],
-                                'kategori_berkas_id' => 2,
+                                'kategori_berkas_id' => 5,
                                 'status_berkas_id' => 2,
                                 'path' => $dataupload['path'],
                                 'tgl_upload' => now(),
@@ -313,12 +303,16 @@ class MateriPelatihanController extends Controller
                                 'size' => $dataupload['size'],
                             ]
                         );
+                        $berkasLama = Berkas::find($berkasIds[$index]);
+                        if ($berkasLama) {
+                            $berkasLama->delete();
+                        }
 
                         $berkasIds[$index] = $berkas->id;
-                        Log::info('Berkas dokumen ke-' . ($index + 1) . ' berhasil diupload.');
+                        Log::info('Berkas ' . $field . ' berhasil diupload.');
+                    } else if (is_string($request->input($field))) {
+                        unset($data[$field]);
                     }
-                } else if (is_string($request->input('dokumen'))) {
-                    unset($data['dokumen']);
                 }
 
                 StorageServerHelper::logout();
@@ -340,7 +334,7 @@ class MateriPelatihanController extends Controller
                 ], Response::HTTP_OK);
             } catch (\Exception $e) {
                 DB::rollBack();
-                Log::error('| Materi Pelatihan | - Error function store: ' . $e->getMessage());
+                Log::error('| Materi Pelatihan | - Error function update: ' . $e->getMessage());
                 return response()->json([
                     'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
                     'message' => 'Terjadi kesalahan pada server: ' . $e->getMessage(),

@@ -201,9 +201,10 @@ class DataJadwalController extends Controller
                         }
                     }
                 } else if ($user->data_karyawans->unit_kerjas->jenis_karyawan == 0) {
-                    // Jika user non-shift, gunakan data dari tabel non_shifts atau hari libur
+                    // Jika user non-shift, gunakan data dari tabel non_shifts dan hari libur
                     foreach ($date_range as $date) {
                         $day_of_week = Carbon::createFromFormat('Y-m-d', $date)->dayOfWeek;
+                        $nonShiftForDay = NonShift::where('nama', 'like', "%{$this->getDayName($day_of_week)}%")->first();
 
                         if ($day_of_week == Carbon::SUNDAY) {
                             // Libur pada hari Minggu
@@ -223,11 +224,18 @@ class DataJadwalController extends Controller
                                 'status' => 3 // libur besar
                             ];
                         } else if ($nonShift) {
+                            // $user_schedule_array[$date] = [
+                            //     'id' => $nonShift->id,
+                            //     'nama' => $nonShift->nama,
+                            //     'jam_from' => $nonShift->jam_from,
+                            //     'jam_to' => $nonShift->jam_to,
+                            //     'status' => 2 // non-shift
+                            // ];
                             $user_schedule_array[$date] = [
-                                'id' => $nonShift->id,
-                                'nama' => $nonShift->nama,
-                                'jam_from' => $nonShift->jam_from,
-                                'jam_to' => $nonShift->jam_to,
+                                'id' => $nonShiftForDay->id,
+                                'nama' => $nonShiftForDay->nama,
+                                'jam_from' => $nonShiftForDay->jam_from,
+                                'jam_to' => $nonShiftForDay->jam_to,
                                 'status' => 2 // non-shift
                             ];
                         }
@@ -726,6 +734,33 @@ class DataJadwalController extends Controller
             $dataKaryawan = $user->data_karyawans;
             $karyawanUnitKerja = $dataKaryawan->unit_kerjas->id ?? null;
 
+            $cekShift = Jadwal::where('user_id', $userId)
+                ->whereDate('tgl_mulai', $tanggalMulai)
+                ->first();
+
+            // Jika tidak ada jadwal yang ditemukan dengan tgl_mulai, cek apakah itu shift malam
+            if (!$cekShift) {
+                // Coba cek jadwal dengan tgl_selesai (untuk kasus shift malam)
+                $cekShiftMalam = Jadwal::where('user_id', $userId)
+                    ->whereDate('tgl_selesai', $tanggalMulai)
+                    ->first();
+
+                if ($cekShiftMalam) {
+                    $tglMulai = Carbon::parse($cekShiftMalam->tgl_mulai);
+                    $tglSelesai = Carbon::parse($cekShiftMalam->tgl_selesai);
+
+                    if ($tglMulai->notEqualTo($tglSelesai)) {
+                        // Jika ini adalah shift malam
+                        return response()->json(new WithoutDataResource(
+                            Response::HTTP_BAD_REQUEST,
+                            "Jadwal shift malam untuk karyawan '{$user->nama}' hanya dapat diperbarui pada tanggal mulai {$tglMulai->format('d-m-Y')}."
+                        ), Response::HTTP_BAD_REQUEST);
+                    }
+                } else {
+                    return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data shift jadwal karyawan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+                }
+            }
+
             // Validasi kesamaan unit kerja antara admin dan karyawan kecuali jika admin adalah Super Admin
             if ($admin->nama !== 'Super Admin') {
                 if (!Gate::allows('bypass jadwalKaryawan') && $adminUnitKerja !== $karyawanUnitKerja) {
@@ -816,7 +851,6 @@ class DataJadwalController extends Controller
                 $existingShift = Jadwal::where('user_id', $userId)
                     ->whereDate('tgl_mulai', $tanggalMulai)
                     ->first();
-
                 if ($existingShift) {
                     // If shift_id is null, set tgl_selesai equal to tgl_mulai
                     // if (is_null($shiftId)) {
@@ -858,7 +892,7 @@ class DataJadwalController extends Controller
                     return response()->json(new WithoutDataResource(Response::HTTP_OK, "Data shift jadwal karyawan '{$user->nama}' berhasil diperbarui."), Response::HTTP_OK);
                 } else {
                     DB::rollBack();
-                    return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data shift jadwal karyawan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+                    return response()->json(new WithoutDataResource(Response::HTTP_INTERNAL_SERVER_ERROR, 'Terjadi kesalahan saat memperbarui data shift jadwal karyawan.'), Response::HTTP_INTERNAL_SERVER_ERROR);
                 }
             } catch (\Exception $e) {
                 DB::rollBack();
@@ -957,6 +991,28 @@ class DataJadwalController extends Controller
             $dates[] = $date->format('Y-m-d');
         }
         return $dates;
+    }
+
+    private function getDayName($dayOfWeek)
+    {
+        switch ($dayOfWeek) {
+            case Carbon::MONDAY:
+                return 'Senin';
+            case Carbon::TUESDAY:
+                return 'Selasa';
+            case Carbon::WEDNESDAY:
+                return 'Rabu';
+            case Carbon::THURSDAY:
+                return 'Kamis';
+            case Carbon::FRIDAY:
+                return 'Jumat';
+            case Carbon::SATURDAY:
+                return 'Sabtu';
+            case Carbon::SUNDAY:
+                return 'Minggu';
+                // default:
+                //     return '';
+        }
     }
 
     public function downloadJadwalTemplate()

@@ -32,9 +32,7 @@ class NonShiftController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
-        $non_shift = NonShift::withTrashed()->orderBy('created_at', 'desc');
-
-        $data_non_shift = $non_shift->get();
+        $data_non_shift = NonShift::withTrashed()->orderBy('created_at', 'desc')->get();
         if ($data_non_shift->isEmpty()) {
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data shift tidak ditemukan.'), Response::HTTP_NOT_FOUND);
         }

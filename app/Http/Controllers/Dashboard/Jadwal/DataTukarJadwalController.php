@@ -13,6 +13,7 @@ use App\Helpers\RandomHelper;
 use Illuminate\Http\Response;
 use App\Models\ModulVerifikasi;
 use App\Models\RelasiVerifikasi;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
@@ -38,7 +39,16 @@ class DataTukarJadwalController extends Controller
                 return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Karyawan pengajuan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
             }
 
-            $jadwal = Jadwal::with('shifts')->where('user_id', $userId)->get();
+            $today = Carbon::today('Asia/Jakarta')->format('Y-m-d');
+            $jadwal = Jadwal::with('shifts')
+                ->where('user_id', $userId)
+                ->where(function ($query) use ($today) {
+                    // Filter schedules that start today or in the future, or end today or in the future
+                    $query->where('tgl_mulai', '>=', $today)
+                        ->orWhere('tgl_selesai', '>=', $today);
+                })
+                ->get();
+            // $jadwal = Jadwal::with('shifts')->where('user_id', $userId)->get();
             if ($jadwal->isEmpty()) {
                 return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Jadwal karyawan pengajuan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
             }
@@ -157,7 +167,16 @@ class DataTukarJadwalController extends Controller
                 return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Karyawan ditukar tidak ditemukan.'), Response::HTTP_NOT_FOUND);
             }
 
-            $jadwal = Jadwal::with('shifts')->where('user_id', $userId)->get();
+            $today = Carbon::today('Asia/Jakarta')->format('Y-m-d');
+            $jadwal = Jadwal::with('shifts')
+                ->where('user_id', $userId)
+                ->where(function ($query) use ($today) {
+                    // Filter schedules that start today or in the future, or end today or in the future
+                    $query->where('tgl_mulai', '>=', $today)
+                        ->orWhere('tgl_selesai', '>=', $today);
+                })
+                ->get();
+            // $jadwal = Jadwal::with('shifts')->where('user_id', $userId)->get();
             if ($jadwal->isEmpty()) {
                 return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Jadwal karyawan ditukar tidak ditemukan.'), Response::HTTP_NOT_FOUND);
             }
@@ -194,7 +213,7 @@ class DataTukarJadwalController extends Controller
 
             $limit = $request->input('limit', 10);
 
-            $tukarJadwal = TukarJadwal::query()->orderBy('created_at', 'desc');
+            $tukarJadwal = TukarJadwal::query()->where('acc_user_ditukar', 1)->orderBy('created_at', 'desc');
 
             $filters = $request->all();
 
@@ -557,10 +576,6 @@ class DataTukarJadwalController extends Controller
             $jadwalPengajuan = Jadwal::findOrFail($data['jadwal_pengajuan']);
             $jadwalDitukar = Jadwal::findOrFail($data['jadwal_ditukar']);
 
-            // Konversi tanggal dari string untuk validasi
-            $tglMulaiPengajuan = RandomHelper::convertToDateString($jadwalPengajuan->tgl_mulai);
-            $tglMulaiDitukar = RandomHelper::convertToDateString($jadwalDitukar->tgl_mulai);
-
             // Verifikasi unit kerja
             if ($userPengajuan->data_karyawans->unit_kerjas->id !== $userDitukar->data_karyawans->unit_kerjas->id) {
                 return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Karyawan harus berada di unit kerja yang sama untuk menukar jadwal.'), Response::HTTP_BAD_REQUEST);
@@ -586,14 +601,17 @@ class DataTukarJadwalController extends Controller
                 $statusPenukaranId = 1;
             }
 
-            if (!is_null($jadwalPengajuan->shift_id) && !is_null($jadwalDitukar->shift_id)) {
+            if ($jadwalPengajuan->shift_id != 0 && $jadwalDitukar->shift_id != 0) {
+                // Konversi tanggal dari string untuk validasi
+                $tglMulaiPengajuan = RandomHelper::convertToDateString($jadwalPengajuan->tgl_mulai);
+                $tglMulaiDitukar = RandomHelper::convertToDateString($jadwalDitukar->tgl_mulai);
+
                 // Verifikasi tanggal
                 if ($tglMulaiPengajuan !== $tglMulaiDitukar) {
                     return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Jadwal harus pada tanggal yang sama untuk menukar jadwal.'), Response::HTTP_BAD_REQUEST);
                 }
 
-                // Tukar shift dengan shift
-                // Tukar user_id
+                // Tukar shift dengan shift dengan Tukar user_id
                 $tempUserId = $jadwalPengajuan->user_id;
                 $jadwalPengajuan->user_id = $jadwalDitukar->user_id;
                 $jadwalDitukar->user_id = $tempUserId;
@@ -613,37 +631,50 @@ class DataTukarJadwalController extends Controller
                 $tukarJadwal->save();
 
                 // Buat dan simpan notifikasi
-                $this->createNotifikasiTukarJadwal($verifikatorId, $userPengajuan, $userDitukar, $jadwalPengajuan, $jadwalDitukar);
-            } else if (is_null($jadwalPengajuan->shift_id) && is_null($jadwalDitukar->shift_id)) {
-                // Tukar libur dengan libur
+                $this->createNotifikasiTukarJadwal($userPengajuan, $userDitukar, $jadwalPengajuan, $jadwalDitukar);
+            } else if ($jadwalPengajuan->shift_id == 0 && $jadwalDitukar->shift_id == 0) {
+                // Konversi tanggal dari string untuk validasi
+                $tglMulaiPengajuan = RandomHelper::convertToDateString($jadwalPengajuan->tgl_mulai);
+                $tglMulaiDitukar = RandomHelper::convertToDateString($jadwalDitukar->tgl_mulai);
 
-                // Ambil jadwal user pengajuan pada tanggal libur user ditukar
+                // Tukar user_id pada jadwal libur
                 $jadwalKerjaPengajuan = Jadwal::where('user_id', $userPengajuan->id)
                     ->where('tgl_mulai', $tglMulaiDitukar)
                     ->whereNotNull('shift_id')
                     ->first();
 
-                if (!$jadwalKerjaPengajuan) {
-                    return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Jadwal kerja user pengajuan tidak ditemukan pada tanggal yang diminta.'), Response::HTTP_BAD_REQUEST);
-                }
+                $jadwalKerjaDitukar = Jadwal::where('user_id', $userDitukar->id)
+                    ->where('tgl_mulai', $tglMulaiPengajuan)
+                    ->whereNotNull('shift_id')
+                    ->first();
+                // dd(
+                //     "user pengajuan {$userPengajuan->id}, jadwal kerja yang ada {$jadwalKerjaPengajuan}",
+                //     "user ditukar {$userDitukar->id}, jadwal kerja yang ada {$jadwalKerjaDitukar}"
+                // );
 
-                // Tukar user_id pada jadwal libur
                 $tempUserId = $jadwalPengajuan->user_id;
                 $jadwalPengajuan->user_id = $jadwalDitukar->user_id;
                 $jadwalDitukar->user_id = $tempUserId;
 
                 // Simpan perubahan jadwal libur
-                $jadwalPengajuan->save();
-                $jadwalDitukar->save();
+                // $jadwalPengajuan->save();
+                // $jadwalDitukar->save();
 
-                // Tukar user_id pada jadwal kerja pengajuan
-                $jadwalKerjaPengajuan->user_id = $userDitukar->id;
-                $jadwalKerjaPengajuan->save();
+                if ($jadwalKerjaPengajuan && $jadwalKerjaDitukar) {
+                    // Tukar shift mereka
+                    $tempShiftId = $jadwalKerjaPengajuan->shift_id;
+                    $jadwalKerjaPengajuan->shift_id = $jadwalKerjaDitukar->shift_id;
+                    $jadwalKerjaDitukar->shift_id = $tempShiftId;
 
-                // Tukar user_id pada jadwal libur yang lain
-                $jadwalLiburPengajuan = Jadwal::findOrFail($data['jadwal_pengajuan']);
-                $jadwalLiburPengajuan->user_id = $userDitukar->id;
-                $jadwalLiburPengajuan->save();
+                    // Tukar user_id pada jadwal kerja
+                    $tempUserId = $jadwalKerjaPengajuan->user_id;
+                    $jadwalKerjaPengajuan->user_id = $jadwalKerjaDitukar->user_id;
+                    $jadwalKerjaDitukar->user_id = $tempUserId;
+
+                    // Simpan perubahan jadwal kerja
+                    // $jadwalKerjaPengajuan->save();
+                    // $jadwalKerjaDitukar->save();
+                }
 
                 // Simpan permintaan tukar jadwal
                 $tukarJadwal = new TukarJadwal([
@@ -657,7 +688,7 @@ class DataTukarJadwalController extends Controller
                 $tukarJadwal->save();
 
                 // Buat dan simpan notifikasi
-                $this->createNotifikasiTukarJadwal($verifikatorId, $userPengajuan, $userDitukar, $jadwalPengajuan, $jadwalDitukar);
+                $this->createNotifikasiTukarJadwal($userPengajuan, $userDitukar, $jadwalPengajuan, $jadwalDitukar);
             } else {
                 return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Tidak bisa menukar shift dengan libur atau sebaliknya.'), Response::HTTP_BAD_REQUEST);
             }
@@ -863,6 +894,10 @@ class DataTukarJadwalController extends Controller
                 return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data tukar jadwal tidak ditemukan.'), Response::HTTP_NOT_FOUND);
             }
 
+            if ($tukar_jadwal->acc_user_ditukar != 1) {
+                return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Tukar jadwal tersebut belum diverifikasi oleh karyawan ditukar atau karyawan pengajuan.'), Response::HTTP_BAD_REQUEST);
+            }
+
             // 3. Jika pengguna bukan Super Admin, lakukan pengecekan relasi verifikasi
             if (!Auth::user()->hasRole('Super Admin')) {
                 // Dapatkan relasi_verifikasis, pastikan verifikator memiliki ID user yang sama
@@ -877,10 +912,6 @@ class DataTukarJadwalController extends Controller
                         'message' => "Anda tidak memiliki hak akses untuk verifikasi tukar jadwal tahap 1 dengan modul '{$relasiVerifikasi->modul_verifikasis->label}'.",
                         'relasi_verifikasi' => null,
                     ], Response::HTTP_NOT_FOUND);
-                }
-
-                if ($tukar_jadwal->acc_user_ditukar != 2) {
-                    return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Tukar jadwal tersebut belum diverifikasi oleh karyawan ditukar atau karyawan pengajuan.'), Response::HTTP_BAD_REQUEST);
                 }
 
                 // 4. Dapatkan user pengaju tukar jadwal
@@ -913,7 +944,7 @@ class DataTukarJadwalController extends Controller
                     $tukar_jadwal->alasan = null;
                     $tukar_jadwal->save();
 
-                    $this->createNotifikasiVerifikasiTahap1($verifikatorId, $tukar_jadwal, true);
+                    $this->createNotifikasiVerifikasiTahap1($tukar_jadwal, true);
 
                     return response()->json(new WithoutDataResource(Response::HTTP_OK, "Verifikasi tahap 1 pertukaran jadwal dari '{$tukar_jadwal->user_pengajuans->nama}' telah disetujui."), Response::HTTP_OK);
                 } else {
@@ -926,7 +957,7 @@ class DataTukarJadwalController extends Controller
                     $tukar_jadwal->alasan = $request->input('alasan');
                     $tukar_jadwal->save();
 
-                    $this->createNotifikasiVerifikasiTahap1($verifikatorId, $tukar_jadwal, false);
+                    $this->createNotifikasiVerifikasiTahap1($tukar_jadwal, false);
 
                     return response()->json(new WithoutDataResource(Response::HTTP_OK, "Verifikasi tahap 1 pertukaran jadwal dari '{$tukar_jadwal->user_pengajuans->nama}' telah ditolak."), Response::HTTP_OK);
                 } else {
@@ -956,7 +987,7 @@ class DataTukarJadwalController extends Controller
                 return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data tukar jadwal tidak ditemukan.'), Response::HTTP_NOT_FOUND);
             }
 
-            if ($tukar_jadwal->acc_user_ditukar != 2) {
+            if ($tukar_jadwal->acc_user_ditukar != 1) {
                 return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Tukar jadwal tersebut belum diverifikasi oleh karyawan ditukar atau karyawan pengajuan.'), Response::HTTP_BAD_REQUEST);
             }
 
@@ -1006,29 +1037,25 @@ class DataTukarJadwalController extends Controller
                     $tukar_jadwal->alasan = null;
                     $tukar_jadwal->save();
 
+                    // Hapus lembur jika ada
                     $lemburPengajuan = Lembur::where('user_id', $tukar_jadwal->user_pengajuan)->exists();
                     $lemburDitukar = Lembur::where('user_id', $tukar_jadwal->user_ditukar)->exists();
-
-                    // Hapus lembur jika ada
                     if ($lemburPengajuan || $lemburDitukar) {
                         Lembur::where('user_id', $tukar_jadwal->user_pengajuan)
                             ->orWhere('user_id', $tukar_jadwal->user_ditukar)
                             ->delete();
                     }
 
-                    // 1. get jadwal dulu
+                    // Tukar jadwal
                     $jadwalPengajuan = Jadwal::findOrFail($tukar_jadwal->jadwal_pengajuan);
                     $jadwalDitukar = Jadwal::findOrFail($tukar_jadwal->jadwal_ditukar);
 
-                    // 2. Tukar user_id antara jadwal_pengajuan dan jadwal_ditukar
-                    $tempUserId = $jadwalPengajuan->user_id;
-                    $jadwalPengajuan->user_id = $jadwalDitukar->user_id;
-                    $jadwalDitukar->user_id = $tempUserId;
+                    // Load actual User objects
+                    $userPengajuan = User::findOrFail($tukar_jadwal->user_pengajuan);
+                    $userDitukar = User::findOrFail($tukar_jadwal->user_ditukar);
+                    $this->CreateTukarJadwal($userPengajuan, $userDitukar, $jadwalPengajuan, $jadwalDitukar);
 
-                    $jadwalPengajuan->save();
-                    $jadwalDitukar->save();
-
-                    $this->createNotifikasiVerifikasiTahap2($verifikatorId, $tukar_jadwal, true);
+                    $this->createNotifikasiVerifikasiTahap2($tukar_jadwal, true);
 
                     return response()->json(new WithoutDataResource(Response::HTTP_OK, "Verifikasi tahap 2 pertukaran jadwal dari '{$tukar_jadwal->user_pengajuans->nama}' telah disetujui."), Response::HTTP_OK);
                 } else {
@@ -1041,7 +1068,7 @@ class DataTukarJadwalController extends Controller
                     $tukar_jadwal->alasan = $request->input('alasan');
                     $tukar_jadwal->save();
 
-                    $this->createNotifikasiVerifikasiTahap2($verifikatorId, $tukar_jadwal, false);
+                    $this->createNotifikasiVerifikasiTahap2($tukar_jadwal, false);
 
                     return response()->json(new WithoutDataResource(Response::HTTP_OK, "Verifikasi tahap 2 pertukaran jadwal dari '{$tukar_jadwal->user_pengajuans->nama}' telah ditolak."), Response::HTTP_OK);
                 } else {
@@ -1140,42 +1167,49 @@ class DataTukarJadwalController extends Controller
         }
     }
 
-    private function createNotifikasiTukarJadwal($verifikatorId, $userPengajuan, $userDitukar, $jadwalPengajuan, $jadwalDitukar)
+    private function createNotifikasiTukarJadwal($userPengajuan, $userDitukar, $jadwalPengajuan, $jadwalDitukar)
     {
         try {
+            // Konversi tanggal pengajuan
             $konversiNotif_tgl_mulai = Carbon::parse($jadwalPengajuan->tgl_mulai)->locale('id')->isoFormat('D MMMM YYYY');
-            $userIdsPengajuan = [$userPengajuan->id, $verifikatorId];
-            $userIdsJsonPengajuan = json_encode($userIdsPengajuan);
-            $message = "Jadwal '{$userPengajuan->nama}' berhasil ditukar dengan karyawan '{$userDitukar->nama}' pada tanggal {$konversiNotif_tgl_mulai}.";
+            $message = "'{$userPengajuan->nama}', Jadwal anda telah ditukar dengan karyawan '{$userDitukar->nama}' pada tanggal {$konversiNotif_tgl_mulai}.";
+            $messageSuperAdmin = "Notifikasi untuk Super Admin: Jadwal '{$userPengajuan->nama}' berhasil ditukar dengan karyawan '{$userDitukar->nama}' pada tanggal {$konversiNotif_tgl_mulai}.";
             $timezone = Carbon::now('Asia/Jakarta');
-            // Buat notifikasi untuk user_pengajuan
-            Notifikasi::create([
-                'kategori_notifikasi_id' => 2,
-                'user_id' => $userIdsJsonPengajuan,
-                'message' => $message,
-                'is_read' => false,
-                'is_verifikasi' => true,
-                'created_at' => $timezone,
-            ]);
 
-            $konversiNotif_tgl_mulai_ajuan = Carbon::parse($jadwalDitukar->tgl_mulai)->locale('id')->isoFormat('D MMMM YYYY');
-            $userIdsDitukar = [$userDitukar->id, $verifikatorId];
-            if (!in_array(1, $userIdsDitukar)) {
-                $userIdsDitukar[] = 1;
+            // Kirim notifikasi ke user pengajuan dan Super Admin
+            $userIdsPengajuan = [$userPengajuan->id, 1];
+            foreach ($userIdsPengajuan as $userIdPengajuan) {
+                $messageToSend = $userIdPengajuan === 1 ? $messageSuperAdmin : $message;
+                Notifikasi::create([
+                    'kategori_notifikasi_id' => 2,
+                    'user_id' => $userIdPengajuan,
+                    'message' => $messageToSend,
+                    'is_read' => false,
+                    'is_verifikasi' => true,
+                    'created_at' => $timezone,
+                ]);
             }
-            $userIdsJsonDitukar = json_encode($userIdsDitukar);
-            $messageDitukar = "Jadwal '{$userDitukar->nama}' berhasil ditukar dengan karyawan '{$userPengajuan->nama}' pada tanggal {$konversiNotif_tgl_mulai_ajuan}.";
-            // Buat notifikasi untuk user_ditukar
-            Notifikasi::create([
-                'kategori_notifikasi_id' => 2,
-                'user_id' => $userIdsJsonDitukar,
-                'message' => $messageDitukar,
-                'is_read' => false,
-                'is_verifikasi' => true,
-                'created_at' => $timezone,
-            ]);
+
+            // Konversi tanggal jadwal ditukar
+            $konversiNotif_tgl_mulai_ajuan = Carbon::parse($jadwalDitukar->tgl_mulai)->locale('id')->isoFormat('D MMMM YYYY');
+            $messageDitukar = "'{$userDitukar->nama}', Jadwal anda telah ditukar dengan karyawan '{$userPengajuan->nama}' pada tanggal {$konversiNotif_tgl_mulai_ajuan}.";
+            $messageSuperAdminDitukar = "Notifikasi untuk Super Admin: Jadwal '{$userDitukar->nama}' berhasil ditukar dengan karyawan '{$userPengajuan->nama}' pada tanggal {$konversiNotif_tgl_mulai_ajuan}.";
+
+            // Kirim notifikasi ke user yang ditukar dan Super Admin
+            $userIdsDitukar = [$userDitukar->id, 1];
+            foreach ($userIdsDitukar as $userIdDitukar) {
+                $messageToSend = $userIdDitukar === 1 ? $messageSuperAdminDitukar : $messageDitukar;
+                Notifikasi::create([
+                    'kategori_notifikasi_id' => 2,
+                    'user_id' => $userIdDitukar,
+                    'message' => $messageToSend,
+                    'is_read' => false,
+                    'is_verifikasi' => true,
+                    'created_at' => $timezone,
+                ]);
+            }
         } catch (\Exception $e) {
-            Log::error('| Cuti | - Error saat menampilkan detail data cuti karyawan: ' . $e->getMessage());
+            Log::error('| Tukar Jadwal | - Error saat menampilkan detail data tukar jadwal: ' . $e->getMessage());
             return response()->json([
                 'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
                 'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
@@ -1183,56 +1217,57 @@ class DataTukarJadwalController extends Controller
         }
     }
 
-    private function createNotifikasiVerifikasiTahap1($verifikatorId, $tukarJadwal, $isApproved)
+    private function createNotifikasiVerifikasiTahap1($tukarJadwal, $isApproved)
     {
         try {
             $userPengajuan = $tukarJadwal->user_pengajuans;
             $userDitukar = $tukarJadwal->user_ditukars;
             $timezone = Carbon::now('Asia/Jakarta');
 
+            // Pesan untuk verifikasi tahap 1 (disetujui atau ditolak)
             if ($isApproved) {
                 $messagePengajuan = "Verifikasi tahap 1 untuk pengajuan tukar jadwal '{$userDitukar->nama}' telah disetujui.";
                 $messageDitukar = "Verifikasi tahap 1 untuk pengajuan tukar jadwal dari '{$userPengajuan->nama}' telah disetujui.";
             } else {
                 $messagePengajuan = "Verifikasi tahap 1 untuk pengajuan tukar jadwal '{$userDitukar->nama}' telah ditolak.";
-                $messageDitukar = "Verifikasi tahap 1 untuk pengajuan tukar jadwal dari {$userPengajuan->nama} telah ditolak.";
+                $messageDitukar = "Verifikasi tahap 1 untuk pengajuan tukar jadwal dari '{$userPengajuan->nama}' telah ditolak.";
                 if ($tukarJadwal->alasan) {
                     $messagePengajuan .= " Alasan penolakan: {$tukarJadwal->alasan}.";
                     $messageDitukar .= " Alasan penolakan: {$tukarJadwal->alasan}.";
                 }
             }
 
-            $userIdsPengajuan = [$userPengajuan->id, $verifikatorId];
-            if (!in_array(1, $userIdsPengajuan)) {
-                $userIdsPengajuan[] = 1;
+            // Pesan khusus untuk Super Admin
+            $messageSuperAdminPengajuan = "Notifikasi untuk Super Admin: " . $messagePengajuan;
+            $messageSuperAdminDitukar = "Notifikasi untuk Super Admin: " . $messageDitukar;
+
+            // Kirim notifikasi ke user pengajuan dan Super Admin (user_id = 1)
+            $userIdsPengajuan = [$userPengajuan->id, 1];
+            foreach ($userIdsPengajuan as $userIdPengajuan) {
+                $message = $userIdPengajuan === 1 ? $messageSuperAdminPengajuan : $messagePengajuan;
+                Notifikasi::create([
+                    'kategori_notifikasi_id' => 2,
+                    'user_id' => $userIdPengajuan,
+                    'message' => $message,
+                    'is_read' => false,
+                    'is_verifikasi' => true,
+                    'created_at' => $timezone,
+                ]);
             }
-            $userIdsJsonPengajuan = json_encode($userIdsPengajuan);
 
-            $userIdsDitukar = [$userDitukar->id, $verifikatorId];
-            if (!in_array(1, $userIdsDitukar)) {
-                $userIdsDitukar[] = 1;
+            // Kirim notifikasi ke user yang ditukar dan Super Admin (user_id = 1)
+            $userIdsDitukar = [$userDitukar->id, 1];
+            foreach ($userIdsDitukar as $userIdDitukar) {
+                $message = $userIdDitukar === 1 ? $messageSuperAdminDitukar : $messageDitukar;
+                Notifikasi::create([
+                    'kategori_notifikasi_id' => 2,
+                    'user_id' => $userIdDitukar,
+                    'message' => $message,
+                    'is_read' => false,
+                    'is_verifikasi' => true,
+                    'created_at' => $timezone,
+                ]);
             }
-            $userIdsJsonDitukar = json_encode($userIdsDitukar);
-
-            // Notifikasi untuk pengguna yang mengajukan
-            Notifikasi::create([
-                'kategori_notifikasi_id' => 2,
-                'user_id' => $userIdsJsonPengajuan,
-                'message' => $messagePengajuan,
-                'is_read' => false,
-                'is_verifikasi' => true,
-                'created_at' => $timezone,
-            ]);
-
-            // Notifikasi untuk pengguna yang ditukar jadwalnya
-            Notifikasi::create([
-                'kategori_notifikasi_id' => 2,
-                'user_id' => $userIdsJsonDitukar,
-                'message' => $messageDitukar,
-                'is_read' => false,
-                'is_verifikasi' => true,
-                'created_at' => $timezone,
-            ]);
         } catch (\Exception $e) {
             Log::error('| Tukar Jadwal | - Error function createNotifikasiVerifikasiTahap1: ' . $e->getMessage());
             return response()->json([
@@ -1242,13 +1277,14 @@ class DataTukarJadwalController extends Controller
         }
     }
 
-    private function createNotifikasiVerifikasiTahap2($verifikatorId, $tukarJadwal, $isApproved)
+    private function createNotifikasiVerifikasiTahap2($tukarJadwal, $isApproved)
     {
         try {
             $userPengajuan = $tukarJadwal->user_pengajuans;
             $userDitukar = $tukarJadwal->user_ditukars;
             $timezone = Carbon::now('Asia/Jakarta');
 
+            // Pesan untuk verifikasi tahap 2 (disetujui atau ditolak)
             if ($isApproved) {
                 $messagePengajuan = "Verifikasi tahap 2 untuk pengajuan tukar jadwal '{$userDitukar->nama}' telah disetujui.";
                 $messageDitukar = "Verifikasi tahap 2 untuk pengajuan tukar jadwal dari '{$userPengajuan->nama}' telah disetujui.";
@@ -1261,43 +1297,130 @@ class DataTukarJadwalController extends Controller
                 }
             }
 
-            $userIdsPengajuan = [$userPengajuan->id, $verifikatorId];
-            if (!in_array(1, $userIdsPengajuan)) {
-                $userIdsPengajuan[] = 1;
+            // Pesan khusus untuk Super Admin
+            $messageSuperAdminPengajuan = "Notifikasi untuk Super Admin: " . $messagePengajuan;
+            $messageSuperAdminDitukar = "Notifikasi untuk Super Admin: " . $messageDitukar;
+
+            // Kirim notifikasi ke user pengajuan dan Super Admin (user_id = 1)
+            $userIdsPengajuan = [$userPengajuan->id, 1];
+            foreach ($userIdsPengajuan as $userIdPengajuan) {
+                $message = $userIdPengajuan === 1 ? $messageSuperAdminPengajuan : $messagePengajuan;
+                Notifikasi::create([
+                    'kategori_notifikasi_id' => 2,
+                    'user_id' => $userIdPengajuan,
+                    'message' => $message,
+                    'is_read' => false,
+                    'created_at' => $timezone,
+                ]);
             }
-            $userIdsJsonPengajuan = json_encode($userIdsPengajuan);
 
-            $userIdsDitukar = [$userDitukar->id, $verifikatorId];
-            if (!in_array(1, $userIdsDitukar)) {
-                $userIdsDitukar[] = 1;
+            // Kirim notifikasi ke user yang ditukar dan Super Admin (user_id = 1)
+            $userIdsDitukar = [$userDitukar->id, 1];
+            foreach ($userIdsDitukar as $userIdDitukar) {
+                $message = $userIdDitukar === 1 ? $messageSuperAdminDitukar : $messageDitukar;
+                Notifikasi::create([
+                    'kategori_notifikasi_id' => 2,
+                    'user_id' => $userIdDitukar,
+                    'message' => $message,
+                    'is_read' => false,
+                    'created_at' => $timezone,
+                ]);
             }
-            $userIdsJsonDitukar = json_encode($userIdsDitukar);
-
-            // Notifikasi untuk pengguna yang mengajukan
-            Notifikasi::create([
-                'kategori_notifikasi_id' => 2,
-                'user_id' => $userIdsJsonPengajuan,
-                'message' => $messagePengajuan,
-                'is_read' => false,
-                'is_verifikasi' => true,
-                'created_at' => $timezone,
-            ]);
-
-            // Notifikasi untuk pengguna yang ditukar jadwalnya
-            Notifikasi::create([
-                'kategori_notifikasi_id' => 2,
-                'user_id' => $userIdsJsonDitukar,
-                'message' => $messageDitukar,
-                'is_read' => false,
-                'is_verifikasi' => true,
-                'created_at' => $timezone,
-            ]);
         } catch (\Exception $e) {
             Log::error('| Tukar Jadwal | - Error function createNotifikasiVerifikasiTahap2: ' . $e->getMessage());
             return response()->json([
                 'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
                 'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    private function CreateTukarJadwal($userPengajuan, $userDitukar, $jadwalPengajuan, $jadwalDitukar)
+    {
+        // Jika shift_id bukan libur (tidak sama dengan 0)
+        if ($jadwalPengajuan->shift_id != 0 && $jadwalDitukar->shift_id != 0) {
+            $tglMulaiPengajuan = RandomHelper::convertToDateString($jadwalPengajuan->tgl_mulai);
+            $tglMulaiDitukar = RandomHelper::convertToDateString($jadwalDitukar->tgl_mulai);
+
+            // Jika salah satu shift adalah shift malam (shift_id == 3)
+            if ($jadwalPengajuan->shift_id == 3 || $jadwalDitukar->shift_id == 3) {
+                $tanggalMulaiPengajuan = Carbon::createFromFormat('Y-m-d', $jadwalPengajuan->tgl_mulai);
+                $tanggalMulaiDitukar = Carbon::createFromFormat('Y-m-d', $jadwalDitukar->tgl_mulai);
+
+                // Handle pengajuan shift malam
+                if ($jadwalPengajuan->shift_id == 3) {
+                    $nextDay = $tanggalMulaiPengajuan->copy()->addDay();
+                    $nextDayShift = Jadwal::where('user_id', $userDitukar->id)
+                        ->whereDate('tgl_mulai', $nextDay)
+                        ->first();
+                    if ($nextDayShift) {
+                        // Hapus jadwal hari berikutnya jika ada
+                        $nextDayShift->delete();
+                    }
+                }
+
+                // Handle tukar shift malam
+                if ($jadwalDitukar->shift_id == 3) {
+                    $nextDay = $tanggalMulaiDitukar->copy()->addDay();
+                    $nextDayShift = Jadwal::where('user_id', $userPengajuan->id)
+                        ->whereDate('tgl_mulai', $nextDay)
+                        ->first();
+                    if ($nextDayShift) {
+                        // Hapus jadwal hari berikutnya jika ada
+                        $nextDayShift->delete();
+                    }
+                }
+            }
+
+            // Tukar user_id
+            $tempUserId = $jadwalPengajuan->user_id;
+            $jadwalPengajuan->user_id = $jadwalDitukar->user_id;
+            $jadwalDitukar->user_id = $tempUserId;
+            $jadwalPengajuan->save();
+            $jadwalDitukar->save();
+        }
+        // Jika keduanya libur (shift_id == 0)
+        else if ($jadwalPengajuan->shift_id == 0 && $jadwalDitukar->shift_id == 0) {
+            $tglMulaiPengajuan = RandomHelper::convertToDateString($jadwalPengajuan->tgl_mulai);
+            $tglMulaiDitukar = RandomHelper::convertToDateString($jadwalDitukar->tgl_mulai);
+
+            $jadwalKerjaPengajuan = Jadwal::where('user_id', $userPengajuan->id)
+                ->where('tgl_mulai', $tglMulaiDitukar)
+                ->whereNotNull('shift_id')
+                ->first();
+
+            $jadwalKerjaDitukar = Jadwal::where('user_id', $userDitukar->id)
+                ->where('tgl_mulai', $tglMulaiPengajuan)
+                ->whereNotNull('shift_id')
+                ->first();
+
+            // dd(
+            //     "user pengajuan {$userPengajuan->id}, jadwal kerja yang ada {$jadwalKerjaPengajuan}",
+            //     "user ditukar {$userDitukar->id}, jadwal kerja yang ada {$jadwalKerjaDitukar}"
+            // );
+
+            // Tukar user_id pada jadwal libur
+            $tempUserId = $jadwalPengajuan->user_id;
+            $jadwalPengajuan->user_id = $jadwalDitukar->user_id;
+            $jadwalDitukar->user_id = $tempUserId;
+            $jadwalPengajuan->save();
+            $jadwalDitukar->save();
+
+            if ($jadwalKerjaPengajuan && $jadwalKerjaDitukar) {
+                // Tukar shift mereka
+                $tempShiftId = $jadwalKerjaPengajuan->shift_id;
+                $jadwalKerjaPengajuan->shift_id = $jadwalKerjaDitukar->shift_id;
+                $jadwalKerjaDitukar->shift_id = $tempShiftId;
+
+                // Tukar user_id pada jadwal kerja
+                $tempUserId = $jadwalKerjaPengajuan->user_id;
+                $jadwalKerjaPengajuan->user_id = $jadwalKerjaDitukar->user_id;
+                $jadwalKerjaDitukar->user_id = $tempUserId;
+                $jadwalKerjaPengajuan->save();
+                $jadwalKerjaDitukar->save();
+            }
+        } else {
+            return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Tidak bisa menukar shift dengan libur atau sebaliknya.'), Response::HTTP_BAD_REQUEST);
         }
     }
 }

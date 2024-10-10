@@ -421,7 +421,7 @@ class DataLemburController extends Controller
             $successMessage = "Lembur karyawan '{$dataLembur->users->nama}' berhasil ditambahkan.";
 
             // Buat dan simpan notifikasi
-            $this->createNotifikasiLembur($verifikatorId, $dataLembur);
+            $this->createNotifikasiLembur($dataLembur);
 
             return response()->json(new LemburJadwalResource(Response::HTTP_OK, $successMessage, $dataLembur), Response::HTTP_OK);
         } catch (\Exception $e) {
@@ -615,29 +615,35 @@ class DataLemburController extends Controller
         }
     }
 
-    private function createNotifikasiLembur($verifikatorId, $dataLembur)
+    private function createNotifikasiLembur($dataLembur)
     {
         try {
             $timeString = RandomHelper::convertToTimeString($dataLembur->durasi);
             $durasi = RandomHelper::convertTimeStringToSeconds($timeString);
             $durasi_jam = RandomHelper::convertToHoursMinutes($durasi);
 
-            $userIds = [$dataLembur->user_id, $verifikatorId];
-            if (!in_array(1, $userIds)) {
-                $userIds[] = 1;
+            // Pesan untuk karyawan terkait
+            $messageForUser = "{$dataLembur->users->nama}, Anda mendapatkan pengajuan lembur dengan durasi {$durasi_jam}.";
+
+            // Pesan untuk Super Admin
+            $messageForSuperAdmin = "Notifikasi untuk Super Admin: {$dataLembur->users->nama} mengajukan lembur dengan durasi {$durasi_jam}.";
+
+            // Daftar userId yang akan menerima notifikasi (karyawan dan Super Admin)
+            $userIds = [$dataLembur->user_id, 1];
+            foreach ($userIds as $userId) {
+                // Tentukan pesan berdasarkan user
+                $message = $userId === 1 ? $messageForSuperAdmin : $messageForUser;
+
+                // Buat notifikasi untuk user atau Super Admin
+                Notifikasi::create([
+                    'kategori_notifikasi_id' => 3,
+                    'user_id' => $userId,
+                    'message' => $message,
+                    'is_read' => false,
+                    'is_verifikasi' => true,
+                    'created_at' => Carbon::now('Asia/Jakarta'),
+                ]);
             }
-            $userIdsJson = json_encode($userIds);
-
-            $message = "{$dataLembur->users->nama}, mendapatkan pengajuan lembur dengan durasi {$durasi_jam}.";
-
-            Notifikasi::create([
-                'kategori_notifikasi_id' => 3,
-                'user_id' => $userIdsJson, // Penerima notifikasi
-                'message' => $message,
-                'is_read' => false,
-                'is_verifikasi' => true,
-                'created_at' => Carbon::now('Asia/Jakarta'),
-            ]);
         } catch (\Exception $e) {
             Log::error('| Lembur | - Error saat membuat notifikasi lembur karyawan: ' . $e->getMessage());
             return response()->json([

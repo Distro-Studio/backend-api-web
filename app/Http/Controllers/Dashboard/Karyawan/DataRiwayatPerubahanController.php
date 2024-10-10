@@ -408,7 +408,7 @@ class DataRiwayatPerubahanController extends Controller
 
                 // Lakukan pembaruan data pada tabel asli
                 $this->updateOriginalData($riwayat);
-                $this->createNotifikasiPerubahan($verifikatorId, $riwayat, 'Disetujui');
+                $this->createNotifikasiPerubahan($riwayat, 'Disetujui');
 
                 return response()->json(new WithoutDataResource(Response::HTTP_OK, "Verifikasi untuk riwayat perubahan '{$riwayat->kolom}' telah disetujui."), Response::HTTP_OK);
             } else {
@@ -422,7 +422,8 @@ class DataRiwayatPerubahanController extends Controller
                 $riwayat->verifikator_1 = Auth::id();
                 $riwayat->alasan = $request->input('alasan');
                 $riwayat->save();
-                $this->createNotifikasiPerubahan($verifikatorId, $riwayat, 'Ditolak');
+
+                $this->createNotifikasiPerubahan($riwayat, 'Ditolak');
 
                 return response()->json(new WithoutDataResource(Response::HTTP_OK, "Verifikasi untuk riwayat perubahan '{$riwayat->kolom}' telah ditolak."), Response::HTTP_OK);
             } else {
@@ -522,24 +523,33 @@ class DataRiwayatPerubahanController extends Controller
         }
     }
 
-    private function createNotifikasiPerubahan($verifikatorId, $riwayat, $status)
+    private function createNotifikasiPerubahan($riwayat, $status)
     {
-        $statusText = $status === 'Disetujui' ? 'Disetujui' : 'Ditolak';
-        $message = "Perubahan data anda telah '{$statusText}', silahkan lakukan cek data terbaru anda.";
+        try {
+            $statusText = $status === 'Disetujui' ? 'Disetujui' : 'Ditolak';
+            $users = $riwayat->data_karyawans->users;
 
-        $userIds = [$riwayat->data_karyawans->user_id, $verifikatorId];
-        if (!in_array(1, $userIds)) {
-            $userIds[] = 1;
+            $message = "Perubahan data '{$users->nama}' telah '{$statusText}', silahkan lakukan cek data terbaru anda.";
+            $messageSuperAdmin = "Notifikasi untuk Super Admin: Perubahan data '{$users->nama}' telah '{$statusText}'.";
+
+            $userIds = [$users->id, 1]; // Daftar user_id, termasuk user dan Super Admin
+
+            foreach ($userIds as $userId) {
+                $messageToSend = $userId === 1 ? $messageSuperAdmin : $message;
+                Notifikasi::create([
+                    'kategori_notifikasi_id' => 11,
+                    'user_id' => $userId,
+                    'message' => $messageToSend,
+                    'is_read' => false,
+                    'created_at' => Carbon::now('Asia/Jakarta'),
+                ]);
+            }
+        } catch (\Exception $e) {
+            Log::error('| Perubahan Data | - Error function createNotifikasiPerubahan: ' . $e->getMessage());
+            return response()->json([
+                'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
+                'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
-        $userIdsJson = json_encode($userIds);
-
-        // Buat notifikasi untuk user yang terkait dengan perubahan data
-        Notifikasi::create([
-            'kategori_notifikasi_id' => 11,
-            'user_id' => $userIdsJson,
-            'message' => $message,
-            'is_read' => false,
-            'created_at' => Carbon::now('Asia/Jakarta'),
-        ]);
     }
 }

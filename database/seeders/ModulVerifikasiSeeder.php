@@ -36,7 +36,7 @@ class ModulVerifikasiSeeder extends Seeder
             ],
             [
                 'label' => 'Diklat Eksternal',
-                'max_order' => 1
+                'max_order' => 2
             ]
         ];
 

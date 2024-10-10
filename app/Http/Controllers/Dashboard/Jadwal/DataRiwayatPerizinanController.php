@@ -445,7 +445,7 @@ class DataRiwayatPerizinanController extends Controller
                         ->update(['status_reward_presensi' => false]);
 
                     // Buat dan simpan notifikasi
-                    $this->createNotifikasiIzin($verifikatorId, $riwayat_izin, 'Disetujui');
+                    $this->createNotifikasiIzin($riwayat_izin, 'Disetujui');
 
                     return response()->json(new WithoutDataResource(Response::HTTP_OK, "Verifikasi perizinan dari '{$riwayat_izin->users->nama}' telah disetujui."), Response::HTTP_OK);
                 } else {
@@ -459,7 +459,7 @@ class DataRiwayatPerizinanController extends Controller
                     $riwayat_izin->save();
 
                     // Buat dan simpan notifikasi
-                    $this->createNotifikasiIzin($verifikatorId, $riwayat_izin, 'Ditolak');
+                    $this->createNotifikasiIzin($riwayat_izin, 'Ditolak');
 
                     return response()->json(new WithoutDataResource(Response::HTTP_OK, "Verifikasi perizinan dari '{$riwayat_izin->users->nama}' telah ditolak."), Response::HTTP_OK);
                 } else {
@@ -477,33 +477,33 @@ class DataRiwayatPerizinanController extends Controller
         }
     }
 
-    private function createNotifikasiIzin($verifikatorId, $riwayat_izin, $status)
+    private function createNotifikasiIzin($riwayat_izin, $status)
     {
         try {
-            $statusText = $status === 'Disetujui' ? 'Disetujui' : 'Ditolak';
-            $konversiTgl = Carbon::parse(RandomHelper::convertToDateString($riwayat_izin->created_at))->locale('id')->isoFormat('D MMMM YYYY');
-            $message = "Pengajuan perizinan Anda pada tanggal '{$konversiTgl}' telah '{$statusText}'.";
+            $statusText = $status === 'Disetujui' ? 'disetujui' : 'ditolak';
+            $penerima_notif = $riwayat_izin->users->nama;
 
-            $userIds = [$riwayat_izin->user_id, $verifikatorId];
-            if (!in_array(1, $userIds)) {
-                $userIds[] = 1;
+            // Pesan untuk karyawan terkait
+            $messageForUser = "Pengajuan izin dari '{$penerima_notif}' untuk tanggal '{$riwayat_izin->tgl_izin}' telah {$statusText}.";
+
+            // Pesan untuk Super Admin
+            $messageForSuperAdmin = "Notifikasi untuk Super Admin: Pengajuan izin dari '{$penerima_notif}' untuk tanggal '{$riwayat_izin->tgl_izin}' telah {$statusText}.";
+
+            $userIds = [$riwayat_izin->user_id, 1];
+            foreach ($userIds as $userId) {
+                $message = $userId === 1 ? $messageForSuperAdmin : $messageForUser;
+                Notifikasi::create([
+                    'kategori_notifikasi_id' => 10, // Kategori notifikasi izin
+                    'user_id' => $userId,
+                    'message' => $message,
+                    'is_read' => false,
+                    'created_at' => Carbon::now('Asia/Jakarta'),
+                ]);
+
+                Log::info('Notifikasi untuk user_id ' . $userId . ' berhasil dikirim.');
             }
-            $userIdsJson = json_encode($userIds);
-
-            // Buat notifikasi untuk user yang mengajukan izin
-            Notifikasi::create([
-                'kategori_notifikasi_id' => 10,
-                'user_id' => $userIdsJson,
-                'message' => $message,
-                'is_read' => false,
-                'created_at' => Carbon::now('Asia/Jakarta'),
-            ]);
         } catch (\Exception $e) {
-            Log::error('| Riwayat Izin | - Error saat membuat notifikasi perizinan karyawan: ' . $e->getMessage());
-            return response()->json([
-                'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
-                'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
-            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+            Log::error('| Notifikasi Izin | - Error saat mengirim notifikasi: ' . $e->getMessage());
         }
     }
 }

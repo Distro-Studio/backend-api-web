@@ -79,7 +79,7 @@ class StorageServerHelper
 	public static function multipleUploadToServer($file, $filename = 'File Upload')
 	{
 		self::login();
-		self::initDomain(); // Ensure domain is initialized
+		self::initDomain();
 
 		$responseupload = Http::withHeaders([
 			'Authorization' => 'Bearer ' . self::$token,

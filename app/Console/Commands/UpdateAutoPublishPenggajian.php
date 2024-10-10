@@ -70,7 +70,7 @@ class UpdateAutoPublishPenggajian extends Command
                         // Kirim notifikasi ke user terkait
                         $penggajians = Penggajian::where('riwayat_penggajian_id', $riwayatPenggajian->id)->get();
                         foreach ($penggajians as $penggajian) {
-                            $this->createNotifikasiPenggajian($penggajian, $currentDate->locale('id')->isoFormat('MMMM Y'));
+                            $this->createNotifikasiPenggajianPublish($penggajian, $currentDate->locale('id')->isoFormat('MMMM Y'));
                         }
                     } catch (\Exception $e) {
                         DB::rollBack();
@@ -83,21 +83,33 @@ class UpdateAutoPublishPenggajian extends Command
         $this->info('Penggajian berhasil dipublikasikan secara otomatis.');
     }
 
-    private function createNotifikasiPenggajian($penggajian, $periode)
+    private function createNotifikasiPenggajianPublish($penggajian, $periode)
     {
         // Pastikan penggajian memiliki relasi yang valid ke data_karyawans
         if ($penggajian->data_karyawans && $penggajian->data_karyawans->user) {
             $user = $penggajian->data_karyawans->user;
 
+            // Pesan untuk user biasa
             $message = "Penggajian untuk periode {$periode} telah dipublikasikan. Silakan cek slip gaji Anda.";
 
-            // Buat notifikasi untuk karyawan yang bersangkutan
-            Notifikasi::create([
-                'kategori_notifikasi_id' => 5, // Sesuaikan dengan kategori notifikasi yang sesuai
-                'user_id' => $user->id, // Penerima notifikasi
-                'message' => $message,
-                'is_read' => false,
-            ]);
+            // Pesan khusus untuk Super Admin
+            $messageSuperAdmin = "Notifikasi untuk Super Admin: Penggajian untuk karyawan pada periode {$periode} telah dipublikasikan.";
+
+            $userIds = [$user->id, 1]; // Daftar user_id, termasuk user dan Super Admin
+
+            foreach ($userIds as $userId) {
+                // Jika user_id adalah 1 (Super Admin), gunakan pesan khusus
+                $messageToSend = $userId === 1 ? $messageSuperAdmin : $message;
+
+                // Buat notifikasi untuk user atau Super Admin
+                Notifikasi::create([
+                    'kategori_notifikasi_id' => 5, // Sesuaikan dengan kategori notifikasi yang sesuai
+                    'user_id' => $userId,
+                    'message' => $messageToSend,
+                    'is_read' => false,
+                    'created_at' => Carbon::now('Asia/Jakarta'),
+                ]);
+            }
         }
     }
 }

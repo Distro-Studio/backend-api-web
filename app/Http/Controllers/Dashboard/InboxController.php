@@ -13,7 +13,7 @@ class InboxController extends Controller
     public function calculatedUnread()
     {
         $user = Auth::user();
-        $unreadCount = Notifikasi::whereJsonContains('user_id', $user->id)
+        $unreadCount = Notifikasi::where('user_id', $user->id)
             ->where('is_read', false)
             ->count();
 
@@ -28,11 +28,12 @@ class InboxController extends Controller
     {
         $user = Auth::user();
         if ($user->nama === 'Super Admin' || $user->id === 1) {
-            $notifikasi = Notifikasi::orderBy('is_read', 'asc')
+            $notifikasi = Notifikasi::where('user_id', $user->id)
+                ->orderBy('is_read', 'asc')
                 ->orderBy('created_at', 'desc')
                 ->get();
         } else {
-            $notifikasi = Notifikasi::whereJsonContains('user_id', $user->id)
+            $notifikasi = Notifikasi::where('user_id', $user->id)
                 ->orderBy('is_read', 'asc')
                 ->orderBy('created_at', 'desc')
                 ->get();
@@ -87,7 +88,7 @@ class InboxController extends Controller
     {
         $user = Auth::user();
         $notifikasi = Notifikasi::where('id', $id)
-            ->whereJsonContains('user_id', $user->id)
+            ->where('user_id', $user->id)
             ->first();
 
         if (!$notifikasi) {
@@ -120,7 +121,7 @@ class InboxController extends Controller
     public function destroyRead()
     {
         $user = Auth::user();
-        $deletedCount = Notifikasi::whereJsonContains('user_id', $user->id)
+        $deletedCount = Notifikasi::where('user_id', $user->id)
             ->where('is_read', true)
             ->delete();
 

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Dashboard\Jadwal;
 
 use Carbon\Carbon;
 use App\Models\Cuti;
+use App\Models\User;
 use App\Models\Jadwal;
 use App\Models\Lembur;
 use App\Models\TipeCuti;
@@ -446,7 +447,7 @@ class DataCutiController extends Controller
                                 $jadwalPengajuan->user_id = $tukarJadwal->user_pengajuan;
                                 $jadwalPengajuan->save();
 
-                                $this->createNotifikasiJadwalKembali($verifikatorId, $jadwalPengajuan->user_id, $jadwalPengajuan->id);
+                                $this->createNotifikasiJadwalKembali($jadwalPengajuan->user_id, $jadwalPengajuan->id);
                             }
 
                             // Kembalikan user_id dari jadwal_ditukar ke user_ditukar
@@ -455,7 +456,7 @@ class DataCutiController extends Controller
                                 $jadwalDitukar->user_id = $tukarJadwal->user_ditukar;
                                 $jadwalDitukar->save();
 
-                                $this->createNotifikasiJadwalKembali($verifikatorId, $jadwalDitukar->user_id, $jadwalDitukar->id);
+                                $this->createNotifikasiJadwalKembali($jadwalDitukar->user_id, $jadwalDitukar->id);
                             }
 
                             // Hapus tukar jadwal setelah dikembalikan
@@ -498,19 +499,19 @@ class DataCutiController extends Controller
             $konversiNotif_tgl_from = Carbon::parse($dataCuti->tgl_from)->locale('id')->isoFormat('D MMMM YYYY');
             $konversiNotif_tgl_to = Carbon::parse($dataCuti->tgl_to)->locale('id')->isoFormat('D MMMM YYYY');
 
-            $userIdsArray = [$dataCuti->user_id, $verifikatorId];
-            if (!in_array(1, $userIdsArray)) {
-                $userIdsArray[] = 1;
+            $userIds = [$dataCuti->user_id, $verifikatorId];
+
+            foreach ($userIds as $userId) {
+                Notifikasi::create([
+                    'kategori_notifikasi_id' => 1,
+                    'user_id' => $userId,
+                    'message' => "'{$dataCuti->users->nama}', mendapatkan cuti {$dataCuti->tipe_cutis->nama} dengan durasi {$dataCuti->durasi} hari yang dimulai pada {$konversiNotif_tgl_from} s/d {$konversiNotif_tgl_to}.",
+                    'is_read' => false,
+                    'is_verifikasi' => true,
+                    'created_at' => Carbon::now('Asia/Jakarta'),
+                ]);
             }
-            // Menyimpan notifikasi ke tabel notifikasis
-            Notifikasi::create([
-                'kategori_notifikasi_id' => 1,
-                'user_id' => json_encode($userIdsArray),
-                'message' => "'{$dataCuti->users->nama}', mendapatkan cuti {$dataCuti->tipe_cutis->nama} dengan durasi {$dataCuti->durasi} hari yang dimulai pada {$konversiNotif_tgl_from} s/d {$konversiNotif_tgl_to}.",
-                'is_read' => false,
-                'is_verifikasi' => true,
-                'created_at' => Carbon::now('Asia/Jakarta'),
-            ]);
+
 
             return response()->json(new CutiJadwalResource(Response::HTTP_OK, $message, $dataCuti), Response::HTTP_OK);
         } catch (\Exception $e) {
@@ -809,7 +810,7 @@ class DataCutiController extends Controller
                     $cuti->save();
 
                     // Buat dan simpan notifikasi
-                    $this->createNotifikasiCutiTahap1($verifikatorId, $cuti, 'Disetujui');
+                    $this->createNotifikasiCutiTahap1($cuti, 'Disetujui');
 
                     // Cek apakah cuti_administratif pada tipe_cutis adalah true atau false
                     if (!$cuti->tipe_cutis->cuti_administratif) {
@@ -836,7 +837,7 @@ class DataCutiController extends Controller
                     $cuti->save();
 
                     // Buat dan simpan notifikasi
-                    $this->createNotifikasiCutiTahap1($verifikatorId, $cuti, 'Ditolak');
+                    $this->createNotifikasiCutiTahap1($cuti, 'Ditolak');
 
 
                     return response()->json(new WithoutDataResource(Response::HTTP_OK, "Verifikasi tahap 1 untuk Cuti '{$cuti->tipe_cutis->nama}' telah ditolak."), Response::HTTP_OK);
@@ -939,7 +940,7 @@ class DataCutiController extends Controller
                                     $jadwalPengajuan->user_id = $tukarJadwal->user_pengajuan;
                                     $jadwalPengajuan->save();
 
-                                    $this->createNotifikasiJadwalKembali($verifikatorId, $jadwalPengajuan->user_id, $jadwalPengajuan->id);
+                                    $this->createNotifikasiJadwalKembali($jadwalPengajuan->user_id, $jadwalPengajuan->id);
                                 }
 
                                 // Kembalikan user_id dari jadwal_ditukar ke user_ditukar
@@ -948,7 +949,7 @@ class DataCutiController extends Controller
                                     $jadwalDitukar->user_id = $tukarJadwal->user_ditukar;
                                     $jadwalDitukar->save();
 
-                                    $this->createNotifikasiJadwalKembali($verifikatorId, $jadwalDitukar->user_id, $jadwalDitukar->id);
+                                    $this->createNotifikasiJadwalKembali($jadwalDitukar->user_id, $jadwalDitukar->id);
                                 }
 
                                 // Hapus tukar jadwal setelah dikembalikan
@@ -963,7 +964,7 @@ class DataCutiController extends Controller
                         }
                     }
 
-                    $this->createNotifikasiCutiTahap2($verifikatorId, $cuti, 'Disetujui');
+                    $this->createNotifikasiCutiTahap2($cuti, 'Disetujui');
 
                     return response()->json(new WithoutDataResource(Response::HTTP_OK, "Verifikasi tahap 2 untuk Cuti '{$cuti->tipe_cutis->nama}' telah disetujui."), Response::HTTP_OK);
                 } else {
@@ -976,7 +977,7 @@ class DataCutiController extends Controller
                     $cuti->alasan = $request->input('alasan');
                     $cuti->save();
 
-                    $this->createNotifikasiCutiTahap2($verifikatorId, $cuti, 'Ditolak');
+                    $this->createNotifikasiCutiTahap2($cuti, 'Ditolak');
 
                     return response()->json(new WithoutDataResource(Response::HTTP_OK, "Verifikasi tahap 2 untuk Cuti '{$cuti->tipe_cutis->nama}' telah ditolak."), Response::HTTP_OK);
                 } else {
@@ -994,28 +995,33 @@ class DataCutiController extends Controller
         }
     }
 
-    private function createNotifikasiCutiTahap1($verifikatorId, $cuti, $status)
+    private function createNotifikasiCutiTahap1($cuti, $status)
     {
         try {
             $statusText = $status === 'Disetujui' ? 'Disetujui' : 'Ditolak';
             $penerima_notif = $cuti->users->nama;
             $konversiTgl = Carbon::parse(RandomHelper::convertToDateString($cuti->tgl_mulai))->locale('id')->isoFormat('D MMMM YYYY');
-            $message = "Pengajuan cuti '{$cuti->tipe_cutis->nama}' dari '{$penerima_notif}' pada tanggal '{$konversiTgl}' telah '{$statusText}' tahap 1.";
 
-            $userIds = [$cuti->user_id, $verifikatorId];
-            if (!in_array(1, $userIds)) {
-                $userIds[] = 1;
+            $messageForUser = "Pengajuan cuti '{$cuti->tipe_cutis->nama}' pada tanggal '{$konversiTgl}' telah '{$statusText}' tahap 1.";
+
+            $messageForSuperAdmin = "Notifikasi untuk Super Admin: Pengajuan cuti '{$cuti->tipe_cutis->nama}' dari '{$penerima_notif}' pada tanggal '{$konversiTgl}' telah '{$statusText}' tahap 1.";
+
+            // Daftar userId yang akan menerima notifikasi
+            $userIds = [$cuti->user_id, 1];
+
+            foreach ($userIds as $userId) {
+                // Tentukan pesan berdasarkan user
+                $message = $userId === 1 ? $messageForSuperAdmin : $messageForUser;
+
+                // Buat notifikasi untuk user terkait atau Super Admin
+                Notifikasi::create([
+                    'kategori_notifikasi_id' => 1,
+                    'user_id' => $userId,
+                    'message' => $message,
+                    'is_read' => false,
+                    'created_at' => Carbon::now('Asia/Jakarta'),
+                ]);
             }
-            $userIdsJson = json_encode($userIds);
-
-            // Buat notifikasi untuk user yang mengajukan cuti
-            Notifikasi::create([
-                'kategori_notifikasi_id' => 1,
-                'user_id' => $userIdsJson,
-                'message' => $message,
-                'is_read' => false,
-                'created_at' => Carbon::now('Asia/Jakarta'),
-            ]);
         } catch (\Exception $e) {
             Log::error('| Cuti | - Error saat notifikasi tahap 1 data cuti karyawan: ' . $e->getMessage());
             return response()->json([
@@ -1025,30 +1031,29 @@ class DataCutiController extends Controller
         }
     }
 
-    private function createNotifikasiCutiTahap2($verifikatorId, $cuti, $status)
+    private function createNotifikasiCutiTahap2($cuti, $status)
     {
         try {
             $statusText = $status === 'Disetujui' ? 'Disetujui' : 'Ditolak';
             $penerima_notif = $cuti->users->nama;
             $konversiTgl = Carbon::parse(RandomHelper::convertToDateString($cuti->tgl_mulai))->locale('id')->isoFormat('D MMMM YYYY');
-            $message = "Pengajuan cuti '{$cuti->tipe_cutis->nama}' dari '{$penerima_notif}' pada tanggal '{$konversiTgl}' telah '{$statusText}' tahap 2.";
 
-            $userIds = [$cuti->user_id, $verifikatorId];
-            if (!in_array(1, $userIds)) {
-                $userIds[] = 1;
+            $messageForUser = "Pengajuan cuti '{$cuti->tipe_cutis->nama}' pada tanggal '{$konversiTgl}' telah '{$statusText}' tahap 2.";
+            $messageForSuperAdmin = "Notifikasi untuk Super Admin: Pengajuan cuti '{$cuti->tipe_cutis->nama}' dari '{$penerima_notif}' pada tanggal '{$konversiTgl}' telah '{$statusText}' tahap 2.";
+
+            $userIds = [$cuti->user_id, 1];
+            foreach ($userIds as $userId) {
+                $message = $userId === 1 ? $messageForSuperAdmin : $messageForUser;
+                Notifikasi::create([
+                    'kategori_notifikasi_id' => 1,
+                    'user_id' => $userId,
+                    'message' => $message,
+                    'is_read' => false,
+                    'created_at' => Carbon::now('Asia/Jakarta'),
+                ]);
             }
-            $userIdsJson = json_encode($userIds);
-
-            // Buat notifikasi untuk user yang mengajukan cuti
-            Notifikasi::create([
-                'kategori_notifikasi_id' => 1,
-                'user_id' => $userIdsJson,
-                'message' => $message,
-                'is_read' => false,
-                'created_at' => Carbon::now('Asia/Jakarta'),
-            ]);
         } catch (\Exception $e) {
-            Log::error('| Cuti | - Error saat menampilkan detail data cuti karyawan: ' . $e->getMessage());
+            Log::error('| Cuti | - Error saat membuat notifikasi tahap 2: ' . $e->getMessage());
             return response()->json([
                 'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
                 'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
@@ -1056,32 +1061,35 @@ class DataCutiController extends Controller
         }
     }
 
-    private function createNotifikasiJadwalKembali($verifikatorId, $userId, $jadwalId)
+    private function createNotifikasiJadwalKembali($userId, $jadwalId)
     {
         try {
             $jadwal = Jadwal::find($jadwalId);
             if ($jadwal) {
+                $user = User::find($userId);
                 $tglMulai = Carbon::createFromFormat('Y-m-d', $jadwal->tgl_mulai)->locale('id')->isoFormat('D MMMM YYYY');
                 $tglSelesai = Carbon::createFromFormat('Y-m-d', $jadwal->tgl_selesai)->locale('id')->isoFormat('D MMMM YYYY');
-                $message = "Jadwal anda dari tanggal {$tglMulai} hingga {$tglSelesai} telah dikembalikan ke status semula.";
 
-                $userIds = [$userId, $verifikatorId];
-                if (!in_array(1, $userIds)) {
-                    $userIds[] = 1;
+                // Pesan untuk karyawan terkait
+                $messageForUser = "Jadwal Anda dari tanggal {$tglMulai} hingga {$tglSelesai} telah dikembalikan ke status semula.";
+
+                // Pesan untuk Super Admin
+                $messageForSuperAdmin = "Notifikasi untuk Super Admin: Jadwal '{$user->nama}' dari tanggal {$tglMulai} hingga {$tglSelesai} telah dikembalikan ke status semula.";
+
+                $userIds = [$userId, 1];
+                foreach ($userIds as $userId) {
+                    $message = $userId === 1 ? $messageForSuperAdmin : $messageForUser;
+                    Notifikasi::create([
+                        'kategori_notifikasi_id' => 2,
+                        'user_id' => $userId,
+                        'message' => $message,
+                        'is_read' => false,
+                        'created_at' => Carbon::now('Asia/Jakarta'),
+                    ]);
                 }
-                $userIdsJson = json_encode($userIds);
-                // dd($verifikatorId);
-
-                Notifikasi::create([
-                    'kategori_notifikasi_id' => 2,
-                    'user_id' => $userIdsJson,
-                    'message' => $message,
-                    'is_read' => false,
-                    'created_at' => Carbon::now('Asia/Jakarta'),
-                ]);
             }
         } catch (\Exception $e) {
-            Log::error('| Cuti | - Error saat membuat notifikasi pengembalian jadwal: ' . $e->getMessage());
+            Log::error('| Jadwal | - Error saat membuat notifikasi pengembalian jadwal: ' . $e->getMessage());
             return response()->json([
                 'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
                 'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',

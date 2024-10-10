@@ -40,7 +40,7 @@ class PermissionSeeder extends Seeder
             'Pengumuman' => ['create pengumuman', 'edit pengumuman', 'delete pengumuman', 'view pengumuman'],
 
             // Master setting
-            'Verifikasi Master' => ['create masterVerifikasi', 'edit masterVerifikasi', 'delete masterVerifikasi', 'view masterVerifikasi'],
+            'Pengaturan Hak Verifikasi' => ['create masterVerifikasi', 'edit masterVerifikasi', 'delete masterVerifikasi', 'view masterVerifikasi'],
             'Verifikasi Data' => ['verifikasi verifikator1', 'verifikasi verifikator2'],
             'Pengaturan Role' => ['create role', 'edit role', 'view role'],
             'Pengaturan Permission' => ['edit permission', 'delete permission', 'view permission'],
@@ -60,6 +60,7 @@ class PermissionSeeder extends Seeder
             'Pengaturan Cuti' => ['create cuti', 'edit cuti', 'delete cuti', 'view cuti'],
             'Pengaturan Lokasi Kantor' => ['edit lokasiKantor', 'view lokasiKantor'],
             'Penilaian Karyawan' => ['create penilaianKaryawan', 'edit penilaianKaryawan', 'delete penilaianKaryawan', 'view penilaianKaryawan', 'export penilaianKaryawan'],
+            'Pengaturan Tentang Rumah Sakit' => ['edit aboutHospital', 'view aboutHospital'],
         ];
 
         foreach ($permissions as $group => $perms) {

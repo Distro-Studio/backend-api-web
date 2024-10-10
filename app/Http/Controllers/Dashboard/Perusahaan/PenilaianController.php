@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
 use App\Helpers\RandomHelper;
 use Illuminate\Http\Response;
 use App\Models\JenisPenilaian;
+use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
@@ -309,8 +310,6 @@ class PenilaianController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
-        $verifikatorId = Auth::id();
-
         $data = $request->validated();
 
         $jenisPenilaianId = $data['jenis_penilaian_id'];
@@ -365,7 +364,7 @@ class PenilaianController extends Controller
         ]);
 
         // Kirim notifikasi kepada user yang dinilai
-        $this->createNotifikasiPenilaian($verifikatorId, $penilaian);
+        $this->createNotifikasiPenilaian($penilaian);
 
         return response()->json([
             'status' => Response::HTTP_CREATED,
@@ -455,29 +454,36 @@ class PenilaianController extends Controller
         }
     }
 
-    private function createNotifikasiPenilaian($verifikatorId, $penilaian)
+    private function createNotifikasiPenilaian($penilaian)
     {
-        // Dapatkan user yang dinilai
-        $userDinilai = $penilaian->user_dinilais;
+        try {
+            // Dapatkan user yang dinilai
+            $userDinilai = $penilaian->user_dinilais;
+            $message = "Anda memiliki penilaian '{$penilaian->jenis_penilaians->nama}', Silakan cek detail penilaian Anda.";
+            $messageSuperAdmin = "Notifikasi untuk Super Admin: Karyawan '{$userDinilai->nama}' telah menerima penilaian '{$penilaian->jenis_penilaians->nama}'.";
 
-        // Siapkan pesan notifikasi
-        $message = "Anda memiliki penilaian '{$penilaian->jenis_penilaians->nama}', Silakan cek detail penilaian Anda.";
+            $userIds = [$userDinilai->id, 1];
+            foreach ($userIds as $userId) {
+                $messageToSend = $userId === 1 ? $messageSuperAdmin : $message;
+                Notifikasi::create([
+                    'kategori_notifikasi_id' => 7,
+                    'user_id' => $userId,
+                    'message' => $messageToSend,
+                    'is_read' => false,
+                    'created_at' => Carbon::now('Asia/Jakarta'),
+                ]);
+            }
 
-        $userIds = [$userDinilai->id, $verifikatorId];
-        if (!in_array(1, $userIds)) {
-            $userIds[] = 1; // Tambahkan Super Admin (ID = 1)
+            Log::info("Notifikasi penilaian untuk user {$userDinilai->nama} berhasil dibuat.");
+        } catch (\Exception $e) {
+            Log::error('| Penilaian | - Error function createNotifikasiPenilaian: ' . $e->getMessage());
+            return response()->json([
+                'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
+                'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
-        $userIdsJson = json_encode($userIds);
-
-        // Buat notifikasi untuk user yang dinilai
-        Notifikasi::create([
-            'kategori_notifikasi_id' => 7,
-            'user_id' => $userIdsJson,
-            'message' => $message,
-            'is_read' => false,
-            'created_at' => Carbon::now('Asia/Jakarta'),
-        ]);
     }
+
 
     // ini v2
     // public function store(Request $request)

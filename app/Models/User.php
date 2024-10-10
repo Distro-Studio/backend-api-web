@@ -277,14 +277,4 @@ class User extends Authenticatable
     {
         return $this->hasMany(Pengumuman::class, 'user_id', 'id');
     }
-
-    /**
-     * Get all of the materi_pelatihans for the User
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
-     */
-    public function materi_pelatihans(): HasMany
-    {
-        return $this->hasMany(MateriPelatihan::class, 'pj_materi', 'id');
-    }
 }

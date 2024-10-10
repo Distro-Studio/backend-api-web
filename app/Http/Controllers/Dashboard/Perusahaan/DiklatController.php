@@ -443,7 +443,7 @@ class DiklatController extends Controller
                 'durasi' => $durasi,
                 'lokasi' => $data['lokasi'],
             ]);
-            $this->createNotifikasiDiklat($verifikatorId, $diklat);
+            $this->createNotifikasiDiklat($diklat);
 
             DB::commit();
 
@@ -646,6 +646,17 @@ class DiklatController extends Controller
                 $diklat->verifikator_1 = Auth::id();
                 $diklat->alasan = null;
                 $diklat->save();
+
+                $totalPeserta = PesertaDiklat::where('diklat_id', $diklat->id)->pluck('peserta');
+                $users = User::whereIn('id', $totalPeserta)->get();
+                foreach ($users as $user) {
+                    $this->createNotifikasiDiklatInternal_Verif1($diklat, $user, 'Disetujui');
+                }
+
+                // Kirim juga ke user_id = 1 (Super Admin)
+                $superAdmin = User::find(1);
+                $this->createNotifikasiDiklatInternal_Verif1($diklat, $superAdmin, 'Disetujui', true);
+
                 return response()->json(new WithoutDataResource(Response::HTTP_OK, "Verifikasi tahap 1 untuk Diklat '{$diklat->nama}' telah disetujui."), Response::HTTP_OK);
             } else {
                 return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Diklat '{$diklat->nama}' tidak dalam status untuk disetujui pada tahap 1."), Response::HTTP_BAD_REQUEST);
@@ -654,8 +665,19 @@ class DiklatController extends Controller
             if ($status_diklat_id == 1) {
                 $diklat->status_diklat_id = 3;
                 $diklat->verifikator_1 = Auth::id();
-                $diklat->alasan = $request->input('alasan', null);
+                $diklat->alasan = $request->input('alasan');
                 $diklat->save();
+
+                $totalPeserta = PesertaDiklat::where('diklat_id', $diklat->id)->pluck('peserta');
+                $users = User::whereIn('id', $totalPeserta)->get();
+                foreach ($users as $user) {
+                    $this->createNotifikasiDiklatInternal_Verif1($diklat, $user, 'Ditolak');
+                }
+
+                // Kirim juga ke user_id = 1 (Super Admin)
+                $superAdmin = User::find(1);
+                $this->createNotifikasiDiklatInternal_Verif1($diklat, $superAdmin, 'Ditolak', true);
+
                 return response()->json(new WithoutDataResource(Response::HTTP_OK, "Verifikasi tahap 1 untuk Diklat '{$diklat->nama}' telah ditolak."), Response::HTTP_OK);
             } else {
                 return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Diklat '{$diklat->nama}' tidak dalam status untuk ditolak pada tahap 1."), Response::HTTP_BAD_REQUEST);
@@ -738,6 +760,16 @@ class DiklatController extends Controller
                     Log::info("Tidak ada peserta untuk diklat ID {$diklat->id} saat melakukan update masa diklat.");
                 }
 
+                $totalPeserta = PesertaDiklat::where('diklat_id', $diklat->id)->pluck('peserta');
+                $users = User::whereIn('id', $totalPeserta)->get();
+                foreach ($users as $user) {
+                    $this->createNotifikasiDiklatInternal_Verif2($diklat, $user, 'Disetujui');
+                }
+
+                // Kirim juga ke user_id = 1 (Super Admin)
+                $superAdmin = User::find(1);
+                $this->createNotifikasiDiklatInternal_Verif2($diklat, $superAdmin, 'Disetujui', true);
+
                 $message = "Verifikasi tahap 2 untuk Diklat '{$diklat->nama}' telah disetujui.";
 
                 return response()->json(new WithoutDataResource(Response::HTTP_OK, $message), Response::HTTP_OK);
@@ -751,6 +783,17 @@ class DiklatController extends Controller
                 $diklat->verifikator_2 = $verifikatorId;
                 $diklat->alasan = $request->input('alasan');
                 $diklat->save();
+
+                $totalPeserta = PesertaDiklat::where('diklat_id', $diklat->id)->pluck('peserta');
+                $users = User::whereIn('id', $totalPeserta)->get();
+                foreach ($users as $user) {
+                    $this->createNotifikasiDiklatInternal_Verif1($diklat, $user, 'Ditolak');
+                }
+
+                // Kirim juga ke user_id = 1 (Super Admin)
+                $superAdmin = User::find(1);
+                $this->createNotifikasiDiklatInternal_Verif1($diklat, $superAdmin, 'Ditolak', true);
+
                 return response()->json(new WithoutDataResource(Response::HTTP_OK, "Verifikasi tahap 2 untuk Diklat '{$diklat->nama}' telah ditolak."), Response::HTTP_OK);
             } else {
                 return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Diklat '{$diklat->nama}' tidak dalam status untuk ditolak pada tahap 2."), Response::HTTP_BAD_REQUEST);
@@ -827,7 +870,15 @@ class DiklatController extends Controller
                     $diklat->certificate_verified_by = Auth::id();
                     $diklat->save();
 
-                    $this->createNotifikasiSertifikat($verifikatorId, $diklat);
+                    $totalPeserta = PesertaDiklat::where('diklat_id', $diklat->id)->pluck('peserta');
+                    $users = User::whereIn('id', $totalPeserta)->get();
+                    foreach ($users as $user) {
+                        $this->createNotifikasiSertifikat($diklat, $user, 'Disetujui');
+                    }
+
+                    // Kirim juga ke user_id = 1 (Super Admin)
+                    $superAdmin = User::find(1);
+                    $this->createNotifikasiSertifikat($diklat, $superAdmin, 'Disetujui', true);
                     return response()->json(new WithoutDataResource(Response::HTTP_OK, "Sertifikat untuk Diklat '{$diklat->nama}' berhasil dibuat."), Response::HTTP_OK);
                 } else {
                     return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, "Tidak ada peserta untuk diklat '{$diklat->nama}'."), Response::HTTP_NOT_FOUND);
@@ -841,7 +892,7 @@ class DiklatController extends Controller
     }
 
     // Untuk verifikasi diklat eksternal
-    public function verifikasiDiklatExternal(Request $request, $diklatId)
+    public function verifikasiDiklatExternal_t1(Request $request, $diklatId)
     {
         // 1. Dapatkan ID user yang login
         $verifikatorId = Auth::id();
@@ -891,24 +942,164 @@ class DiklatController extends Controller
         $status_diklat_id = $diklat->status_diklat_id;
 
         if ($request->has('diklat_eksternal_disetujui') && $request->diklat_eksternal_disetujui == 1) {
-            // Jika status_diklat_id = 1, maka bisa disetujui
             if ($status_diklat_id == 1) {
                 $diklat->status_diklat_id = 2;
                 $diklat->verifikator_1 = Auth::id();
                 $diklat->durasi = $request->input('durasi');
                 $diklat->save();
-                return response()->json(new WithoutDataResource(Response::HTTP_OK, "Verifikasi untuk Diklat Eksternal '{$diklat->nama}' telah disetujui."), Response::HTTP_OK);
+
+                $totalPeserta = PesertaDiklat::where('diklat_id', $diklat->id)->pluck('peserta');
+                $users = User::whereIn('id', $totalPeserta)->get();
+                foreach ($users as $user) {
+                    $this->createNotifikasiDiklatEksternal_Verif1($diklat, $user, 'Disetujui');
+                }
+
+                // Kirim juga ke user_id = 1 (Super Admin)
+                $superAdmin = User::find(1);
+                $this->createNotifikasiDiklatEksternal_Verif1($diklat, $superAdmin, 'Disetujui', true);
+
+                return response()->json(new WithoutDataResource(Response::HTTP_OK, "Verifikasi untuk Diklat Eksternal tahap 1 '{$diklat->nama}' telah disetujui."), Response::HTTP_OK);
             } else {
-                return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Diklat Eksternal '{$diklat->nama}' tidak dalam status untuk disetujui."), Response::HTTP_BAD_REQUEST);
+                return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Diklat Eksternal tahap 1 '{$diklat->nama}' tidak dalam status untuk disetujui."), Response::HTTP_BAD_REQUEST);
             }
         } elseif ($request->has('diklat_eksternal_ditolak') && $request->diklat_eksternal_ditolak == 1) {
-            // Jika status_diklat_id = 2, maka bisa ditolak
             if ($status_diklat_id == 2) {
                 $diklat->status_diklat_id = 5;
                 $diklat->verifikator_2 = Auth::id();
                 $diklat->alasan = $request->input('alasan');
                 $diklat->save();
+
+                // Ambil total peserta dan user yang terkait
+                $totalPeserta = PesertaDiklat::where('diklat_id', $diklat->id)->pluck('peserta');
+                $users = User::whereIn('id', $totalPeserta)->get();
+
+                // Buat notifikasi untuk setiap peserta
+                foreach ($users as $user) {
+                    $this->createNotifikasiDiklatEksternal_Verif1($diklat, $user, 'Ditolak');
+                }
+
+                // Kirim juga ke user_id = 1 (Super Admin)
+                $superAdmin = User::find(1);
+                $this->createNotifikasiDiklatEksternal_Verif1($diklat, $superAdmin, 'Ditolak', true);
+
                 return response()->json(new WithoutDataResource(Response::HTTP_OK, "Verifikasi tahap 2 untuk Diklat Eksternal '{$diklat->nama}' telah ditolak."), Response::HTTP_OK);
+            } else {
+                return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Diklat Eksternal '{$diklat->nama}' tidak dalam status untuk ditolak pada tahap 2."), Response::HTTP_BAD_REQUEST);
+            }
+        } else {
+            return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Aksi tidak valid.'), Response::HTTP_BAD_REQUEST);
+        }
+    }
+
+    public function verifikasiDiklatExternal_t2(Request $request, $diklatId)
+    {
+        // 1. Dapatkan ID user yang login
+        $verifikatorId = Auth::id();
+
+        // 2. Cari diklat berdasarkan ID
+        $diklat = Diklat::find($diklatId);
+        if (!$diklat) {
+            return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Diklat tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+        }
+
+        // 3. Jika user bukan Super Admin, lakukan pengecekan relasi verifikasi
+        if (!Auth::user()->hasRole('Super Admin')) {
+            // Dapatkan relasi_verifikasis, pastikan verifikator memiliki ID user yang sama
+            $relasiVerifikasi = RelasiVerifikasi::where('verifikator', $verifikatorId)
+                ->where('modul_verifikasi', 6) // 6 adalah modul diklat eksternal
+                ->where('order', 2)
+                ->first();
+
+            if (!$relasiVerifikasi) {
+                return response()->json([
+                    'status' => Response::HTTP_NOT_FOUND,
+                    'message' => "Anda tidak memiliki hak akses untuk verifikasi diklat eksternal tahap 2 dengan modul '{$relasiVerifikasi->modul_verifikasis->label}'.",
+                    'relasi_verifikasi' => null,
+                ], Response::HTTP_NOT_FOUND);
+            }
+
+            // Dapatkan peserta diklat yang diverifikasi
+            $userIdPeserta = $diklat->peserta_diklat->pluck('users.id')->first();
+
+            // Cocokkan user_id peserta dengan user_diverifikasi pada tabel relasi_verifikasis
+            $userDiverifikasi = $relasiVerifikasi->user_diverifikasi;
+            if (!is_array($userDiverifikasi)) {
+                Log::warning('Kesalahan format data user diverifikasi pada verif 1 diklat eksternal.');
+                return response()->json(new WithoutDataResource(Response::HTTP_INTERNAL_SERVER_ERROR, 'Kesalahan format data user diverifikasi.'), Response::HTTP_INTERNAL_SERVER_ERROR);
+            }
+
+            if (!in_array($userIdPeserta, $userDiverifikasi)) {
+                return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak dapat memverifikasi diklat eksternal ini karena peserta tidak ada dalam daftar verifikasi Anda.'), Response::HTTP_FORBIDDEN);
+            }
+
+            // Validasi nilai kolom order dan status_diklat_id
+            if ($relasiVerifikasi->order != 2) {
+                return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Diklat eksternal ini tidak dalam status untuk disetujui pada tahap 1.'), Response::HTTP_BAD_REQUEST);
+            }
+        }
+
+        $status_diklat_id = $diklat->status_diklat_id;
+
+        if ($request->has('verifikasi_kedua_disetujui') && $request->verifikasi_kedua_disetujui == 1) {
+            if ($status_diklat_id == 2) {
+                $diklat->status_diklat_id = 4;
+                $diklat->verifikator_2 = $verifikatorId;
+                $diklat->alasan = null;
+                $diklat->save();
+
+                // Update masa diklat karyawan
+                $pesertaDiklat = PesertaDiklat::where('diklat_id', $diklatId)->pluck('peserta');
+                if ($pesertaDiklat->isNotEmpty()) {
+                    foreach ($pesertaDiklat as $userId) {
+                        $dataKaryawan = DataKaryawan::where('user_id', $userId)->first();
+                        if ($dataKaryawan) {
+                            $dataKaryawan->masa_diklat = $diklat->durasi;
+                            $dataKaryawan->save();
+                        } else {
+                            Log::error("Data karyawan dengan user_id {$userId} tidak ditemukan saat mencoba update masa diklat untuk diklat ID {$diklat->id}.");
+                        }
+                    }
+                    Log::info("Proses update masa diklat selesai untuk diklat ID {$diklat->id} dengan jumlah peserta {$pesertaDiklat->count()}.");
+                } else {
+                    Log::info("Tidak ada peserta untuk diklat ID {$diklat->id} saat melakukan update masa diklat.");
+                }
+
+                $totalPeserta = PesertaDiklat::where('diklat_id', $diklat->id)->pluck('peserta');
+                $users = User::whereIn('id', $totalPeserta)->get();
+                foreach ($users as $user) {
+                    $this->createNotifikasiDiklatEksternal_Verif2($diklat, $user, 'Disetujui');
+                }
+
+                // Kirim juga ke user_id = 1 (Super Admin)
+                $superAdmin = User::find(1);
+                $this->createNotifikasiDiklatEksternal_Verif2($diklat, $superAdmin, 'Disetujui', true);
+
+                $message = "Verifikasi tahap 2 Diklat Eksternal '{$diklat->nama}' telah disetujui.";
+
+                return response()->json(new WithoutDataResource(Response::HTTP_OK, $message), Response::HTTP_OK);
+            } else {
+                return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Diklat Eksternal '{$diklat->nama}' tidak dalam status untuk disetujui pada tahap 2."), Response::HTTP_BAD_REQUEST);
+            }
+        } elseif ($request->has('verifikasi_kedua_ditolak') && $request->verifikasi_kedua_ditolak == 1) {
+            // Jika status_diklat_id = 2, maka bisa ditolak
+            if ($status_diklat_id == 2) {
+                $diklat->status_diklat_id = 5;
+                $diklat->verifikator_2 = $verifikatorId;
+                $diklat->alasan = $request->input('alasan');
+                $diklat->save();
+
+                $totalPeserta = PesertaDiklat::where('diklat_id', $diklat->id)->pluck('peserta');
+                $users = User::whereIn('id', $totalPeserta)->get();
+                foreach ($users as $user) {
+                    $this->createNotifikasiDiklatEksternal_Verif2($diklat, $user, 'Ditolak');
+                }
+
+                // Kirim juga ke user_id = 1 (Super Admin)
+                $superAdmin = User::find(1);
+                $this->createNotifikasiDiklatEksternal_Verif2($diklat, $superAdmin, 'Ditolak', true);
+
+
+                return response()->json(new WithoutDataResource(Response::HTTP_OK, "Verifikasi tahap 2 Diklat Eksternal '{$diklat->nama}' telah ditolak."), Response::HTTP_OK);
             } else {
                 return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Diklat Eksternal '{$diklat->nama}' tidak dalam status untuk ditolak pada tahap 2."), Response::HTTP_BAD_REQUEST);
             }
@@ -957,52 +1148,140 @@ class DiklatController extends Controller
         ], Response::HTTP_OK);
     }
 
-    private function createNotifikasiDiklat($verifikatorId, $diklat)
+    private function createNotifikasiDiklat($diklat)
     {
-        $konversiNotif_jam_mulai = Carbon::parse(RandomHelper::convertToTimeString($diklat->jam_mulai))->format('H:i:s');
-        $konversiNotif_tgl_mulai = Carbon::parse(RandomHelper::convertToDateString($diklat->tgl_mulai))->locale('id')->isoFormat('D MMMM YYYY');
-        $message = "Diklat baru berjudul '{$diklat->nama}' akan dilaksanakan pada tanggal {$konversiNotif_tgl_mulai} di lokasi {$diklat->lokasi} pada jam {$konversiNotif_jam_mulai}.";
+        try {
+            $users = User::all();
 
-        // Ambil semua karyawan
-        $allUsers = User::pluck('id');
-        $userIds = $allUsers->toArray(); // Mengonversi ke array
-        if (!in_array($verifikatorId, $userIds)) {
-            $userIds[] = $verifikatorId;
-        }
-        if (!in_array(1, $userIds)) {
-            $userIds[] = 1;
-        }
+            foreach ($users as $user) {
+                $message = "Diklat Internal baru '{$diklat->nama}' telah ditambahkan pada tanggal mulai {$diklat->tgl_mulai}.";
+                Notifikasi::create([
+                    'kategori_notifikasi_id' => 4,
+                    'user_id' => $user->id,
+                    'message' => $message,
+                    'is_read' => false,
+                    'is_verifikasi' => true,
+                    'created_at' => Carbon::now('Asia/Jakarta'),
+                ]);
+            }
 
-        Notifikasi::create([
-            'kategori_notifikasi_id' => 4,
-            'user_id' => json_encode($userIds), // Penerima notifikasi
-            'message' => $message,
-            'is_read' => false,
-            'is_verifikasi' => true,
-            'created_at' => Carbon::now('Asia/Jakarta'),
-        ]);
+            Log::info('Notifikasi diklat telah berhasil dikirimkan ke semua pengguna.');
+        } catch (\Exception $e) {
+            Log::error('| Notifikasi Diklat | - Error saat mengirim notifikasi: ' . $e->getMessage());
+        }
     }
 
-    private function createNotifikasiSertifikat($verifikatorId, $diklat)
+    private function createNotifikasiDiklatInternal_Verif1($diklat, $user, $status, $isSuperAdmin = false)
     {
-        // Ambil peserta diklat
-        $pesertaDiklat = PesertaDiklat::where('diklat_id', $diklat->id)->pluck('peserta');
+        try {
+            $statusText = $status === 'Disetujui' ? 'Disetujui' : 'Ditolak';
+            $message = $isSuperAdmin
+                ? "Notifikasi untuk Super Admin: Verifikasi tahap 1 untuk Diklat Internal '{$diklat->nama}' dari '{$user->nama}' telah {$statusText}."
+                : "'{$user->nama}', Verifikasi tahap 1 untuk Diklat Internal '{$diklat->nama}' telah {$statusText}.";
 
-        // Tambahkan Super Admin ke dalam array peserta (misal Super Admin memiliki ID = 1)
-        $userIds = $pesertaDiklat->toArray();
-        if (!in_array($verifikatorId, $userIds)) {
-            $userIds[] = $verifikatorId;
-        }
-        if (!in_array(1, $userIds)) {
-            $userIds[] = 1;
-        }
+            // Buat notifikasi untuk user atau Super Admin
+            Notifikasi::create([
+                'kategori_notifikasi_id' => 4,
+                'user_id' => $user->id,
+                'message' => $message,
+                'is_read' => false,
+                'created_at' => Carbon::now('Asia/Jakarta'),
+            ]);
 
-        Notifikasi::create([
-            'kategori_notifikasi_id' => 5,
-            'user_id' => json_encode($userIds),
-            'message' => "Sertifikat Diklat '{$diklat->nama}' anda telah dipublikasi dan tersedia untuk diunduh.",
-            'is_read' => false,
-            'created_at' => Carbon::now('Asia/Jakarta'),
-        ]);
+            Log::info('Notifikasi untuk peserta diklat ' . $user->nama . ' berhasil dibuat.');
+        } catch (\Exception $e) {
+            Log::error('| Diklat Eksternal | - Error saat membuat notifikasi tahap 1: ' . $e->getMessage());
+        }
+    }
+
+    private function createNotifikasiDiklatInternal_Verif2($diklat, $user, $status, $isSuperAdmin = false)
+    {
+        try {
+            $statusText = $status === 'Disetujui' ? 'Disetujui' : 'Ditolak';
+            $message = $isSuperAdmin
+                ? "Notifikasi untuk Super Admin: Verifikasi tahap 2 untuk Diklat Internal '{$diklat->nama}' dari '{$user->nama}' telah {$statusText}."
+                : "'{$user->nama}', Verifikasi tahap 2 untuk Diklat Internal '{$diklat->nama}' telah {$statusText}.";
+
+            // Buat notifikasi untuk user atau Super Admin
+            Notifikasi::create([
+                'kategori_notifikasi_id' => 4,
+                'user_id' => $user->id,
+                'message' => $message,
+                'is_read' => false,
+                'created_at' => Carbon::now('Asia/Jakarta'),
+            ]);
+
+            Log::info('Notifikasi untuk peserta diklat ' . $user->nama . ' berhasil dibuat.');
+        } catch (\Exception $e) {
+            Log::error('| Diklat Eksternal | - Error saat membuat notifikasi tahap 1: ' . $e->getMessage());
+        }
+    }
+
+    private function createNotifikasiDiklatEksternal_Verif1($diklat, $user, $status, $isSuperAdmin = false)
+    {
+        try {
+            $statusText = $status === 'Disetujui' ? 'Disetujui' : 'Ditolak';
+            $message = $isSuperAdmin
+                ? "Notifikasi untuk Super Admin: Verifikasi tahap 1 untuk Diklat Eksternal '{$diklat->nama}' dari '{$user->nama}' telah {$statusText}."
+                : "'{$diklat->nama}', Verifikasi tahap 1 untuk Diklat Eksternal '{$diklat->nama}' telah {$statusText}.";
+
+            // Buat notifikasi untuk user atau Super Admin
+            Notifikasi::create([
+                'kategori_notifikasi_id' => 4,
+                'user_id' => $user->id,
+                'message' => $message,
+                'is_read' => false,
+                'created_at' => Carbon::now('Asia/Jakarta'),
+            ]);
+
+            Log::info('Notifikasi untuk peserta diklat ' . $user->nama . ' berhasil dibuat.');
+        } catch (\Exception $e) {
+            Log::error('| Diklat Eksternal | - Error saat membuat notifikasi tahap 1: ' . $e->getMessage());
+        }
+    }
+
+    private function createNotifikasiDiklatEksternal_Verif2($diklat, $user, $status, $isSuperAdmin = false)
+    {
+        try {
+            $statusText = $status === 'Disetujui' ? 'Disetujui' : 'Ditolak';
+            $message = $isSuperAdmin
+                ? "Notifikasi untuk Super Admin: Verifikasi tahap 2 untuk Diklat Eksternal '{$diklat->nama}' dari '{$user->nama}' telah {$statusText}."
+                : "'{$diklat->nama}', Verifikasi tahap 2 untuk Diklat Eksternal '{$diklat->nama}' telah {$statusText}.";
+
+            // Buat notifikasi untuk user atau Super Admin
+            Notifikasi::create([
+                'kategori_notifikasi_id' => 4,
+                'user_id' => $user->id,
+                'message' => $message,
+                'is_read' => false,
+                'created_at' => Carbon::now('Asia/Jakarta'),
+            ]);
+
+            Log::info('Notifikasi untuk peserta diklat ' . $user->nama . ' berhasil dibuat.');
+        } catch (\Exception $e) {
+            Log::error('| Diklat Eksternal | - Error saat membuat notifikasi tahap 1: ' . $e->getMessage());
+        }
+    }
+
+    private function createNotifikasiSertifikat($diklat, $user, $isSuperAdmin = false)
+    {
+        try {
+            $message = $isSuperAdmin
+                ? "Notifikasi untuk Super Admin: Sertifikat karyawan '{$user->nama}' untuk Diklat '{$diklat->nama}' telah berhasil dibuat dan dipublikasikan."
+                : "'{$user->nama}', Sertifikat untuk Diklat '{$diklat->nama}' telah berhasil dibuat dan dipublikasikan.";
+
+            // Buat notifikasi untuk user atau Super Admin
+            Notifikasi::create([
+                'kategori_notifikasi_id' => 4,
+                'user_id' => $user->id,
+                'message' => $message,
+                'is_read' => false,
+                'created_at' => Carbon::now('Asia/Jakarta'),
+            ]);
+
+            Log::info('Notifikasi untuk peserta diklat ' . $user->nama . ' berhasil dibuat.');
+        } catch (\Exception $e) {
+            Log::error('| Generate Sertifikat | - Error saat membuat notifikasi: ' . $e->getMessage());
+        }
     }
 }
