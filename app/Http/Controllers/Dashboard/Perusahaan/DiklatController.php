@@ -27,6 +27,7 @@ use App\Http\Requests\StoreDiklatRequest;
 use App\Helpers\GenerateCertificateHelper;
 use App\Exports\Perusahaan\DiklatInternalExport;
 use App\Exports\Perusahaan\DiklatEksternalExport;
+use App\Http\Requests\StoreDiklatExternalRequest;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
 
 class DiklatController extends Controller
@@ -450,6 +451,123 @@ class DiklatController extends Controller
             return response()->json([
                 'status' => Response::HTTP_CREATED,
                 'message' => "Diklat '{$diklat->nama}' berhasil ditambahkan.",
+                'data' => $diklat,
+            ], Response::HTTP_CREATED);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
+                'message' => "Terjadi kesalahan saat menyimpan data diklat, Error: {$e->getMessage()}"
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    public function storeExternal(StoreDiklatExternalRequest $request)
+    {
+        $loggedUser = Auth::user();
+        if (!$loggedUser->hasRole('Super Admin')) {
+            return response()->json([
+                'status' => Response::HTTP_FORBIDDEN,
+                'message' => 'Anda tidak memiliki hak akses untuk melakukan proses ini.'
+            ], Response::HTTP_FORBIDDEN);
+        }
+
+        if (!Gate::allows('create diklat')) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
+
+        $verifikatorId = Auth::id();
+        $data = $request->validated();
+
+        DB::beginTransaction();
+        try {
+            $berkas = null;
+
+            if ($request->hasFile('dokumen')) {
+                $authUser = Auth::user();
+
+                // Login to the storage server
+                StorageServerHelper::login();
+
+                $file = $request->file('dokumen');
+
+                // Upload file using helper
+                $random_filename = Str::random(20);
+                $dataupload = StorageServerHelper::uploadToServer($request, $random_filename);
+                // $gambarUrl = $dataupload['path'];
+
+                $berkas = Berkas::create([
+                    'user_id' => $authUser->id,
+                    'file_id' => $dataupload['id_file']['id'],
+                    'nama' => $random_filename,
+                    'kategori_berkas_id' => 2, // umum
+                    'status_berkas_id' => 2,
+                    'path' => $dataupload['path'],
+                    'tgl_upload' => now(),
+                    'nama_file' => $dataupload['nama_file'],
+                    'ext' => $dataupload['ext'],
+                    'size' => $dataupload['size'],
+                ]);
+                if (!$berkas) {
+                    throw new Exception('Berkas gagal di upload.');
+                }
+
+                $gambarId = $berkas->id;
+
+                StorageServerHelper::logout();
+            }
+
+            $jamMulai = Carbon::createFromFormat('H:i:s', $data['jam_mulai'], 'Asia/Jakarta');
+            $jamSelesai = Carbon::createFromFormat('H:i:s', $data['jam_selesai'], 'Asia/Jakarta');
+
+            // Cek apakah jam selesai lebih kecil dari jam mulai (berarti selesai keesokan hari)
+            if ($jamSelesai->lessThan($jamMulai)) {
+                $jamSelesai->addDay(); // Tambahkan 1 hari ke jam selesai
+            }
+
+            // Hitung selisih jam (dalam detik)
+            $selisihJam = $jamMulai->diffInSeconds($jamSelesai);
+
+            // Hitung total hari (selisih tanggal)
+            $tglMulai = Carbon::createFromFormat('d-m-Y', $data['tgl_mulai'], 'Asia/Jakarta');
+            $tglSelesai = Carbon::createFromFormat('d-m-Y', $data['tgl_selesai'], 'Asia/Jakarta');
+            $totalHari = $tglMulai->diffInDays($tglSelesai) + 1; // +1 untuk menghitung hari mulai
+
+            $durasi = $selisihJam * $totalHari;
+
+            $diklat = Diklat::create([
+                'gambar' => $gambarId,
+                'nama' => $data['nama'],
+                'kategori_diklat_id' => 2,
+                'status_diklat_id' => 4,
+                'deskripsi' => $data['deskripsi'],
+                'kuota' => 1,
+                'tgl_mulai' => $data['tgl_mulai'],
+                'tgl_selesai' => $data['tgl_selesai'],
+                'jam_mulai' => $data['jam_mulai'],
+                'jam_selesai' => $data['jam_selesai'],
+                'durasi' => $durasi,
+                'lokasi' => $data['lokasi'],
+                'verifikator_1' => $verifikatorId,
+                'verifikator_2' => $verifikatorId,
+            ]);
+
+            PesertaDiklat::create([
+                'diklat_id' => $diklat->id,
+                'peserta' => $data['user_id'],
+            ]);
+
+            $user = User::find($data['user_id']);
+            if (!$user) {
+                throw new Exception('Karyawan tidak ditemukan.');
+            }
+
+            $this->createNotifikasiDiklatExternal($diklat, $data['user_id']);
+            DB::commit();
+
+            return response()->json([
+                'status' => Response::HTTP_CREATED,
+                'message' => "Diklat Eksternal '{$diklat->nama}' dari karyawan '{$user->nama}' berhasil ditambahkan.",
                 'data' => $diklat,
             ], Response::HTTP_CREATED);
         } catch (\Exception $e) {
@@ -941,11 +1059,11 @@ class DiklatController extends Controller
 
         $status_diklat_id = $diklat->status_diklat_id;
 
-        if ($request->has('diklat_eksternal_disetujui') && $request->diklat_eksternal_disetujui == 1) {
+        if ($request->has('verifikasi_pertama_disetujui') && $request->verifikasi_pertama_disetujui == 1) {
             if ($status_diklat_id == 1) {
                 $diklat->status_diklat_id = 2;
                 $diklat->verifikator_1 = Auth::id();
-                $diklat->durasi = $request->input('durasi');
+                // $diklat->durasi = $request->input('durasi');
                 $diklat->save();
 
                 $totalPeserta = PesertaDiklat::where('diklat_id', $diklat->id)->pluck('peserta');
@@ -962,7 +1080,7 @@ class DiklatController extends Controller
             } else {
                 return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Diklat Eksternal tahap 1 '{$diklat->nama}' tidak dalam status untuk disetujui."), Response::HTTP_BAD_REQUEST);
             }
-        } elseif ($request->has('diklat_eksternal_ditolak') && $request->diklat_eksternal_ditolak == 1) {
+        } elseif ($request->has('verifikasi_pertama_ditolak') && $request->verifikasi_pertama_ditolak == 1) {
             if ($status_diklat_id == 2) {
                 $diklat->status_diklat_id = 5;
                 $diklat->verifikator_2 = Auth::id();
@@ -1159,6 +1277,37 @@ class DiklatController extends Controller
                     'kategori_notifikasi_id' => 4,
                     'user_id' => $user->id,
                     'message' => $message,
+                    'is_read' => false,
+                    'is_verifikasi' => true,
+                    'created_at' => Carbon::now('Asia/Jakarta'),
+                ]);
+            }
+
+            Log::info('Notifikasi diklat telah berhasil dikirimkan ke semua pengguna.');
+        } catch (\Exception $e) {
+            Log::error('| Notifikasi Diklat | - Error saat mengirim notifikasi: ' . $e->getMessage());
+        }
+    }
+
+    private function createNotifikasiDiklatExternal($diklat, $userId)
+    {
+        try {
+            $user = User::find($userId);
+            if (!$user) {
+                throw new Exception('Karyawan tidak ditemukan.');
+            }
+
+            $message = "Diklat External '{$diklat->nama}' telah ditambahkan pada tanggal {$diklat->tgl_mulai}.";
+            $messageSuperAdmin = "Notifikasi untuk Super Admin: Diklat External '{$diklat->nama}' telah ditambahkan untuk karyawan '{$user->nama}'.";
+
+            $userIds = [$userId, 1];
+
+            foreach ($userIds as $recipientId) {
+                $messageToSend = $recipientId === 1 ? $messageSuperAdmin : $message;
+                Notifikasi::create([
+                    'kategori_notifikasi_id' => 4,
+                    'user_id' => $recipientId,
+                    'message' => $messageToSend,
                     'is_read' => false,
                     'is_verifikasi' => true,
                     'created_at' => Carbon::now('Asia/Jakarta'),

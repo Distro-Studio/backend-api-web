@@ -246,6 +246,26 @@ class DataCutiController extends Controller
             $formattedData = $dataCuti->map(function ($dataCuti) {
                 $userId = $dataCuti->users->id ?? null;
 
+                // Ambil kuota cuti berdasarkan tipe cuti
+                $leaveType = TipeCuti::find($dataCuti->tipe_cuti_id);
+                $quota = $leaveType->kuota;
+
+                // Hitung jumlah hari cuti yang sudah digunakan dalam tahun ini
+                $usedDays = Cuti::where('tipe_cuti_id', $leaveType->id)
+                    // ->where('status_cuti_id', 2)
+                    ->where('user_id', $userId)
+                    ->whereYear('created_at', Carbon::now('Asia/Jakarta')->year)
+                    ->get()
+                    ->sum(function ($cuti) {
+                        $tglFrom = Carbon::parse($cuti->tgl_from);
+                        $tglTo = Carbon::parse($cuti->tgl_to);
+                        return $tglFrom->diffInDays($tglTo) + 1;
+                    });
+                    // dd($usedDays);
+
+                // Hitung sisa kuota
+                $sisaKuota = $quota - $usedDays;
+
                 // Ambil max_order dari modul_verifikasis
                 $modulVerifikasi = ModulVerifikasi::where('id', 3)->first(); // 3 untuk modul cuti
                 $maxOrder = $modulVerifikasi ? $modulVerifikasi->max_order : 0;
@@ -318,6 +338,7 @@ class DataCutiController extends Controller
                     'tgl_to' => $dataCuti->tgl_to,
                     'catatan' => $dataCuti->catatan,
                     'durasi' => $dataCuti->durasi,
+                    'sisa_kuota' => $sisaKuota,
                     'status_cuti' => $dataCuti->status_cutis,
                     'alasan' => $cuti->alasan ?? null,
                     'relasi_verifikasi' => $formattedRelasiVerifikasi,

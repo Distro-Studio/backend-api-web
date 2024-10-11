@@ -15,9 +15,9 @@ return new class extends Migration
             $table->id();
             $table->text('konten');
             $table->foreignId('edited_by')->nullable()->constrained('users');
-            $table->foreignId('about_hospital_1')->nullable()->constrained('berkas')->onDelete('cascade');
-            $table->foreignId('about_hospital_2')->nullable()->constrained('berkas')->onDelete('cascade');
-            $table->foreignId('about_hospital_3')->nullable()->constrained('berkas')->onDelete('cascade');
+            $table->foreignId('about_hospital_1')->nullable()->constrained('berkas')->onUpdate('cascade');
+            $table->foreignId('about_hospital_2')->nullable()->constrained('berkas')->onUpdate('cascade');
+            $table->foreignId('about_hospital_3')->nullable()->constrained('berkas')->onUpdate('cascade');
             $table->timestamps();
         });
     }

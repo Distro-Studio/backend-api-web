@@ -3,16 +3,19 @@
 namespace App\Http\Controllers\Dashboard\Karyawan\DetailKaryawan\Keluarga;
 
 use Carbon\Carbon;
+use App\Models\User;
 use App\Models\Notifikasi;
 use App\Models\DataKaryawan;
 use App\Models\DataKeluarga;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\UpdateDataKeluargaReqeust;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
+use App\Http\Requests\StoreDataKeluargaRequest;
+use App\Http\Requests\UpdateDataKeluargaReqeust;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
 
 class Karyawan_KeluargaController extends Controller
@@ -101,12 +104,71 @@ class Karyawan_KeluargaController extends Controller
         }
     }
 
+    public function storeDataKeluarga(StoreDataKeluargaRequest $request, $data_karyawan_id)
+    {
+        try {
+            $currentUser = Auth::user();
+            if (!$currentUser->hasRole('Super Admin')) {
+                return response()->json([
+                    'status' => Response::HTTP_FORBIDDEN,
+                    'message' => 'Anda tidak memiliki hak akses untuk melakukan proses ini.'
+                ], Response::HTTP_FORBIDDEN);
+            }
+
+            if (!Gate::allows('edit dataKaryawan')) {
+                return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+            }
+
+            $user = User::where('data_karyawan_id', $data_karyawan_id)->first();
+            if (!$user) {
+                return response()->json([
+                    'status' => Response::HTTP_NOT_FOUND,
+                    'message' => 'Karyawan dengan data karyawan tersebut tidak ditemukan.'
+                ], Response::HTTP_NOT_FOUND);
+            }
+
+            $data = $request->validated();
+            DB::beginTransaction();
+            $dataKeluarga = DataKeluarga::create([
+                'data_karyawan_id' => $data_karyawan_id,
+                'nama_keluarga' => $data['nama_keluarga'],
+                'hubungan' => $data['hubungan'],
+                'pendidikan_terakhir' => $data['pendidikan_terakhir'],
+                'status_hidup' => $data['status_hidup'],
+                'pekerjaan' => $data['pekerjaan'] ?? null,
+                'no_hp' => $data['no_hp'] ?? null,
+                'email' => $data['email'] ?? null,
+                'status_keluarga_id' => 2,
+                'is_bpjs' => $data['is_bpjs'],
+                'verifikator_1' => $currentUser->id,
+            ]);
+            DB::commit();
+
+            return response()->json([
+                'status' => Response::HTTP_CREATED,
+                'message' => "Data keluarga '{$dataKeluarga->nama_keluarga}' dari karyawan '{$user->nama}' berhasil ditambahkan."
+            ], Response::HTTP_CREATED);
+        } catch (\Exception $e) {
+            Log::error('| Karyawan | - Error function storeDataKeluarga: ' . $e->getMessage());
+            return response()->json([
+                'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
+                'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
     public function updateDataKeluarga(UpdateDataKeluargaReqeust $request, $data_karyawan_id, $keluarga_id)
     {
         try {
             $currentUser = Auth::user();
+            if (!$currentUser->hasRole('Super Admin')) {
+                return response()->json([
+                    'status' => Response::HTTP_FORBIDDEN,
+                    'message' => 'Anda tidak memiliki hak akses untuk melakukan proses ini.'
+                ], Response::HTTP_FORBIDDEN);
+            }
 
-            if ($currentUser->role_id != 1 && !Gate::allows('edit dataKaryawan')) {
+            if (!Gate::allows('edit dataKaryawan')) {
                 return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
             }
 

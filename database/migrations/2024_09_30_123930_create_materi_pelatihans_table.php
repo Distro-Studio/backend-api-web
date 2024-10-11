@@ -16,9 +16,9 @@ return new class extends Migration
             $table->string('judul');
             $table->text('deskripsi');
             $table->foreignId('pj_materi')->constrained('users');
-            $table->foreignId('dokumen_materi_1')->nullable()->constrained('berkas')->onDelete('cascade');
-            $table->foreignId('dokumen_materi_2')->nullable()->constrained('berkas')->onDelete('cascade');
-            $table->foreignId('dokumen_materi_3')->nullable()->constrained('berkas')->onDelete('cascade');
+            $table->foreignId('dokumen_materi_1')->nullable()->constrained('berkas')->onDelete('cascade')->onUpdate('cascade');
+            $table->foreignId('dokumen_materi_2')->nullable()->constrained('berkas')->onDelete('cascade')->onUpdate('cascade');
+            $table->foreignId('dokumen_materi_3')->nullable()->constrained('berkas')->onDelete('cascade')->onUpdate('cascade');
             $table->timestamps();
         });
     }

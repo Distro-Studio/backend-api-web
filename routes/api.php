@@ -129,6 +129,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
             // ! Data Keluarga Section ===========>
             Route::get('/detail-karyawan-keluarga/{data_karyawan_id}', [Karyawan_KeluargaController::class, 'getDataKeluarga']);
+            Route::post('/detail-karyawan-keluarga/{data_karyawan_id}/create-keluarga', [Karyawan_KeluargaController::class, 'storeDataKeluarga']);
             Route::post('/detail-karyawan-keluarga/{data_karyawan_id}/update-keluarga/{keluarga_id}', [Karyawan_KeluargaController::class, 'updateDataKeluarga']);
             Route::post('/detail-karyawan-keluarga/{data_karyawan_id}/verifikasi', [Karyawan_KeluargaController::class, 'verifikasiKeluarga']);
 
@@ -248,6 +249,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::post('/get-diklat-internal', [DiklatController::class, 'indexInternal']);
             Route::post('/get-diklat-eksternal', [DiklatController::class, 'indexEksternal']);
             Route::post('/diklat', [DiklatController::class, 'store']);
+            Route::post('/diklat-eksternal-user', [DiklatController::class, 'storeExternal']);
             Route::get('/diklat/{diklatId}', [DiklatController::class, 'show']);
             Route::get('/diklat-internal/export', [DiklatController::class, 'exportDiklatInternal']);
             Route::get('/diklat-eksternal/export', [DiklatController::class, 'exportDiklatEksternal']);

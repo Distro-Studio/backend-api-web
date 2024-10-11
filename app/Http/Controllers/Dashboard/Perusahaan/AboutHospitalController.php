@@ -128,7 +128,7 @@ class AboutHospitalController extends Controller
                                 'file_id' => $dataupload['id_file']['id'],
                                 'kategori_berkas_id' => 6,
                                 'status_berkas_id' => 2,
-                                'path' => $dataupload['path'],
+                                'path' => '/' . $dataupload['path'],
                                 'tgl_upload' => now(),
                                 'nama_file' => $dataupload['nama_file'],
                                 'ext' => $dataupload['ext'],

@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Gate;
 use App\Http\Requests\StoreMateriPelatihanRequest;
 use App\Http\Requests\UpdateMateriPelatihanRequest;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
+use Carbon\Carbon;
 
 class MateriPelatihanController extends Controller
 {
@@ -156,6 +157,7 @@ class MateriPelatihanController extends Controller
                     'dokumen_materi_1' => $berkasIds['dokumen_materi_1'],
                     'dokumen_materi_2' => $berkasIds['dokumen_materi_2'],
                     'dokumen_materi_3' => $berkasIds['dokumen_materi_3'],
+                    'created_at' => Carbon::now('Asia/Jakarta'),
                 ]);
 
                 DB::commit();

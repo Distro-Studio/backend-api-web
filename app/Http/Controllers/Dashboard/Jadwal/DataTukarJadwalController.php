@@ -213,7 +213,7 @@ class DataTukarJadwalController extends Controller
 
             $limit = $request->input('limit', 10);
 
-            $tukarJadwal = TukarJadwal::query()->where('acc_user_ditukar', 1)->orderBy('created_at', 'desc');
+            $tukarJadwal = TukarJadwal::query()->where('acc_user_ditukar', 2)->orderBy('created_at', 'desc');
 
             $filters = $request->all();
 
@@ -894,7 +894,7 @@ class DataTukarJadwalController extends Controller
                 return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data tukar jadwal tidak ditemukan.'), Response::HTTP_NOT_FOUND);
             }
 
-            if ($tukar_jadwal->acc_user_ditukar != 1) {
+            if ($tukar_jadwal->acc_user_ditukar != 2) {
                 return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Tukar jadwal tersebut belum diverifikasi oleh karyawan ditukar atau karyawan pengajuan.'), Response::HTTP_BAD_REQUEST);
             }
 
@@ -987,7 +987,7 @@ class DataTukarJadwalController extends Controller
                 return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data tukar jadwal tidak ditemukan.'), Response::HTTP_NOT_FOUND);
             }
 
-            if ($tukar_jadwal->acc_user_ditukar != 1) {
+            if ($tukar_jadwal->acc_user_ditukar != 2) {
                 return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Tukar jadwal tersebut belum diverifikasi oleh karyawan ditukar atau karyawan pengajuan.'), Response::HTTP_BAD_REQUEST);
             }
 

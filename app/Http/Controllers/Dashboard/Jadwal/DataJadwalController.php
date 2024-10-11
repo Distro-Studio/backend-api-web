@@ -173,7 +173,7 @@ class DataJadwalController extends Controller
 
             $jadwal = Jadwal::whereIn('user_id', $users->pluck('id'))->get();
             $hariLibur = HariLibur::whereIn('tanggal', $date_range)->get()->keyBy('tanggal');
-            $nonShift = NonShift::first(); // Asumsikan hanya ada satu jadwal non-shift
+            $nonShift = NonShift::first();
 
             $groupedSchedules = $jadwal->groupBy('user_id');
             $result = $users->map(function ($user) use ($groupedSchedules, $date_range, $nonShift, $hariLibur, $jadwal, $request) {
@@ -243,26 +243,33 @@ class DataJadwalController extends Controller
                 }
 
                 if ($user->data_karyawans->unit_kerjas->jenis_karyawan == 0) {
-                    if ($nonShift && $nonShift->jam_from && $nonShift->jam_to) {
-                        $jamFrom = Carbon::createFromFormat('H:i:s', $nonShift->jam_from);
-                        $jamTo = Carbon::createFromFormat('H:i:s', $nonShift->jam_to);
+                    $totalJamFilter = collect($date_range)->filter(function ($date) use ($hariLibur) {
+                        $dayOfWeek = Carbon::createFromFormat('Y-m-d', $date)->dayOfWeek;
 
-                        if ($jamTo->lt($jamFrom)) {
-                            $jamTo->addDay();
+                        // Hitung Senin (1) hingga Sabtu (6), dan tanggal yang bukan hari libur
+                        return $dayOfWeek >= 1 && $dayOfWeek <= 6 && !isset($hariLibur[$date]);
+                    })->sum(function ($date) {
+                        $dayOfWeek = Carbon::createFromFormat('Y-m-d', $date)->dayOfWeek;
+                        $hariNama = $this->getDayName($dayOfWeek); // Mengambil nama hari
+
+                        // Dapatkan jadwal non shift untuk hari tersebut
+                        $nonShiftForDay = NonShift::where('nama', 'like', "%{$hariNama}%")->first();
+
+                        if ($nonShiftForDay) {
+                            $jamFrom = Carbon::createFromFormat('H:i:s', $nonShiftForDay->jam_from);
+                            $jamTo = Carbon::createFromFormat('H:i:s', $nonShiftForDay->jam_to);
+
+                            // Jika jam_to lebih kecil dari jam_from, tambahkan 1 hari pada jam_to
+                            if ($jamTo->lt($jamFrom)) {
+                                $jamTo->addDay();
+                            }
+
+                            // Menghitung total waktu kerja dalam detik untuk hari tersebut
+                            return $jamTo->diffInSeconds($jamFrom);
                         }
 
-                        $shiftSeconds = $jamTo->diffInSeconds($jamFrom);
-
-                        // Filter hari kerja (Senin - Sabtu) yang tidak libur
-                        $workingDaysCount = collect($date_range)->filter(function ($date) use ($hariLibur) {
-                            $dayOfWeek = Carbon::createFromFormat('Y-m-d', $date)->dayOfWeek;
-                            // Hitung Senin (1) hingga Sabtu (6), dan tanggal yang bukan hari libur
-                            return $dayOfWeek >= 1 && $dayOfWeek <= 6 && !isset($hariLibur[$date]);
-                        })->count();
-                        $totalJamFilter = $shiftSeconds * $workingDaysCount;
-                    } else {
-                        $totalJamFilter = null;
-                    }
+                        return 0;
+                    });
                 } else {
                     // Shift user
                     $totalJamFilter = $groupedSchedules->get($user->id, collect())->filter(function ($schedule) use ($request) {
