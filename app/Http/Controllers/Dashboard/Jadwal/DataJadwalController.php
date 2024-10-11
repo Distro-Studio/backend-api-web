@@ -210,7 +210,7 @@ class DataJadwalController extends Controller
                             // Libur default gak ada jadwal
                             $user_schedule_array[$date] = [
                                 'id' => null,
-                                'nama' => 'Hari Libur',
+                                'nama' => 'Minggu',
                                 'jam_from' => null,
                                 'jam_to' => null,
                                 'status' => 4 // libur gak ada jadwal (null)

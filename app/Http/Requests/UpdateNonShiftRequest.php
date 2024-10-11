@@ -22,17 +22,15 @@ class UpdateNonShiftRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'jam_from' => 'required|string',
-            'jam_to' => 'required|string',
+            'jam_from' => 'nullable|string',
+            'jam_to' => 'nullable|string',
         ];
     }
 
     public function messages()
     {
         return [
-            'jam_from.required' => 'Jam kerja mulai jam kerja tetap tidak diperbolehkan kosong.',
             'jam_from.string' => 'Nama jam kerja tetap tidak diperbolehkan mengandung selain angka dan huruf.',
-            'jam_to.required' => 'Jam kerja selesai jam kerja tetap tidak diperbolehkan kosong.',
             'jam_to.string' => 'Nama jam kerja tetap tidak diperbolehkan mengandung selain angka dan huruf.',
         ];
     }
