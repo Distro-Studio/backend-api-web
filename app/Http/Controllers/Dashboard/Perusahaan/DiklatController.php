@@ -542,6 +542,7 @@ class DiklatController extends Controller
                 'status_diklat_id' => 4,
                 'deskripsi' => $data['deskripsi'],
                 'kuota' => 1,
+                'total_peserta' => 1,
                 'tgl_mulai' => $data['tgl_mulai'],
                 'tgl_selesai' => $data['tgl_selesai'],
                 'jam_mulai' => $data['jam_mulai'],

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Dashboard\Presensi;
 
 use Carbon\Carbon;
+use App\Models\Cuti;
 use App\Models\Berkas;
 use App\Models\Jadwal;
 use App\Models\NonShift;
@@ -40,22 +41,102 @@ class DataPresensiController extends Controller
         ], Response::HTTP_OK);
     }
 
+    // public function calculatedPresensi()
+    // {
+    //     if (!Gate::allows('view presensiKaryawan')) {
+    //         return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+    //     }
+
+    //     $today = Carbon::today('Asia/Jakarta')->format('Y-m-d');
+
+    //     // Ambil ID untuk setiap kategori dari tabel kategori_presensis
+    //     $kategoriTepatWaktuId = DB::table('kategori_presensis')->where('label', 'Tepat Waktu')->value('id');
+    //     $kategoriTerlambatId = DB::table('kategori_presensis')->where('label', 'Terlambat')->value('id');
+    //     $kategoriCutiId = DB::table('kategori_presensis')->where('label', 'Cuti')->value('id');
+    //     $kategoriAbsenId = DB::table('kategori_presensis')->where('label', 'Absen')->value('id');
+
+    //     // Validasi untuk memastikan kategori ditemukan
+    //     if (is_null($kategoriTepatWaktuId) || is_null($kategoriTerlambatId) || is_null($kategoriCutiId) || is_null($kategoriAbsenId)) {
+    //         return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Kategori presensi tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+    //     }
+
+    //     // Calculate total number of employees excluding the super admin
+    //     $calculatedKaryawan = DataKaryawan::where('id', '!=', 1)->count();
+
+    //     // Hitung jumlah presensi dalam setiap kategori
+    //     $countTepatWaktu = Presensi::where('kategori_presensi_id', $kategoriTepatWaktuId)
+    //         ->whereDate('jam_masuk', $today)
+    //         ->count('user_id');
+
+    //     $countTerlambat = Presensi::where('kategori_presensi_id', $kategoriTerlambatId)
+    //         ->whereDate('jam_masuk', $today)
+    //         ->count('user_id');
+
+    //     $countCuti = Presensi::where('kategori_presensi_id', $kategoriCutiId)
+    //         ->whereDate('jam_masuk', $today)
+    //         ->count('user_id');
+
+    //     $countAbsen = Presensi::where('kategori_presensi_id', $kategoriAbsenId)
+    //         ->whereDate('jam_masuk', $today)
+    //         ->count('user_id');
+
+    //     // Hitung karyawan shift yang libur berdasarkan user_id
+    //     $countLiburShift = Jadwal::where('shift_id', 0)
+    //         ->whereDate('tgl_mulai', '<=', $today)
+    //         ->whereDate('tgl_selesai', '>=', $today)
+    //         ->count('user_id');
+
+    //     // Periksa apakah hari ini adalah hari libur
+    //     $isHariLibur = HariLibur::whereDate('tanggal', $today)->exists();
+
+    //     // Hitung karyawan non-shift yang libur berdasarkan hari libur
+    //     $countLiburNonShift = DataKaryawan::whereHas('unit_kerjas', function ($query) {
+    //         $query->where('jenis_karyawan', 0);
+    //     })->when($isHariLibur, function ($query) {
+    //         return $query->distinct('id')->count('id');  // Hitung berdasarkan user_id
+    //     }, function ($query) {
+    //         return 0;
+    //     });
+
+    //     // Total karyawan yang libur
+    //     $countLibur = $countLiburShift + $countLiburNonShift;
+
+    //     // Hitung total hadir dan total tidak hadir
+    //     $totalHadir = $countTepatWaktu + $countTerlambat;
+    //     $totalTidakHadir = $countCuti + $countAbsen + $countLibur;
+
+    //     return response()->json([
+    //         'status' => Response::HTTP_OK,
+    //         'message' => 'Perhitungan presensi seluruh karyawan berhasil ditampilkan.',
+    //         'data' => [
+    //             'total_karyawan' => $calculatedKaryawan,
+    //             'total_hadir' => $totalHadir,
+    //             'total_tepat_waktu' => $countTepatWaktu,
+    //             'total_terlambat' => $countTerlambat,
+    //             'total_tidak_hadir' => $totalTidakHadir,
+    //             'total_libur' => $countLibur,
+    //             'total_cuti' => $countCuti,
+    //             'total_absen' => $countAbsen,
+    //         ],
+    //     ], Response::HTTP_OK);
+    // }
+
     public function calculatedPresensi()
     {
         if (!Gate::allows('view presensiKaryawan')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
-        $today = Carbon::today('Asia/Jakarta')->format('Y-m-d');
+        // Tetap menggunakan format 'd-m-Y' untuk $today
+        $today = Carbon::today('Asia/Jakarta')->format('d-m-Y');
 
         // Ambil ID untuk setiap kategori dari tabel kategori_presensis
         $kategoriTepatWaktuId = DB::table('kategori_presensis')->where('label', 'Tepat Waktu')->value('id');
         $kategoriTerlambatId = DB::table('kategori_presensis')->where('label', 'Terlambat')->value('id');
-        $kategoriCutiId = DB::table('kategori_presensis')->where('label', 'Cuti')->value('id');
         $kategoriAbsenId = DB::table('kategori_presensis')->where('label', 'Absen')->value('id');
 
         // Validasi untuk memastikan kategori ditemukan
-        if (is_null($kategoriTepatWaktuId) || is_null($kategoriTerlambatId) || is_null($kategoriCutiId) || is_null($kategoriAbsenId)) {
+        if (is_null($kategoriTepatWaktuId) || is_null($kategoriTerlambatId) || is_null($kategoriAbsenId)) {
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Kategori presensi tidak ditemukan.'), Response::HTTP_NOT_FOUND);
         }
 
@@ -64,29 +145,31 @@ class DataPresensiController extends Controller
 
         // Hitung jumlah presensi dalam setiap kategori
         $countTepatWaktu = Presensi::where('kategori_presensi_id', $kategoriTepatWaktuId)
-            ->whereDate('jam_masuk', $today)
+            ->whereDate('jam_masuk', Carbon::createFromFormat('d-m-Y', $today)->format('Y-m-d'))
             ->count('user_id');
 
         $countTerlambat = Presensi::where('kategori_presensi_id', $kategoriTerlambatId)
-            ->whereDate('jam_masuk', $today)
-            ->count('user_id');
-
-        $countCuti = Presensi::where('kategori_presensi_id', $kategoriCutiId)
-            ->whereDate('jam_masuk', $today)
+            ->whereDate('jam_masuk', Carbon::createFromFormat('d-m-Y', $today)->format('Y-m-d'))
             ->count('user_id');
 
         $countAbsen = Presensi::where('kategori_presensi_id', $kategoriAbsenId)
-            ->whereDate('jam_masuk', $today)
+            ->whereDate('jam_masuk', Carbon::createFromFormat('d-m-Y', $today)->format('Y-m-d'))
+            ->count('user_id');
+
+        // Perhitungan Cuti: Ambil data cuti langsung dari tabel cutis berdasarkan tgl_from dan tgl_to
+        $countCuti = Cuti::where('status_cuti_id', 4)
+            ->whereDate(DB::raw("STR_TO_DATE(tgl_from, '%d-%m-%Y')"), '<=', Carbon::createFromFormat('d-m-Y', $today)->format('Y-m-d'))
+            ->whereDate(DB::raw("STR_TO_DATE(tgl_to, '%d-%m-%Y')"), '>=', Carbon::createFromFormat('d-m-Y', $today)->format('Y-m-d'))
             ->count('user_id');
 
         // Hitung karyawan shift yang libur berdasarkan user_id
         $countLiburShift = Jadwal::where('shift_id', 0)
-            ->whereDate('tgl_mulai', '<=', $today)
-            ->whereDate('tgl_selesai', '>=', $today)
+            ->whereDate('tgl_mulai', '<=', Carbon::createFromFormat('d-m-Y', $today)->format('Y-m-d'))
+            ->whereDate('tgl_selesai', '>=', Carbon::createFromFormat('d-m-Y', $today)->format('Y-m-d'))
             ->count('user_id');
 
         // Periksa apakah hari ini adalah hari libur
-        $isHariLibur = HariLibur::whereDate('tanggal', $today)->exists();
+        $isHariLibur = HariLibur::whereDate('tanggal', Carbon::createFromFormat('d-m-Y', $today)->format('Y-m-d'))->exists();
 
         // Hitung karyawan non-shift yang libur berdasarkan hari libur
         $countLiburNonShift = DataKaryawan::whereHas('unit_kerjas', function ($query) {
