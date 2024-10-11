@@ -206,14 +206,14 @@ class DataJadwalController extends Controller
                         $day_of_week = Carbon::createFromFormat('Y-m-d', $date)->dayOfWeek;
                         $nonShiftForDay = NonShift::where('nama', 'like', "%{$this->getDayName($day_of_week)}%")->first();
 
-                        if ($day_of_week == Carbon::SUNDAY) {
-                            // Libur pada hari Minggu
+                        if (is_null($nonShiftForDay->jam_from) || is_null($nonShiftForDay->jam_to)) {
+                            // Libur default gak ada jadwal
                             $user_schedule_array[$date] = [
                                 'id' => null,
-                                'nama' => 'Libur Minggu',
+                                'nama' => 'Hari Libur',
                                 'jam_from' => null,
                                 'jam_to' => null,
-                                'status' => 4 // libur minggu
+                                'status' => 4 // libur gak ada jadwal (null)
                             ];
                         } elseif (isset($hariLibur[$date])) {
                             $user_schedule_array[$date] = [
@@ -224,13 +224,6 @@ class DataJadwalController extends Controller
                                 'status' => 3 // libur besar
                             ];
                         } else if ($nonShift) {
-                            // $user_schedule_array[$date] = [
-                            //     'id' => $nonShift->id,
-                            //     'nama' => $nonShift->nama,
-                            //     'jam_from' => $nonShift->jam_from,
-                            //     'jam_to' => $nonShift->jam_to,
-                            //     'status' => 2 // non-shift
-                            // ];
                             $user_schedule_array[$date] = [
                                 'id' => $nonShiftForDay->id,
                                 'nama' => $nonShiftForDay->nama,
@@ -243,11 +236,12 @@ class DataJadwalController extends Controller
                 }
 
                 if ($user->data_karyawans->unit_kerjas->jenis_karyawan == 0) {
+                    // Filter dan hitung total jam untuk non-shift karyawan
                     $totalJamFilter = collect($date_range)->filter(function ($date) use ($hariLibur) {
                         $dayOfWeek = Carbon::createFromFormat('Y-m-d', $date)->dayOfWeek;
 
-                        // Hitung Senin (1) hingga Sabtu (6), dan tanggal yang bukan hari libur
-                        return $dayOfWeek >= 1 && $dayOfWeek <= 6 && !isset($hariLibur[$date]);
+                        // Hitung Senin (1) hingga Minggu (0 = Minggu), dan tanggal yang bukan hari libur
+                        return $dayOfWeek >= 0 && $dayOfWeek <= 6 && !isset($hariLibur[$date]);
                     })->sum(function ($date) {
                         $dayOfWeek = Carbon::createFromFormat('Y-m-d', $date)->dayOfWeek;
                         $hariNama = $this->getDayName($dayOfWeek); // Mengambil nama hari
@@ -256,6 +250,10 @@ class DataJadwalController extends Controller
                         $nonShiftForDay = NonShift::where('nama', 'like', "%{$hariNama}%")->first();
 
                         if ($nonShiftForDay) {
+                            if (is_null($nonShiftForDay->jam_from) || is_null($nonShiftForDay->jam_to)) {
+                                return 0; // Jika jam_from atau jam_to adalah null, skip hari ini
+                            }
+
                             $jamFrom = Carbon::createFromFormat('H:i:s', $nonShiftForDay->jam_from);
                             $jamTo = Carbon::createFromFormat('H:i:s', $nonShiftForDay->jam_to);
 
@@ -263,8 +261,6 @@ class DataJadwalController extends Controller
                             if ($jamTo->lt($jamFrom)) {
                                 $jamTo->addDay();
                             }
-
-                            // Menghitung total waktu kerja dalam detik untuk hari tersebut
                             return $jamTo->diffInSeconds($jamFrom);
                         }
 
@@ -1017,8 +1013,8 @@ class DataJadwalController extends Controller
                 return 'Sabtu';
             case Carbon::SUNDAY:
                 return 'Minggu';
-                // default:
-                //     return '';
+            default:
+                return '';
         }
     }
 

@@ -56,7 +56,7 @@ class NonShiftController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data shift tidak ditemukan.'), Response::HTTP_NOT_FOUND);
         }
 
-        $successMessage = "Data jam kerja tetap karyawwan '{$non_shift->nama}' berhasil diubah.";
+        $successMessage = "Data jam kerja tetap karyawan '{$non_shift->nama}' berhasil diubah.";
         $formattedData = $this->formatData(collect([$non_shift]))->first();
 
         return response()->json([
@@ -66,9 +66,8 @@ class NonShiftController extends Controller
         ], Response::HTTP_OK);
     }
 
-    public function edit(UpdateNonShiftRequest $request)
+    public function edit(UpdateNonShiftRequest $request, $non_shift)
     {
-        // Check if the user has the required permission
         if (!Gate::allows('edit shift')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
@@ -76,23 +75,14 @@ class NonShiftController extends Controller
         $data = $request->validated();
 
         // Find the NonShift record with ID 1
-        $non_shift = NonShift::withTrashed()->find(1);
-
+        $non_shift = NonShift::withTrashed()->find($non_shift);
         if (!$non_shift) {
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data jam kerja tetap karyawan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
         }
 
-        // Validate for uniqueness
-        $existingDataValidation = NonShift::where('nama', $data['nama'])->where('id', '!=', 1)->first();
-        if ($existingDataValidation) {
-            return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Nama jam kerja tetap karyawan tersebut sudah pernah dibuat.'), Response::HTTP_BAD_REQUEST);
-        }
-
-        // Update the NonShift record
         $non_shift->update($data);
 
         $successMessage = "Data jam kerja tetap karyawan '{$non_shift->nama}' berhasil diubah.";
-
         return response()->json([
             'status' => Response::HTTP_OK,
             'message' => $successMessage,
