@@ -231,6 +231,23 @@ class PenilaianController extends Controller
             }
         }
 
+        if (isset($filters['jenis_kompetensi'])) {
+            $jenisKaryawan = $filters['jenis_kompetensi'];
+            if (is_array($jenisKaryawan)) {
+                $penilaian->whereHas('user_dinilais.data_karyawans.kompetensis', function ($query) use ($jenisKaryawan) {
+                    $query->where(function ($query) use ($jenisKaryawan) {
+                        foreach ($jenisKaryawan as $jk) {
+                            $query->orWhere('jenis_kompetensi', $jk);
+                        }
+                    });
+                });
+            } else {
+                $penilaian->whereHas('user_dinilais.data_karyawans.kompetensis', function ($query) use ($jenisKaryawan) {
+                    $query->where('jenis_kompetensi', $jenisKaryawan);
+                });
+            }
+        }
+
         if (isset($filters['kategori_transfer'])) {
             $namaTransferKategori = $filters['kategori_transfer'];
             $penilaian->whereHas('user_dinilais.tranfer_karyawans.kategori_transfer_karyawans', function ($query) use ($namaTransferKategori) {

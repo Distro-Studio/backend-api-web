@@ -189,6 +189,23 @@ class DataTransferKaryawanController extends Controller
             }
         }
 
+        if (isset($filters['jenis_kompetensi'])) {
+            $jenisKaryawan = $filters['jenis_kompetensi'];
+            if (is_array($jenisKaryawan)) {
+                $transfer->whereHas('users.data_karyawans.kompetensis', function ($query) use ($jenisKaryawan) {
+                    $query->where(function ($query) use ($jenisKaryawan) {
+                        foreach ($jenisKaryawan as $jk) {
+                            $query->orWhere('jenis_kompetensi', $jk);
+                        }
+                    });
+                });
+            } else {
+                $transfer->whereHas('users.data_karyawans.kompetensis', function ($query) use ($jenisKaryawan) {
+                    $query->where('jenis_kompetensi', $jenisKaryawan);
+                });
+            }
+        }
+
         if (isset($filters['kategori_transfer'])) {
             $namaTransferKategori = $filters['kategori_transfer'];
             $transfer->whereHas('kategori_transfer_karyawans', function ($query) use ($namaTransferKategori) {

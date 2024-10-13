@@ -13,7 +13,7 @@ class KategoriNotifikasiSeeder extends Seeder
      */
     public function run(): void
     {
-        $kategori = ['Cuti', 'Tukar Jadwal', 'Lembur', 'Event & Diklat', 'Slip Gajiku', 'Dokumen', 'Feedback', 'Laporan', 'Koperasi', 'Perizinan', 'Perubahan Data', 'Data Keluarga Karyawan'];
+        $kategori = ['Cuti', 'Tukar Jadwal', 'Lembur', 'Sertifikat Diklat', 'Slip Gajiku', 'Dokumen', 'Feedback', 'Laporan', 'Koperasi', 'Perizinan', 'Perubahan Data', 'Data Keluarga Karyawan', 'Diklat Internal', 'Diklat Eksternal'];
         foreach ($kategori as $kategori) {
             DB::table('kategori_notifikasis')->insert([
                 'label' => $kategori,

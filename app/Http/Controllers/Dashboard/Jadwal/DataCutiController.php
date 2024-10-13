@@ -177,6 +177,23 @@ class DataCutiController extends Controller
                 }
             }
 
+            if (isset($filters['jenis_kompetensi'])) {
+                $jenisKaryawan = $filters['jenis_kompetensi'];
+                if (is_array($jenisKaryawan)) {
+                    $cuti->whereHas('users.data_karyawans.kompetensis', function ($query) use ($jenisKaryawan) {
+                        $query->where(function ($query) use ($jenisKaryawan) {
+                            foreach ($jenisKaryawan as $jk) {
+                                $query->orWhere('jenis_kompetensi', $jk);
+                            }
+                        });
+                    });
+                } else {
+                    $cuti->whereHas('users.data_karyawans.kompetensis', function ($query) use ($jenisKaryawan) {
+                        $query->where('jenis_kompetensi', $jenisKaryawan);
+                    });
+                }
+            }
+
             if (isset($filters['tipe_cuti'])) {
                 $namaTipeCuti = $filters['tipe_cuti'];
                 $cuti->whereHas('tipe_cutis', function ($query) use ($namaTipeCuti) {

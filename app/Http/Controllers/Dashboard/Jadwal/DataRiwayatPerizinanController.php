@@ -167,6 +167,23 @@ class DataRiwayatPerizinanController extends Controller
                 }
             }
 
+            if (isset($filters['jenis_kompetensi'])) {
+                $jenisKaryawan = $filters['jenis_kompetensi'];
+                if (is_array($jenisKaryawan)) {
+                    $riwayat_izin->whereHas('users.data_karyawans.kompetensis', function ($query) use ($jenisKaryawan) {
+                        $query->where(function ($query) use ($jenisKaryawan) {
+                            foreach ($jenisKaryawan as $jk) {
+                                $query->orWhere('jenis_kompetensi', $jk);
+                            }
+                        });
+                    });
+                } else {
+                    $riwayat_izin->whereHas('users.data_karyawans.kompetensis', function ($query) use ($jenisKaryawan) {
+                        $query->where('jenis_kompetensi', $jenisKaryawan);
+                    });
+                }
+            }
+
             if (isset($filters['status_izin'])) {
                 $namaStatusCuti = $filters['status_izin'];
                 $riwayat_izin->whereHas('status_izins', function ($query) use ($namaStatusCuti) {

@@ -350,6 +350,23 @@ class DataTukarJadwalController extends Controller
                 }
             }
 
+            if (isset($filters['jenis_kompetensi'])) {
+                $jenisKaryawan = $filters['jenis_kompetensi'];
+                if (is_array($jenisKaryawan)) {
+                    $tukarJadwal->whereHas('user_pengajuans.data_karyawans.kompetensis', function ($query) use ($jenisKaryawan) {
+                        $query->where(function ($query) use ($jenisKaryawan) {
+                            foreach ($jenisKaryawan as $jk) {
+                                $query->orWhere('jenis_kompetensi', $jk);
+                            }
+                        });
+                    });
+                } else {
+                    $tukarJadwal->whereHas('user_pengajuans.data_karyawans.kompetensis', function ($query) use ($jenisKaryawan) {
+                        $query->where('jenis_kompetensi', $jenisKaryawan);
+                    });
+                }
+            }
+
             if (isset($filters['status_penukaran'])) {
                 $namaStatusPenukaran = $filters['status_penukaran'];
                 $tukarJadwal->whereHas('status_tukar_jadwals', function ($query) use ($namaStatusPenukaran) {

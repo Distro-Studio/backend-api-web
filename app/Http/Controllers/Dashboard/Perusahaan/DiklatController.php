@@ -1275,7 +1275,7 @@ class DiklatController extends Controller
             foreach ($users as $user) {
                 $message = "Diklat Internal baru '{$diklat->nama}' telah ditambahkan pada tanggal mulai {$diklat->tgl_mulai}.";
                 Notifikasi::create([
-                    'kategori_notifikasi_id' => 4,
+                    'kategori_notifikasi_id' => 13,
                     'user_id' => $user->id,
                     'message' => $message,
                     'is_read' => false,
@@ -1306,7 +1306,7 @@ class DiklatController extends Controller
             foreach ($userIds as $recipientId) {
                 $messageToSend = $recipientId === 1 ? $messageSuperAdmin : $message;
                 Notifikasi::create([
-                    'kategori_notifikasi_id' => 4,
+                    'kategori_notifikasi_id' => 14,
                     'user_id' => $recipientId,
                     'message' => $messageToSend,
                     'is_read' => false,
@@ -1331,7 +1331,7 @@ class DiklatController extends Controller
 
             // Buat notifikasi untuk user atau Super Admin
             Notifikasi::create([
-                'kategori_notifikasi_id' => 4,
+                'kategori_notifikasi_id' => 13,
                 'user_id' => $user->id,
                 'message' => $message,
                 'is_read' => false,
@@ -1354,7 +1354,7 @@ class DiklatController extends Controller
 
             // Buat notifikasi untuk user atau Super Admin
             Notifikasi::create([
-                'kategori_notifikasi_id' => 4,
+                'kategori_notifikasi_id' => 13,
                 'user_id' => $user->id,
                 'message' => $message,
                 'is_read' => false,
@@ -1377,7 +1377,7 @@ class DiklatController extends Controller
 
             // Buat notifikasi untuk user atau Super Admin
             Notifikasi::create([
-                'kategori_notifikasi_id' => 4,
+                'kategori_notifikasi_id' => 14,
                 'user_id' => $user->id,
                 'message' => $message,
                 'is_read' => false,
@@ -1400,7 +1400,7 @@ class DiklatController extends Controller
 
             // Buat notifikasi untuk user atau Super Admin
             Notifikasi::create([
-                'kategori_notifikasi_id' => 4,
+                'kategori_notifikasi_id' => 14,
                 'user_id' => $user->id,
                 'message' => $message,
                 'is_read' => false,

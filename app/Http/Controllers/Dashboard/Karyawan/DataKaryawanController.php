@@ -723,6 +723,17 @@ class DataKaryawanController extends Controller
         });
       }
 
+      if (isset($filters['jenis_kompetensi'])) {
+        $jenisKaryawan = $filters['jenis_kompetensi'];
+        $karyawan->whereHas('kompetensis', function ($query) use ($jenisKaryawan) {
+          if (is_array($jenisKaryawan)) {
+            $query->whereIn('jenis_kompetensi', $jenisKaryawan);
+          } else {
+            $query->where('jenis_kompetensi', '=', $jenisKaryawan);
+          }
+        });
+      }
+
       if (isset($filters['masa_diklat'])) {
         $masaDiklatJam = $filters['masa_diklat'];
         if (is_array($masaDiklatJam)) {

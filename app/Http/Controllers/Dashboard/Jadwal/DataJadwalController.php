@@ -140,6 +140,21 @@ class DataJadwalController extends Controller
                 });
             }
 
+            if (isset($filters['jenis_kompetensi'])) {
+                $jenisKaryawan = $filters['jenis_kompetensi'];
+                $usersQuery->whereHas('data_karyawans.kompetensis', function ($query) use ($jenisKaryawan) {
+                    if (is_array($jenisKaryawan)) {
+                        $query->where(function ($query) use ($jenisKaryawan) {
+                            foreach ($jenisKaryawan as $jk) {
+                                $query->orWhere('jenis_kompetensi', $jk);
+                            }
+                        });
+                    } else {
+                        $query->where('jenis_kompetensi', $jenisKaryawan);
+                    }
+                });
+            }
+
             if (isset($filters['search'])) {
                 $searchTerm = '%' . $filters['search'] . '%';
                 $usersQuery->where(function ($query) use ($searchTerm) {
