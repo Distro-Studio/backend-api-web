@@ -940,7 +940,7 @@ class DataJadwalController extends Controller
             try {
                 return Excel::download(new JadwalShiftExport(), 'jadwal-shift-karyawan.xls');
             } catch (\Throwable $e) {
-                return response()->json(new WithoutDataResource(Response::HTTP_INTERNAL_SERVER_ERROR, 'Maaf sepertinya terjadi error. Message: ' . $e->getMessage()), Response::HTTP_INTERNAL_SERVER_ERROR);
+                return response()->json(new WithoutDataResource(Response::HTTP_INTERNAL_SERVER_ERROR, 'Maaf sepertinya terjadi error. Pesan: ' . $e->getMessage()), Response::HTTP_INTERNAL_SERVER_ERROR);
             }
         } catch (\Exception $e) {
             Log::error('| Jadwal | - Error saat export data jadwal karyawan shift: ' . $e->getMessage());
@@ -966,7 +966,7 @@ class DataJadwalController extends Controller
             try {
                 return Excel::download(new JadwalNonShiftExport(), 'jadwal-non-shift-karyawan.xls');
             } catch (\Throwable $e) {
-                return response()->json(new WithoutDataResource(Response::HTTP_INTERNAL_SERVER_ERROR, 'Maaf sepertinya terjadi error. Message: ' . $e->getMessage()), Response::HTTP_INTERNAL_SERVER_ERROR);
+                return response()->json(new WithoutDataResource(Response::HTTP_INTERNAL_SERVER_ERROR, 'Maaf sepertinya terjadi error. Pesan: ' . $e->getMessage()), Response::HTTP_INTERNAL_SERVER_ERROR);
             }
         } catch (\Exception $e) {
             Log::error('| Jadwal | - Error saat export data jadwal karyawan non shift: ' . $e->getMessage());
@@ -1038,7 +1038,7 @@ class DataJadwalController extends Controller
         try {
             return Excel::download(new TemplateJadwalExport(), 'template_jadwal_import.xls');
         } catch (\Throwable $e) {
-            return response()->json(new WithoutDataResource(Response::HTTP_INTERNAL_SERVER_ERROR, 'Maaf sepertinya terjadi error. Message: ' . $e->getMessage()), Response::HTTP_INTERNAL_SERVER_ERROR);
+            return response()->json(new WithoutDataResource(Response::HTTP_INTERNAL_SERVER_ERROR, 'Maaf sepertinya terjadi error. Pesan: ' . $e->getMessage()), Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 }

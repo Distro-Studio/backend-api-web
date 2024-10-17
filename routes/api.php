@@ -210,7 +210,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::get('/calculated-info-penggajian', [PenggajianController::class, 'calculatedInfo']);
             Route::post('/get-penggajian', [PenggajianController::class, 'index']);
 
-            Route::post('/penggajian/export-penerimaan', [PenggajianController::class, 'exportRekapPenerimaanGaji']);
+            Route::post('/penggajian/export-penerimaan-karyawan', [PenggajianController::class, 'exportRekapPenerimaanGaji']);
+            Route::post('/penggajian/export-penerimaan-unit', [PenggajianController::class, 'exportRekapPenerimaanGajiUnit']);
             Route::post('/penggajian/export-potongan', [PenggajianController::class, 'exportRekapPotonganGaji']);
             Route::post('/penggajian/export-bank', [PenggajianController::class, 'exportLaporanGajiBank']);
             Route::get('/penggajian/detail/{penggajian_id}', [PenggajianController::class, 'showDetailGajiUser']);
@@ -225,6 +226,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
             Route::apiResource('/penggajian', PenggajianController::class);
             Route::post('/publikasi-penggajian', [PenggajianController::class, 'publikasiPenggajian']);
+            
 
             // ! Penyesuaian Gaji ===========>
             Route::post('/get-penyesuaian-gaji', [PenyesuaianGajiController::class, 'index']);

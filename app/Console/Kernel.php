@@ -2,6 +2,7 @@
 
 namespace App\Console;
 
+use App\Console\Commands\NotificationSIP;
 use App\Console\Commands\ResetMasaDiklat;
 use App\Console\Commands\UpdateAndResetReward;
 use App\Console\Commands\UpdateAutoPublishPenggajian;
@@ -17,7 +18,8 @@ class Kernel extends ConsoleKernel
         UpdateDataKaryawanTransfer::class,
         UpdateAutoPublishPenggajian::class,
         UpdateAndResetReward::class,
-        ResetMasaDiklat::class
+        ResetMasaDiklat::class,
+        NotificationSIP::class
     ];
 
     /**
@@ -44,6 +46,11 @@ class Kernel extends ConsoleKernel
         $schedule->command('app:reset-masa-diklat')
             ->timezone('Asia/Jakarta')
             ->yearlyOn(12, 31, '23:59');
+
+        // Notification SIP
+        $schedule->command('app:notification-warning-sip')
+            ->timezone('Asia/Jakarta')
+            ->dailyAt('01:00');
     }
 
     /**

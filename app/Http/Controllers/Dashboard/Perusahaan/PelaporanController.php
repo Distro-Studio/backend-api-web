@@ -284,7 +284,7 @@ class PelaporanController extends Controller
         try {
             return Excel::download(new PelaporanExport(), 'perusahaan-pelaporan-karyawan.xls');
         } catch (\Throwable $e) {
-            return response()->json(new WithoutDataResource(Response::HTTP_INTERNAL_SERVER_ERROR, 'Maaf sepertinya terjadi error. Message: ' . $e->getMessage()), Response::HTTP_INTERNAL_SERVER_ERROR);
+            return response()->json(new WithoutDataResource(Response::HTTP_INTERNAL_SERVER_ERROR, 'Maaf sepertinya terjadi error. Pesan: ' . $e->getMessage()), Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 }

@@ -540,7 +540,7 @@ class DataLemburController extends Controller
             try {
                 return Excel::download(new LemburJadwalExport(), 'lembur-karyawan.xls');
             } catch (\Throwable $e) {
-                return response()->json(new WithoutDataResource(Response::HTTP_INTERNAL_SERVER_ERROR, 'Maaf sepertinya terjadi error. Message: ' . $e->getMessage()), Response::HTTP_INTERNAL_SERVER_ERROR);
+                return response()->json(new WithoutDataResource(Response::HTTP_INTERNAL_SERVER_ERROR, 'Maaf sepertinya terjadi error. Pesan: ' . $e->getMessage()), Response::HTTP_INTERNAL_SERVER_ERROR);
             }
         } catch (\Exception $e) {
             Log::error('| Lembur | - Error saat export data lembur karyawan: ' . $e->getMessage());
@@ -635,9 +635,10 @@ class DataLemburController extends Controller
     private function createNotifikasiLembur($dataLembur)
     {
         try {
-            $timeString = RandomHelper::convertToTimeString($dataLembur->durasi);
-            $durasi = RandomHelper::convertTimeStringToSeconds($timeString);
-            $durasi_jam = RandomHelper::convertToHoursMinutes($durasi);
+            $seconds = $dataLembur->durasi;
+            $hours = floor($seconds / 3600);
+            $minutes = floor(($seconds % 3600) / 60);
+            $durasi_jam = sprintf("%d Jam %d Menit", $hours, $minutes);
 
             // Pesan untuk karyawan terkait
             $messageForUser = "{$dataLembur->users->nama}, Anda mendapatkan pengajuan lembur dengan durasi {$durasi_jam}.";

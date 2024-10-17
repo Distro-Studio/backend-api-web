@@ -23,6 +23,7 @@ use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
 use App\Exports\Keuangan\LaporanPenggajian\LaporanGajiBankExport;
 use App\Exports\Keuangan\LaporanPenggajian\RekapGajiPotonganExport;
 use App\Exports\Keuangan\LaporanPenggajian\RekapGajiPenerimaanExport;
+use App\Exports\Keuangan\LaporanPenggajian\RekapGajiUnitExport;
 
 class PenggajianController extends Controller
 {
@@ -587,11 +588,38 @@ class PenggajianController extends Controller
 
         try {
             return Excel::download(new RekapGajiPenerimaanExport($months, $years), 'rekap-penerimaan-gaji.xls');
-        } catch (\Exception $e) {
-            return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya terjadi error. Message: ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
-        } catch (\Error $e) {
-            return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya terjadi error. Message: ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
+        } catch (\Throwable $e) {
+            return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya terjadi error. Pesan: ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
         }
+
+        return response()->json(new WithoutDataResource(Response::HTTP_OK, 'Data penggajian karyawan berhasil di download.'), Response::HTTP_OK);
+    }
+
+    public function exportRekapPenerimaanGajiUnit(Request $request)
+    {
+        if (!Gate::allows('export penggajianKaryawan')) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
+
+        $dataPenggajian = Penggajian::all();
+        if ($dataPenggajian->isEmpty()) {
+            return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Tidak ada data penggajian karyawan yang tersedia untuk diekspor.'), Response::HTTP_NOT_FOUND);
+        }
+
+        $months = $request->input('months', []);
+        $years = $request->input('years', []);
+
+        try {
+            $sheets = new RekapGajiUnitExport($months, $years);
+            if ($sheets->sheets() === []) {
+                return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Tidak ada data penggajian karyawan yang tersedia untuk diekspor.'), Response::HTTP_NOT_FOUND);
+            }
+
+            return Excel::download($sheets, 'rekap-penerimaan-gaji-unit-kerja.xls');
+        } catch (\Throwable $e) {
+            return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf, tidak ada data yang dapat diekspor atau terjadi error. Pesan: ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
+        }
+    
 
         return response()->json(new WithoutDataResource(Response::HTTP_OK, 'Data penggajian karyawan berhasil di download.'), Response::HTTP_OK);
     }
@@ -613,10 +641,8 @@ class PenggajianController extends Controller
 
         try {
             return Excel::download(new RekapGajiPotonganExport($months, $years), 'rekap-potongan-gaji.xls');
-        } catch (\Exception $e) {
-            return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya terjadi error. Message: ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
-        } catch (\Error $e) {
-            return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya terjadi error. Message: ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
+        } catch (\Throwable $e) {
+            return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya terjadi error. Pesan: ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
         }
 
         return response()->json(new WithoutDataResource(Response::HTTP_OK, 'Data rekap potongan gaji karyawan berhasil di download.'), Response::HTTP_OK);
@@ -639,10 +665,8 @@ class PenggajianController extends Controller
 
         try {
             return Excel::download(new LaporanGajiBankExport($months, $years), 'laporan-penggajian-bank.xls');
-        } catch (\Exception $e) {
-            return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya terjadi error. Message: ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
-        } catch (\Error $e) {
-            return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya terjadi error. Message: ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
+        } catch (\Throwable $e) {
+            return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya terjadi error. Pesan: ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
         }
 
         return response()->json(new WithoutDataResource(Response::HTTP_OK, 'Data laporan penggajian setoran bank berhasil di download.'), Response::HTTP_OK);

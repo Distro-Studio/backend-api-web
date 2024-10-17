@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('nama_jabatan');
             $table->boolean('is_struktural');
-            // $table->integer('tunjangan_jabatan');
+            $table->integer('tunjangan_jabatan');
             $table->softDeletes();
             $table->timestamps();
         });

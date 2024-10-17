@@ -933,7 +933,7 @@ class DataKaryawanController extends Controller
           'status_karyawan_id' => $data['status_karyawan_id'],
           'kelompok_gaji_id' => $data['kelompok_gaji_id'],
           'no_rekening' => $data['no_rekening'],
-          // 'tunjangan_jabatan' => $data['tunjangan_jabatan'],
+          'tunjangan_jabatan' => $data['tunjangan_jabatan'],
           'tunjangan_fungsional' => $data['tunjangan_fungsional'],
           'tunjangan_khusus' => $data['tunjangan_khusus'],
           'tunjangan_lainnya' => $data['tunjangan_lainnya'],
@@ -1476,7 +1476,7 @@ class DataKaryawanController extends Controller
       try {
         return Excel::download(new KaryawanExport($request->all()), 'karyawan-data.xls');
       } catch (\Throwable $e) {
-        return response()->json(new WithoutDataResource(Response::HTTP_INTERNAL_SERVER_ERROR, 'Maaf sepertinya terjadi error. Message: ' . $e->getMessage()), Response::HTTP_INTERNAL_SERVER_ERROR);
+        return response()->json(new WithoutDataResource(Response::HTTP_INTERNAL_SERVER_ERROR, 'Maaf sepertinya terjadi error. Pesan: ' . $e->getMessage()), Response::HTTP_INTERNAL_SERVER_ERROR);
       }
     } catch (\Exception $e) {
       Log::error('| Karyawan | - Error function exportKaryawan: ' . $e->getMessage());
@@ -1574,7 +1574,7 @@ class DataKaryawanController extends Controller
     try {
       return Excel::download(new TemplateKaryawanExport, 'template_import_karyawan.xls');
     } catch (\Throwable $e) {
-      return response()->json(new WithoutDataResource(Response::HTTP_INTERNAL_SERVER_ERROR, 'Maaf sepertinya terjadi error. Message: ' . $e->getMessage()), Response::HTTP_INTERNAL_SERVER_ERROR);
+      return response()->json(new WithoutDataResource(Response::HTTP_INTERNAL_SERVER_ERROR, 'Maaf sepertinya terjadi error. Pesan: ' . $e->getMessage()), Response::HTTP_INTERNAL_SERVER_ERROR);
     }
   }
 }

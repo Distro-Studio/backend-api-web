@@ -192,6 +192,7 @@ class KaryawanSeeder extends Seeder
             $tgl_keluar = date('Y-m-d', rand(mktime(0, 0, 0, 1, 1, 2023), mktime(0, 0, 0, 12, 31, 2024)));
             $tgl_lahir = date('Y-m-d', rand(mktime(0, 0, 0, 1, 1, 1900), mktime(0, 0, 0, 12, 31, 2003)));
             $tgl_str = date('Y-m-d', rand(mktime(0, 0, 0, 1, 1, 2023), mktime(0, 0, 0, 12, 31, 2028)));
+            $tgl_sip = '10-10-2024';
 
             // Create DataKaryawan
             $dataKaryawan = DataKaryawan::create([
@@ -204,12 +205,14 @@ class KaryawanSeeder extends Seeder
                 'jabatan_id' => $jabatan_id[array_rand($jabatan_id)],
                 'kompetensi_id' => $kompetensi_id[array_rand($kompetensi_id)],
                 'status_karyawan_id' => $status_karyawan_id[array_rand($status_karyawan_id)],
+                // 'status_karyawan_id' => rand(1, 3),
                 'tempat_lahir' => $cityborn[array_rand($cityborn)],
                 'tgl_lahir' => $tgl_lahir,
                 "nik" => rand(1214, 50000000),
                 "nik_ktp" => rand(1214, 50000000),
                 'kelompok_gaji_id' => $kelompok_gaji_id[array_rand($kelompok_gaji_id)],
                 'no_rekening' => rand(152368, 500000000),
+                'tunjangan_jabatan' => rand(70000, 5500000),
                 'tunjangan_fungsional' => rand(70000, 250000),
                 'tunjangan_khusus' => rand(0, 120000),
                 'tunjangan_lainnya' => rand(250000, 1000000),
@@ -239,7 +242,7 @@ class KaryawanSeeder extends Seeder
                 "no_str" => "STR/01/RA/" . rand(1214, 500000),
                 "masa_berlaku_str" => $tgl_str,
                 "no_sip" => "SIP/01/VI/" . rand(1214, 500000),
-                "masa_berlaku_sip" => $tgl_str,
+                "masa_berlaku_sip" => $tgl_sip,
                 "tgl_berakhir_pks" => $tgl_keluar,
                 "masa_diklat" => null,
                 'bmi_value' => mt_rand(100, 400) / 10,
