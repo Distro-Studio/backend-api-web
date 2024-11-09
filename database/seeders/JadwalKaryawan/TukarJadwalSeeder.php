@@ -21,6 +21,7 @@ class TukarJadwalSeeder extends Seeder
     {
         $users = User::where('nama', '!=', 'Super Admin')->pluck('id')->all();
         $jadwals = Jadwal::pluck('id')->all();
+        $status_tukar = StatusTukarJadwal::pluck('id')->all();
 
         for ($i = 0; $i < 20; $i++) {
             $user_pengajuan = $users[array_rand($users)];
@@ -38,7 +39,8 @@ class TukarJadwalSeeder extends Seeder
                 'user_ditukar' => $user_ditukar,
                 'jadwal_pengajuan' => $jadwal_pengajuan,
                 'jadwal_ditukar' => $jadwal_ditukar,
-                'status_penukaran_id' => 1, // Assuming you have a status field with 3 statuses
+                'status_penukaran_id' => $status_tukar[array_rand($status_tukar)],
+                'acc_user_ditukar' => 2,
                 'kategori_penukaran_id' => rand(1, 2), // Assuming you have a category field with 2 categories
             ]);
         }

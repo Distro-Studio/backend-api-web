@@ -3,6 +3,7 @@
 namespace App\Exports\Sheet;
 
 use Carbon\Carbon;
+use App\Models\DataKaryawan;
 use App\Models\Penggajian;
 use Maatwebsite\Excel\Concerns\WithTitle;
 use Maatwebsite\Excel\Concerns\WithHeadings;
@@ -27,6 +28,10 @@ class RekapGajiUnitSheet implements FromCollection, WithHeadings, WithTitle
 
     public function collection()
     {
+        if ($this->unitKerjas->isEmpty()) {
+            return collect([]);
+        }
+
         $rows = [];
 
         foreach ($this->unitKerjas as $unitKerja) {
@@ -97,8 +102,11 @@ class RekapGajiUnitSheet implements FromCollection, WithHeadings, WithTitle
                 $query->where('unit_kerja_id', $unitKerja->id);
             })->distinct('data_karyawan_id')->count('data_karyawan_id');
 
+            $totalKaryawanUnitKerja = DataKaryawan::where('unit_kerja_id', $unitKerja->id)->count();
+
             $rows[] = [
                 $unitKerja->nama_unit,
+                $totalKaryawanUnitKerja,
                 $jumlahKaryawan,
                 $gajiPokok,
                 $tunjanganJabatan,
@@ -122,14 +130,15 @@ class RekapGajiUnitSheet implements FromCollection, WithHeadings, WithTitle
     {
         return [
             'Nama Unit',
-            'Jumlah Karyawan',
+            'Jumlah Karyawan Unit',
+            'Jumlah Karyawan Digaji',
             'Gaji Pokok',
             'Tunjangan Jabatan',
             'Tunjangan Fungsional',
             'Tunjangan Khusus',
             'Tunjangan Lainnya',
             'Uang Lembur',
-            'BOR',
+            'Reward BOR',
             'Reward Absensi',
             'Uang Makan',
             'Tambahan Lain',

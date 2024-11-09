@@ -23,7 +23,8 @@ class Penggajian extends Model
         'total_premi' => 'integer',
         'pph_21' => 'integer',
         'take_home_pay' => 'integer',
-        'status_gaji_id' => 'integer'
+        'status_gaji_id' => 'integer',
+        'periode_gaji_karyawan' => 'integer'
     ];
 
     /**

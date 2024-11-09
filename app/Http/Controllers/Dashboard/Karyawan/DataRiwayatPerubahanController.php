@@ -14,6 +14,7 @@ use Illuminate\Http\Response;
 use App\Models\ModulVerifikasi;
 use App\Models\RelasiVerifikasi;
 use App\Models\RiwayatPerubahan;
+use App\Models\PerubahanKeluarga;
 use App\Models\KategoriPendidikan;
 use App\Helpers\CalculateBMIHelper;
 use Illuminate\Support\Facades\Log;
@@ -263,11 +264,11 @@ class DataRiwayatPerubahanController extends Controller
             }
 
             if ($data_perubahan->jenis_perubahan === 'Personal') {
-                if (in_array($data_perubahan->kolom, ['kategori_agama_id', 'kategori_darah_id', 'pendidikan_terakhir'])) {
-                    if ($data_perubahan->kolom === 'kategori_agama_id') {
+                if (in_array($data_perubahan->kolom, ['agama', 'golongan_darah', 'pendidikan_terakhir'])) {
+                    if ($data_perubahan->kolom === 'agama') {
                         $originalData = KategoriAgama::find($originalData) ?? $originalData;
                         $updatedData = KategoriAgama::find($updatedData) ?? $updatedData;
-                    } elseif ($data_perubahan->kolom === 'kategori_darah_id') {
+                    } elseif ($data_perubahan->kolom === 'golongan_darah') {
                         $originalData = KategoriDarah::find($originalData) ?? $originalData;
                         $updatedData = KategoriDarah::find($updatedData) ?? $updatedData;
                     } elseif ($data_perubahan->kolom === 'pendidikan_terakhir') {
@@ -476,6 +477,11 @@ class DataRiwayatPerubahanController extends Controller
                         }
                     }
 
+                    if ($riwayat->kolom == 'agama') {
+                        $riwayat->kolom = 'kategori_agama_id';
+                    } elseif ($riwayat->kolom == 'golongan_darah') {
+                        $riwayat->kolom = 'kategori_darah_id';
+                    }
                     // Update data sesuai dengan kolom yang diubah
                     $dataKaryawan->{$riwayat->kolom} = $riwayat->updated_data;
                     if ($bmiResult) {
@@ -491,45 +497,29 @@ class DataRiwayatPerubahanController extends Controller
                 $updatedFamilyData = is_string($riwayat->updated_data) ? json_decode($riwayat->updated_data, true) : $riwayat->updated_data;
 
                 if (is_array($updatedFamilyData)) {
-                    foreach ($updatedFamilyData as $update) {
-                        if (!is_null($update['data_keluarga_id'])) {
-                            // Update existing family data
-                            $dataKeluarga = DataKeluarga::find($update['data_keluarga_id']);
-                            if ($dataKeluarga) {
-                                $updateData = [];
-
-                                if (!is_null($update['nama_keluarga'])) $updateData['nama_keluarga'] = $update['nama_keluarga'];
-                                if (!is_null($update['hubungan'])) $updateData['hubungan'] = $update['hubungan'];
-                                if (!is_null($update['pendidikan_terakhir'])) $updateData['pendidikan_terakhir'] = $update['pendidikan_terakhir'];
-                                if (!is_null($update['status_hidup'])) $updateData['status_hidup'] = $update['status_hidup'];
-                                if (!is_null($update['pekerjaan'])) $updateData['pekerjaan'] = $update['pekerjaan'];
-                                if (!is_null($update['no_hp'])) $updateData['no_hp'] = $update['no_hp'];
-                                if (!is_null($update['email'])) $updateData['email'] = $update['email'];
-                                if (!is_null($update['is_bpjs'])) $updateData['is_bpjs'] = $update['is_bpjs'];
-
-                                if (!empty($updateData)) {
-                                    $dataKeluarga->update($updateData);
-                                }
-                            }
-                        } else {
-                            // Create new family data if data_keluarga_id is null
-                            if (!is_null($update['data_karyawan_id'])) {
-                                $newFamilyData = [
-                                    'data_karyawan_id' => $update['data_karyawan_id'],
-                                    'nama_keluarga' => $update['nama_keluarga'],
-                                    'hubungan' => $update['hubungan'],
-                                    'pendidikan_terakhir' => $update['pendidikan_terakhir'],
-                                    'status_hidup' => $update['status_hidup'],
-                                    'pekerjaan' => $update['pekerjaan'] ?? null,
-                                    'no_hp' => $update['no_hp'] ?? null,
-                                    'email' => $update['email'] ?? null,
-                                    'status_keluarga_id' => 1,
-                                    'is_bpjs' => $update['is_bpjs'],
-                                ];
-
-                                DataKeluarga::create($newFamilyData);
-                            }
+                    PerubahanKeluarga::where('riwayat_perubahan_id', $riwayat->id)->delete();
+                    $dkeluarga = DataKeluarga::where('data_karyawan_id', $riwayat->data_karyawan_id)->get();
+                    if ($dkeluarga->isNotEmpty()) {
+                        foreach ($dkeluarga as $d) {
+                            PerubahanKeluarga::where('data_keluarga_id', $d->id)->delete();
+                            DataKeluarga::where('id', $d->id)->delete();
                         }
+                    }
+
+                    foreach ($updatedFamilyData as $update) {
+                        DataKeluarga::create([
+                            'data_karyawan_id' => $riwayat->data_karyawan_id,
+                            'nama_keluarga' => $update['nama_keluarga'],
+                            'hubungan' => $update['hubungan'],
+                            'pendidikan_terakhir' => $update['pendidikan_terakhir'],
+                            'status_hidup' => $update['status_hidup'],
+                            'pekerjaan' => $update['pekerjaan'],
+                            'no_hp' => $update['no_hp'],
+                            'email' => $update['email'],
+                            'status_keluarga_id' => 2,
+                            'is_bpjs' => $update['is_bpjs'],
+                            'verifikator_1' => Auth::user()->id,
+                        ]);
                     }
                 }
                 break;

@@ -21,6 +21,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\TemplateJadwalExport;
+use Illuminate\Support\Facades\Storage;
 use App\Exports\Jadwal\JadwalShiftExport;
 use App\Exports\Jadwal\JadwalNonShiftExport;
 use App\Http\Requests\StoreJadwalKaryawanRequest;
@@ -221,7 +222,7 @@ class DataJadwalController extends Controller
                         $day_of_week = Carbon::createFromFormat('Y-m-d', $date)->dayOfWeek;
                         $nonShiftForDay = NonShift::where('nama', 'like', "%{$this->getDayName($day_of_week)}%")->first();
 
-                        if (is_null($nonShiftForDay->jam_from) || is_null($nonShiftForDay->jam_to)) {
+                        if (!$nonShiftForDay || is_null($nonShiftForDay->jam_from) || is_null($nonShiftForDay->jam_to)) {
                             // Libur default gak ada jadwal
                             $user_schedule_array[$date] = [
                                 'id' => null,
@@ -353,7 +354,7 @@ class DataJadwalController extends Controller
             Log::error('| Jadwal | - Error saat menampilkan detail data jadwal karyawan: ' . $e->getMessage());
             return response()->json([
                 'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
-                'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
+                'message' => "Terjadi kesalahan pada server {$e->getMessage()}. Line: {$e->getLine()}. Silakan coba lagi nanti.",
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
@@ -1036,9 +1037,16 @@ class DataJadwalController extends Controller
     public function downloadJadwalTemplate()
     {
         try {
-            return Excel::download(new TemplateJadwalExport(), 'template_jadwal_import.xls');
+            $filePath = 'templates/template_import_jadwal.xls';
+
+            if (!Storage::exists($filePath)) {
+                return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'File template tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+            }
+
+            return Storage::download($filePath, 'template_import_jadwal.xls');
         } catch (\Throwable $e) {
-            return response()->json(new WithoutDataResource(Response::HTTP_INTERNAL_SERVER_ERROR, 'Maaf sepertinya terjadi error. Pesan: ' . $e->getMessage()), Response::HTTP_INTERNAL_SERVER_ERROR);
+            Log::error('| Jadwal | - Error saat download template jadwal: ' . $e->getMessage() . ' Line: ' . $e->getLine());
+            return response()->json(new WithoutDataResource(Response::HTTP_INTERNAL_SERVER_ERROR, 'Maaf sepertinya terjadi error.'), Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 }

@@ -22,7 +22,7 @@ class DashboardController extends Controller
     {
         $today = Carbon::today('Asia/Jakarta')->format('d-m-Y');
 
-        $kategoriAbsenId = DB::table('kategori_presensis')->where('label', 'Absen')->value('id');
+        $kategoriAbsenId = DB::table('kategori_presensis')->where('label', 'Alpha')->value('id');
 
         // Calculate total number of employees excluding the super admin
         $calculatedKaryawan = DataKaryawan::where('id', '!=', 1)->count();

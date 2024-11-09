@@ -212,6 +212,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
             Route::post('/penggajian/export-penerimaan-karyawan', [PenggajianController::class, 'exportRekapPenerimaanGaji']);
             Route::post('/penggajian/export-penerimaan-unit', [PenggajianController::class, 'exportRekapPenerimaanGajiUnit']);
+            Route::post('/penggajian/export-penerimaan-kompetensi', [PenggajianController::class, 'exportRekapPenerimaanGajiKompetensi']);
             Route::post('/penggajian/export-potongan', [PenggajianController::class, 'exportRekapPotonganGaji']);
             Route::post('/penggajian/export-bank', [PenggajianController::class, 'exportLaporanGajiBank']);
             Route::get('/penggajian/detail/{penggajian_id}', [PenggajianController::class, 'showDetailGajiUser']);

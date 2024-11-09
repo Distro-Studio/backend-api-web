@@ -5,6 +5,7 @@ namespace App\Console;
 use App\Console\Commands\NotificationSIP;
 use App\Console\Commands\ResetMasaDiklat;
 use App\Console\Commands\UpdateAndResetReward;
+use App\Console\Commands\UpdateAutoAlfaPresensi;
 use App\Console\Commands\UpdateAutoPublishPenggajian;
 use DateTimeZone;
 use Carbon\Carbon;
@@ -19,7 +20,8 @@ class Kernel extends ConsoleKernel
         UpdateAutoPublishPenggajian::class,
         UpdateAndResetReward::class,
         ResetMasaDiklat::class,
-        NotificationSIP::class
+        NotificationSIP::class,
+        UpdateAutoAlfaPresensi::class
     ];
 
     /**
@@ -51,6 +53,11 @@ class Kernel extends ConsoleKernel
         $schedule->command('app:notification-warning-sip')
             ->timezone('Asia/Jakarta')
             ->dailyAt('01:00');
+
+        // Update alfa presensi
+        $schedule->command('app:update-auto-alfa-presensi')
+            ->timezone('Asia/Jakarta')
+            ->dailyAt('00:00');
     }
 
     /**

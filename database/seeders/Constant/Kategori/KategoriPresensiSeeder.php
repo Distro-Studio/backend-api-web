@@ -13,7 +13,7 @@ class KategoriPresensiSeeder extends Seeder
      */
     public function run(): void
     {
-        $kategori = ['Tepat Waktu', 'Terlambat', 'Cuti', 'Absen'];
+        $kategori = ['Tepat Waktu', 'Terlambat', 'Cuti', 'Alpha'];
 
         foreach ($kategori as $kategori) {
             DB::table('kategori_presensis')->insert([

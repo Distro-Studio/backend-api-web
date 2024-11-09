@@ -287,6 +287,12 @@ class MateriPelatihanController extends Controller
                 // Iterasi untuk setiap field dokumen yang ada
                 foreach ($berkasFields as $index => $field) {
                     if ($request->hasFile($field)) {
+                        $berkasLama = Berkas::find($berkasIds[$index]);
+                        if ($berkasLama) {
+                            StorageServerHelper::deleteFromServer($berkasLama->file_id);
+                            $berkasLama->delete();
+                        }
+
                         $file = $request->file($field);
                         $random_filename = Str::random(20);
                         $dataupload = StorageServerHelper::multipleUploadToServer($file, $random_filename);
@@ -305,16 +311,13 @@ class MateriPelatihanController extends Controller
                                 'size' => $dataupload['size'],
                             ]
                         );
-                        $berkasLama = Berkas::find($berkasIds[$index]);
-                        if ($berkasLama) {
-                            $berkasLama->delete();
-                        }
 
                         $berkasIds[$index] = $berkas->id;
                         Log::info('Berkas ' . $field . ' berhasil diupload.');
-                    } else if (is_string($request->input($field))) {
-                        unset($data[$field]);
-                    }
+                    } 
+                    // else if (is_string($request->input($field))) {
+                    //     unset($data[$field]);
+                    // }
                 }
 
                 StorageServerHelper::logout();
@@ -339,7 +342,7 @@ class MateriPelatihanController extends Controller
                 Log::error('| Materi Pelatihan | - Error function update: ' . $e->getMessage());
                 return response()->json([
                     'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
-                    'message' => 'Terjadi kesalahan pada server: ' . $e->getMessage(),
+                    'message' => 'Terjadi kesalahan pada server: ' . $e->getMessage() . ', Line:' . $e->getLine(),
                 ], Response::HTTP_INTERNAL_SERVER_ERROR);
             }
         } catch (\Exception $e) {
@@ -365,6 +368,8 @@ class MateriPelatihanController extends Controller
 
             DB::beginTransaction();
             try {
+                StorageServerHelper::login();
+
                 $dokumenIds = [
                     $data_pelatihan->dokumen_materi_1,
                     $data_pelatihan->dokumen_materi_2,
@@ -372,8 +377,10 @@ class MateriPelatihanController extends Controller
                 ];
 
                 $berkas = Berkas::whereIn('id', $dokumenIds)->get();
+                // dd($berkas);
                 if ($berkas->isNotEmpty()) {
                     foreach ($berkas as $berkasItem) {
+                        StorageServerHelper::deleteFromServer($berkasItem->file_id);
                         $berkasItem->delete();
                         Log::info('Berkas ID ' . $berkasItem->id . ' berhasil dihapus.');
                     }
@@ -391,8 +398,10 @@ class MateriPelatihanController extends Controller
                 Log::error('| Materi Pelatihan | - Error pada function destroy: ' . $e->getMessage());
                 return response()->json([
                     'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
-                    'message' => 'Terjadi kesalahan saat menghapus data. Silakan coba lagi nanti.',
+                    'message' => 'Terjadi kesalahan saat menghapus data. Silakan coba lagi nanti.' . $e->getMessage(),
                 ], Response::HTTP_INTERNAL_SERVER_ERROR);
+            } finally {
+                StorageServerHelper::logout();
             }
         } catch (\Exception $e) {
             Log::error('| Materi Pelatihan | - Error pada function destroy: ' . $e->getMessage());

@@ -15,13 +15,14 @@ use Illuminate\Http\Request;
 use App\Helpers\RandomHelper;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use App\Helpers\StorageServerHelper;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Gate;
 use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Support\Facades\Storage;
 use App\Exports\Presensi\PresensiExport;
 use App\Imports\Presensi\PresensiImport;
-use App\Exports\Presensi\TemplateImportPresensiExport;
 use App\Http\Requests\Excel_Import\ImportPresensiRequest;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
 
@@ -41,86 +42,6 @@ class DataPresensiController extends Controller
         ], Response::HTTP_OK);
     }
 
-    // public function calculatedPresensi()
-    // {
-    //     if (!Gate::allows('view presensiKaryawan')) {
-    //         return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
-    //     }
-
-    //     $today = Carbon::today('Asia/Jakarta')->format('Y-m-d');
-
-    //     // Ambil ID untuk setiap kategori dari tabel kategori_presensis
-    //     $kategoriTepatWaktuId = DB::table('kategori_presensis')->where('label', 'Tepat Waktu')->value('id');
-    //     $kategoriTerlambatId = DB::table('kategori_presensis')->where('label', 'Terlambat')->value('id');
-    //     $kategoriCutiId = DB::table('kategori_presensis')->where('label', 'Cuti')->value('id');
-    //     $kategoriAbsenId = DB::table('kategori_presensis')->where('label', 'Absen')->value('id');
-
-    //     // Validasi untuk memastikan kategori ditemukan
-    //     if (is_null($kategoriTepatWaktuId) || is_null($kategoriTerlambatId) || is_null($kategoriCutiId) || is_null($kategoriAbsenId)) {
-    //         return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Kategori presensi tidak ditemukan.'), Response::HTTP_NOT_FOUND);
-    //     }
-
-    //     // Calculate total number of employees excluding the super admin
-    //     $calculatedKaryawan = DataKaryawan::where('id', '!=', 1)->count();
-
-    //     // Hitung jumlah presensi dalam setiap kategori
-    //     $countTepatWaktu = Presensi::where('kategori_presensi_id', $kategoriTepatWaktuId)
-    //         ->whereDate('jam_masuk', $today)
-    //         ->count('user_id');
-
-    //     $countTerlambat = Presensi::where('kategori_presensi_id', $kategoriTerlambatId)
-    //         ->whereDate('jam_masuk', $today)
-    //         ->count('user_id');
-
-    //     $countCuti = Presensi::where('kategori_presensi_id', $kategoriCutiId)
-    //         ->whereDate('jam_masuk', $today)
-    //         ->count('user_id');
-
-    //     $countAbsen = Presensi::where('kategori_presensi_id', $kategoriAbsenId)
-    //         ->whereDate('jam_masuk', $today)
-    //         ->count('user_id');
-
-    //     // Hitung karyawan shift yang libur berdasarkan user_id
-    //     $countLiburShift = Jadwal::where('shift_id', 0)
-    //         ->whereDate('tgl_mulai', '<=', $today)
-    //         ->whereDate('tgl_selesai', '>=', $today)
-    //         ->count('user_id');
-
-    //     // Periksa apakah hari ini adalah hari libur
-    //     $isHariLibur = HariLibur::whereDate('tanggal', $today)->exists();
-
-    //     // Hitung karyawan non-shift yang libur berdasarkan hari libur
-    //     $countLiburNonShift = DataKaryawan::whereHas('unit_kerjas', function ($query) {
-    //         $query->where('jenis_karyawan', 0);
-    //     })->when($isHariLibur, function ($query) {
-    //         return $query->distinct('id')->count('id');  // Hitung berdasarkan user_id
-    //     }, function ($query) {
-    //         return 0;
-    //     });
-
-    //     // Total karyawan yang libur
-    //     $countLibur = $countLiburShift + $countLiburNonShift;
-
-    //     // Hitung total hadir dan total tidak hadir
-    //     $totalHadir = $countTepatWaktu + $countTerlambat;
-    //     $totalTidakHadir = $countCuti + $countAbsen + $countLibur;
-
-    //     return response()->json([
-    //         'status' => Response::HTTP_OK,
-    //         'message' => 'Perhitungan presensi seluruh karyawan berhasil ditampilkan.',
-    //         'data' => [
-    //             'total_karyawan' => $calculatedKaryawan,
-    //             'total_hadir' => $totalHadir,
-    //             'total_tepat_waktu' => $countTepatWaktu,
-    //             'total_terlambat' => $countTerlambat,
-    //             'total_tidak_hadir' => $totalTidakHadir,
-    //             'total_libur' => $countLibur,
-    //             'total_cuti' => $countCuti,
-    //             'total_absen' => $countAbsen,
-    //         ],
-    //     ], Response::HTTP_OK);
-    // }
-
     public function calculatedPresensi()
     {
         if (!Gate::allows('view presensiKaryawan')) {
@@ -133,7 +54,7 @@ class DataPresensiController extends Controller
         // Ambil ID untuk setiap kategori dari tabel kategori_presensis
         $kategoriTepatWaktuId = DB::table('kategori_presensis')->where('label', 'Tepat Waktu')->value('id');
         $kategoriTerlambatId = DB::table('kategori_presensis')->where('label', 'Terlambat')->value('id');
-        $kategoriAbsenId = DB::table('kategori_presensis')->where('label', 'Absen')->value('id');
+        $kategoriAbsenId = DB::table('kategori_presensis')->where('label', 'Alpha')->value('id');
 
         // Validasi untuk memastikan kategori ditemukan
         if (is_null($kategoriTepatWaktuId) || is_null($kategoriTerlambatId) || is_null($kategoriAbsenId)) {
@@ -484,7 +405,17 @@ class DataPresensiController extends Controller
         $jadwalNonShift = null;
         $jenisKaryawan = $presensiHariIni->users->data_karyawans->unit_kerjas->jenis_karyawan ?? null;
         if ($jenisKaryawan === 0) {
-            $jadwalNonShift = NonShift::first();
+            $jamMasukDate = Carbon::parse($presensiHariIni->jam_masuk)->format('l');
+            $hariNamaIndonesia = [
+                'Monday' => 'Senin',
+                'Tuesday' => 'Selasa',
+                'Wednesday' => 'Rabu',
+                'Thursday' => 'Kamis',
+                'Friday' => 'Jumat',
+                'Saturday' => 'Sabtu',
+                'Sunday' => 'Minggu'
+            ][$jamMasukDate] ?? 'Senin';
+            $jadwalNonShift = NonShift::where('nama', $hariNamaIndonesia)->first();
         }
 
         return response()->json([
@@ -535,7 +466,7 @@ class DataPresensiController extends Controller
                     'long_masuk' => $presensiHariIni->long,
                     'lat_keluar' => $presensiHariIni->latkeluar,
                     'long_keluar' => $presensiHariIni->longkeluar,
-                    'foto_masuk' => [
+                    'foto_masuk' => $fotoMasukBerkas ? [
                         'id' => $fotoMasukBerkas->id,
                         'user_id' => $fotoMasukBerkas->user_id,
                         'file_id' => $fotoMasukBerkas->file_id,
@@ -544,7 +475,7 @@ class DataPresensiController extends Controller
                         'path' => $fotoMasukUrl,
                         'ext' => $fotoMasukBerkas->ext,
                         'size' => $fotoMasukBerkas->size,
-                    ],
+                    ] : null,
                     'foto_keluar' => $fotoKeluarBerkas ? [
                         'id' => $fotoKeluarBerkas->id,
                         'user_id' => $fotoKeluarBerkas->user_id,
@@ -598,9 +529,16 @@ class DataPresensiController extends Controller
     public function downloadPresensiTemplate()
     {
         try {
-            return Excel::download(new TemplateImportPresensiExport, 'template_import_presensi.xls');
+            $filePath = 'templates/template_import_presensi.xls';
+
+            if (!Storage::exists($filePath)) {
+                return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'File template tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+            }
+
+            return Storage::download($filePath, 'template_import_presensi.xls');
         } catch (\Throwable $e) {
-            return response()->json(new WithoutDataResource(Response::HTTP_INTERNAL_SERVER_ERROR, 'Maaf sepertinya terjadi error. Pesan: ' . $e->getMessage()), Response::HTTP_INTERNAL_SERVER_ERROR);
+            Log::error('| Presensi | - Error saat download template presensi: ' . $e->getMessage() . ' Line: ' . $e->getLine());
+            return response()->json(new WithoutDataResource(Response::HTTP_INTERNAL_SERVER_ERROR, 'Maaf sepertinya terjadi error.'), Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 

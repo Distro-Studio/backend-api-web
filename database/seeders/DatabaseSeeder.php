@@ -79,7 +79,7 @@ class DatabaseSeeder extends Seeder
       RoleSeeder::class,
       AccountSeeder::class,
 
-        /* ==== Kategori & Status ==== */
+      /* ==== Kategori & Status ==== */
       KategoriActivityLogSeeder::class,
       KategoriAgamaSeeder::class,
       KategoriBerkasSeeder::class,
@@ -110,50 +110,50 @@ class DatabaseSeeder extends Seeder
       ModulVerifikasiSeeder::class,
 
       LokasiKantorSeeder::class,
-      
+
       /* ==== Pengaturan Karyawan ==== */
       JabatanSeeder::class,
       KelompokGajiSeeder::class,
       KompetensiSeeder::class,
       UnitKerjaSeeder::class,
-      
+
       /* ==== Pengaturan Finance ==== */
       KategoriTERSeeder::class,
       PTKPSeeder::class,
       PremiSeeder::class,
       TERSeeder::class,
-      
+
       /* ==== Pengaturan Managemen Waktu ==== */
       ShiftSeeder::class,
       JadwalNonShiftSeeder::class,
       HariLiburSeeder::class,
       TipeCutiSeeder::class,
 
-        /* ==== Karyawan ==== */
+      /* ==== Karyawan ==== */
       KaryawanSeeder::class,
       KeluargaKaryawanSeeder::class,
       TransferKaryawanSeeder::class,
       PerubahanKeluargaSeeder::class,
       PerubahanPersonalSeeder::class,
 
-        // /* ==== Jadwals ==== */
-        // PerizinanSeeder::class,
-        // JadwalSeeder::class,
-        // LemburSeeder::class,
-        // CutiJadwalSeeder::class,
-        // TukarJadwalSeeder::class,
+      // /* ==== Jadwals ==== */
+      // PerizinanSeeder::class,
+      // JadwalSeeder::class,
+      // LemburSeeder::class,
+      // CutiJadwalSeeder::class,
+      // TukarJadwalSeeder::class,
 
-        // /* ==== Presensi ==== */
-        // PresensiSeeder::class,
+      // /* ==== Presensi ==== */
+      // PresensiSeeder::class,
 
-        /* ==== Keuangan ==== */
+      /* ==== Keuangan ==== */
       TanggalGajiSeeder::class,
       TagihanPotonganSeeder::class,
       // PenggajianSeeder::class,
       // RiwayatPenggajianSeeder::class,
       // THRPenggajianSeeder::class,
 
-        /* ==== Perusahaan ==== */
+      /* ==== Perusahaan ==== */
       DiklatSeeder::class,
       PelaporanSeeder::class,
       JenisPenilaianSeeder::class,

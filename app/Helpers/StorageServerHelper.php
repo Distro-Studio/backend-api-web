@@ -2,6 +2,7 @@
 
 namespace App\Helpers;
 
+use App\Models\Berkas;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Http;
@@ -90,6 +91,29 @@ class StorageServerHelper
 		]);
 
 		$uploadinfo = $responseupload->json();
+		$dataupload = $uploadinfo['data'];
+
+		self::logout();
+
+		return $dataupload;
+	}
+
+	// Delete Berkas
+	public static function deleteFromServer($file_id)
+	{
+		self::login();
+		self::initDomain();
+
+		$responseupload = Http::withHeaders([
+			'Authorization' => 'Bearer ' . self::$token,
+		])->asMultipart()->post(self::$storageDomain . '/api/delete-file', [
+			'file_id' => $file_id,
+		]);
+
+		$uploadinfo = $responseupload->json();
+		// if (!isset($uploadinfo['data'])) {
+		// 	throw new \Exception('Error: ' . $responseupload->body());
+		// }
 		$dataupload = $uploadinfo['data'];
 
 		self::logout();

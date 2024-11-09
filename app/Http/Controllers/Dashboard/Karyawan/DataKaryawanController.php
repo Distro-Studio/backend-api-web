@@ -43,6 +43,7 @@ use Illuminate\Support\Facades\Mail;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\TemplateKaryawanExport;
 use App\Models\KategoriTagihanPotongan;
+use Illuminate\Support\Facades\Storage;
 use App\Exports\Karyawan\KaryawanExport;
 use App\Imports\Karyawan\KaryawanImport;
 use App\Http\Requests\StoreDataKaryawanRequest;
@@ -1572,9 +1573,16 @@ class DataKaryawanController extends Controller
   public function downloadKaryawanTemplate()
   {
     try {
-      return Excel::download(new TemplateKaryawanExport, 'template_import_karyawan.xls');
+      $filePath = 'templates/template_import_karyawan.xls';
+
+      if (!Storage::exists($filePath)) {
+        return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'File template tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+      }
+
+      return Storage::download($filePath, 'template_import_karyawan.xls');
     } catch (\Throwable $e) {
-      return response()->json(new WithoutDataResource(Response::HTTP_INTERNAL_SERVER_ERROR, 'Maaf sepertinya terjadi error. Pesan: ' . $e->getMessage()), Response::HTTP_INTERNAL_SERVER_ERROR);
+      Log::error('| Karyawan | - Error saat download template karyawan: ' . $e->getMessage() . ' Line: ' . $e->getLine());
+      return response()->json(new WithoutDataResource(Response::HTTP_INTERNAL_SERVER_ERROR, 'Maaf sepertinya terjadi error.'), Response::HTTP_INTERNAL_SERVER_ERROR);
     }
   }
 }

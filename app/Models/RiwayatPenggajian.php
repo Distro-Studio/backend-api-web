@@ -18,6 +18,7 @@ class RiwayatPenggajian extends Model
         'karyawan_verifikasi' => 'integer',
         'jenis_riwayat' => 'integer',
         'status_gaji_id' => 'integer',
+        'periode_gaji_karyawan' => 'integer',
         'created_by' => 'integer',
         'submitted_by' => 'integer'
     ];

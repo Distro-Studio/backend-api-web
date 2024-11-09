@@ -48,26 +48,29 @@ class RekapGajiPenerimaanSheet implements FromCollection, WithHeadings, WithMapp
             ->get()
             ->groupBy('data_karyawan');
 
-        $penyesuaianGajiData = DB::table('penyesuaian_gajis')
-            ->join('penggajians', 'penyesuaian_gajis.penggajian_id', '=', 'penggajians.id')
-            ->join('data_karyawans', 'penggajians.data_karyawan_id', '=', 'data_karyawans.id')
-            ->select(
-                'data_karyawans.id as data_karyawan',
-                'penyesuaian_gajis.nama_detail',
-                'penyesuaian_gajis.besaran'
-            )
-            ->where('data_karyawans.unit_kerja_id', $this->unit_kerja_id)
-            ->where('penyesuaian_gajis.kategori_gaji_id', 2)
-            ->whereMonth('penyesuaian_gajis.created_at', $this->month)
-            ->whereYear('penyesuaian_gajis.created_at', $this->year)
-            ->get()
-            ->groupBy('data_karyawan');
-
         $exportData = collect([]);
         $counter = 1;
 
         foreach ($detailGajiData as $karyawanId => $details) {
             $firstDetail = $details->first();
+
+            $penyesuaian_penambah = $details->where('kategori_gaji_id', 2)
+                ->whereNotIn('nama_detail', [
+                    'Gaji Pokok',
+                    'Tunjangan Jabatan',
+                    'Tunjangan Fungsional',
+                    'Tunjangan Khusus',
+                    'Tunjangan Lainnya',
+                    'Uang Lembur',
+                    'Uang Makan',
+                    'Reward BOR',
+                    'Reward Absensi'
+                ])->sum('besaran');
+
+            $penyesuaian_pengurang = $details->where('kategori_gaji_id', 3)->whereNotIn('nama_detail', [
+                'PPh21'
+            ])->sum('besaran');
+
             $data = [
                 'no' => $counter++,
                 'nama_karyawan' => $firstDetail->nama_karyawan,
@@ -78,18 +81,15 @@ class RekapGajiPenerimaanSheet implements FromCollection, WithHeadings, WithMapp
                 'tunjangan_lainnya' => $details->where('nama_detail', 'Tunjangan Lainnya')->first()->besaran ?? 0,
                 'uang_lembur' => $details->where('nama_detail', 'Uang Lembur')->first()->besaran ?? 0,
                 'uang_makan' => $details->where('nama_detail', 'Uang Makan')->first()->besaran ?? 0,
-                'bonus_bor' => $details->where('nama_detail', 'Bonus BOR')->first()->besaran ?? 0,
-                'bonus_presensi' => $details->where('nama_detail', 'Bonus Presensi')->first()->besaran ?? 0,
+                'bonus_bor' => $details->where('nama_detail', 'Reward BOR')->first()->besaran ?? 0,
+                'bonus_presensi' => $details->where('nama_detail', 'Reward Absensi')->first()->besaran ?? 0,
+                'pph21' => $details->where('nama_detail', 'PPh21')->first()->besaran ?? 0,
+                'penambah_gaji' => $penyesuaian_penambah,
+                'pengurang_gaji' => $penyesuaian_pengurang,
                 'jumlah_penghasilan' => $firstDetail->gaji_bruto ?? 0,
-                'jumlah_potongan' => $firstDetail->total_premi ?? 0,
+                'jumlah_premi' => $firstDetail->total_premi ?? 0,
                 'gaji_diterima' => $firstDetail->take_home_pay ?? 0,
             ];
-
-            if (isset($penyesuaianGajiData[$karyawanId])) {
-                foreach ($penyesuaianGajiData[$karyawanId] as $penyesuaian) {
-                    $data[$penyesuaian->nama_detail] = $penyesuaian->besaran ?? 0;
-                }
-            }
             $exportData->push($data);
         }
         return $exportData;
@@ -97,15 +97,6 @@ class RekapGajiPenerimaanSheet implements FromCollection, WithHeadings, WithMapp
 
     public function headings(): array
     {
-        $penyesuaianHeadings = DB::table('penyesuaian_gajis')
-            ->where('kategori_gaji_id', 2)
-            ->distinct()
-            ->pluck('nama_detail')
-            ->map(function ($item) {
-                return 'penambah_' . str_replace(' ', '_', strtolower($item));
-            })
-            ->toArray();
-
         $heading = [
             ["Unit Kerja: {$this->unit_kerja_nama}"],
             ["Periode: {$this->periode_sekarang}"],
@@ -120,13 +111,15 @@ class RekapGajiPenerimaanSheet implements FromCollection, WithHeadings, WithMapp
                     'tunjangan_lainnya',
                     'uang_lembur',
                     'uang_makan',
-                    'bonus_bor',
-                    'bonus_presensi',
+                    'reward_bor',
+                    'reward_absensi',
                     'jumlah_penghasilan',
-                    'jumlah_potongan',
-                    'gaji_diterima',
-                ],
-                $penyesuaianHeadings
+                    'jumlah_premi',
+                    'PPh21',
+                    'penambah_gaji',
+                    'pengurang_gaji',
+                    'take_home_pay'
+                ]
             )
         ];
 
@@ -135,7 +128,7 @@ class RekapGajiPenerimaanSheet implements FromCollection, WithHeadings, WithMapp
 
     public function map($row): array
     {
-        $mappedRow = [
+        return [
             $row['no'],
             $row['nama_karyawan'],
             $row['gaji_pokok'],
@@ -148,21 +141,12 @@ class RekapGajiPenerimaanSheet implements FromCollection, WithHeadings, WithMapp
             $row['bonus_bor'],
             $row['bonus_presensi'],
             $row['jumlah_penghasilan'],
-            $row['jumlah_potongan'],
+            $row['jumlah_premi'],
+            $row['pph21'],
+            $row['penambah_gaji'],
+            $row['pengurang_gaji'],
             $row['gaji_diterima']
         ];
-
-        $penyesuaianHeadings = DB::table('penyesuaian_gajis')
-            ->where('kategori_gaji_id', 2)
-            ->distinct()
-            ->pluck('nama_detail')
-            ->toArray();
-
-        foreach ($penyesuaianHeadings as $heading) {
-            $mappedRow[] = $row[$heading] ?? 0;
-        }
-
-        return $mappedRow;
     }
 
     public function title(): string

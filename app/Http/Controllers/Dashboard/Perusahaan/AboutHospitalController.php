@@ -117,6 +117,12 @@ class AboutHospitalController extends Controller
 
                 foreach ($berkasFields as $index => $field) {
                     if ($request->hasFile($field)) {
+                        $berkasLama = Berkas::find($berkasIds[$index]);
+                        if ($berkasLama) {
+                            StorageServerHelper::deleteFromServer($berkasLama->file_id);
+                            $berkasLama->delete();
+                        }
+
                         $file = $request->file($field);
                         $random_filename = Str::random(20);
                         $dataupload = StorageServerHelper::multipleUploadToServer($file, $random_filename);
@@ -135,10 +141,6 @@ class AboutHospitalController extends Controller
                                 'size' => $dataupload['size'],
                             ]
                         );
-                        $berkasLama = Berkas::find($berkasIds[$index]);
-                        if ($berkasLama) {
-                            $berkasLama->delete();
-                        }
 
                         $berkasIds[$index] = $berkas->id;
                         Log::info('Berkas ' . $field . ' berhasil diperbarui.');

@@ -144,6 +144,17 @@ class KaryawanExport implements FromCollection, WithHeadings, WithMapping
             });
         }
 
+        if (isset($this->filters['pendidikan_terakhir'])) {
+            $namaPendidikan = $this->filters['pendidikan_terakhir'];
+            $karyawan->whereHas('kategori_pendidikans', function ($query) use ($namaPendidikan) {
+                if (is_array($namaPendidikan)) {
+                    $query->whereIn('id', $namaPendidikan);
+                } else {
+                    $query->where('id', '=', $namaPendidikan);
+                }
+            });
+        }
+
         if (isset($this->filters['masa_diklat'])) {
             $masaDiklatJam = $this->filters['masa_diklat'];
             if (is_array($masaDiklatJam)) {

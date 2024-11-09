@@ -16,6 +16,7 @@ use App\Models\StatusKaryawan;
 use App\Mail\SendAccoundUsersMail;
 use App\Models\KategoriAgama;
 use App\Models\KategoriDarah;
+use App\Models\KategoriPendidikan;
 use Spatie\Permission\Models\Role;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
@@ -39,6 +40,7 @@ class KaryawanImport implements ToModel, WithHeadingRow, WithValidation
   private $StatusKaryawan;
   private $KategoriAgama;
   private $GolonganDarah;
+  private $KategoriPendidikan;
 
   public function __construct()
   {
@@ -52,6 +54,7 @@ class KaryawanImport implements ToModel, WithHeadingRow, WithValidation
     $this->StatusKaryawan = StatusKaryawan::select('id', 'label')->get();
     $this->KategoriAgama = KategoriAgama::select('id', 'label')->get();
     $this->GolonganDarah = KategoriDarah::select('id', 'label')->get();
+    $this->KategoriPendidikan = KategoriPendidikan::select('id', 'label')->get();
   }
 
   public function rules(): array
@@ -76,6 +79,7 @@ class KaryawanImport implements ToModel, WithHeadingRow, WithValidation
       'uang_makan' => 'required|numeric',
       'uang_lembur' => 'nullable|numeric',
       'kode_ptkp' => 'required',
+      'pendidikan_terakhir' => 'required',
 
       // tambahan
       'gelar_depan' => 'nullable',
@@ -118,6 +122,7 @@ class KaryawanImport implements ToModel, WithHeadingRow, WithValidation
       'jabatan.required' => 'Silahkan masukkan nama jabatan karyawan terlebih dahulu.',
       'kompetensi.required' => 'Silahkan masukkan nama kompetensi karyawan terlebih dahulu.',
       'status_karyawan.required' => 'Status karyawan tidak diperbolehkan kosong.',
+      'pendidikan_terakhir.required' => 'Pendidikan terakhir karyawan tidak diperbolehkan kosong.',
 
       'kelompok_gaji.required' => 'Silahkan masukkan kelompok gaji karyawan terlebih dahulu.',
       'no_rekening.required' => 'Nomor rekening karyawan tidak diperbolehkan kosong.',
@@ -219,6 +224,11 @@ class KaryawanImport implements ToModel, WithHeadingRow, WithValidation
       throw new \Exception("Status karyawan '" . $row['status_karyawan'] . "' tidak ditemukan.");
     }
 
+    $pendidikan_terakhir = $this->KategoriPendidikan->where('label', $row['pendidikan_terakhir'])->first();
+    if (!$pendidikan_terakhir) {
+      throw new \Exception("Pendidikan terakhir karyawan '" . $row['pendidikan_terakhir'] . "' tidak ditemukan.");
+    }
+
     if (!empty($row['agama'])) {
       $agama = $this->KategoriAgama->where('label', $row['agama'])->first();
       if (!$agama) {
@@ -305,7 +315,7 @@ class KaryawanImport implements ToModel, WithHeadingRow, WithValidation
       'berat_badan' => $row['berat_badan'],
       'bmi_value' => $bmi_calculate['bmi_value'],
       'bmi_ket' => $bmi_calculate['bmi_ket'],
-      'pendidikan_terakhir' => $row['pendidikan_terakhir'],
+      'pendidikan_terakhir' => $pendidikan_terakhir ? $pendidikan_terakhir->id : null,
       'asal_sekolah' => $row['asal_sekolah'],
       'tahun_lulus' => $tahun_lulus,
       'tgl_diangkat' => $tgl_diangkat_formatted,

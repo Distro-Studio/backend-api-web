@@ -2,13 +2,13 @@
 
 namespace App\Exports\Keuangan\LaporanPenggajian;
 
-use App\Models\UnitKerja;
-use App\Exports\Sheet\RekapGajiUnitSheet;
+use App\Models\Kompetensi;
 use Maatwebsite\Excel\Concerns\Exportable;
 use Maatwebsite\Excel\Concerns\FromCollection;
+use App\Exports\Sheet\RekapGajiKompetensiSheet;
 use Maatwebsite\Excel\Concerns\WithMultipleSheets;
 
-class RekapGajiUnitExport implements FromCollection, WithMultipleSheets
+class RekapGajiKompetensiExport implements FromCollection, WithMultipleSheets
 {
     use Exportable;
 
@@ -32,34 +32,34 @@ class RekapGajiUnitExport implements FromCollection, WithMultipleSheets
 
         foreach ($this->years as $year) {
             foreach ($this->months as $month) {
-                $shiftUnits = UnitKerja::where('jenis_karyawan', 1)
+                $kompetensiMedis = Kompetensi::where('jenis_kompetensi', 1)
                     ->whereHas('data_karyawan.penggajians', function ($query) use ($month, $year) {
                         $query->whereMonth('tgl_penggajian', $month)
                             ->whereYear('tgl_penggajian', $year);
                     })
                     ->get();
 
-                $nonShiftUnits = UnitKerja::where('jenis_karyawan', 0)
+                $kompetensiNonMedis = Kompetensi::where('jenis_kompetensi', 0)
                     ->whereHas('data_karyawan.penggajians', function ($query) use ($month, $year) {
                         $query->whereMonth('tgl_penggajian', $month)
                             ->whereYear('tgl_penggajian', $year);
                     })
                     ->get();
 
-                // Add Shift sheet
-                if ($shiftUnits->isNotEmpty()) {
-                    $sheets[] = new RekapGajiUnitSheet('Shift', $shiftUnits, $month, $year);
+                // Add Medis sheet
+                if ($kompetensiMedis->isNotEmpty()) {
+                    $sheets[] = new RekapGajiKompetensiSheet('Medis', $kompetensiMedis, $month, $year);
                 }
 
-                // Add Non-Shift sheet
-                if ($nonShiftUnits->isNotEmpty()) {
-                    $sheets[] = new RekapGajiUnitSheet('Non-Shift', $nonShiftUnits, $month, $year);
+                // Add Non-Medis sheet
+                if ($kompetensiNonMedis->isNotEmpty()) {
+                    $sheets[] = new RekapGajiKompetensiSheet('Non-Medis', $kompetensiNonMedis, $month, $year);
                 }
             }
         }
 
         if (empty($sheets)) {
-            $sheets[] = new RekapGajiUnitSheet('Sheet Kosong', collect([]), null, null);
+            $sheets[] = new RekapGajiKompetensiSheet('Sheet Kosong', collect([]), null, null);
         }
 
         return $sheets;

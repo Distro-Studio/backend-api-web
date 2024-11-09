@@ -355,6 +355,7 @@ class DataCutiController extends Controller
                     'tgl_to' => $dataCuti->tgl_to,
                     'catatan' => $dataCuti->catatan,
                     'durasi' => $dataCuti->durasi,
+                    'total_kuota' => $quota,
                     'sisa_kuota' => $sisaKuota,
                     'status_cuti' => $dataCuti->status_cutis,
                     'alasan' => $cuti->alasan ?? null,

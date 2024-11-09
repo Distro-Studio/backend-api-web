@@ -21,6 +21,7 @@ use Maatwebsite\Excel\Facades\Excel;
 use App\Jobs\Penggajian\CreateGajiJob;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
 use App\Exports\Keuangan\LaporanPenggajian\LaporanGajiBankExport;
+use App\Exports\Keuangan\LaporanPenggajian\RekapGajiKompetensiExport;
 use App\Exports\Keuangan\LaporanPenggajian\RekapGajiPotonganExport;
 use App\Exports\Keuangan\LaporanPenggajian\RekapGajiPenerimaanExport;
 use App\Exports\Keuangan\LaporanPenggajian\RekapGajiUnitExport;
@@ -54,7 +55,6 @@ class PenggajianController extends Controller
             ->whereYear('tgl_penggajian', $currentYear)
             ->where('status_gaji_id', 1)
             ->get();
-
         if ($penggajians->isEmpty()) {
             return response()->json(new WithoutDataResource(Response::HTTP_OK, 'Tidak ada data penggajian yang perlu dipublikasikan.'), Response::HTTP_OK);
         }
@@ -65,31 +65,45 @@ class PenggajianController extends Controller
 
         foreach ($penggajians as $penggajian) {
             $riwayatPenggajian = $penggajian->riwayat_penggajians;
-            $tgl_penggajian = Carbon::parse(RandomHelper::convertToDateString($penggajian->tgl_penggajian));
+            $tgl_penggajian = Carbon::parse(RandomHelper::convertToDateString($penggajian->tgl_penggajian), 'Asia/Jakarta');
+            // dd($tgl_penggajian);
 
             // ini yg baru
             // Validasi agar publikasi dilakukan hanya dalam rentang tgl_penggajian sampai tgl_mulai
             if ($currentDate->greaterThanOrEqualTo($tgl_penggajian) && $currentDate->lessThanOrEqualTo($tgl_mulai)) {
                 // Update status penggajian ke "Dipublikasikan" jika belum
                 if ($penggajian->status_gaji_id != 2) {
-                    $penggajian->status_gaji_id = 2;
-                    $penggajian->save();
-                    $updatedPenggajians[] = [
-                        'penggajian_id' => $penggajian->id,
-                        'updated_at' => $penggajian->updated_at
-                    ];
-                    if ($riwayatPenggajian->status_gaji_id != 2) {
-                        $riwayatPenggajian->status_gaji_id = 2;
-                        $riwayatPenggajian->submitted_by = Auth::id();
-                        $riwayatPenggajian->save();
+                    DB::beginTransaction();
+                    try {
+                        $penggajian->status_gaji_id = 2;
+                        $penggajian->save();
+
+                        // Sum take_home_pay untuk riwayat_penggajian_id terkait
+                        $totalTakeHomePay = Penggajian::where('riwayat_penggajian_id', $riwayatPenggajian->id)
+                            ->where('status_gaji_id', 2)
+                            ->sum('take_home_pay');
+
+                        $riwayatPenggajian->update([
+                            'status_gaji_id' => 2,
+                            'submitted_by' => Auth::id(),
+                            'periode_gaji_karyawan' => $totalTakeHomePay
+                        ]);
+
+                        $updatedPenggajians[] = [
+                            'penggajian_id' => $penggajian->id,
+                            'updated_at' => $penggajian->updated_at
+                        ];
                         $riwayatPenggajians[] = [
                             'riwayat_penggajian_id' => $riwayatPenggajian->id,
                             'updated_at' => $riwayatPenggajian->updated_at
                         ];
-                    }
 
-                    // Buat dan simpan notifikasi untuk setiap penggajian yang dipublikasikan
-                    $this->createNotifikasiPenggajianPublish($penggajian, $periode);
+                        DB::commit();
+                        $this->createNotifikasiPenggajianPublish($penggajian, $periode);
+                    } catch (\Exception $e) {
+                        DB::rollBack();
+                        Log::error("Gagal mempublikasikan penggajian ID {$penggajian->id}, Pesan Error: " . $e->getMessage());
+                    }
                 }
             } else {
                 return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Publikasi penggajian hanya dapat dilakukan dari tanggal '{$tgl_penggajian->format('Y-m-d')}' hingga tanggal '{$tgl_mulai->format('Y-m-d')}'."), Response::HTTP_BAD_REQUEST);
@@ -176,6 +190,7 @@ class PenggajianController extends Controller
                     'created_at' => $riwayatPenggajian->submitted_users->created_at,
                     'updated_at' => $riwayatPenggajian->submitted_users->updated_at
                 ] : null,
+                'periode_gaji_karyawan' => $riwayatPenggajian->periode_gaji_karyawan ?? null,
                 'created_at' => $riwayatPenggajian->created_at,
                 'updated_at' => $riwayatPenggajian->updated_at
             ];
@@ -202,6 +217,7 @@ class PenggajianController extends Controller
             ->where('status_karyawan_id', [1, 2, 3])
             ->pluck('id')
             ->toArray();
+        // dd($data_karyawan_ids);
         $sertakan_bor = $request->has('bor') && $request->bor == 1;
 
         // Ambil jadwal penggajian dari tabel jadwal_penggajians
@@ -611,15 +627,44 @@ class PenggajianController extends Controller
 
         try {
             $sheets = new RekapGajiUnitExport($months, $years);
-            if ($sheets->sheets() === []) {
-                return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Tidak ada data penggajian karyawan yang tersedia untuk diekspor.'), Response::HTTP_NOT_FOUND);
-            }
+            // if ($sheets->sheets() === []) {
+            //     return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Tidak ada data penggajian karyawan yang tersedia untuk diekspor.'), Response::HTTP_NOT_FOUND);
+            // }
 
             return Excel::download($sheets, 'rekap-penerimaan-gaji-unit-kerja.xls');
         } catch (\Throwable $e) {
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf, tidak ada data yang dapat diekspor atau terjadi error. Pesan: ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
         }
-    
+
+
+        return response()->json(new WithoutDataResource(Response::HTTP_OK, 'Data penggajian karyawan berhasil di download.'), Response::HTTP_OK);
+    }
+
+    public function exportRekapPenerimaanGajiKompetensi(Request $request)
+    {
+        if (!Gate::allows('export penggajianKaryawan')) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
+
+        $dataPenggajian = Penggajian::all();
+        if ($dataPenggajian->isEmpty()) {
+            return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Tidak ada data penggajian karyawan yang tersedia untuk diekspor.'), Response::HTTP_NOT_FOUND);
+        }
+
+        $months = $request->input('months', []);
+        $years = $request->input('years', []);
+
+        try {
+            $sheets = new RekapGajiKompetensiExport($months, $years);
+            // if ($sheets->sheets() === []) {
+            //     return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Tidak ada data penggajian karyawan yang tersedia untuk diekspor.'), Response::HTTP_NOT_FOUND);
+            // }
+
+            return Excel::download($sheets, 'rekap-penerimaan-gaji-kompetensi.xls');
+        } catch (\Throwable $e) {
+            return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf, tidak ada data yang dapat diekspor atau terjadi error. Pesan: ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
+        }
+
 
         return response()->json(new WithoutDataResource(Response::HTTP_OK, 'Data penggajian karyawan berhasil di download.'), Response::HTTP_OK);
     }
@@ -691,21 +736,15 @@ class PenggajianController extends Controller
             if ($penggajian->data_karyawans && $penggajian->data_karyawans->users) {
                 $user = $penggajian->data_karyawans->users;
 
-                // Pesan untuk user biasa
                 $message = "Penggajian untuk periode {$periode} telah dipublikasikan. Silakan cek slip gaji Anda.";
-
-                // Pesan khusus untuk Super Admin
                 $messageSuperAdmin = "Notifikasi untuk Super Admin: Penggajian untuk karyawan pada periode {$periode} telah dipublikasikan.";
 
-                $userIds = [$user->id, 1]; // Daftar user_id, termasuk user dan Super Admin
+                $userIds = [$user->id];
 
                 foreach ($userIds as $userId) {
-                    // Jika user_id adalah 1 (Super Admin), gunakan pesan khusus
                     $messageToSend = $userId === 1 ? $messageSuperAdmin : $message;
-
-                    // Buat notifikasi untuk user atau Super Admin
                     Notifikasi::create([
-                        'kategori_notifikasi_id' => 5, // Sesuaikan dengan kategori notifikasi yang sesuai
+                        'kategori_notifikasi_id' => 5,
                         'user_id' => $userId,
                         'message' => $messageToSend,
                         'is_read' => false,
