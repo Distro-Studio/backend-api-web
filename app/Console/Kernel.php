@@ -58,6 +58,10 @@ class Kernel extends ConsoleKernel
         $schedule->command('app:update-auto-alfa-presensi')
             ->timezone('Asia/Jakarta')
             ->dailyAt('00:00');
+
+        // Backup DB
+        $schedule->command('backup:clean')->monthly()->at('01:00');
+        $schedule->command('backup:run')->monthly()->at('01:30');
     }
 
     /**

@@ -65,6 +65,11 @@ trait InteractsWithDockerComposeServices
             ? Yaml::parseFile($composePath)
             : Yaml::parse(file_get_contents(__DIR__ . '/../../../stubs/docker-compose.stub'));
 
+        // Prepare the installation of the "mariadb-client" package if the MariaDB service is used...
+        if (in_array('mariadb', $services)) {
+            $compose['services']['laravel.test']['build']['args']['MYSQL_CLIENT'] = 'mariadb-client';
+        }
+
         // Adds the new services as dependencies of the laravel.test service...
         if (! array_key_exists('laravel.test', $compose['services'])) {
             $this->warn('Couldn\'t find the laravel.test service. Make sure you add ['.implode(',', $services).'] to the depends_on config.');
@@ -99,12 +104,11 @@ trait InteractsWithDockerComposeServices
             unset($compose['volumes']);
         }
 
-        // Replace Selenium with ARM base container on Apple Silicon...
-        if (in_array('selenium', $services) && in_array(php_uname('m'), ['arm64', 'aarch64'])) {
-            $compose['services']['selenium']['image'] = 'seleniarm/standalone-chromium';
-        }
+        $yaml = Yaml::dump($compose, Yaml::DUMP_OBJECT_AS_MAP);
 
-        file_put_contents($this->laravel->basePath('docker-compose.yml'), Yaml::dump($compose, Yaml::DUMP_OBJECT_AS_MAP));
+        $yaml = str_replace('{{PHP_VERSION}}', $this->hasOption('php') ? $this->option('php') : '8.3', $yaml);
+
+        file_put_contents($this->laravel->basePath('docker-compose.yml'), $yaml);
     }
 
     /**

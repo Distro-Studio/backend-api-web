@@ -38,7 +38,7 @@ class DashboardController extends Controller
         $countLiburNonShift = DataKaryawan::whereHas('unit_kerjas', function ($query) {
             $query->where('jenis_karyawan', 0);
         })->when($isHariLibur, function ($query) {
-            return $query->distinct('id')->count('id');  // Hitung berdasarkan user_id
+            return $query->distinct('id')->count('user_id');  // Hitung berdasarkan user_id
         }, function ($query) {
             return 0;
         });
@@ -52,10 +52,10 @@ class DashboardController extends Controller
             ->whereDate(DB::raw("STR_TO_DATE(tgl_to, '%d-%m-%Y')"), '>=', Carbon::createFromFormat('d-m-Y', $today)->format('Y-m-d'))
             ->count('user_id');
 
-        // Calculate the number of employees absent today (presensi kategori absen)
-        $countAbsen = Presensi::where('kategori_presensi_id', $kategoriAbsenId)
-            ->whereDate('jam_masuk', Carbon::createFromFormat('d-m-Y', $today)->format('Y-m-d'))
-            ->count('user_id');
+        // $countAbsen = Presensi::where('kategori_presensi_id', $kategoriAbsenId)
+        //     ->whereDate('jam_masuk', Carbon::createFromFormat('d-m-Y', $today)->format('Y-m-d'))
+        //     ->count('user_id');
+        $countAbsen = $countCuti + $countLibur;
 
         return response()->json([
             'status' => Response::HTTP_OK,
