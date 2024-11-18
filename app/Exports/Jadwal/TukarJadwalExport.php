@@ -47,8 +47,8 @@ class TukarJadwalExport implements FromCollection, WithHeadings, WithMapping
             $no++,
             Carbon::parse($tukar_jadwal->created_at)->format('d-m-Y'),
             $tukar_jadwal->user_pengajuans->data_karyawans->unit_kerjas->nama_unit,
-            $this->getKategoriName($tukar_jadwal->kategori_penukaran_id),
-            $this->getStatusName($tukar_jadwal->status_penukaran_id),
+            $tukar_jadwal->kategori_tukar_jadwals->label,
+            $tukar_jadwal->status_tukar_jadwals->label,
             $tukar_jadwal->user_pengajuans->nama,
             $tukar_jadwal->jadwal_pengajuans->shifts ? $tukar_jadwal->jadwal_pengajuans->shifts->nama : 'Libur',
             $tukar_jadwal->user_ditukars->nama,
@@ -56,26 +56,5 @@ class TukarJadwalExport implements FromCollection, WithHeadings, WithMapping
             Carbon::parse($tukar_jadwal->created_at)->format('d-m-Y H:i:s'),
             Carbon::parse($tukar_jadwal->updated_at)->format('d-m-Y H:i:s')
         ];
-    }
-
-    private function getStatusName($statusId)
-    {
-        $statuses = [
-            1 => 'Menunggu',
-            2 => 'Disetujui',
-            3 => 'Tidak Disetujui',
-        ];
-
-        return $statuses[$statusId] ?? 'Unknown';
-    }
-
-    private function getKategoriName($kategoriId)
-    {
-        $categories = [
-            1 => 'Tukar Shift',
-            2 => 'Tukar Libur',
-        ];
-
-        return $categories[$kategoriId] ?? 'Unknown';
     }
 }

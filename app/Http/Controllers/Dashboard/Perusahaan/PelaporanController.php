@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Dashboard\Perusahaan;
 
-use App\Exports\Perusahaan\PelaporanExport;
+use Carbon\Carbon;
 use App\Models\Berkas;
 use App\Models\Pelaporan;
 use Illuminate\Http\Request;
@@ -12,6 +12,7 @@ use App\Helpers\StorageServerHelper;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Gate;
 use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\Perusahaan\PelaporanExport;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
 
 class PelaporanController extends Controller
@@ -66,17 +67,18 @@ class PelaporanController extends Controller
 
         if (isset($filters['masa_kerja'])) {
             $masaKerja = $filters['masa_kerja'];
+            $currentDate = Carbon::now('Asia/Jakarta');
             if (is_array($masaKerja)) {
-                $pelaporan->whereHas('user_pelapor.data_karyawans', function ($query) use ($masaKerja) {
+                $pelaporan->whereHas('user_pelapor.data_karyawans', function ($query) use ($masaKerja, $currentDate) {
                     foreach ($masaKerja as $masa) {
                         $bulan = $masa * 12;
-                        $query->orWhereRaw('TIMESTAMPDIFF(MONTH, tgl_masuk, COALESCE(tgl_keluar, NOW())) <= ?', [$bulan]);
+                        $query->orWhereRaw("TIMESTAMPDIFF(MONTH, STR_TO_DATE(tgl_masuk, '%d-%m-%Y'), COALESCE(STR_TO_DATE(tgl_keluar, '%d-%m-%Y'), ?)) <= ?", [$currentDate, $bulan]);
                     }
                 });
             } else {
                 $bulan = $masaKerja * 12;
-                $pelaporan->whereHas('user_pelapor.data_karyawans', function ($query) use ($bulan) {
-                    $query->whereRaw('TIMESTAMPDIFF(MONTH, tgl_masuk, COALESCE(tgl_keluar, NOW())) <= ?', [$bulan]);
+                $pelaporan->whereHas('user_pelapor.data_karyawans', function ($query) use ($bulan, $currentDate) {
+                    $query->whereRaw("TIMESTAMPDIFF(MONTH, STR_TO_DATE(tgl_masuk, '%d-%m-%Y'), COALESCE(STR_TO_DATE(tgl_keluar, '%d-%m-%Y'), ?)) <= ?", [$currentDate, $bulan]);
                 });
             }
         }
@@ -95,14 +97,12 @@ class PelaporanController extends Controller
         if (isset($filters['tgl_masuk'])) {
             $tglMasuk = $filters['tgl_masuk'];
             if (is_array($tglMasuk)) {
-                $convertedDates = array_map([RandomHelper::class, 'convertToDateString'], $tglMasuk);
-                $pelaporan->whereHas('user_pelapor.data_karyawans', function ($query) use ($convertedDates) {
-                    $query->whereIn('tgl_masuk', $convertedDates);
+                $pelaporan->whereHas('user_pelapor.data_karyawans', function ($query) use ($tglMasuk) {
+                    $query->whereIn('tgl_masuk', $tglMasuk);
                 });
             } else {
-                $convertedDate = RandomHelper::convertToDateString($tglMasuk);
-                $pelaporan->whereHas('user_pelapor.data_karyawans', function ($query) use ($convertedDate) {
-                    $query->where('tgl_masuk', $convertedDate);
+                $pelaporan->whereHas('user_pelapor.data_karyawans', function ($query) use ($tglMasuk) {
+                    $query->where('tgl_masuk', $tglMasuk);
                 });
             }
         }

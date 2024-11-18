@@ -464,13 +464,13 @@ class DiklatController extends Controller
 
     public function storeExternal(StoreDiklatExternalRequest $request)
     {
-        $loggedUser = Auth::user();
-        if (!$loggedUser->hasRole('Super Admin')) {
-            return response()->json([
-                'status' => Response::HTTP_FORBIDDEN,
-                'message' => 'Anda tidak memiliki hak akses untuk melakukan proses ini.'
-            ], Response::HTTP_FORBIDDEN);
-        }
+        // $loggedUser = Auth::user();
+        // if (!$loggedUser->hasRole('Super Admin')) {
+        //     return response()->json([
+        //         'status' => Response::HTTP_FORBIDDEN,
+        //         'message' => 'Anda tidak memiliki hak akses untuk melakukan proses ini.'
+        //     ], Response::HTTP_FORBIDDEN);
+        // }
 
         if (!Gate::allows('create diklat')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
@@ -536,7 +536,7 @@ class DiklatController extends Controller
             $durasi = $selisihJam * $totalHari;
 
             $diklat = Diklat::create([
-                'gambar' => $gambarId,
+                'dokumen_eksternal' => $gambarId,
                 'nama' => $data['nama'],
                 'kategori_diklat_id' => 2,
                 'status_diklat_id' => 4,
@@ -1082,8 +1082,8 @@ class DiklatController extends Controller
                 return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Diklat Eksternal tahap 1 '{$diklat->nama}' tidak dalam status untuk disetujui."), Response::HTTP_BAD_REQUEST);
             }
         } elseif ($request->has('verifikasi_pertama_ditolak') && $request->verifikasi_pertama_ditolak == 1) {
-            if ($status_diklat_id == 2) {
-                $diklat->status_diklat_id = 5;
+            if ($status_diklat_id == 1) {
+                $diklat->status_diklat_id = 3;
                 $diklat->verifikator_2 = Auth::id();
                 $diklat->alasan = $request->input('alasan');
                 $diklat->save();

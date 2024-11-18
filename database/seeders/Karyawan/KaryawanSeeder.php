@@ -188,10 +188,10 @@ class KaryawanSeeder extends Seeder
             ]);
             $user->roles()->attach(rand(2, 4));
 
-            $tgl_masuk = date('Y-m-d', rand(mktime(0, 0, 0, 1, 1, 2007), mktime(0, 0, 0, 12, 31, 2022)));
-            $tgl_keluar = date('Y-m-d', rand(mktime(0, 0, 0, 1, 1, 2023), mktime(0, 0, 0, 12, 31, 2024)));
-            $tgl_lahir = date('Y-m-d', rand(mktime(0, 0, 0, 1, 1, 1900), mktime(0, 0, 0, 12, 31, 2003)));
-            $tgl_str = date('Y-m-d', rand(mktime(0, 0, 0, 1, 1, 2023), mktime(0, 0, 0, 12, 31, 2028)));
+            $tgl_masuk = date('d-m-Y', rand(mktime(0, 0, 0, 1, 1, 2007), mktime(0, 0, 0, 12, 31, 2022)));
+            $tgl_keluar = date('d-m-Y', rand(mktime(0, 0, 0, 1, 1, 2023), mktime(0, 0, 0, 12, 31, 2024)));
+            $tgl_lahir = date('d-m-Y', rand(mktime(0, 0, 0, 1, 1, 1900), mktime(0, 0, 0, 12, 31, 2003)));
+            $tgl_str = date('d-m-Y', rand(mktime(0, 0, 0, 1, 1, 2023), mktime(0, 0, 0, 12, 31, 2028)));
             $tgl_sip = '10-10-2024';
 
             // Create DataKaryawan

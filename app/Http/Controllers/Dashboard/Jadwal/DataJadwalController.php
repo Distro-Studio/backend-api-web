@@ -20,7 +20,6 @@ use App\Imports\Jadwal\JadwalImport;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Maatwebsite\Excel\Facades\Excel;
-use App\Exports\TemplateJadwalExport;
 use Illuminate\Support\Facades\Storage;
 use App\Exports\Jadwal\JadwalShiftExport;
 use App\Exports\Jadwal\JadwalNonShiftExport;
@@ -84,16 +83,12 @@ class DataJadwalController extends Controller
             if (isset($filters['tgl_masuk'])) {
                 $tglMasuk = $filters['tgl_masuk'];
                 if (is_array($tglMasuk)) {
-                    $convertedDates = array_map(function ($date) {
-                        return RandomHelper::convertToDateString($date);
-                    }, $tglMasuk);
-                    $usersQuery->whereHas('data_karyawans', function ($query) use ($convertedDates) {
-                        $query->whereIn(DB::raw('DATE(tgl_masuk)'), $convertedDates);
+                    $usersQuery->whereHas('data_karyawans', function ($query) use ($tglMasuk) {
+                        $query->whereIn(DB::raw('DATE(tgl_masuk)'), $tglMasuk);
                     });
                 } else {
-                    $convertedDate = RandomHelper::convertToDateString($tglMasuk);
-                    $usersQuery->whereHas('data_karyawans', function ($query) use ($convertedDate) {
-                        $query->where(DB::raw('DATE(tgl_masuk)'), $convertedDate);
+                    $usersQuery->whereHas('data_karyawans', function ($query) use ($tglMasuk) {
+                        $query->where(DB::raw('DATE(tgl_masuk)'), $tglMasuk);
                     });
                 }
             }
@@ -192,11 +187,11 @@ class DataJadwalController extends Controller
             $nonShift = NonShift::first();
 
             $groupedSchedules = $jadwal->groupBy('user_id');
-            $result = $users->map(function ($user) use ($groupedSchedules, $date_range, $nonShift, $hariLibur, $jadwal, $request) {
+            $result = $users->map(function ($user) use ($groupedSchedules, $date_range, $nonShift, $hariLibur, $request) {
                 $user_schedule_array = array_fill_keys($date_range, null);
 
                 // Mengisi user_schedule_array dengan jadwal yang sebenarnya
-                if ($groupedSchedules->has($user->id)) {
+                if ($groupedSchedules->has($user->id) && $user->data_karyawans->unit_kerjas->jenis_karyawan == 1) {
                     foreach ($groupedSchedules[$user->id] as $schedule) {
                         $current_date = Carbon::createFromFormat('Y-m-d', $schedule->tgl_mulai);
                         $end_date_for_schedule = Carbon::createFromFormat('Y-m-d', $schedule->tgl_selesai);
@@ -1003,6 +998,22 @@ class DataJadwalController extends Controller
         }
     }
 
+    public function downloadJadwalTemplate()
+    {
+        try {
+            $filePath = 'templates/template_import_jadwal.xls';
+
+            if (!Storage::exists($filePath)) {
+                return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'File template tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+            }
+
+            return Storage::download($filePath, 'template_import_jadwal.xls');
+        } catch (\Throwable $e) {
+            Log::error('| Jadwal | - Error saat download template jadwal: ' . $e->getMessage() . ' Line: ' . $e->getLine());
+            return response()->json(new WithoutDataResource(Response::HTTP_INTERNAL_SERVER_ERROR, 'Maaf sepertinya terjadi error.'), Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
     private function generateDateRange($start_date, $end_date)
     {
         $dates = [];
@@ -1031,22 +1042,6 @@ class DataJadwalController extends Controller
                 return 'Minggu';
             default:
                 return '';
-        }
-    }
-
-    public function downloadJadwalTemplate()
-    {
-        try {
-            $filePath = 'templates/template_import_jadwal.xls';
-
-            if (!Storage::exists($filePath)) {
-                return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'File template tidak ditemukan.'), Response::HTTP_NOT_FOUND);
-            }
-
-            return Storage::download($filePath, 'template_import_jadwal.xls');
-        } catch (\Throwable $e) {
-            Log::error('| Jadwal | - Error saat download template jadwal: ' . $e->getMessage() . ' Line: ' . $e->getLine());
-            return response()->json(new WithoutDataResource(Response::HTTP_INTERNAL_SERVER_ERROR, 'Maaf sepertinya terjadi error.'), Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 }

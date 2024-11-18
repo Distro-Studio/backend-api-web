@@ -20,7 +20,7 @@ class StoreDiklatRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'dokumen' => 'nullable|image|mimes:jpeg,png,jpg,svg|max:5048',
+            'dokumen' => 'nullable|image|mimes:jpeg,png,jpg,svg|max:10240',
             'nama' => 'required|string|max:255',
             // 'kategori_diklat_id' => 'required|integer|exists:kategori_diklats,id',
             'deskripsi' => 'required|string|max:225',
@@ -42,7 +42,7 @@ class StoreDiklatRequest extends FormRequest
         return [
             'dokumen.image' => 'File gambar yang diperbolehkan berupa gambar.',
             'dokumen.mimes' => 'Gambar yang diperbolehkan berformat jpeg, png, jpg, atau svg.',
-            'dokumen.max' => 'Ukuran gambar maksimal adalah 5MB.',
+            'dokumen.max' => 'Ukuran gambar maksimal adalah 10MB.',
             'nama.required' => 'Nama diklat tidak diperbolehkan kosong.',
             'nama.string' => 'Nama diklat hanya diperbolehkan menggunakan angka dan huruf.',
             'kategori_diklat_id.required' => 'Silahkan pilih kategori diklat terlebih dahulu.',

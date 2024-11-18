@@ -231,7 +231,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
             // ! Penyesuaian Gaji ===========>
             Route::post('/get-penyesuaian-gaji', [PenyesuaianGajiController::class, 'index']);
-            Route::post('/penyesuaian-bor', [PenyesuaianGajiController::class, 'penyesuaianBOR']);
+            Route::post('/delete-gaji', [PenyesuaianGajiController::class, 'forceDeleteGaji']);
             Route::get('/penyesuaian-gaji/export', [PenyesuaianGajiController::class, 'exportPenyesuaianGaji']);
             Route::apiResource('/penyesuaian-gaji', PenyesuaianGajiController::class);
 
@@ -295,6 +295,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::post('/users/change-passwords', [UserPasswordController::class, 'updatePassword']);
 
             // ! Master Verification ===========>
+            Route::post('/master-verifikasi/restore/{id}', [MasterVerificationController::class, 'restore']);
             Route::apiResource('/master-verifikasi', MasterVerificationController::class);
 
             // ! About RSKI ===========>

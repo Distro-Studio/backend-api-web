@@ -173,7 +173,7 @@ class Karyawan_BerkasController extends Controller
     public function verifikasiBerkas(Request $request, $data_karyawan_id)
     {
         try {
-            if (!Gate::allows('verifikasi1 berkas')) {
+            if (!Gate::allows('edit dataKaryawan')) {
                 return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
             }
 

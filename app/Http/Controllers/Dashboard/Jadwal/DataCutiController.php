@@ -26,6 +26,7 @@ use App\Http\Requests\StoreCutiJadwalRequest;
 use App\Http\Requests\UpdateCutiJadwalRequest;
 use App\Http\Resources\Dashboard\Jadwal\CutiJadwalResource;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
+use App\Models\DataKaryawan;
 
 class DataCutiController extends Controller
 {
@@ -80,17 +81,18 @@ class DataCutiController extends Controller
 
             if (isset($filters['masa_kerja'])) {
                 $masaKerja = $filters['masa_kerja'];
+                $currentDate = Carbon::now('Asia/Jakarta');
                 if (is_array($masaKerja)) {
-                    $cuti->whereHas('users.data_karyawans', function ($query) use ($masaKerja) {
+                    $cuti->whereHas('users.data_karyawans', function ($query) use ($masaKerja, $currentDate) {
                         foreach ($masaKerja as $masa) {
                             $bulan = $masa * 12;
-                            $query->orWhereRaw('TIMESTAMPDIFF(MONTH, tgl_masuk, COALESCE(tgl_keluar, NOW())) <= ?', [$bulan]);
+                            $query->orWhereRaw("TIMESTAMPDIFF(MONTH, STR_TO_DATE(tgl_masuk, '%d-%m-%Y'), COALESCE(STR_TO_DATE(tgl_keluar, '%d-%m-%Y'), ?)) <= ?", [$currentDate, $bulan]);
                         }
                     });
                 } else {
                     $bulan = $masaKerja * 12;
-                    $cuti->whereHas('users.data_karyawans', function ($query) use ($bulan) {
-                        $query->whereRaw('TIMESTAMPDIFF(MONTH, tgl_masuk, COALESCE(tgl_keluar, NOW())) <= ?', [$bulan]);
+                    $cuti->whereHas('users.data_karyawans', function ($query) use ($bulan, $currentDate) {
+                        $query->whereRaw("TIMESTAMPDIFF(MONTH, STR_TO_DATE(tgl_masuk, '%d-%m-%Y'), COALESCE(STR_TO_DATE(tgl_keluar, '%d-%m-%Y'), ?)) <= ?", [$currentDate, $bulan]);
                     });
                 }
             }
@@ -109,14 +111,12 @@ class DataCutiController extends Controller
             if (isset($filters['tgl_masuk'])) {
                 $tglMasuk = $filters['tgl_masuk'];
                 if (is_array($tglMasuk)) {
-                    $convertedDates = array_map([RandomHelper::class, 'convertToDateString'], $tglMasuk);
-                    $cuti->whereHas('users.data_karyawans', function ($query) use ($convertedDates) {
-                        $query->whereIn('tgl_masuk', $convertedDates);
+                    $cuti->whereHas('users.data_karyawans', function ($query) use ($tglMasuk) {
+                        $query->whereIn('tgl_masuk', $tglMasuk);
                     });
                 } else {
-                    $convertedDate = RandomHelper::convertToDateString($tglMasuk);
-                    $cuti->whereHas('users.data_karyawans', function ($query) use ($convertedDate) {
-                        $query->where('tgl_masuk', $convertedDate);
+                    $cuti->whereHas('users.data_karyawans', function ($query) use ($tglMasuk) {
+                        $query->where('tgl_masuk', $tglMasuk);
                     });
                 }
             }
@@ -278,7 +278,7 @@ class DataCutiController extends Controller
                         $tglTo = Carbon::parse($cuti->tgl_to);
                         return $tglFrom->diffInDays($tglTo) + 1;
                     });
-                    // dd($usedDays);
+                // dd($usedDays);
 
                 // Hitung sisa kuota
                 $sisaKuota = $quota - $usedDays;
@@ -525,13 +525,13 @@ class DataCutiController extends Controller
             $dataCuti = Cuti::create($data);
 
             // Setelah pembuatan cuti, cari cuti yang baru dibuat dan periksa cuti_administratif
-            $cutiTerbaru = Cuti::where('user_id', $data['user_id'])->latest()->first();
+            // $cutiTerbaru = Cuti::where('user_id', $data['user_id'])->latest()->first();
 
-            if ($cutiTerbaru && !$cutiTerbaru->tipe_cutis->cuti_administratif) {
-                DB::table('data_karyawans')
-                    ->where('user_id', $data['user_id'])
-                    ->update(['status_reward_presensi' => false]);
-            }
+            // if ($cutiTerbaru && !$cutiTerbaru->tipe_cutis->cuti_administratif) {
+            //     DB::table('data_karyawans')
+            //         ->where('user_id', $data['user_id'])
+            //         ->update(['status_reward_presensi' => false]);
+            // }
 
             $message = "Data cuti karyawan '{$dataCuti->users->nama}' berhasil dibuat untuk tipe cuti '{$dataCuti->tipe_cutis->nama}' dengan durasi {$dataCuti->durasi} hari.";
 
@@ -952,10 +952,31 @@ class DataCutiController extends Controller
                     $cuti->alasan = null;
                     $cuti->save();
 
-                    // Step 1: Cek Hapus jadwal kerja shift jika ada yang cuti mendadak dan jika masih ada jadwal
+                    // Step 1: Cek Hapus jadwal kerja shift dan non shift jika cuti mendadak dan jika masih ada jadwal
                     $tglFrom = Carbon::createFromFormat('d-m-Y', $cuti->tgl_from)->format('Y-m-d');
                     $tglTo = Carbon::createFromFormat('d-m-Y', $cuti->tgl_to)->format('Y-m-d');
 
+                    $userId = $cuti->user_id;
+                    $data_karyawan = DataKaryawan::with('unit_kerjas')->where('user_id', $userId)->first();
+                    if (!$data_karyawan) {
+                        return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data karyawan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+                    }
+
+                    // ini untuk karyawan non shifts
+                    $jenis_karyawan = $data_karyawan->unit_kerjas->jenis_karyawan ?? null;
+                    if ($jenis_karyawan === 0) {
+                        $tglFromFormatted = Carbon::createFromFormat('Y-m-d', $tglFrom)->format('d-m-Y');
+                        $tglToFormatted = Carbon::createFromFormat('Y-m-d', $tglTo)->format('d-m-Y');
+
+                        $lemburIds = Lembur::where('user_id', $userId)
+                            ->whereBetween('tgl_pengajuan', [$tglFromFormatted, $tglToFormatted])
+                            ->pluck('id');
+                        if ($lemburIds->isNotEmpty()) {
+                            Lembur::whereIn('id', $lemburIds)->delete();
+                        }
+                    }
+
+                    // ini untuk karyawan shifts
                     $jadwalConflicts = Jadwal::where('user_id', $cuti->user_id)
                         ->where(function ($query) use ($tglFrom, $tglTo) {
                             $query->whereBetween('tgl_mulai', [$tglFrom, $tglTo])

@@ -501,9 +501,9 @@ class PenyesuaianGajiController extends Controller
   //   }
   // }
 
-  public function penyesuaianBOR(Request $request)
+  public function forceDeleteGaji(Request $request)
   {
-    if (!Gate::allows('create penggajianKaryawan')) {
+    if (!Gate::allows('delete penggajianKaryawan')) {
       return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
     }
 
@@ -525,7 +525,7 @@ class PenyesuaianGajiController extends Controller
     if ($currentDateTime->lessThan($awalBulan) || $currentDateTime->greaterThan($tgl_akhir)) {
       return response()->json(new WithoutDataResource(
         Response::HTTP_BAD_REQUEST,
-        "Perhitungan ulang BOR hanya dapat dilakukan mulai tanggal 1 hingga tanggal '{$tgl_mulai->format('d-m-Y')}' sampai jam 23:59."
+        "Penghapusan penggajian hanya dapat dilakukan mulai tanggal 1 hingga tanggal '{$tgl_mulai->format('d-m-Y')}' sampai jam 23:59."
       ), Response::HTTP_BAD_REQUEST);
     }
 
@@ -553,15 +553,6 @@ class PenyesuaianGajiController extends Controller
       ), Response::HTTP_BAD_REQUEST);
     }
 
-    $data_karyawan_ids = DataKaryawan::where('id', '!=', 1)
-      ->whereHas('users', function ($query) {
-        $query->where('status_aktif', 2);
-      })
-      ->where('status_karyawan_id', [1, 2, 3])
-      ->pluck('id')
-      ->toArray();
-    $sertakan_bor = $request->has('bor') && $request->bor == 1;
-
     DB::beginTransaction();
     try {
       $penggajians = Penggajian::where('riwayat_penggajian_id', $riwayatPenggajianId)->pluck('id');
@@ -569,15 +560,14 @@ class PenyesuaianGajiController extends Controller
       DetailGaji::whereIn('penggajian_id', $penggajians)->delete();
       PenyesuaianGaji::whereIn('penggajian_id', $penggajians)->delete();
       Penggajian::where('riwayat_penggajian_id', $riwayatPenggajianId)->delete();
-
-      CreateGajiJob::dispatch($data_karyawan_ids, $sertakan_bor, $riwayatPenggajian->id);
+      RiwayatPenggajian::where('id', $request->input('riwayat_penggajian_id'))->delete();
 
       DB::commit();
 
       $periodeAt = Carbon::parse($riwayatPenggajian->periode)->locale('id')->isoFormat('MMMM Y');
       return response()->json([
         'status' => Response::HTTP_OK,
-        'message' => "Penyesuaian ulang penggajian berhasil dilakukan untuk semua karyawan pada periode '{$periodeAt}'. Segala bentuk penyesuaian gaji penambah atau pengurang telah di-reset."
+        'message' => "Penyesuaian ulang penggajian berhasil dihapus untuk semua karyawan pada periode '{$periodeAt}'. Segala bentuk penyesuaian gaji penambah atau pengurang telah di-hapus dan silahkan buat ulang penggajian."
       ], Response::HTTP_OK);
     } catch (\Exception $e) {
       DB::rollBack();
@@ -588,7 +578,7 @@ class PenyesuaianGajiController extends Controller
   // Penyesuaian gaji single
   public function storePenyesuaianGajiPenambah(StorePenyesuaianGajiCustomRequest $request, $penggajian_id)
   {
-    if (!Gate::allows('create penggajianKaryawan')) {
+    if (!Gate::allows('edit penggajianKaryawan')) {
       return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
     }
 
@@ -683,7 +673,7 @@ class PenyesuaianGajiController extends Controller
 
   public function storePenyesuaianGajiPengurang(StorePenyesuaianGajiCustomRequest $request, $penggajian_id)
   {
-    if (!Gate::allows('create penggajianKaryawan')) {
+    if (!Gate::allows('edit penggajianKaryawan')) {
       return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
     }
 

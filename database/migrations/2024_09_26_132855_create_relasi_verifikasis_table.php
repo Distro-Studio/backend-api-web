@@ -18,6 +18,7 @@ return new class extends Migration
             $table->foreignId('modul_verifikasi')->constrained('modul_verifikasis');
             $table->integer('order'); // untuk verifikasi 1, verifikasi 2, dst (intinya untuk menyimpan urutan verifikasi mana yang harus dilakukan)
             $table->text('user_diverifikasi'); // target user yang datanya akan diverifikasi
+            $table->softDeletes();
             $table->timestamps();
         });
     }

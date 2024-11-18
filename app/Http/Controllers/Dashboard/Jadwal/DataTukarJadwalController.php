@@ -253,17 +253,18 @@ class DataTukarJadwalController extends Controller
 
             if (isset($filters['masa_kerja'])) {
                 $masaKerja = $filters['masa_kerja'];
+                $currentDate = Carbon::now('Asia/Jakarta');
                 if (is_array($masaKerja)) {
-                    $tukarJadwal->whereHas('user_pengajuans.data_karyawans', function ($query) use ($masaKerja) {
+                    $tukarJadwal->whereHas('user_pengajuans.data_karyawans', function ($query) use ($masaKerja, $currentDate) {
                         foreach ($masaKerja as $masa) {
                             $bulan = $masa * 12;
-                            $query->orWhereRaw('TIMESTAMPDIFF(MONTH, tgl_masuk, COALESCE(tgl_keluar, NOW())) <= ?', [$bulan]);
+                            $query->orWhereRaw("TIMESTAMPDIFF(MONTH, STR_TO_DATE(tgl_masuk, '%d-%m-%Y'), COALESCE(STR_TO_DATE(tgl_keluar, '%d-%m-%Y'), ?)) <= ?", [$currentDate, $bulan]);
                         }
                     });
                 } else {
                     $bulan = $masaKerja * 12;
-                    $tukarJadwal->whereHas('user_pengajuans.data_karyawans', function ($query) use ($bulan) {
-                        $query->whereRaw('TIMESTAMPDIFF(MONTH, tgl_masuk, COALESCE(tgl_keluar, NOW())) <= ?', [$bulan]);
+                    $tukarJadwal->whereHas('user_pengajuans.data_karyawans', function ($query) use ($bulan, $currentDate) {
+                        $query->whereRaw("TIMESTAMPDIFF(MONTH, STR_TO_DATE(tgl_masuk, '%d-%m-%Y'), COALESCE(STR_TO_DATE(tgl_keluar, '%d-%m-%Y'), ?)) <= ?", [$currentDate, $bulan]);
                     });
                 }
             }
@@ -282,14 +283,12 @@ class DataTukarJadwalController extends Controller
             if (isset($filters['tgl_masuk'])) {
                 $tglMasuk = $filters['tgl_masuk'];
                 if (is_array($tglMasuk)) {
-                    $convertedDates = array_map([RandomHelper::class, 'convertToDateString'], $tglMasuk);
-                    $tukarJadwal->whereHas('user_pengajuans.data_karyawans', function ($query) use ($convertedDates) {
-                        $query->whereIn('tgl_masuk', $convertedDates);
+                    $tukarJadwal->whereHas('user_pengajuans.data_karyawans', function ($query) use ($tglMasuk) {
+                        $query->whereIn('tgl_masuk', $tglMasuk);
                     });
                 } else {
-                    $convertedDate = RandomHelper::convertToDateString($tglMasuk);
-                    $tukarJadwal->whereHas('user_pengajuans.data_karyawans', function ($query) use ($convertedDate) {
-                        $query->where('tgl_masuk', $convertedDate);
+                    $tukarJadwal->whereHas('user_pengajuans.data_karyawans', function ($query) use ($tglMasuk) {
+                        $query->where('tgl_masuk', $tglMasuk);
                     });
                 }
             }
@@ -578,192 +577,192 @@ class DataTukarJadwalController extends Controller
     }
 
     // super fix super jos
-    public function store(StoreTukarJadwalRequest $request)
-    {
-        try {
-            if (!Gate::allows('create tukarJadwal')) {
-                return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
-            }
+    // public function store(StoreTukarJadwalRequest $request)
+    // {
+    //     try {
+    //         if (!Gate::allows('create tukarJadwal')) {
+    //             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+    //         }
 
-            $verifikatorId = Auth::id();
+    //         $verifikatorId = Auth::id();
 
-            $data = $request->validated();
-            $userPengajuan = User::findOrFail($data['user_pengajuan']);
-            $userDitukar = User::findOrFail($data['user_ditukar']);
-            $jadwalPengajuan = Jadwal::findOrFail($data['jadwal_pengajuan']);
-            $jadwalDitukar = Jadwal::findOrFail($data['jadwal_ditukar']);
+    //         $data = $request->validated();
+    //         $userPengajuan = User::findOrFail($data['user_pengajuan']);
+    //         $userDitukar = User::findOrFail($data['user_ditukar']);
+    //         $jadwalPengajuan = Jadwal::findOrFail($data['jadwal_pengajuan']);
+    //         $jadwalDitukar = Jadwal::findOrFail($data['jadwal_ditukar']);
 
-            // Verifikasi unit kerja
-            if ($userPengajuan->data_karyawans->unit_kerjas->id !== $userDitukar->data_karyawans->unit_kerjas->id) {
-                return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Karyawan harus berada di unit kerja yang sama untuk menukar jadwal.'), Response::HTTP_BAD_REQUEST);
-            }
+    //         // Verifikasi unit kerja
+    //         if ($userPengajuan->data_karyawans->unit_kerjas->id !== $userDitukar->data_karyawans->unit_kerjas->id) {
+    //             return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Karyawan harus berada di unit kerja yang sama untuk menukar jadwal.'), Response::HTTP_BAD_REQUEST);
+    //         }
 
-            if (Gate::allows('verifikasi2 tukarJadwal')) {
-                $statusPenukaranId = 4;
-                $lemburPengajuan = Lembur::where('user_id', $data['user_pengajuan'])->exists();
-                $lemburDitukar = Lembur::where('user_id', $data['user_ditukar'])->exists();
+    //         if (Gate::allows('verifikasi2 tukarJadwal')) {
+    //             $statusPenukaranId = 4;
+    //             $lemburPengajuan = Lembur::where('user_id', $data['user_pengajuan'])->exists();
+    //             $lemburDitukar = Lembur::where('user_id', $data['user_ditukar'])->exists();
 
-                // Hapus lembur jika ada
-                if ($lemburPengajuan || $lemburDitukar) {
-                    Lembur::where('user_id', $data['user_pengajuan'])
-                        ->orWhere('user_id', $data['user_ditukar'])
-                        ->delete();
-                }
-                $data['verifikator_1'] = $verifikatorId;
-                $data['verifikator_2'] = $verifikatorId;
-            } elseif (Gate::allows('verifikasi1 tukarJadwal')) {
-                $statusPenukaranId = 2;
-                $data['verifikator_1'] = $verifikatorId;
-            } else {
-                $statusPenukaranId = 1;
-            }
+    //             // Hapus lembur jika ada
+    //             if ($lemburPengajuan || $lemburDitukar) {
+    //                 Lembur::where('user_id', $data['user_pengajuan'])
+    //                     ->orWhere('user_id', $data['user_ditukar'])
+    //                     ->delete();
+    //             }
+    //             $data['verifikator_1'] = $verifikatorId;
+    //             $data['verifikator_2'] = $verifikatorId;
+    //         } elseif (Gate::allows('verifikasi1 tukarJadwal')) {
+    //             $statusPenukaranId = 2;
+    //             $data['verifikator_1'] = $verifikatorId;
+    //         } else {
+    //             $statusPenukaranId = 1;
+    //         }
 
-            if ($jadwalPengajuan->shift_id != 0 && $jadwalDitukar->shift_id != 0) {
-                // Konversi tanggal dari string untuk validasi
-                $tglMulaiPengajuan = RandomHelper::convertToDateString($jadwalPengajuan->tgl_mulai);
-                $tglMulaiDitukar = RandomHelper::convertToDateString($jadwalDitukar->tgl_mulai);
+    //         if ($jadwalPengajuan->shift_id != 0 && $jadwalDitukar->shift_id != 0) {
+    //             // Konversi tanggal dari string untuk validasi
+    //             $tglMulaiPengajuan = RandomHelper::convertToDateString($jadwalPengajuan->tgl_mulai);
+    //             $tglMulaiDitukar = RandomHelper::convertToDateString($jadwalDitukar->tgl_mulai);
 
-                // Verifikasi tanggal
-                if ($tglMulaiPengajuan !== $tglMulaiDitukar) {
-                    return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Jadwal harus pada tanggal yang sama untuk menukar jadwal.'), Response::HTTP_BAD_REQUEST);
-                }
+    //             // Verifikasi tanggal
+    //             if ($tglMulaiPengajuan !== $tglMulaiDitukar) {
+    //                 return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Jadwal harus pada tanggal yang sama untuk menukar jadwal.'), Response::HTTP_BAD_REQUEST);
+    //             }
 
-                // Tukar shift dengan shift dengan Tukar user_id
-                $tempUserId = $jadwalPengajuan->user_id;
-                $jadwalPengajuan->user_id = $jadwalDitukar->user_id;
-                $jadwalDitukar->user_id = $tempUserId;
+    //             // Tukar shift dengan shift dengan Tukar user_id
+    //             $tempUserId = $jadwalPengajuan->user_id;
+    //             $jadwalPengajuan->user_id = $jadwalDitukar->user_id;
+    //             $jadwalDitukar->user_id = $tempUserId;
 
-                $jadwalPengajuan->save();
-                $jadwalDitukar->save();
+    //             $jadwalPengajuan->save();
+    //             $jadwalDitukar->save();
 
-                // Simpan permintaan tukar jadwal
-                $tukarJadwal = new TukarJadwal([
-                    'user_pengajuan' => $userPengajuan->id,
-                    'jadwal_pengajuan' => $jadwalPengajuan->id,
-                    'user_ditukar' => $userDitukar->id,
-                    'jadwal_ditukar' => $jadwalDitukar->id,
-                    'status_penukaran_id' => $statusPenukaranId, // Disetujui
-                    'kategori_penukaran_id' => 1, // Tukar Shift
-                ]);
-                $tukarJadwal->save();
+    //             // Simpan permintaan tukar jadwal
+    //             $tukarJadwal = new TukarJadwal([
+    //                 'user_pengajuan' => $userPengajuan->id,
+    //                 'jadwal_pengajuan' => $jadwalPengajuan->id,
+    //                 'user_ditukar' => $userDitukar->id,
+    //                 'jadwal_ditukar' => $jadwalDitukar->id,
+    //                 'status_penukaran_id' => $statusPenukaranId, // Disetujui
+    //                 'kategori_penukaran_id' => 1, // Tukar Shift
+    //             ]);
+    //             $tukarJadwal->save();
 
-                // Buat dan simpan notifikasi
-                $this->createNotifikasiTukarJadwal($userPengajuan, $userDitukar, $jadwalPengajuan, $jadwalDitukar);
-            } else if ($jadwalPengajuan->shift_id == 0 && $jadwalDitukar->shift_id == 0) {
-                // Konversi tanggal dari string untuk validasi
-                $tglMulaiPengajuan = RandomHelper::convertToDateString($jadwalPengajuan->tgl_mulai);
-                $tglMulaiDitukar = RandomHelper::convertToDateString($jadwalDitukar->tgl_mulai);
+    //             // Buat dan simpan notifikasi
+    //             $this->createNotifikasiTukarJadwal($userPengajuan, $userDitukar, $jadwalPengajuan, $jadwalDitukar);
+    //         } else if ($jadwalPengajuan->shift_id == 0 && $jadwalDitukar->shift_id == 0) {
+    //             // Konversi tanggal dari string untuk validasi
+    //             $tglMulaiPengajuan = RandomHelper::convertToDateString($jadwalPengajuan->tgl_mulai);
+    //             $tglMulaiDitukar = RandomHelper::convertToDateString($jadwalDitukar->tgl_mulai);
 
-                // Tukar user_id pada jadwal libur
-                $jadwalKerjaPengajuan = Jadwal::where('user_id', $userPengajuan->id)
-                    ->where('tgl_mulai', $tglMulaiDitukar)
-                    ->whereNotNull('shift_id')
-                    ->first();
+    //             // Tukar user_id pada jadwal libur
+    //             $jadwalKerjaPengajuan = Jadwal::where('user_id', $userPengajuan->id)
+    //                 ->where('tgl_mulai', $tglMulaiDitukar)
+    //                 ->whereNotNull('shift_id')
+    //                 ->first();
 
-                $jadwalKerjaDitukar = Jadwal::where('user_id', $userDitukar->id)
-                    ->where('tgl_mulai', $tglMulaiPengajuan)
-                    ->whereNotNull('shift_id')
-                    ->first();
-                // dd(
-                //     "user pengajuan {$userPengajuan->id}, jadwal kerja yang ada {$jadwalKerjaPengajuan}",
-                //     "user ditukar {$userDitukar->id}, jadwal kerja yang ada {$jadwalKerjaDitukar}"
-                // );
+    //             $jadwalKerjaDitukar = Jadwal::where('user_id', $userDitukar->id)
+    //                 ->where('tgl_mulai', $tglMulaiPengajuan)
+    //                 ->whereNotNull('shift_id')
+    //                 ->first();
+    //             // dd(
+    //             //     "user pengajuan {$userPengajuan->id}, jadwal kerja yang ada {$jadwalKerjaPengajuan}",
+    //             //     "user ditukar {$userDitukar->id}, jadwal kerja yang ada {$jadwalKerjaDitukar}"
+    //             // );
 
-                $tempUserId = $jadwalPengajuan->user_id;
-                $jadwalPengajuan->user_id = $jadwalDitukar->user_id;
-                $jadwalDitukar->user_id = $tempUserId;
+    //             $tempUserId = $jadwalPengajuan->user_id;
+    //             $jadwalPengajuan->user_id = $jadwalDitukar->user_id;
+    //             $jadwalDitukar->user_id = $tempUserId;
 
-                // Simpan perubahan jadwal libur
-                // $jadwalPengajuan->save();
-                // $jadwalDitukar->save();
+    //             // Simpan perubahan jadwal libur
+    //             // $jadwalPengajuan->save();
+    //             // $jadwalDitukar->save();
 
-                if ($jadwalKerjaPengajuan && $jadwalKerjaDitukar) {
-                    // Tukar shift mereka
-                    $tempShiftId = $jadwalKerjaPengajuan->shift_id;
-                    $jadwalKerjaPengajuan->shift_id = $jadwalKerjaDitukar->shift_id;
-                    $jadwalKerjaDitukar->shift_id = $tempShiftId;
+    //             if ($jadwalKerjaPengajuan && $jadwalKerjaDitukar) {
+    //                 // Tukar shift mereka
+    //                 $tempShiftId = $jadwalKerjaPengajuan->shift_id;
+    //                 $jadwalKerjaPengajuan->shift_id = $jadwalKerjaDitukar->shift_id;
+    //                 $jadwalKerjaDitukar->shift_id = $tempShiftId;
 
-                    // Tukar user_id pada jadwal kerja
-                    $tempUserId = $jadwalKerjaPengajuan->user_id;
-                    $jadwalKerjaPengajuan->user_id = $jadwalKerjaDitukar->user_id;
-                    $jadwalKerjaDitukar->user_id = $tempUserId;
+    //                 // Tukar user_id pada jadwal kerja
+    //                 $tempUserId = $jadwalKerjaPengajuan->user_id;
+    //                 $jadwalKerjaPengajuan->user_id = $jadwalKerjaDitukar->user_id;
+    //                 $jadwalKerjaDitukar->user_id = $tempUserId;
 
-                    // Simpan perubahan jadwal kerja
-                    // $jadwalKerjaPengajuan->save();
-                    // $jadwalKerjaDitukar->save();
-                }
+    //                 // Simpan perubahan jadwal kerja
+    //                 // $jadwalKerjaPengajuan->save();
+    //                 // $jadwalKerjaDitukar->save();
+    //             }
 
-                // Simpan permintaan tukar jadwal
-                $tukarJadwal = new TukarJadwal([
-                    'user_pengajuan' => $userPengajuan->id,
-                    'jadwal_pengajuan' => $jadwalPengajuan->id,
-                    'user_ditukar' => $userDitukar->id,
-                    'jadwal_ditukar' => $jadwalDitukar->id,
-                    'status_penukaran_id' => $statusPenukaranId, // Disetujui
-                    'kategori_penukaran_id' => 2, // Tukar Libur
-                ]);
-                $tukarJadwal->save();
+    //             // Simpan permintaan tukar jadwal
+    //             $tukarJadwal = new TukarJadwal([
+    //                 'user_pengajuan' => $userPengajuan->id,
+    //                 'jadwal_pengajuan' => $jadwalPengajuan->id,
+    //                 'user_ditukar' => $userDitukar->id,
+    //                 'jadwal_ditukar' => $jadwalDitukar->id,
+    //                 'status_penukaran_id' => $statusPenukaranId, // Disetujui
+    //                 'kategori_penukaran_id' => 2, // Tukar Libur
+    //             ]);
+    //             $tukarJadwal->save();
 
-                // Buat dan simpan notifikasi
-                $this->createNotifikasiTukarJadwal($userPengajuan, $userDitukar, $jadwalPengajuan, $jadwalDitukar);
-            } else {
-                return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Tidak bisa menukar shift dengan libur atau sebaliknya.'), Response::HTTP_BAD_REQUEST);
-            }
+    //             // Buat dan simpan notifikasi
+    //             $this->createNotifikasiTukarJadwal($userPengajuan, $userDitukar, $jadwalPengajuan, $jadwalDitukar);
+    //         } else {
+    //             return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Tidak bisa menukar shift dengan libur atau sebaliknya.'), Response::HTTP_BAD_REQUEST);
+    //         }
 
-            return response()->json([
-                'status' => Response::HTTP_OK,
-                'message' => 'Data tukar jadwal karyawan berhasil ditambahkan.',
-                'data' => [
-                    [
-                        'user_pengajuan' => [
-                            'id' => $tukarJadwal->id,
-                            'user' => [
-                                'id' => $userPengajuan->id,
-                                'nama' => $userPengajuan->nama,
-                                'username' => $userPengajuan->username,
-                                'email_verified_at' => $userPengajuan->email_verified_at,
-                                'data_karyawan_id' => $userPengajuan->data_karyawan_id,
-                                'foto_profil' => $userPengajuan->foto_profil,
-                                'data_completion_step' => $userPengajuan->data_completion_step,
-                                'status_aktif' => $userPengajuan->status_aktif,
-                                'created_at' => $userPengajuan->created_at,
-                                'updated_at' => $userPengajuan->updated_at
-                            ],
-                            'jadwal' => $jadwalPengajuan,
-                            'status' => $tukarJadwal->status_tukar_jadwals,
-                            'kategori' => $tukarJadwal->kategori_tukar_jadwals,
-                        ]
-                    ],
-                    [
-                        'user_ditukar' => [
-                            'id' => $tukarJadwal->id,
-                            'user' => [
-                                'id' => $userDitukar->id,
-                                'nama' => $userDitukar->nama,
-                                'username' => $userDitukar->username,
-                                'email_verified_at' => $userDitukar->email_verified_at,
-                                'data_karyawan_id' => $userDitukar->data_karyawan_id,
-                                'foto_profil' => $userDitukar->foto_profil,
-                                'data_completion_step' => $userDitukar->data_completion_step,
-                                'status_aktif' => $userDitukar->status_aktif,
-                                'created_at' => $userDitukar->created_at,
-                                'updated_at' => $userDitukar->updated_at
-                            ],
-                            'jadwal' => $jadwalDitukar,
-                            'status' => $tukarJadwal->status_tukar_jadwals,
-                            'kategori' => $tukarJadwal->kategori_tukar_jadwals,
-                        ]
-                    ]
-                ]
-            ], Response::HTTP_OK);
-        } catch (\Exception $e) {
-            Log::error('| Tukar Jadwal | - Error saat menyimpan data tukar jadwal: ' . $e->getMessage());
-            return response()->json([
-                'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
-                'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
-            ], Response::HTTP_INTERNAL_SERVER_ERROR);
-        }
-    }
+    //         return response()->json([
+    //             'status' => Response::HTTP_OK,
+    //             'message' => 'Data tukar jadwal karyawan berhasil ditambahkan.',
+    //             'data' => [
+    //                 [
+    //                     'user_pengajuan' => [
+    //                         'id' => $tukarJadwal->id,
+    //                         'user' => [
+    //                             'id' => $userPengajuan->id,
+    //                             'nama' => $userPengajuan->nama,
+    //                             'username' => $userPengajuan->username,
+    //                             'email_verified_at' => $userPengajuan->email_verified_at,
+    //                             'data_karyawan_id' => $userPengajuan->data_karyawan_id,
+    //                             'foto_profil' => $userPengajuan->foto_profil,
+    //                             'data_completion_step' => $userPengajuan->data_completion_step,
+    //                             'status_aktif' => $userPengajuan->status_aktif,
+    //                             'created_at' => $userPengajuan->created_at,
+    //                             'updated_at' => $userPengajuan->updated_at
+    //                         ],
+    //                         'jadwal' => $jadwalPengajuan,
+    //                         'status' => $tukarJadwal->status_tukar_jadwals,
+    //                         'kategori' => $tukarJadwal->kategori_tukar_jadwals,
+    //                     ]
+    //                 ],
+    //                 [
+    //                     'user_ditukar' => [
+    //                         'id' => $tukarJadwal->id,
+    //                         'user' => [
+    //                             'id' => $userDitukar->id,
+    //                             'nama' => $userDitukar->nama,
+    //                             'username' => $userDitukar->username,
+    //                             'email_verified_at' => $userDitukar->email_verified_at,
+    //                             'data_karyawan_id' => $userDitukar->data_karyawan_id,
+    //                             'foto_profil' => $userDitukar->foto_profil,
+    //                             'data_completion_step' => $userDitukar->data_completion_step,
+    //                             'status_aktif' => $userDitukar->status_aktif,
+    //                             'created_at' => $userDitukar->created_at,
+    //                             'updated_at' => $userDitukar->updated_at
+    //                         ],
+    //                         'jadwal' => $jadwalDitukar,
+    //                         'status' => $tukarJadwal->status_tukar_jadwals,
+    //                         'kategori' => $tukarJadwal->kategori_tukar_jadwals,
+    //                     ]
+    //                 ]
+    //             ]
+    //         ], Response::HTTP_OK);
+    //     } catch (\Exception $e) {
+    //         Log::error('| Tukar Jadwal | - Error saat menyimpan data tukar jadwal: ' . $e->getMessage());
+    //         return response()->json([
+    //             'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
+    //             'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
+    //         ], Response::HTTP_INTERNAL_SERVER_ERROR);
+    //     }
+    // }
 
     public function show($id)
     {

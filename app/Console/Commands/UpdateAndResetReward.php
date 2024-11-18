@@ -32,7 +32,7 @@ class UpdateAndResetReward extends Command
         try {
             DB::transaction(function () {
                 // Ambil daftar data_karyawan_id yang memenuhi kriteria
-                $data_karyawan_ids = DataKaryawan::where('email', '!=', 'super_admin@admin.rski')
+                $data_karyawan_ids = DataKaryawan::where('id', '!=', 1)
                     ->whereHas('users', function ($query) {
                         $query->where('status_aktif', 2);
                     })

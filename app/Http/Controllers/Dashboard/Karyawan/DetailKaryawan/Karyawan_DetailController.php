@@ -121,24 +121,26 @@ class Karyawan_DetailController extends Controller
                 ], Response::HTTP_NOT_FOUND);
             }
 
+            // Tampilkan jadwal dalam 1 minggu
+            $startOfWeek = Carbon::now('Asia/Jakarta')->startOfWeek(Carbon::MONDAY)->startOfDay();
+            $endOfWeek = Carbon::now('Asia/Jakarta')->endOfWeek(Carbon::SUNDAY)->endOfDay();
+
             // Format data jadwal
             $user_schedule_array = [];
             foreach ($user->jadwals as $schedule) {
-                $tglMulai = Carbon::createFromFormat('Y-m-d', $schedule->tgl_mulai)->format('d-m-Y');
-                $tglSelesai = Carbon::createFromFormat('Y-m-d', $schedule->tgl_selesai)->format('d-m-Y');
-
-                $current_date = Carbon::createFromFormat('d-m-Y', $tglMulai);
-                $end_date = Carbon::createFromFormat('d-m-Y', $tglSelesai);
-                while ($current_date->lte(Carbon::parse($tglSelesai))) {
-                    // $date = $current_date->format('Y-m-d');
-                    $user_schedule_array[] = [
-                        'id' => $schedule->id,
-                        // 'tanggal' => $date,
-                        'tgl_mulai' => $tglMulai,
-                        'tgl_selesai' => $tglSelesai,
-                        'shift' => $schedule->shifts,
-                        'updated_at' => $schedule->updated_at
-                    ];
+                $current_date = Carbon::parse($schedule->tgl_mulai);
+                $end_date = Carbon::parse($schedule->tgl_selesai);
+                while ($current_date->lte($end_date)) {
+                    if ($current_date->between($startOfWeek, $endOfWeek)) {
+                        $user_schedule_array[] = [
+                            'id' => $schedule->id,
+                            'tgl_mulai' => $current_date->format('d-m-Y'),
+                            'tgl_selesai' => $end_date->format('d-m-Y'),
+                            'shift' => $schedule->shifts,
+                            'created_at' => $schedule->created_at,
+                            'updated_at' => $schedule->updated_at
+                        ];
+                    }
                     $current_date->addDay();
                 }
             }

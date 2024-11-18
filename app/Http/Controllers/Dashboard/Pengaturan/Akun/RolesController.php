@@ -37,7 +37,8 @@ class RolesController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
-        $role = Role::query()->orderBy('created_at', 'desc')->withTrashed();
+        $role = Role::query()->orderBy('created_at', 'desc');
+        // $role = Role::query()->orderBy('created_at', 'desc')->withTrashed();
 
         $dataRole = $role->get();
         if ($dataRole->isEmpty()) {

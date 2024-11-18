@@ -214,7 +214,7 @@ class PenggajianController extends Controller
             ->whereHas('users', function ($query) {
                 $query->where('status_aktif', 2);
             })
-            ->where('status_karyawan_id', [1, 2, 3])
+            ->whereIn('status_karyawan_id', [1, 2, 3])
             ->pluck('id')
             ->toArray();
         // dd($data_karyawan_ids);
@@ -452,7 +452,8 @@ class PenggajianController extends Controller
             'THR'
         ];
 
-        $potonganTetapList = Premi::pluck('nama_premi')->toArray();
+        $potonganTetapList = array_merge(Premi::pluck('nama_premi')->toArray(), ['PPh21']);
+        // $potonganTetapList = Premi::pluck('nama_premi')->toArray();
 
         // Filter pendapatan tetap
         $pendapatanTetap = $penggajian->detail_gajis->filter(function ($detail) use ($pendapatanTetapList) {
@@ -465,7 +466,7 @@ class PenggajianController extends Controller
                 'created_at' => $detail->created_at,
                 'updated_at' => $detail->updated_at
             ];
-        });
+        })->values();
 
         // Filter pendapatan tambahan (selain pendapatan tetap)
         $pendapatanTambahan = $penggajian->detail_gajis->filter(function ($detail) use ($pendapatanTambahanList, $pendapatanTetapList) {

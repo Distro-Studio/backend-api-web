@@ -58,7 +58,8 @@ class DataKaryawanController extends Controller
   public function resetCredentials(Request $request)
   {
     try {
-      if (!Gate::allows('edit dataKaryawan')) {
+      $loggedInUser = Auth::user();
+      if ($loggedInUser->id !== 1 && $loggedInUser->nama !== 'Super Admin') {
         return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
       }
 
@@ -641,16 +642,17 @@ class DataKaryawanController extends Controller
 
       if (isset($filters['masa_kerja'])) {
         $masaKerja = $filters['masa_kerja'];
+        $currentDate = Carbon::now('Asia/Jakarta');
         if (is_array($masaKerja)) {
-          $karyawan->where(function ($query) use ($masaKerja) {
+          $karyawan->where(function ($query) use ($masaKerja, $currentDate) {
             foreach ($masaKerja as $masa) {
               $bulan = $masa * 12;
-              $query->orWhereRaw('TIMESTAMPDIFF(MONTH, tgl_masuk, COALESCE(tgl_keluar, NOW())) <= ?', [$bulan]);
+              $query->orWhereRaw("TIMESTAMPDIFF(MONTH, STR_TO_DATE(tgl_masuk, '%d-%m-%Y'), COALESCE(STR_TO_DATE(tgl_keluar, '%d-%m-%Y'), ?)) <= ?", [$currentDate, $bulan]);
             }
           });
         } else {
           $bulan = $masaKerja * 12;
-          $karyawan->whereRaw('TIMESTAMPDIFF(MONTH, tgl_masuk, COALESCE(tgl_keluar, NOW())) <= ?', [$bulan]);
+          $karyawan->whereRaw("TIMESTAMPDIFF(MONTH, STR_TO_DATE(tgl_masuk, '%d-%m-%Y'), COALESCE(STR_TO_DATE(tgl_keluar, '%d-%m-%Y'), ?)) <= ?", [$currentDate, $bulan]);
         }
       }
 
@@ -668,12 +670,8 @@ class DataKaryawanController extends Controller
       if (isset($filters['tgl_masuk'])) {
         $tglMasuk = $filters['tgl_masuk'];
         if (is_array($tglMasuk)) {
-          foreach ($tglMasuk as &$tgl) {
-            $tgl = RandomHelper::convertToDateString($tgl);
-          }
           $karyawan->whereIn('tgl_masuk', $tglMasuk);
         } else {
-          $tglMasuk = RandomHelper::convertToDateString($tglMasuk);
           $karyawan->where('tgl_masuk', $tglMasuk);
         }
       }
@@ -1013,6 +1011,8 @@ class DataKaryawanController extends Controller
       $keluargaList = DataKeluarga::where('data_karyawan_id', $data_karyawan_id)
         ->get();
 
+      $berkasList = Berkas::where('user_id', $user_id)->get();
+
       $statusKeluarga = false;
       foreach ($keluargaList as $keluarga) {
         if ($keluarga->status_keluarga_id == 1) {
@@ -1025,6 +1025,23 @@ class DataKaryawanController extends Controller
         foreach ($keluargaList as $keluarga) {
           if ($keluarga->status_keluarga_id == 2 || $keluarga->status_keluarga_id == 3) {
             $statusKeluarga = false;
+            break;
+          }
+        }
+      }
+
+      $statusBerkas = false;
+      foreach ($berkasList as $berkas) {
+        if ($berkas->status_berkas_id == 1) {
+          $statusBerkas = true; // Butuh verifikasi
+          break;
+        }
+      }
+
+      if (!$statusBerkas) {
+        foreach ($berkasList as $berkas) {
+          if ($berkas->status_berkas_id == 2 || $berkas->status_berkas_id == 3) {
+            $statusBerkas = false;
             break;
           }
         }
@@ -1153,6 +1170,7 @@ class DataKaryawanController extends Controller
         'total_durasi_eksternal' => $total_durasi_eksternal,
         'status_reward_presensi' => $karyawan->status_reward_presensi,
         'status_keluarga' => $statusKeluarga,
+        'status_berkas' => $statusBerkas,
         'bmi_value' => $karyawan->bmi_value,
         'bmi_ket' => $karyawan->bmi_ket,
         'riwayat_penyakit' => $karyawan->riwayat_penyakit,
@@ -1192,6 +1210,9 @@ class DataKaryawanController extends Controller
       $keluargaList = DataKeluarga::where('data_karyawan_id', $data_karyawan_id)
         ->get();
 
+      $berkasList = Berkas::where('user_id', $karyawan->user_id)
+        ->get();
+
       $statusKeluarga = false;
       foreach ($keluargaList as $keluarga) {
         if ($keluarga->status_keluarga_id == 1) {
@@ -1204,6 +1225,23 @@ class DataKaryawanController extends Controller
         foreach ($keluargaList as $keluarga) {
           if ($keluarga->status_keluarga_id == 2 || $keluarga->status_keluarga_id == 3) {
             $statusKeluarga = false;
+            break;
+          }
+        }
+      }
+
+      $statusBerkas = false;
+      foreach ($berkasList as $berkas) {
+        if ($berkas->status_berkas_id == 1) {
+          $statusBerkas = true; // Butuh verifikasi
+          break;
+        }
+      }
+
+      if (!$statusBerkas) {
+        foreach ($berkasList as $berkas) {
+          if ($berkas->status_berkas_id == 2 || $berkas->status_berkas_id == 3) {
+            $statusBerkas = false;
             break;
           }
         }
@@ -1346,6 +1384,7 @@ class DataKaryawanController extends Controller
         'total_durasi_eksternal' => $total_durasi_eksternal,
         'status_reward_presensi' => $karyawan->status_reward_presensi,
         'status_keluarga' => $statusKeluarga,
+        'status_berkas' => $statusBerkas,
         'bmi_value' => $karyawan->bmi_value,
         'bmi_ket' => $karyawan->bmi_ket,
         'riwayat_penyakit' => $karyawan->riwayat_penyakit,

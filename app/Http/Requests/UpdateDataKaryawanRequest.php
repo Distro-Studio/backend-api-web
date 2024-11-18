@@ -132,9 +132,9 @@ class UpdateDataKaryawanRequest extends FormRequest
             'no_hp.numeric' => 'Nomor HP karyawan tidak diperbolehkan mengandung selain angka.',
             'jenis_kelamin.in' => 'Jenis kelamin karyawan tidak diperbolehkan selain laki-laki atau perempuan.',
             'nik_ktp.integer' => 'NIK KTP karyawan tidak diperbolehkan mengandung selain angka.',
-            'nik_ktp.digits' => 'NIK KTP karyawan melebihi batas maksimum panjang 16 karakter.',
+            'nik_ktp.digits' => 'NIK KTP karyawan tidak diperbolehkan melebihi batas maksimum panjang 16 karakter.',
             'no_kk.integer' => 'Nomor KK karyawan tidak diperbolehkan mengandung selain angka.',
-            'no_kk.digits' => 'Nomor KK karyawan melebihi batas maksimum panjang 16 karakter.',
+            'no_kk.digits' => 'Nomor KK karyawan tidak diperbolehkan melebihi batas maksimum panjang 16 karakter.',
             'kategori_agama_id.exists' => 'Agama karyawan yang dipilih yang tidak valid.',
             'kategori_darah_id.exists' => 'Golongan darah karyawan yang dipilih tidak valid.',
             'tinggi_badan.integer' => 'Tinggi badan karyawan tidak diperbolehkan mengandung selain angka.',
@@ -155,18 +155,12 @@ class UpdateDataKaryawanRequest extends FormRequest
 
     public function failedValidation(Validator $validator)
     {
-        $reponse = [
+        $messages = implode(' ', $validator->errors()->all());
+        $response = [
             'status' => Response::HTTP_BAD_REQUEST,
-            'message' => $validator->errors()
+            'message' => $messages,
         ];
 
-        throw new HttpResponseException(response()->json($reponse, Response::HTTP_BAD_REQUEST));
-        // $messages = implode(' ', $validator->errors()->all());
-        // $response = [
-        //     'status' => Response::HTTP_BAD_REQUEST,
-        //     'message' => $messages,
-        // ];
-
-        // throw new HttpResponseException(response()->json($response, Response::HTTP_BAD_REQUEST));
+        throw new HttpResponseException(response()->json($response, Response::HTTP_BAD_REQUEST));
     }
 }

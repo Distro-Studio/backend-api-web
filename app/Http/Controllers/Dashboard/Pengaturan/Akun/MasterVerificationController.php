@@ -39,7 +39,7 @@ class MasterVerificationController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
-        $verification = RelasiVerifikasi::query()->orderBy('created_at', 'desc');
+        $verification = RelasiVerifikasi::withTrashed()->orderBy('created_at', 'desc');
 
         $dataVerifikasi = $verification->get();
         if ($dataVerifikasi->isEmpty()) {
@@ -142,7 +142,7 @@ class MasterVerificationController extends Controller
 
     public function update($master_verifikasi, UpdateMasterVerificationRequest $request)
     {
-        $verification = RelasiVerifikasi::find($master_verifikasi);
+        $verification = RelasiVerifikasi::withTrashed()->find($master_verifikasi);
 
         if (!Gate::allows('edit masterVerifikasi', $verification)) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
@@ -221,6 +221,25 @@ class MasterVerificationController extends Controller
         return response()->json(new WithoutDataResource(Response::HTTP_OK, $successMessage), Response::HTTP_OK);
     }
 
+    public function restore($id)
+    {
+        $verifikasi = RelasiVerifikasi::withTrashed()->find($id);
+
+        if (!Gate::allows('delete masterVerifikasi', $verifikasi)) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
+
+        $verifikasi->restore();
+
+        if (is_null($verifikasi->deleted_at)) {
+            $successMessage = "Data hak verifikasi '{$verifikasi->nama}' berhasil dipulihkan.";
+            return response()->json(new WithoutDataResource(Response::HTTP_OK, $successMessage), Response::HTTP_OK);
+        } else {
+            $successMessage = 'Restore data tidak dapat diproses, Silahkan hubungi admin untuk dilakukan pengecekan ulang.';
+            return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, $successMessage), Response::HTTP_BAD_REQUEST);
+        }
+    }
+
     protected function formatData(Collection $collection)
     {
         return $collection->transform(function ($verification) {
@@ -260,6 +279,7 @@ class MasterVerificationController extends Controller
                 'user_diverifikasi' => $formattedDiverifiedUsers,
                 'created_at' => $verification->created_at,
                 'updated_at' => $verification->updated_at,
+                'deleted_at' => $verification->deleted_at
             ];
         });
     }

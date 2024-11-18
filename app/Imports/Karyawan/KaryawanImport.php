@@ -204,9 +204,13 @@ class KaryawanImport implements ToModel, WithHeadingRow, WithValidation
       throw new \Exception("Unit kerja '" . $row['unit_kerja'] . "' tidak ditemukan.");
     }
 
-    $kompetensi = $this->Kompetensi->where('nama_kompetensi', $row['kompetensi'])->first();
-    if (!$kompetensi) {
-      throw new \Exception("Kompetensi '" . $row['kompetensi'] . "' tidak ditemukan.");
+    if (!empty($row['kompetensi'])) {
+      $kompetensi = $this->Kompetensi->where('nama_kompetensi', $row['kompetensi'])->first();
+      if (!$kompetensi) {
+        throw new \Exception("Kompetensi '" . $row['kompetensi'] . "' tidak ditemukan.");
+      }
+    } else {
+      $kompetensi = null;
     }
 
     $kelompok_gaji = $this->KelompokGaji->where('nama_kelompok', $row['kelompok_gaji'])->first();
@@ -247,16 +251,6 @@ class KaryawanImport implements ToModel, WithHeadingRow, WithValidation
       $darah = null;
     }
 
-    $tgl_masuk = \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($row['tgl_masuk']);
-    $tgl_berakhir_pks = \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($row['tgl_berakhir_pks']);
-    $tgl_lahir = \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($row['tgl_lahir']);
-    $tgl_diangkat = \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($row['tgl_diangkat']);
-
-    $tgl_masuk_formatted = Carbon::instance($tgl_masuk)->format('d-m-Y');
-    $tgl_berakhir_pks_formatted = Carbon::instance($tgl_berakhir_pks)->format('d-m-Y');
-    $tgl_lahir_formatted = Carbon::instance($tgl_lahir)->format('d-m-Y');
-    $tgl_diangkat_formatted = Carbon::instance($tgl_diangkat)->format('d-m-Y');
-
     // Konversi jenis kelamin
     $jenis_kelamin = null;
     if ($row['jenis_kelamin'] === 'L') {
@@ -280,10 +274,8 @@ class KaryawanImport implements ToModel, WithHeadingRow, WithValidation
       'email' => $row['email'],
       'no_rm' => $row['no_rm'],
       'no_manulife' => $row['no_manulife'],
-      'tgl_masuk' => $tgl_masuk_formatted,
-      'tgl_berakhir_pks' => $tgl_berakhir_pks_formatted,
-      // 'tgl_masuk' => $row['tgl_masuk'],
-      // 'tgl_berakhir_pks' => $row['tgl_berakhir_pks'],
+      'tgl_masuk' => $row['tgl_masuk'],
+      'tgl_berakhir_pks' => $row['tgl_berakhir_pks'],
       'nik' => $row['nik'],
       'unit_kerja_id' => $unit_kerja ? $unit_kerja->id : null,
       'jabatan_id' => $jabatan ? $jabatan->id : null,
@@ -302,7 +294,7 @@ class KaryawanImport implements ToModel, WithHeadingRow, WithValidation
       'gelar_depan' => $row['gelar_depan'],
       'gelar_belakang' => $row['gelar_belakang'],
       'tempat_lahir' => $row['tempat_lahir'],
-      'tgl_lahir' => $tgl_lahir_formatted,
+      'tgl_lahir' => $row['tgl_lahir'],
       'alamat' => $row['alamat'],
       'no_hp' => $row['no_hp'],
       'nik_ktp' => $row['nik_ktp'],
@@ -318,7 +310,7 @@ class KaryawanImport implements ToModel, WithHeadingRow, WithValidation
       'pendidikan_terakhir' => $pendidikan_terakhir ? $pendidikan_terakhir->id : null,
       'asal_sekolah' => $row['asal_sekolah'],
       'tahun_lulus' => $tahun_lulus,
-      'tgl_diangkat' => $tgl_diangkat_formatted,
+      'tgl_diangkat' => $row['tgl_diangkat'],
     ]);
 
     $createUser->update(['data_karyawan_id' => $dataKaryawan->id]);
