@@ -8,6 +8,7 @@ use App\Models\Shift;
 use App\Models\Jadwal;
 use App\Models\NonShift;
 use App\Models\Presensi;
+use App\Models\UnitKerja;
 use App\Models\DataKaryawan;
 use App\Models\LokasiKantor;
 use App\Models\KategoriPresensi;
@@ -22,11 +23,13 @@ class PresensiImport implements ToModel, WithHeadingRow, WithValidation
 
     private $User;
     private $DataKaryawan;
+    private $UnitKerja;
     private $KategoriPresensi;
     public function __construct()
     {
         $this->User = User::select('id', 'nama')->get();
         $this->DataKaryawan = DataKaryawan::select('id', 'nik', 'user_id')->get();
+        $this->UnitKerja = UnitKerja::select('id', 'nama_unit')->get();
         $this->KategoriPresensi = KategoriPresensi::select('id', 'label')->get();
     }
 
@@ -60,6 +63,11 @@ class PresensiImport implements ToModel, WithHeadingRow, WithValidation
             throw new \Exception("Karyawan dengan NIK '" . $row['nomor_induk_karyawan'] . "' tidak ditemukan.");
         }
 
+        $unit_kerja = $this->UnitKerja->where('nama_unit', $row['unit_kerja'])->first();
+        if (!$unit_kerja) {
+            throw new \Exception("Unit kerja '" . $row['unit_kerja'] . "' tidak ditemukan.");
+        }
+
         // Mendapatkan data lokasi kantor
         $lokasi_kantor = LokasiKantor::first();
         if (!$lokasi_kantor) {
@@ -85,8 +93,8 @@ class PresensiImport implements ToModel, WithHeadingRow, WithValidation
 
         // Memeriksa apakah data presensi sudah ada
         $existingPresensi = Presensi::where('user_id', $data_karyawan->user_id)
-            ->where('jam_masuk', $jam_masuk->format('H:i:s'))
-            ->where('jam_keluar', $jam_keluar->format('H:i:s'))
+            ->whereDate('jam_masuk', $jam_masuk_full)
+            ->whereDate('jam_keluar', $jam_keluar_full)
             ->first();
 
         if ($existingPresensi) {
@@ -107,20 +115,35 @@ class PresensiImport implements ToModel, WithHeadingRow, WithValidation
         }
 
         if ($jenis_karyawan === 'shift') {
-            // Mendapatkan shift yang cocok berdasarkan jam masuk
-            $shift = Shift::all()->filter(function ($shift) use ($jam_masuk) {
+            $shifts = Shift::where('unit_kerja_id', $unit_kerja->id)->get();
+            if ($shifts->isEmpty()) {
+                throw new \Exception("Shift tidak ditemukan untuk unit kerja: {$row['unit_kerja']}.");
+            }
+
+            $shift = $shifts->filter(function ($shift) use ($jam_masuk, $jam_keluar) {
                 $jam_from = Carbon::parse($shift->jam_from);
                 $jam_to = Carbon::parse($shift->jam_to);
 
-                if ($jam_from->lessThan($jam_to)) {
-                    return $jam_masuk->between($jam_from, $jam_to);
-                } else { // Untuk shift malam yang melewati tengah malam
-                    return $jam_masuk->greaterThanOrEqualTo($jam_from) || $jam_masuk->lessThanOrEqualTo($jam_to);
-                }
-            })->first();
+                // Cek apakah jam masuk berada dalam toleransi setelah jam_from
+                $isJamMasukValid = $jam_masuk->greaterThanOrEqualTo($jam_from->copy()->subMinutes(30))
+                    && $jam_masuk->lessThanOrEqualTo($jam_to);
 
+                // Cek apakah jam keluar berada dalam toleransi setelah jam_to
+                $isJamKeluarValid = $jam_keluar->greaterThanOrEqualTo($jam_from)
+                    && $jam_keluar->lessThanOrEqualTo($jam_to->copy()->addMinutes(30));
+
+                return $isJamMasukValid && $isJamKeluarValid;
+            })->first();
             if (!$shift) {
                 throw new \Exception("Shift tidak ditemukan untuk waktu jam masuk: {$row['jam_masuk']}");
+            }
+
+            // Mendapatkan kategori presensi berdasarkan jam masuk dan shift
+            $kategori_presensi_id = $this->getKategoriPresensiId($shift, $jam_masuk);
+
+            // Jika kategori presensi adalah 'Terlambat', perbarui status_reward_presensi
+            if ($kategori_presensi_id == 2) {
+                $data_karyawan->update(['status_reward_presensi' => false]);
             }
 
             // Mendapatkan jadwal berdasarkan user, shift, dan tanggal masuk dari excel
@@ -138,14 +161,6 @@ class PresensiImport implements ToModel, WithHeadingRow, WithValidation
                     'tgl_mulai' => $tanggal_masuk->format('Y-m-d'),
                     'tgl_selesai' => $tanggal_masuk->format('Y-m-d')
                 ]);
-            }
-
-            // Mendapatkan kategori presensi berdasarkan jam masuk dan shift
-            $kategori_presensi_id = $this->getKategoriPresensiId($shift, $jam_masuk);
-
-            // Jika kategori presensi adalah 'Terlambat', perbarui status_reward_presensi
-            if ($kategori_presensi_id == 2) {
-                $data_karyawan->update(['status_reward_presensi' => false]);
             }
 
             // Mengembalikan instance dari model Presensi dengan data yang sesuai
@@ -213,21 +228,21 @@ class PresensiImport implements ToModel, WithHeadingRow, WithValidation
     {
         $jam_from = Carbon::parse($shift->jam_from);
 
-        if ($jam_masuk->greaterThanOrEqualTo($jam_from)) {
+        if ($jam_masuk->greaterThan($jam_from)) {
             return $this->KategoriPresensi->where('label', 'Terlambat')->first()->id;
-        } else {
-            return $this->KategoriPresensi->where('label', 'Tepat Waktu')->first()->id;
         }
+
+        return $this->KategoriPresensi->where('label', 'Tepat Waktu')->first()->id;
     }
 
     private function getKategoriPresensiIdNonShift($non_shift, $jam_masuk)
     {
         $jam_from = Carbon::parse($non_shift->jam_from);
 
-        if ($jam_masuk->greaterThanOrEqualTo($jam_from)) {
+        if ($jam_masuk->greaterThan($jam_from)) {
             return $this->KategoriPresensi->where('label', 'Terlambat')->first()->id;
-        } else {
-            return $this->KategoriPresensi->where('label', 'Tepat Waktu')->first()->id;
         }
+
+        return $this->KategoriPresensi->where('label', 'Tepat Waktu')->first()->id;
     }
 }

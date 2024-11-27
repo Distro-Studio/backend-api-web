@@ -5,7 +5,9 @@ namespace App\Http\Controllers\Dashboard\Karyawan\DetailKaryawan;
 use Carbon\Carbon;
 use App\Models\Cuti;
 use App\Models\User;
+use App\Models\Jadwal;
 use App\Models\Lembur;
+use App\Models\NonShift;
 use App\Models\Presensi;
 use App\Models\Penilaian;
 use App\Models\TrackRecord;
@@ -29,68 +31,167 @@ class Karyawan_DetailController extends Controller
                 return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
             }
 
-            // Mendapatkan data presensi karyawan berdasarkan data_karyawan_id dan filter hari ini
-            $presensi = Presensi::with([
+            $month = request()->input('month');
+            $year = request()->input('year');
+            if (!is_numeric($month) || $month < 1 || $month > 12 || !is_numeric($year) || strlen($year) != 4) {
+                return response()->json([
+                    'status' => Response::HTTP_BAD_REQUEST,
+                    'message' => 'Format bulan berupa angka 1-12 dan tahun berupa angka dengan format yyyy.',
+                ], Response::HTTP_BAD_REQUEST);
+            }
+
+            $dataPresensi = Presensi::with([
+                'users',
+                'jadwals.shifts',
+                'data_karyawans.unit_kerjas',
+                'kategori_presensis',
+            ])
+                ->where('data_karyawan_id', $data_karyawan_id)
+                ->first();
+            if (!$dataPresensi) {
+                return response()->json([
+                    'status' => Response::HTTP_NOT_FOUND,
+                    'message' => 'Data presensi karyawan tidak ditemukan.',
+                ], Response::HTTP_NOT_FOUND);
+            }
+
+            $listPresensi = Presensi::with([
                 'users',
                 'jadwals.shifts',
                 'data_karyawans.unit_kerjas',
                 'kategori_presensis'
             ])
                 ->where('data_karyawan_id', $data_karyawan_id)
-                // ->whereDate('jam_masuk', Carbon::today())
-                ->first();
-
-            if (!$presensi) {
-                return response()->json([
-                    'status' => Response::HTTP_NOT_FOUND,
-                    'message' => 'Data presensi karyawan tidak ditemukan.'
-                ], Response::HTTP_NOT_FOUND);
-            }
-
-            // Ambil semua presensi bulan ini dari karyawan yang sama
-            $presensiBulanIni = Presensi::where('data_karyawan_id', $data_karyawan_id)
-                ->whereYear('jam_masuk', Carbon::now()->year)
-                ->whereMonth('jam_masuk', Carbon::now()->month)
-                ->orderBy('jam_masuk')
+                ->whereYear('created_at', $year)
+                ->whereMonth('created_at', $month)
+                ->orderBy('created_at', 'desc')
                 ->get();
-
-            // Memformat aktivitas presensi
-            $aktivitasPresensi = [];
-            foreach ($presensiBulanIni as $presensi) {
-                if ($presensi->jam_masuk) {
-                    $aktivitasPresensi[] = [
-                        'presensi' => 'Masuk',
-                        'tanggal' => Carbon::parse($presensi->jam_masuk)->format('d-m-Y'),
-                        'jam' => Carbon::parse($presensi->jam_masuk)->format('H:i:s'),
-                    ];
-                }
-                if ($presensi->jam_keluar) {
-                    $aktivitasPresensi[] = [
-                        'presensi' => 'Keluar',
-                        'tanggal' => Carbon::parse($presensi->jam_keluar)->format('d-m-Y'),
-                        'jam' => Carbon::parse($presensi->jam_keluar)->format('H:i:s'),
-                    ];
-                }
-            }
-
-            return response()->json([
-                'status' => Response::HTTP_OK,
-                'message' => "Detail data presensi karyawan '{$presensi->users->nama}' berhasil ditampilkan.",
-                'data' => [
+            $formattedData = $listPresensi->map(function ($presensi) {
+                return [
                     'id' => $presensi->id,
                     'user' => $presensi->users,
                     'unit_kerja' => $presensi->data_karyawans->unit_kerjas,
-                    'list_presensi' => $aktivitasPresensi
+                    'jadwal' => [
+                        'id' => $presensi->jadwals->id ?? null,
+                        'tgl_mulai' => $presensi->jadwals->tgl_mulai ?? null,
+                        'tgl_selesai' => $presensi->jadwals->tgl_selesai ?? null,
+                        'shift' => $presensi->jadwals->shifts ?? null,
+                    ],
+                    'jam_masuk' => $presensi->jam_masuk,
+                    'jam_keluar' => $presensi->jam_keluar,
+                    'durasi' => $presensi->durasi,
+                    'kategori_presensi' => $presensi->kategori_presensis,
+                    'created_at' => $presensi->created_at,
+                    'updated_at' => $presensi->updated_at,
+                ];
+            });
+
+            return response()->json([
+                'status' => Response::HTTP_OK,
+                'message' => "Detail data presensi karyawan '{$dataPresensi->users->nama}' berhasil ditampilkan.",
+                'data' => [
+                    'user' => $this->mapUser($dataPresensi->users),
+                    'unit_kerja' => $dataPresensi->data_karyawans->unit_kerjas,
+                    'list_presensi' => $formattedData
                 ],
             ], Response::HTTP_OK);
         } catch (\Exception $e) {
             Log::error('| Karyawan | - Error function getDataPresensi: ' . $e->getMessage());
             return response()->json([
                 'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
-                'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
+                'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti. Error: ' . $e->getMessage(),
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
+
+    // public function getDataJadwal($data_karyawan_id)
+    // {
+    //     try {
+    //         if (!Gate::allows('view dataKaryawan')) {
+    //             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+    //         }
+
+    //         $karyawan = DataKaryawan::with(['users.jadwals.shifts', 'unit_kerjas'])
+    //             ->where('id', '!=', 1)
+    //             ->find($data_karyawan_id);
+    //         if (!$karyawan) {
+    //             return response()->json([
+    //                 'status' => Response::HTTP_NOT_FOUND,
+    //                 'message' => 'Data karyawan tidak ditemukan.'
+    //             ], Response::HTTP_NOT_FOUND);
+    //         }
+
+    //         $user = $karyawan->users;
+    //         if (!$user) {
+    //             return response()->json([
+    //                 'status' => Response::HTTP_NOT_FOUND,
+    //                 'message' => 'Data akun karyawan tidak ditemukan.'
+    //             ], Response::HTTP_NOT_FOUND);
+    //         }
+
+    //         // Tampilkan jadwal dalam 1 minggu
+    //         $startOfWeek = Carbon::now('Asia/Jakarta')->startOfWeek(Carbon::MONDAY)->startOfDay();
+    //         $endOfWeek = Carbon::now('Asia/Jakarta')->endOfWeek(Carbon::SUNDAY)->endOfDay();
+
+    //         // Format data jadwal
+    //         $user_schedule_array = [];
+    //         foreach ($user->jadwals as $schedule) {
+    //             $current_date = Carbon::parse($schedule->tgl_mulai);
+    //             $end_date = Carbon::parse($schedule->tgl_selesai);
+    //             while ($current_date->lte($end_date)) {
+    //                 if ($current_date->between($startOfWeek, $endOfWeek)) {
+    //                     $user_schedule_array[] = [
+    //                         'id' => $schedule->id,
+    //                         'tgl_mulai' => $current_date->format('d-m-Y'),
+    //                         'tgl_selesai' => $end_date->format('d-m-Y'),
+    //                         'shift' => $schedule->shifts,
+    //                         'created_at' => $schedule->created_at,
+    //                         'updated_at' => $schedule->updated_at
+    //                     ];
+    //                 }
+    //                 $current_date->addDay();
+    //             }
+    //         }
+
+    //         if (empty($user_schedule_array)) {
+    //             return response()->json([
+    //                 'status' => Response::HTTP_NOT_FOUND,
+    //                 'message' => 'Jadwal karyawan tidak ditemukan.',
+    //             ], Response::HTTP_NOT_FOUND);
+    //         }
+
+    //         // Format respons
+    //         $formattedData = [
+    //             'id' => $karyawan->id,
+    //             'user' => [
+    //                 'id' => $user->id,
+    //                 'nama' => $user->nama,
+    //                 'username' => $user->username,
+    //                 'email_verified_at' => $user->email_verified_at,
+    //                 'data_karyawan_id' => $user->data_karyawan_id,
+    //                 'foto_profil' => $user->foto_profil,
+    //                 'data_completion_step' => $user->data_completion_step,
+    //                 'status_aktif' => $user->status_aktif,
+    //                 'created_at' => $user->created_at,
+    //                 'updated_at' => $user->updated_at
+    //             ],
+    //             'unit_kerja' => $karyawan->unit_kerjas,
+    //             'list_jadwal' => $user_schedule_array,
+    //         ];
+
+    //         return response()->json([
+    //             'status' => Response::HTTP_OK,
+    //             'message' => "Detail jadwal karyawan '{$user->nama}' berhasil ditampilkan.",
+    //             'data' => $formattedData,
+    //         ], Response::HTTP_OK);
+    //     } catch (\Exception $e) {
+    //         Log::error('| Karyawan | - Error function getDataJadwal: ' . $e->getMessage() . ' | Line: ' . $e->getLine());
+    //         return response()->json([
+    //             'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
+    //             'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
+    //         ], Response::HTTP_INTERNAL_SERVER_ERROR);
+    //     }
+    // }
 
     public function getDataJadwal($data_karyawan_id)
     {
@@ -99,11 +200,7 @@ class Karyawan_DetailController extends Controller
                 return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
             }
 
-            // Cari data karyawan berdasarkan data_karyawan_id
-            $karyawan = DataKaryawan::with(['users.jadwals.shifts', 'unit_kerjas'])
-                ->where('id', '!=', 1)
-                ->find($data_karyawan_id);
-
+            $karyawan = DataKaryawan::with(['users.jadwals.shifts', 'unit_kerjas'])->find($data_karyawan_id);
             if (!$karyawan) {
                 return response()->json([
                     'status' => Response::HTTP_NOT_FOUND,
@@ -111,76 +208,130 @@ class Karyawan_DetailController extends Controller
                 ], Response::HTTP_NOT_FOUND);
             }
 
-            // Ambil data user yang terkait dengan karyawan
             $user = $karyawan->users;
-
             if (!$user) {
                 return response()->json([
                     'status' => Response::HTTP_NOT_FOUND,
-                    'message' => 'User tidak ditemukan untuk data karyawan ini.'
+                    'message' => 'Data akun karyawan tidak ditemukan.'
                 ], Response::HTTP_NOT_FOUND);
             }
 
-            // Tampilkan jadwal dalam 1 minggu
-            $startOfWeek = Carbon::now('Asia/Jakarta')->startOfWeek(Carbon::MONDAY)->startOfDay();
-            $endOfWeek = Carbon::now('Asia/Jakarta')->endOfWeek(Carbon::SUNDAY)->endOfDay();
+            $unitKerja = $karyawan->unit_kerjas;
+            $jenisKaryawan = $unitKerja->jenis_karyawan;
 
-            // Format data jadwal
-            $user_schedule_array = [];
-            foreach ($user->jadwals as $schedule) {
-                $current_date = Carbon::parse($schedule->tgl_mulai);
-                $end_date = Carbon::parse($schedule->tgl_selesai);
-                while ($current_date->lte($end_date)) {
-                    if ($current_date->between($startOfWeek, $endOfWeek)) {
-                        $user_schedule_array[] = [
-                            'id' => $schedule->id,
-                            'tgl_mulai' => $current_date->format('d-m-Y'),
-                            'tgl_selesai' => $end_date->format('d-m-Y'),
-                            'shift' => $schedule->shifts,
-                            'created_at' => $schedule->created_at,
-                            'updated_at' => $schedule->updated_at
+            // Tentukan rentang tanggal untuk minggu ini
+            $startOfWeek = Carbon::now('Asia/Jakarta')->startOfWeek(Carbon::MONDAY)->format('Y-m-d');
+            $endOfWeek = Carbon::now('Asia/Jakarta')->endOfWeek(Carbon::SUNDAY)->format('Y-m-d');
+            $dateRange = $this->generateDateRange(Carbon::parse($startOfWeek), Carbon::parse($endOfWeek));
+
+            // Ambil data jadwal
+            $jadwals = Jadwal::where('user_id', $user->id)
+                ->where(function ($query) use ($startOfWeek, $endOfWeek) {
+                    $query->whereBetween('tgl_mulai', [$startOfWeek, $endOfWeek])
+                        ->orWhereBetween('tgl_selesai', [$startOfWeek, $endOfWeek]);
+                })
+                ->with('shifts')
+                ->get();
+
+            // Ambil data cuti
+            $cutis = Cuti::where('user_id', $user->id)
+                ->where('status_cuti_id', 4)
+                ->get()
+                ->map(function ($cuti) {
+                    $cuti->tgl_from = Carbon::createFromFormat('d-m-Y', $cuti->tgl_from)->format('Y-m-d');
+                    $cuti->tgl_to = Carbon::createFromFormat('d-m-Y', $cuti->tgl_to)->format('Y-m-d');
+                    return $cuti;
+                });
+
+            // Ambil jadwal non-shift jika jenis karyawan adalah non-shift
+            $nonShifts = $jenisKaryawan == 0
+                ? NonShift::whereIn('nama', collect($dateRange)->map(fn($date) => $this->getDayName(Carbon::parse($date)->dayOfWeek))->toArray())
+                ->get()
+                ->keyBy('nama')
+                : collect();
+
+            // Format jadwal
+            $formattedSchedules = [];
+            foreach ($dateRange as $date) {
+                $currentDate = Carbon::parse($date);
+
+                // Cek untuk cuti
+                $cutiForDate = $cutis->first(function ($cuti) use ($currentDate) {
+                    return $currentDate->between(Carbon::parse($cuti->tgl_from), Carbon::parse($cuti->tgl_to));
+                });
+
+                if ($cutiForDate) {
+                    $formattedSchedules[] = [
+                        'id' => $cutiForDate->id,
+                        'user' => $this->mapUser($user),
+                        'unit_kerja' => $unitKerja,
+                        'tipe_cuti' => $cutiForDate->tipe_cutis,
+                        'keterangan' => $cutiForDate->keterangan,
+                        'tgl_from' => $cutiForDate->tgl_from,
+                        'tgl_to' => $cutiForDate->tgl_to,
+                        'catatan' => $cutiForDate->catatan,
+                        'durasi' => $cutiForDate->durasi,
+                        'status_cuti' => $cutiForDate->status_cutis,
+                        'status' => 5,
+                        'created_at' => $cutiForDate->created_at,
+                        'updated_at' => $cutiForDate->updated_at,
+                    ];
+                    continue;
+                }
+
+                // Cek untuk jadwal shift
+                $scheduleForDate = $jadwals->first(function ($jadwal) use ($currentDate) {
+                    return $currentDate->between(Carbon::parse($jadwal->tgl_mulai), Carbon::parse($jadwal->tgl_selesai));
+                });
+
+                if ($scheduleForDate) {
+                    $formattedSchedules[] = [
+                        'id' => $scheduleForDate->id,
+                        'tgl_mulai' => $scheduleForDate->tgl_mulai,
+                        'tgl_selesai' => $scheduleForDate->tgl_selesai,
+                        'shift' => $scheduleForDate->shifts,
+                        'updated_at' => $scheduleForDate->updated_at,
+                        'status' => 1,
+                    ];
+                    continue;
+                }
+
+                // Cek untuk jadwal non-shift
+                if ($jenisKaryawan == 0) {
+                    $dayName = $this->getDayName($currentDate->dayOfWeek);
+                    $nonShiftForDay = $nonShifts->get($dayName);
+
+                    if ($nonShiftForDay) {
+                        $formattedSchedules[] = [
+                            'id' => $nonShiftForDay->id,
+                            'nama' => $nonShiftForDay->nama,
+                            'jam_from' => $nonShiftForDay->jam_from,
+                            'jam_to' => $nonShiftForDay->jam_to,
+                            'status' => 2,
                         ];
+                    } else {
+                        $formattedSchedules[] = null;
                     }
-                    $current_date->addDay();
+                } else {
+                    $formattedSchedules[] = null;
                 }
             }
 
-            if (empty($user_schedule_array)) {
-                return response()->json([
-                    'status' => Response::HTTP_NOT_FOUND,
-                    'message' => 'Jadwal karyawan tidak ditemukan.',
-                ], Response::HTTP_NOT_FOUND);
-            }
-
-            // Format respons
-            $formattedData = [
-                'id' => $karyawan->id,
-                'user' => [
-                    'id' => $user->id,
-                    'nama' => $user->nama,
-                    'username' => $user->username,
-                    'email_verified_at' => $user->email_verified_at,
-                    'data_karyawan_id' => $user->data_karyawan_id,
-                    'foto_profil' => $user->foto_profil,
-                    'data_completion_step' => $user->data_completion_step,
-                    'status_aktif' => $user->status_aktif,
-                    'created_at' => $user->created_at,
-                    'updated_at' => $user->updated_at
-                ],
-                'unit_kerja' => $karyawan->unit_kerjas,
-                'list_jadwal' => $user_schedule_array,
-            ];
-
             return response()->json([
                 'status' => Response::HTTP_OK,
-                'message' => "Detail jadwal karyawan '{$user->nama}' berhasil ditampilkan.",
-                'data' => $formattedData,
+                'message' => "Detail jadwal karyawan '{$user->nama}' minggu ini berhasil ditampilkan.",
+                'data' => [
+                    'id' => $karyawan->id,
+                    'user' => $this->mapUser($user),
+                    'unit_kerja' => $unitKerja,
+                    'list_jadwal' => $formattedSchedules,
+                ],
             ], Response::HTTP_OK);
         } catch (\Exception $e) {
-            Log::error('| Karyawan | - Error function getDataJadwal: ' . $e->getMessage());
+            Log::error('| Jadwal | - Error function getDataJadwal: ' . $e->getMessage());
             return response()->json([
                 'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
-                'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
+                'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.'
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
@@ -219,18 +370,7 @@ class Karyawan_DetailController extends Controller
 
                 return [
                     'id' => $item->id,
-                    'user' => [
-                        'id' => $user->id,
-                        'nama' => $user->nama,
-                        'username' => $user->username,
-                        'email_verified_at' => $user->email_verified_at,
-                        'data_karyawan_id' => $user->data_karyawan_id,
-                        'foto_profil' => $user->foto_profil,
-                        'data_completion_step' => $user->data_completion_step,
-                        'status_aktif' => $user->status_aktif,
-                        'created_at' => $user->created_at,
-                        'updated_at' => $user->updated_at
-                    ],
+                    'user' => $this->mapUser($user),
                     'kategori_rekam_jejak' => $item->kategori_track_records,
                     'content' => [
                         'kategori_transfer' => $transfer->kategori_transfer_karyawans,
@@ -265,18 +405,7 @@ class Karyawan_DetailController extends Controller
                 foreach ($perubahanDataList as $perubahanData) {
                     $formattedDataPerubahan[] = [
                         'id' => $data_perubahan->id,
-                        'user' => [
-                            'id' => $relasiUser->id,
-                            'nama' => $relasiUser->nama,
-                            'username' => $relasiUser->username,
-                            'email_verified_at' => $relasiUser->email_verified_at,
-                            'data_karyawan_id' => $relasiUser->data_karyawan_id,
-                            'foto_profil' => $relasiUser->foto_profil,
-                            'data_completion_step' => $relasiUser->data_completion_step,
-                            'status_aktif' => $relasiUser->status_aktif,
-                            'created_at' => $relasiUser->created_at,
-                            'updated_at' => $relasiUser->updated_at
-                        ],
+                        'user' => $this->mapUser($relasiUser),
                         'kategori_rekam_jejak' => $relasiKategori,
                         'content' => [
                             'kolom' => $perubahanData->kolom,
@@ -307,7 +436,7 @@ class Karyawan_DetailController extends Controller
                 'message' => "Data rekam jejak karyawan '{$user->nama}' berhasil ditampilkan.",
                 'data' => [
                     'id' => $karyawan->id,
-                    'user' => $user,
+                    'user' => $this->mapUser($user),
                     'tgl_masuk_karyawan' => $karyawan->tgl_masuk,
                     'tgl_keluar_karyawan' => $karyawan->tgl_keluar,
                     // 'masa_kerja_karyawan' => $masaKerja,
@@ -315,7 +444,7 @@ class Karyawan_DetailController extends Controller
                 ]
             ], Response::HTTP_OK);
         } catch (\Exception $e) {
-            Log::error('| Karyawan | - Error function getDataRekamJejak: ' . $e->getMessage());
+            Log::error('| Karyawan | - Error function getDataRekamJejak: ' . $e->getMessage() . ' - Line: ' . $e->getLine());
             return response()->json([
                 'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
                 'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
@@ -338,7 +467,6 @@ class Karyawan_DetailController extends Controller
 
             // Ambil semua data cuti yang dimiliki karyawan tersebut
             $dataCuti = Cuti::where('user_id', $karyawan->users->id)->get();
-
             if ($dataCuti->isEmpty()) {
                 return response()->json([
                     'status' => Response::HTTP_NOT_FOUND,
@@ -361,32 +489,18 @@ class Karyawan_DetailController extends Controller
                 ];
             });
 
-            // Format data user
-            $formattedData = [
-                'id' => $karyawan->id,
-                'user' => [
-                    'id' => $karyawan->users->id,
-                    'nama' => $karyawan->users->nama,
-                    'username' => $karyawan->users->username,
-                    'email_verified_at' => $karyawan->users->email_verified_at,
-                    'data_karyawan_id' => $karyawan->users->data_karyawan_id,
-                    'foto_profil' => $karyawan->users->foto_profil,
-                    'data_completion_step' => $karyawan->users->data_completion_step,
-                    'status_aktif' => $karyawan->users->status_aktif,
-                    'created_at' => $karyawan->users->created_at,
-                    'updated_at' => $karyawan->users->updated_at
-                ],
-                'unit_kerja' => $karyawan->unit_kerjas,
-                'list_cuti' => $listCuti
-            ];
-
             return response()->json([
                 'status' => Response::HTTP_OK,
                 'message' => "Detail data cuti karyawan '{$karyawan->users->nama}' berhasil ditampilkan.",
-                'data' => $formattedData
+                'data' => [
+                    'id' => $karyawan->id,
+                    'user' => $this->mapUser($karyawan->users),
+                    'unit_kerja' => $karyawan->unit_kerjas,
+                    'list_cuti' => $listCuti
+                ]
             ], Response::HTTP_OK);
         } catch (\Exception $e) {
-            Log::error('| Karyawan | - Error function getDataCuti: ' . $e->getMessage());
+            Log::error('| Karyawan | - Error function getDataCuti: ' . $e->getMessage() . ' | Line: ' . $e->getLine());
             return response()->json([
                 'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
                 'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
@@ -401,7 +515,6 @@ class Karyawan_DetailController extends Controller
                 return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
             }
 
-            // Cari user berdasarkan data_karyawan_id
             $karyawan = DataKaryawan::find($data_karyawan_id);
             if (!$karyawan) {
                 return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data karyawan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
@@ -413,8 +526,8 @@ class Karyawan_DetailController extends Controller
             // Cari tukar jadwal di mana user menjadi user_pengajuan atau user_ditukar
             $tukarJadwal = TukarJadwal::where('user_pengajuan', $userId)
                 ->orWhere('user_ditukar', $userId)
+                ->orderBy('created_at', 'desc')
                 ->get();
-
             if ($tukarJadwal->isEmpty()) {
                 return response()->json([
                     'status' => Response::HTTP_NOT_FOUND,
@@ -423,52 +536,70 @@ class Karyawan_DetailController extends Controller
             }
 
             // Format data tukar jadwal
-            $formattedData = $tukarJadwal->map(function ($item) use ($userId) {
-                $isUserPengajuan = $item->user_pengajuan == $userId;
+            $formattedData = $tukarJadwal->map(function ($item) {
                 return [
                     'id' => $item->id,
-                    'user_pengajuan' => [
-                        'user' => [
-                            'id' => $item->user_pengajuans->id,
-                            'nama' => $item->user_pengajuans->nama,
-                            'username' => $item->user_pengajuans->username,
-                            'email_verified_at' => $item->user_pengajuans->email_verified_at,
-                            'data_karyawan_id' => $item->user_pengajuans->data_karyawan_id,
-                            'foto_profil' => $item->user_pengajuans->foto_profil,
-                            'data_completion_step' => $item->user_pengajuans->data_completion_step,
-                            'status_aktif' => $item->user_pengajuans->status_aktif,
-                            'created_at' => $item->user_pengajuans->created_at,
-                            'updated_at' => $item->user_pengajuans->updated_at,
-                        ],
-                        'jadwal' => $item->jadwal_pengajuans,
-                        'status' => $item->status_tukar_jadwals,
-                        'kategori' => $item->kategori_tukar_jadwals,
+                    'tanggal_pengajuan' => $item->created_at,
+                    'status_penukaran' => $item->status_tukar_jadwals ? [
+                        'id' => $item->status_tukar_jadwals->id,
+                        'label' => $item->status_tukar_jadwals->label,
+                        'created_at' => $item->status_tukar_jadwals->created_at,
+                        'updated_at' => $item->status_tukar_jadwals->updated_at,
+                    ] : null,
+                    'kategori_penukaran' => $item->kategori_tukar_jadwals ? [
+                        'id' => $item->kategori_tukar_jadwals->id,
+                        'label' => $item->kategori_tukar_jadwals->label,
+                        'created_at' => $item->kategori_tukar_jadwals->created_at,
+                        'updated_at' => $item->kategori_tukar_jadwals->updated_at,
+                    ] : null,
+                    'unit_kerja' => $item->user_pengajuans->data_karyawans->unit_kerjas ?? null,
+                    'karyawan_pengajuan' => $item->user_pengajuans ? [
+                        'id' => $item->user_pengajuans->id,
+                        'nama' => $item->user_pengajuans->nama,
+                        'email_verified_at' => $item->user_pengajuans->email_verified_at,
+                        'data_karyawan_id' => $item->user_pengajuans->data_karyawans->id,
+                        'foto_profil' => $item->user_pengajuans->foto_profil,
+                        'data_completion_step' => $item->user_pengajuans->data_completion_step,
+                        'status_aktif' => $item->user_pengajuans->status_aktif,
+                        'created_at' => $item->user_pengajuans->created_at,
+                        'updated_at' => $item->user_pengajuans->updated_at,
+                    ] : null,
+                    'karyawan_ditukar' => $item->user_ditukars ? [
+                        'id' => $item->user_ditukars->id,
+                        'nama' => $item->user_ditukars->nama,
+                        'email_verified_at' => $item->user_ditukars->email_verified_at,
+                        'data_karyawan_id' => $item->user_ditukars->data_karyawans->id,
+                        'foto_profil' => $item->user_ditukars->foto_profil,
+                        'data_completion_step' => $item->user_ditukars->data_completion_step,
+                        'status_aktif' => $item->user_ditukars->status_aktif,
+                        'created_at' => $item->user_ditukars->created_at,
+                        'updated_at' => $item->user_ditukars->updated_at,
+                    ] : null,
+                    'list_jadwal' => [
+                        [
+                            'jadwal_karyawan_pengajuan' => $item->jadwal_pengajuans ? [
+                                'id' => $item->jadwal_pengajuans->id,
+                                'tgl_mulai' => $item->jadwal_pengajuans->tgl_mulai,
+                                'tgl_selesai' => $item->jadwal_pengajuans->tgl_selesai,
+                                'shift' => $item->jadwal_pengajuans->shifts,
+                                'created_at' => $item->jadwal_pengajuans->created_at,
+                                'updated_at' => $item->jadwal_pengajuans->updated_at,
+                            ] : null,
+                            'jadwal_karyawan_ditukar' => $item->jadwal_ditukars ? [
+                                'id' => $item->jadwal_ditukars->id,
+                                'tgl_mulai' => $item->jadwal_ditukars->tgl_mulai,
+                                'tgl_selesai' => $item->jadwal_ditukars->tgl_selesai,
+                                'shift' => $item->jadwal_ditukars->shifts,
+                                'created_at' => $item->jadwal_ditukars->created_at,
+                                'updated_at' => $item->jadwal_ditukars->updated_at,
+                            ] : null,
+                        ]
                     ],
-                    'user_ditukar' => [
-                        'user' => [
-                            'id' => $item->user_ditukars->id,
-                            'nama' => $item->user_ditukars->nama,
-                            'username' => $item->user_ditukars->username,
-                            'email_verified_at' => $item->user_ditukars->email_verified_at,
-                            'data_karyawan_id' => $item->user_ditukars->data_karyawan_id,
-                            'foto_profil' => $item->user_ditukars->foto_profil,
-                            'data_completion_step' => $item->user_ditukars->data_completion_step,
-                            'status_aktif' => $item->user_ditukars->status_aktif,
-                            'created_at' => $item->user_ditukars->created_at,
-                            'updated_at' => $item->user_ditukars->updated_at,
-                        ],
-                        'jadwal' => $item->jadwal_ditukars,
-                        'status' => $item->status_tukar_jadwals,
-                        'kategori' => $item->kategori_tukar_jadwals,
-                    ],
+                    'created_at' => $item->created_at,
+                    'updated_at' => $item->updated_at
                 ];
             });
 
-            // Menentukan data user dan unit_kerja
-            $dataUser = $karyawan->users;
-            $unitKerja = $karyawan->unit_kerjas;
-
-            // Menentukan nama yang ditampilkan dalam pesan
             $message = '';
             if ($tukarJadwal->first()->user_pengajuan == $userId) {
                 $message = "Detail tukar jadwal karyawan '{$tukarJadwal->first()->user_pengajuans->nama}' berhasil ditampilkan.";
@@ -481,13 +612,13 @@ class Karyawan_DetailController extends Controller
                 'message' => $message,
                 'data' => [
                     'id' => $karyawan->id,
-                    'user' => $dataUser,
-                    'unit_kerja' => $unitKerja,
-                    'list_tukar_jadwal' => $formattedData
+                    'user' => $this->mapUser($karyawan->users),
+                    'unit_kerja' => $karyawan->unit_kerjas,
+                    'pertukaran_jadwal' => $formattedData
                 ]
             ], Response::HTTP_OK);
         } catch (\Exception $e) {
-            Log::error('| Karyawan | - Error function getDataTukarJadwal: ' . $e->getMessage());
+            Log::error('| Karyawan | - Error function getDataTukarJadwal: ' . $e->getMessage() . ' | Line: ' . $e->getLine());
             return response()->json([
                 'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
                 'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
@@ -504,16 +635,15 @@ class Karyawan_DetailController extends Controller
 
             // Cari data karyawan berdasarkan data_karyawan_id
             $karyawan = DataKaryawan::find($data_karyawan_id);
-
             if (!$karyawan) {
                 return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data karyawan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
             }
 
-            // Ambil semua data lembur berdasarkan user_id yang terkait dengan data_karyawan_id
-            $dataLembur = Lembur::whereHas('users', function ($query) use ($data_karyawan_id) {
-                $query->where('data_karyawan_id', $data_karyawan_id);
-            })->get();
+            $jenisKaryawan = $karyawan->unit_kerjas->jenis_karyawan;
 
+            $dataLembur = Lembur::where('user_id', $karyawan->user_id)
+                ->orderBy('created_at', 'desc')
+                ->get();
             if ($dataLembur->isEmpty()) {
                 return response()->json([
                     'status' => Response::HTTP_NOT_FOUND,
@@ -522,54 +652,53 @@ class Karyawan_DetailController extends Controller
             }
 
             // Format data lembur
-            $formattedData = $dataLembur->map(function ($lembur) {
+            $formattedData = $dataLembur->map(function ($lembur) use ($jenisKaryawan) {
+                $jadwalNonShift = [];
+                if ($jenisKaryawan == 0) {
+                    $tanggalPengajuan = Carbon::createFromFormat('d-m-Y', $lembur->tgl_pengajuan);
+                    $hari = $tanggalPengajuan->locale('id')->dayName;
+                    $jadwalNonShift = NonShift::where('nama', $hari)->first();
+                }
+
                 return [
                     'id' => $lembur->id,
-                    'jadwal' => [
-                        'id' => $lembur->jadwals->id,
-                        'tgl_mulai' => $lembur->jadwals->tgl_mulai,
-                        'tgl_selesai' => $lembur->jadwals->tgl_selesai,
-                        'shift' => $lembur->jadwals->shifts
-                    ],
+                    'jadwal_shift' => $jenisKaryawan == 1 ? [
+                        'id' => $lembur->jadwals->id ?? null,
+                        'tgl_mulai' => $lembur->jadwals->tgl_mulai ?? null,
+                        'tgl_selesai' => $lembur->jadwals->tgl_selesai ?? null,
+                        'shift' => $lembur->jadwals->shifts ?? null,
+                    ] : null,
+                    'jadwal_non_shift' => $jadwalNonShift ? [
+                        'id' => $jadwalNonShift->id,
+                        'nama' => $jadwalNonShift->nama,
+                        'jam_from' => $jadwalNonShift->jam_from,
+                        'jam_to' => $jadwalNonShift->jam_to,
+                        'created_at' => $jadwalNonShift->created_at,
+                        'updated_at' => $jadwalNonShift->updated_at
+                    ] : null,
                     'tgl_pengajuan' => $lembur->tgl_pengajuan,
-                    'kompensasi_lembur' => $lembur->kategori_kompensasis,
                     'durasi' => $lembur->durasi,
                     'catatan' => $lembur->catatan,
-                    'status_lembur' => $lembur->status_lemburs,
                     'created_at' => $lembur->created_at,
                     'updated_at' => $lembur->updated_at
                 ];
             });
-
-            // Menentukan data user dan unit_kerja
-            $dataUser = [
-                'id' => $karyawan->users->id,
-                'nama' => $karyawan->users->nama,
-                'email_verified_at' => $karyawan->users->email_verified_at,
-                'data_karyawan_id' => $karyawan->users->data_karyawan_id,
-                'foto_profil' => $karyawan->users->foto_profil,
-                'data_completion_step' => $karyawan->users->data_completion_step,
-                'status_aktif' => $karyawan->users->status_aktif,
-                'created_at' => $karyawan->users->created_at,
-                'updated_at' => $karyawan->users->updated_at
-            ];
-            $unitKerja = $karyawan->unit_kerjas;
 
             return response()->json([
                 'status' => Response::HTTP_OK,
                 'message' => "Detail data lembur karyawan '{$karyawan->users->nama}' berhasil ditampilkan.",
                 'data' => [
                     'id' => $karyawan->id,
-                    'user' => $dataUser,
-                    'unit_kerja' => $unitKerja,
+                    'user' => $this->mapUser($karyawan->users),
+                    'unit_kerja' => $karyawan->unit_kerjas,
                     'list_lembur' => $formattedData
                 ]
             ], Response::HTTP_OK);
         } catch (\Exception $e) {
-            Log::error('| Karyawan | - Error function getDataLembur: ' . $e->getMessage());
+            Log::error('| Karyawan | - Error function getDataLembur: ' . $e->getMessage() . ' | Line: ' . $e->getLine());
             return response()->json([
                 'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
-                'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
+                'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.' . $e->getMessage(),
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
@@ -585,7 +714,6 @@ class Karyawan_DetailController extends Controller
             $userDinilai = User::whereHas('data_karyawans', function ($query) use ($data_karyawan_id) {
                 $query->where('id', $data_karyawan_id);
             })->with('data_karyawans.jabatans')->first();
-
             if (!$userDinilai) {
                 return response()->json([
                     'status' => Response::HTTP_NOT_FOUND,
@@ -619,33 +747,19 @@ class Karyawan_DetailController extends Controller
                 ];
             });
 
-            // Format Data Utama
-            $formattedData = [
-                'id' => $userDinilai->data_karyawan_id,
-                'user' => [
-                    'id' => $userDinilai->id,
-                    'nama' => $userDinilai->nama,
-                    'username' => $userDinilai->username,
-                    'email_verified_at' => $userDinilai->email_verified_at,
-                    'data_karyawan_id' => $userDinilai->data_karyawan_id,
-                    'foto_profil' => $userDinilai->foto_profil,
-                    'data_completion_step' => $userDinilai->data_completion_step,
-                    'status_aktif' => $userDinilai->status_aktif,
-                    'created_at' => $userDinilai->created_at,
-                    'updated_at' => $userDinilai->updated_at
-                ],
-                'jabatan' => $userDinilai->data_karyawans->jabatans,
-                'list_penilaian' => $listPenilaian,
-            ];
-
             // Response dengan data detail penilaian
             return response()->json([
                 'status' => Response::HTTP_OK,
                 'message' => 'Detail penilaian berhasil ditampilkan.',
-                'data' => $formattedData
+                'data' => [
+                    'id' => $userDinilai->data_karyawan_id,
+                    'user' => $this->mapUser($userDinilai),
+                    'jabatan' => $userDinilai->data_karyawans->jabatans,
+                    'list_penilaian' => $listPenilaian,
+                ]
             ], Response::HTTP_OK);
         } catch (\Exception $e) {
-            Log::error('| Karyawan | - Error function getDataFeedbackPenilaian: ' . $e->getMessage());
+            Log::error('| Karyawan | - Error function getDataFeedbackPenilaian: ' . $e->getMessage() . ' | Line: ' . $e->getLine());
             return response()->json([
                 'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
                 'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
@@ -718,28 +832,65 @@ class Karyawan_DetailController extends Controller
                 'status' => Response::HTTP_OK,
                 'message' => "Data diklat dari karyawan '{$userName->nama}' berhasil ditampilkan.",
                 'data' => [
-                    'user' => [
-                        'id' => $userName->id,
-                        'nama' => $userName->nama,
-                        'username' => $userName->username,
-                        'email_verified_at' => $userName->email_verified_at,
-                        'data_karyawan_id' => $userName->data_karyawan_id,
-                        'foto_profil' => $userName->foto_profil,
-                        'data_completion_step' => $userName->data_completion_step,
-                        'status_aktif' => $userName->status_aktif,
-                        'created_at' => $userName->created_at,
-                        'updated_at' => $userName->updated_at
-                    ],
+                    'id' => $user->data_karyawan_id,
+                    'user' => $this->mapUser($userName),
                     'unit_kerja' => $userName->data_karyawans->unit_kerjas,
                     'jadwal_diklat' => $formattedData
                 ]
             ], Response::HTTP_OK);
         } catch (\Exception $e) {
-            Log::error('| Karyawan | - Error function getDataDiklat: ' . $e->getMessage());
+            Log::error('| Karyawan | - Error function getDataDiklat: ' . $e->getMessage() . ' | Line: ' . $e->getLine());
             return response()->json([
                 'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
                 'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    private function mapUser($user)
+    {
+        return [
+            'id' => $user->id,
+            'nama' => $user->nama,
+            'username' => $user->username,
+            'email_verified_at' => $user->email_verified_at,
+            'data_karyawan_id' => $user->data_karyawan_id,
+            'foto_profil' => $user->foto_profil,
+            'data_completion_step' => $user->data_completion_step,
+            'status_aktif' => $user->status_aktif,
+            'created_at' => $user->created_at,
+            'updated_at' => $user->updated_at,
+        ];
+    }
+
+    private function generateDateRange($start_date, $end_date)
+    {
+        $dates = [];
+        for ($date = $start_date; $date->lte($end_date); $date->addDay()) {
+            $dates[] = $date->format('Y-m-d');
+        }
+        return $dates;
+    }
+
+    private function getDayName($dayOfWeek)
+    {
+        switch ($dayOfWeek) {
+            case Carbon::MONDAY:
+                return 'Senin';
+            case Carbon::TUESDAY:
+                return 'Selasa';
+            case Carbon::WEDNESDAY:
+                return 'Rabu';
+            case Carbon::THURSDAY:
+                return 'Kamis';
+            case Carbon::FRIDAY:
+                return 'Jumat';
+            case Carbon::SATURDAY:
+                return 'Sabtu';
+            case Carbon::SUNDAY:
+                return 'Minggu';
+            default:
+                return '';
         }
     }
 }

@@ -88,7 +88,7 @@ class KaryawanImport implements ToModel, WithHeadingRow, WithValidation
       'tgl_lahir' => 'nullable',
       'alamat' => 'nullable',
       'no_hp' => 'nullable|numeric',
-      'nik_ktp' => 'nullable|numeric',
+      'nik_ktp' => 'nullable|numeric|max:16',
       'no_kk' => 'nullable|numeric',
       'npwp' => 'nullable|numeric',
       'jenis_kelamin' => 'nullable|in:P,L',
@@ -141,6 +141,7 @@ class KaryawanImport implements ToModel, WithHeadingRow, WithValidation
 
       'no_hp.numeric' => 'Nomor HP karyawan tidak diperbolehkan mengandung selain angka.',
       'nik_ktp.numeric' => 'NIK KTP karyawan tidak diperbolehkan mengandung selain angka.',
+      'nik_ktp.max' => 'NIK KTP karyawan melebihi batas maksimum panjang 16 karakter.',
       'no_kk.numeric' => 'Nomor KK karyawan tidak diperbolehkan mengandung selain angka.',
       'npwp.numeric' => 'Nomor NPWP karyawan tidak diperbolehkan mengandung selain angka.',
       'jenis_kelamin.in' => 'Jenis kelamin karyawan tidak diperbolehkan mengandung nilai selain P dan L.',

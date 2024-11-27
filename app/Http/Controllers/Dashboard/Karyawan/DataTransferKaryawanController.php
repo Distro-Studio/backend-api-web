@@ -430,11 +430,20 @@ class DataTransferKaryawanController extends Controller
         // Langkah 2: Ambil kolom tgl_mulai
         $tgl_mulai_db = Carbon::createFromFormat('d-m-Y', $transfer->tgl_mulai)->startOfDay();
         $today = Carbon::today('Asia/Jakarta');
-        if ($tgl_mulai_db->format('d-m-Y') <= $today->format('d-m-Y')) {
+        if ($tgl_mulai_db->lt($today)) {
             return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Transfer karyawan tidak dapat diperbarui, karena tanggal mulai sudah terlewat atau hari ini.'), Response::HTTP_BAD_REQUEST);
         }
 
         $data = $request->validated();
+
+        if (isset($data['tgl_mulai'])) {
+            $tgl_mulai_input = Carbon::createFromFormat('d-m-Y', $data['tgl_mulai'])->startOfDay();
+            if ($tgl_mulai_input->lt($today)) {
+                return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Transfer karyawan tidak dapat diperbarui, karena tanggal mulai baru tidak valid (sudah terlewat).'), Response::HTTP_BAD_REQUEST);
+            } else if ($tgl_mulai_input->lte($today->addDay(2))) {
+                return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Tanggal mulai hanya diperbolehkan untuk 2 hari kedepan.'), Response::HTTP_BAD_REQUEST);
+            }
+        }
 
         DB::beginTransaction();
         try {
@@ -478,11 +487,6 @@ class DataTransferKaryawanController extends Controller
                 );
                 Log::info('Berkas Transfer ' . $user->nama . ' berhasil di diperbarui.');
 
-                // $berkasLama = Berkas::where('user_id', $transfer->user_id)->first();
-                // if ($berkasLama) {
-                //     $berkasLama->delete();
-                // }
-
                 StorageServerHelper::logout();
 
                 if (!$berkas) {
@@ -505,13 +509,13 @@ class DataTransferKaryawanController extends Controller
             $alasan = $transfer->alasan;
             $tgl_mulai = $transfer->tgl_mulai;
 
-            $kategori_record_id = ($data['kategori_transfer_id'] == 1) ? 3 : 2;
-            TrackRecord::create([
-                'user_id' => $transfer->user_id,
-                'tgl_masuk' => $users->data_karyawans->tgl_masuk,
-                'tgl_keluar' => $users->data_karyawans->tgl_keluar,
-                'kategori_record_id' => $kategori_record_id,
-            ]);
+            // $kategori_record_id = ($data['kategori_transfer_id'] == 1) ? 3 : 2;
+            // TrackRecord::create([
+            //     'user_id' => $transfer->user_id,
+            //     'tgl_masuk' => $users->data_karyawans->tgl_masuk,
+            //     'tgl_keluar' => $users->data_karyawans->tgl_keluar,
+            //     'kategori_record_id' => $kategori_record_id,
+            // ]);
 
             $details = [
                 'nama' => $user->nama,
@@ -524,14 +528,20 @@ class DataTransferKaryawanController extends Controller
                 'kelompok_gaji_tujuans' => $kelompok_gaji_tujuans,
                 'role_tujuans' => $role_tujuans,
                 'alasan' => $alasan,
-                'tgl_mulai' => RandomHelper::convertToDateTimeString($tgl_mulai),
+                'tgl_mulai' => $tgl_mulai,
             ];
 
-            if ($request->has('beri_tahu_manajer_direktur') && $request->beri_tahu_manajer_direktur == 1) {
-                TransferEmailJob::dispatch('manager@example.com', ['direktur@example.com'], $details);
-            }
+            // if ($request->has('beri_tahu_manajer_direktur') && $request->beri_tahu_manajer_direktur == 1) {
+            //     TransferEmailJob::dispatch('manager@example.com', ['direktur@example.com'], $details);
+            // }
             if ($request->has('beri_tahu_karyawan') && $request->beri_tahu_karyawan == 1) {
-                TransferEmailJob::dispatch($users->data_karyawans->email, [], $details);
+                $karyawanEmail = $users->data_karyawans->email;
+                if (!is_null($karyawanEmail)) {
+                    TransferEmailJob::dispatch($karyawanEmail, [], $details);
+                    Log::info("Email pemberitahuan dikirim ke karyawan dengan email: {$karyawanEmail}");
+                } else {
+                    Log::warning("Email pemberitahuan tidak dikirim karena email karyawan null untuk user_id: {$users->id}");
+                }
             }
 
             DB::commit();
@@ -560,4 +570,121 @@ class DataTransferKaryawanController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_INTERNAL_SERVER_ERROR, 'Maaf sepertinya terjadi error. Pesan: ' . $e->getMessage()), Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
+
+    // private function updateTukarRelasiTransfer($request, $transferKaryawanId)
+    // {
+    //     $data = $request->validated();
+
+    //     $relasi_verifikasi_id = $request->input('master_relasi_id');
+    //     $verification = RelasiVerifikasi::whereNull('deleted_at')->find($relasi_verifikasi_id); // pastikan relasi verifikasi belum dihapus
+    //     if (!$verification) {
+    //         return [
+    //             'status' => Response::HTTP_NOT_FOUND,
+    //             'message' => 'Data hak verifikasi terkait tidak ditemukan atau sedang dihapus.',
+    //         ];
+    //     }
+
+    //     $user_diverifikasi = array_map('intval', $request->input('user_diverifikasi', []));
+    //     $users = User::whereIn('id', $user_diverifikasi)->get();
+    //     $foundUserIds = $users->pluck('id')->toArray();
+    //     $invalidUserIds = array_diff($user_diverifikasi, $foundUserIds);
+    //     if (!empty($invalidUserIds)) {
+    //         DB::rollBack();
+    //         Log::error('User ID ' . implode(', ', $invalidUserIds) . ' tidak ditemukan atau tidak valid saat create master verifikasi.');
+    //         return response()->json([
+    //             'status' => Response::HTTP_BAD_REQUEST,
+    //             'message' => 'Tidak dapat melanjutkan proses. Terdapat karyawan yang tidak valid.',
+    //         ], Response::HTTP_BAD_REQUEST);
+    //     }
+
+    //     $modulVerifikasi = ModulVerifikasi::find($data['modul_verifikasi']);
+    //     if (!$modulVerifikasi) {
+    //         return response()->json([
+    //             'status' => Response::HTTP_NOT_FOUND,
+    //             'message' => 'Modul verifikasi tidak ditemukan.',
+    //         ], Response::HTTP_NOT_FOUND);
+    //     }
+    //     if ($data['order'] > $modulVerifikasi->max_order) {
+    //         return response()->json([
+    //             'status' => Response::HTTP_BAD_REQUEST,
+    //             'message' => "Order yang diisi tidak boleh lebih dari {$modulVerifikasi->max_order}.",
+    //         ], Response::HTTP_BAD_REQUEST);
+    //     }
+
+    //     $existingVerification = RelasiVerifikasi::where('verifikator', $data['verifikator'])
+    //         ->where('order', $data['order'])
+    //         ->where('modul_verifikasi', $data['modul_verifikasi'])
+    //         ->whereNull('deleted_at')
+    //         ->first();
+    //     if ($existingVerification) {
+    //         $existingVerifikator = User::find($data['verifikator']);
+    //         $labelModulVerifikasi = $modulVerifikasi->label;
+    //         return response()->json([
+    //             'status' => Response::HTTP_CONFLICT,
+    //             'message' => "Kombinasi verifikator, order, dan modul verifikasi sudah ada. Verifikator '{$existingVerifikator->nama}' dengan level verifikasi '{$data['order']}' dan modul verifikasi '{$labelModulVerifikasi}' sudah terdaftar.",
+    //         ], Response::HTTP_CONFLICT);
+    //     }
+
+    //     $verification = TransferRelasiVerifikasi::create([
+    //         'transfer_karyawan_id' => $transferKaryawanId,
+    //         'master_relasi_id' => $relasi_verifikasi_id,
+    //         'nama' => $data['nama'],
+    //         'verifikator' => $data['verifikator'],
+    //         'modul_verifikasi' => $data['modul_verifikasi'],
+    //         'order' => $data['order'],
+    //         'user_diverifikasi' => $user_diverifikasi,
+    //         'updated_at' => now('Asia/Jakarta'),
+    //     ]);
+    //     $formattedData = $this->formatData(collect([$verification]))->first();
+
+    //     return [
+    //         'status' => Response::HTTP_CREATED,
+    //         'message' => "Data master verifikasi '{$verification->nama}' berhasil dibuat.",
+    //         'data' => $formattedData,
+    //     ];
+    // }
+
+    // protected function formatData(Collection $collection)
+    // {
+    //     return $collection->transform(function ($verification) {
+    //         $userIds = $verification->user_diverifikasi;
+    //         $diverifiedUsers = User::whereIn('id', $userIds)->get();
+    //         $formattedDiverifiedUsers = $diverifiedUsers->map(function ($user) {
+    //             return [
+    //                 'id' => $user->id,
+    //                 'nama' => $user->nama,
+    //                 'username' => $user->username,
+    //                 'email_verified_at' => $user->email_verified_at,
+    //                 'data_karyawan_id' => $user->data_karyawan_id,
+    //                 'foto_profil' => $user->foto_profil,
+    //                 'data_completion_step' => $user->data_completion_step,
+    //                 'status_aktif' => $user->status_aktif,
+    //                 'created_at' => $user->created_at,
+    //                 'updated_at' => $user->updated_at
+    //             ];
+    //         });
+    //         return [
+    //             'id' => $verification->id,
+    //             'name' => $verification->nama,
+    //             'verifikator' => [
+    //                 'id' => $verification->users->id,
+    //                 'nama' => $verification->users->nama,
+    //                 'username' => $verification->users->username,
+    //                 'email_verified_at' => $verification->users->email_verified_at,
+    //                 'data_karyawan_id' => $verification->users->data_karyawan_id,
+    //                 'foto_profil' => $verification->users->foto_profil,
+    //                 'data_completion_step' => $verification->users->data_completion_step,
+    //                 'status_aktif' => $verification->users->status_aktif,
+    //                 'created_at' => $verification->users->created_at,
+    //                 'updated_at' => $verification->users->updated_at
+    //             ],
+    //             'modul_verifikasi' => $verification->modul_verifikasis,
+    //             'order' => $verification->order,
+    //             'user_diverifikasi' => $formattedDiverifiedUsers,
+    //             'created_at' => $verification->created_at,
+    //             'updated_at' => $verification->updated_at,
+    //             'deleted_at' => $verification->deleted_at
+    //         ];
+    //     });
+    // }
 }

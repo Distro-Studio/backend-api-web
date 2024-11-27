@@ -48,12 +48,18 @@ class LemburJadwalExport implements FromCollection, WithHeadings, WithMapping
         $jenisKaryawan = $lembur->users->data_karyawans->unit_kerjas->jenis_karyawan ?? 'N/A';
 
         if ($jenisKaryawan == 1) { // Shift
-            $tgl_mulai = Carbon::parse($lembur->jadwals->tgl_mulai)->format('d-m-Y') ?? 'N/A';
-            $tgl_selesai = Carbon::parse($lembur->jadwals->tgl_selesai)->format('d-m-Y') ?? 'N/A';
+            $tgl_mulai = $lembur->jadwals
+                ? Carbon::parse($lembur->jadwals->tgl_mulai)->format('d-m-Y')
+                : 'N/A';
+            $tgl_selesai = $lembur->jadwals
+                ? Carbon::parse($lembur->jadwals->tgl_selesai)->format('d-m-Y')
+                : 'N/A';
             $shift = $lembur->jadwals->shifts->nama ?? 'N/A';
         } else { // Non-shift
-            $tgl_mulai = $lembur->tgl_pengajuan ?? 'N/A';
-            $tgl_selesai = Carbon::parse($lembur->tgl_selesai)->format('d-m-Y') ?? 'N/A';
+            $tgl_mulai = Carbon::parse($lembur->tgl_pengajuan)->format('d-m-Y') ?? 'N/A';
+            $tgl_selesai = $lembur->tgl_selesai
+                ? Carbon::parse($lembur->tgl_selesai)->format('d-m-Y')
+                : 'N/A';
             $shift = 'N/A';
         }
 

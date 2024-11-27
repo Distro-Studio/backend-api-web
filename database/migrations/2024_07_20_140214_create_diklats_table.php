@@ -24,10 +24,10 @@ return new class extends Migration
             $table->integer('kuota')->nullable();
             $table->unsignedBigInteger('total_peserta')->nullable()->default(0);
             $table->text('skp')->nullable();
-            $table->string('tgl_mulai');
-            $table->string('tgl_selesai');
-            $table->string('jam_mulai');
-            $table->string('jam_selesai');
+            $table->string('tgl_mulai'); // d-m-Y
+            $table->string('tgl_selesai'); // d-m-Y
+            $table->string('jam_mulai'); // H:i:s
+            $table->string('jam_selesai'); // H:i:s
             $table->integer('durasi');
             $table->string('lokasi');
             $table->foreignId('verifikator_1')->nullable()->constrained('users');

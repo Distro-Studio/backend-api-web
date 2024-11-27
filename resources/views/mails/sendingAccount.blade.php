@@ -484,8 +484,7 @@
 																					target="_blank"
 																					style="text-decoration: none; color: #8a3b8f;"
 																					rel="noopener"><span
-																						style="color: #000000;"><strong>Humas
-																							RSKI</strong></span></a></strong></u><span
+																						style="color: #000000;"><strong>RSKI Personalia</strong></span></a></strong></u><span
 																			style="color: #000000;"><u></u><strong><a
 																					href="https://rskasihibu.com/"
 																					target="_blank"

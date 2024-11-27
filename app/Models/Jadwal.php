@@ -46,7 +46,7 @@ class Jadwal extends Model
      */
     public function shifts(): BelongsTo
     {
-        return $this->belongsTo(Shift::class, 'shift_id', 'id');
+        return $this->belongsTo(Shift::class, 'shift_id', 'id')->withTrashed();
     }
 
     /**

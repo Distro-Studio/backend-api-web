@@ -7,9 +7,11 @@ use App\Models\Cuti;
 use App\Models\User;
 use App\Models\Jadwal;
 use App\Models\Lembur;
+use App\Models\Presensi;
 use App\Models\TipeCuti;
 use App\Models\Notifikasi;
 use App\Models\TukarJadwal;
+use App\Models\DataKaryawan;
 use Illuminate\Http\Request;
 use App\Helpers\RandomHelper;
 use Illuminate\Http\Response;
@@ -26,7 +28,6 @@ use App\Http\Requests\StoreCutiJadwalRequest;
 use App\Http\Requests\UpdateCutiJadwalRequest;
 use App\Http\Resources\Dashboard\Jadwal\CutiJadwalResource;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
-use App\Models\DataKaryawan;
 
 class DataCutiController extends Controller
 {
@@ -38,7 +39,7 @@ class DataCutiController extends Controller
             }
 
             // Per page
-            $limit = $request->input('limit', 10); // Default per page is 10
+            $limit = $request->input('limit', 10);
 
             $cuti = Cuti::query()->orderBy('created_at', 'desc');
 
@@ -351,6 +352,7 @@ class DataCutiController extends Controller
                     ],
                     'unit_kerja' => $dataCuti->users->data_karyawans->unit_kerjas,
                     'tipe_cuti' => $dataCuti->tipe_cutis,
+                    'keterangan' => $dataCuti->keterangan ?? null,
                     'tgl_from' => $dataCuti->tgl_from,
                     'tgl_to' => $dataCuti->tgl_to,
                     'catatan' => $dataCuti->catatan,
@@ -358,7 +360,7 @@ class DataCutiController extends Controller
                     'total_kuota' => $quota,
                     'sisa_kuota' => $sisaKuota,
                     'status_cuti' => $dataCuti->status_cutis,
-                    'alasan' => $cuti->alasan ?? null,
+                    'alasan' => $dataCuti->alasan ?? null,
                     'relasi_verifikasi' => $formattedRelasiVerifikasi,
                     'created_at' => $dataCuti->created_at,
                     'updated_at' => $dataCuti->updated_at
@@ -390,14 +392,21 @@ class DataCutiController extends Controller
             $data = $request->validated();
             $verifikatorId = Auth::id();
 
-            // Cek cuti sama
-            $cutiExist = Cuti::where('user_id', $data['user_id'])
-                ->where('tgl_from', Carbon::createFromFormat('d-m-Y', $data['tgl_from'])->format('d-m-Y'))
-                ->where('tgl_to', Carbon::createFromFormat('d-m-Y', $data['tgl_to'])->format('d-m-Y'))
+            $tglFrom = Carbon::createFromFormat('d-m-Y', $data['tgl_from'])->format('Y-m-d');
+            $tglTo = Carbon::createFromFormat('d-m-Y', $data['tgl_to'])->format('Y-m-d');
+
+            $overlappingCuti = Cuti::where('user_id', $data['user_id'])
+                ->where(function ($query) use ($tglFrom, $tglTo) {
+                    $query->whereBetween(DB::raw("STR_TO_DATE(tgl_from, '%d-%m-%Y')"), [$tglFrom, $tglTo])
+                        ->orWhereBetween(DB::raw("STR_TO_DATE(tgl_to, '%d-%m-%Y')"), [$tglFrom, $tglTo])
+                        ->orWhere(function ($query) use ($tglFrom, $tglTo) {
+                            $query->where(DB::raw("STR_TO_DATE(tgl_from, '%d-%m-%Y')"), '<=', $tglFrom)
+                                ->where(DB::raw("STR_TO_DATE(tgl_to, '%d-%m-%Y')"), '>=', $tglTo);
+                        });
+                })
                 ->exists();
-            // dd($cutiExist);
-            if ($cutiExist) {
-                return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Karyawan tersebut sudah memiliki cuti yang diajukan pada tanggal '{$data['tgl_from']}'."), Response::HTTP_BAD_REQUEST);
+            if ($overlappingCuti) {
+                return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Karyawan tersebut sudah memiliki cuti pada rentang tanggal yang diajukan.'), Response::HTTP_BAD_REQUEST);
             }
 
             // Mengambil informasi tipe cuti berdasarkan tipe_cuti_id
@@ -441,92 +450,74 @@ class DataCutiController extends Controller
                 return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, $message), Response::HTTP_BAD_REQUEST);
             }
 
-            // cek bentrok dengan jadwal karyawan
-            // $jadwalConflict = Jadwal::where('user_id', $data['user_id'])
-            //     ->where(function ($query) use ($tglFrom, $tglTo) {
-            //         $query->whereBetween(DB::raw("DATE_FORMAT(tgl_mulai, '%Y-%m-%d')"), [$tglFrom, $tglTo])
-            //             ->orWhereBetween(DB::raw("DATE_FORMAT(tgl_selesai, '%Y-%m-%d')"), [$tglFrom, $tglTo])
-            //             ->orWhere(function ($query) use ($tglFrom, $tglTo) {
-            //                 $query->where(DB::raw("DATE_FORMAT(tgl_mulai, '%Y-%m-%d')"), '<=', $tglFrom)
-            //                     ->where(DB::raw("DATE_FORMAT(tgl_selesai, '%Y-%m-%d')"), '>=', $tglTo);
-            //             });
-            //     })
-            //     ->first();
+            // if (Gate::allows('verifikasi2 cutiKaryawan')) {
+            //     $statusCutiId = 4;
 
-            // if ($jadwalConflict) {
-            //     $jadwalFrom = Carbon::parse($jadwalConflict->tgl_mulai)->format('d-m-Y');
-            //     $jadwalTo = Carbon::parse($jadwalConflict->tgl_selesai)->format('d-m-Y');
-            //     return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Tidak dapat mengajukan cuti, karena karyawan '{$jadwalConflict->users->nama}' memiliki jadwal kerja pada rentang tanggal {$jadwalFrom} hingga {$jadwalTo}."), Response::HTTP_BAD_REQUEST);
+            //     // Step 1: Cek jadwal kerja shift, jika ada yang cuti mendadak dan jika masih ada jadwal
+            //     $jadwalConflicts = Jadwal::where('user_id', $data['user_id'])
+            //         ->where(function ($query) use ($tglFrom, $tglTo) {
+            //             $query->whereBetween('tgl_mulai', [$tglFrom, $tglTo])
+            //                 ->orWhereBetween('tgl_selesai', [$tglFrom, $tglTo])
+            //                 ->orWhere(function ($query) use ($tglFrom, $tglTo) {
+            //                     $query->where('tgl_mulai', '<=', $tglFrom)
+            //                         ->where('tgl_selesai', '>=', $tglTo);
+            //                 });
+            //         })->get();
+
+            //     if ($jadwalConflicts->isNotEmpty()) {
+            //         foreach ($jadwalConflicts as $jadwal) {
+            //             $tukarJadwal = TukarJadwal::where('jadwal_pengajuan', $jadwal->id)
+            //                 ->orWhere('jadwal_ditukar', $jadwal->id)
+            //                 ->first();
+
+            //             if ($tukarJadwal) {
+            //                 // Kembalikan user_id dari jadwal_pengajuan ke user_pengajuan
+            //                 $jadwalPengajuan = Jadwal::find($tukarJadwal->jadwal_pengajuan);
+            //                 if ($jadwalPengajuan) {
+            //                     $jadwalPengajuan->user_id = $tukarJadwal->user_pengajuan;
+            //                     $jadwalPengajuan->save();
+
+            //                     $this->createNotifikasiJadwalKembali($jadwalPengajuan->user_id, $jadwalPengajuan->id);
+            //                 }
+
+            //                 // Kembalikan user_id dari jadwal_ditukar ke user_ditukar
+            //                 $jadwalDitukar = Jadwal::find($tukarJadwal->jadwal_ditukar);
+            //                 if ($jadwalDitukar) {
+            //                     $jadwalDitukar->user_id = $tukarJadwal->user_ditukar;
+            //                     $jadwalDitukar->save();
+
+            //                     $this->createNotifikasiJadwalKembali($jadwalDitukar->user_id, $jadwalDitukar->id);
+            //                 }
+
+            //                 // Hapus tukar jadwal setelah dikembalikan
+            //                 $tukarJadwal->delete();
+            //             }
+
+            //             // Hapus lembur
+            //             Lembur::where('jadwal_id', $jadwal->id)->delete();
+
+            //             // Hapus jadwal
+            //             Jadwal::where('user_id', $data['user_id'])->delete();
+            //         }
+            //     }
+
+            //     $data['verifikator_1'] = $verifikatorId;
+            //     $data['verifikator_2'] = $verifikatorId;
+            // } elseif (Gate::allows('verifikasi1 cutiKaryawan')) {
+            //     $statusCutiId = 2;
+            //     $data['verifikator_1'] = $verifikatorId;
+            // } else {
+            //     $statusCutiId = 1;
             // }
-
-            if (Gate::allows('verifikasi2 cutiKaryawan')) {
-                $statusCutiId = 4;
-
-                // Step 1: Cek jadwal kerja shift, jika ada yang cuti mendadak dan jika masih ada jadwal
-                $jadwalConflicts = Jadwal::where('user_id', $data['user_id'])
-                    ->where(function ($query) use ($tglFrom, $tglTo) {
-                        $query->whereBetween('tgl_mulai', [$tglFrom, $tglTo])
-                            ->orWhereBetween('tgl_selesai', [$tglFrom, $tglTo])
-                            ->orWhere(function ($query) use ($tglFrom, $tglTo) {
-                                $query->where('tgl_mulai', '<=', $tglFrom)
-                                    ->where('tgl_selesai', '>=', $tglTo);
-                            });
-                    })->get();
-
-                if ($jadwalConflicts->isNotEmpty()) {
-                    foreach ($jadwalConflicts as $jadwal) {
-                        $tukarJadwal = TukarJadwal::where('jadwal_pengajuan', $jadwal->id)
-                            ->orWhere('jadwal_ditukar', $jadwal->id)
-                            ->first();
-
-                        if ($tukarJadwal) {
-                            // Kembalikan user_id dari jadwal_pengajuan ke user_pengajuan
-                            $jadwalPengajuan = Jadwal::find($tukarJadwal->jadwal_pengajuan);
-                            if ($jadwalPengajuan) {
-                                $jadwalPengajuan->user_id = $tukarJadwal->user_pengajuan;
-                                $jadwalPengajuan->save();
-
-                                $this->createNotifikasiJadwalKembali($jadwalPengajuan->user_id, $jadwalPengajuan->id);
-                            }
-
-                            // Kembalikan user_id dari jadwal_ditukar ke user_ditukar
-                            $jadwalDitukar = Jadwal::find($tukarJadwal->jadwal_ditukar);
-                            if ($jadwalDitukar) {
-                                $jadwalDitukar->user_id = $tukarJadwal->user_ditukar;
-                                $jadwalDitukar->save();
-
-                                $this->createNotifikasiJadwalKembali($jadwalDitukar->user_id, $jadwalDitukar->id);
-                            }
-
-                            // Hapus tukar jadwal setelah dikembalikan
-                            $tukarJadwal->delete();
-                        }
-
-                        // Hapus lembur
-                        Lembur::where('jadwal_id', $jadwal->id)->delete();
-
-                        // Hapus jadwal
-                        Jadwal::where('user_id', $data['user_id'])->delete();
-                    }
-                }
-
-                $data['verifikator_1'] = $verifikatorId;
-                $data['verifikator_2'] = $verifikatorId;
-            } elseif (Gate::allows('verifikasi1 cutiKaryawan')) {
-                $statusCutiId = 2;
-                $data['verifikator_1'] = $verifikatorId;
-            } else {
-                $statusCutiId = 1;
-            }
 
             // Menambahkan durasi ke data sebelum menyimpan
             $data['durasi'] = $durasi;
-            $data['status_cuti_id'] = $statusCutiId;
+            $data['status_cuti_id'] = 1;
+            // $data['status_cuti_id'] = $statusCutiId;
             $dataCuti = Cuti::create($data);
 
             // Setelah pembuatan cuti, cari cuti yang baru dibuat dan periksa cuti_administratif
             // $cutiTerbaru = Cuti::where('user_id', $data['user_id'])->latest()->first();
-
             // if ($cutiTerbaru && !$cutiTerbaru->tipe_cutis->cuti_administratif) {
             //     DB::table('data_karyawans')
             //         ->where('user_id', $data['user_id'])
@@ -550,7 +541,6 @@ class DataCutiController extends Controller
                     'created_at' => Carbon::now('Asia/Jakarta'),
                 ]);
             }
-
 
             return response()->json(new CutiJadwalResource(Response::HTTP_OK, $message, $dataCuti), Response::HTTP_OK);
         } catch (\Exception $e) {
@@ -578,6 +568,7 @@ class DataCutiController extends Controller
                 return [
                     'id' => $cuti->id,
                     'tipe_cuti' => $cuti->tipe_cutis,
+                    'keterangan' => $cuti->keterangan ?? null,
                     'tgl_from' => $cuti->tgl_from,
                     'tgl_to' => $cuti->tgl_to,
                     'catatan' => $cuti->catatan,
@@ -731,68 +722,6 @@ class DataCutiController extends Controller
         }
     }
 
-    // public function verifikasiTahap1(Request $request, $cutiId)
-    // {
-    //     if (!Gate::allows('verifikasi1 cutiKaryawan')) {
-    //         return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
-    //     }
-
-    //     // Cari cuti berdasarkan ID
-    //     $cuti = Cuti::find($cutiId);
-
-    //     if (!$cuti) {
-    //         return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Cuti tidak ditemukan.'), Response::HTTP_NOT_FOUND);
-    //     }
-
-    //     $status_cuti_id = $cuti->status_cuti_id;
-
-    //     if ($request->has('verifikasi_pertama_disetujui') && $request->verifikasi_pertama_disetujui == 1) {
-    //         if ($status_cuti_id == 1) {
-    //             $cuti->status_cuti_id = 2; // Update status ke tahap 1 disetujui
-    //             $cuti->verifikator_1 = Auth::id();
-    //             $cuti->alasan = null;
-    //             $cuti->save();
-
-    //             // Buat dan simpan notifikasi
-    //             $this->createNotifikasiCutiTahap1($cuti, 'Disetujui');
-
-    //             // Cek apakah cuti_administratif pada tipe_cutis adalah true atau false
-    //             if (!$cuti->tipe_cutis->cuti_administratif) {
-    //                 // Jika cuti_administratif = false, lakukan update status_reward_presensi menjadi false
-    //                 $user_id = $cuti->user_id;
-    //                 $data_karyawan_id = DB::table('data_karyawans')
-    //                     ->where('user_id', $user_id)
-    //                     ->value('id');
-
-    //                 DB::table('data_karyawans')
-    //                     ->where('id', $data_karyawan_id)
-    //                     ->update(['status_reward_presensi' => false]);
-    //             }
-
-    //             return response()->json(new WithoutDataResource(Response::HTTP_OK, "Verifikasi tahap 1 untuk Cuti '{$cuti->tipe_cutis->nama}' telah disetujui."), Response::HTTP_OK);
-    //         } else {
-    //             return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Cuti '{$cuti->tipe_cutis->nama}' tidak dalam status untuk disetujui pada tahap 1."), Response::HTTP_BAD_REQUEST);
-    //         }
-    //     } elseif ($request->has('verifikasi_pertama_ditolak') && $request->verifikasi_pertama_ditolak == 1) {
-    //         if ($status_cuti_id == 1) {
-    //             $cuti->status_cuti_id = 3; // Update status ke tahap 1 ditolak
-    //             $cuti->verifikator_1 = Auth::id();
-    //             $cuti->alasan = $request->input('alasan', null);
-    //             $cuti->save();
-
-    //             // Buat dan simpan notifikasi
-    //             $this->createNotifikasiCutiTahap1($cuti, 'Ditolak');
-
-
-    //             return response()->json(new WithoutDataResource(Response::HTTP_OK, "Verifikasi tahap 1 untuk Cuti '{$cuti->tipe_cutis->nama}' telah ditolak."), Response::HTTP_OK);
-    //         } else {
-    //             return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Cuti '{$cuti->tipe_cutis->nama}' tidak dalam status untuk ditolak pada tahap 1."), Response::HTTP_BAD_REQUEST);
-    //         }
-    //     } else {
-    //         return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Aksi tidak valid.'), Response::HTTP_BAD_REQUEST);
-    //     }
-    // }
-
     public function verifikasiTahap1(Request $request, $cutiId)
     {
         try {
@@ -855,14 +784,21 @@ class DataCutiController extends Controller
                     if (!$cuti->tipe_cutis->cuti_administratif) {
                         // Jika cuti_administratif = false, lakukan update status_reward_presensi menjadi false
                         $user_id = $cuti->user_id;
-                        $data_karyawan_id = DB::table('data_karyawans')
+                        $data_karyawan = DB::table('data_karyawans')
                             ->where('user_id', $user_id)
-                            ->value('id');
+                            ->first(['id', 'status_reward_presensi']);
 
-                        DB::table('data_karyawans')
-                            ->where('id', $data_karyawan_id)
-                            ->update(['status_reward_presensi' => false]);
+                        if ($data_karyawan && $data_karyawan->status_reward_presensi) {
+                            DB::table('data_karyawans')
+                                ->where('id', $data_karyawan->id)
+                                ->update(['status_reward_presensi' => false]);
+
+                            Log::info("Status reward presensi karyawan ID {$data_karyawan->id} diubah menjadi false.");
+                        } else {
+                            Log::info("Status reward presensi karyawan ID {$data_karyawan->id} sudah false, tidak dilakukan update.");
+                        }
                     }
+
 
                     return response()->json(new WithoutDataResource(Response::HTTP_OK, "Verifikasi tahap 1 untuk Cuti '{$cuti->tipe_cutis->nama}' telah disetujui."), Response::HTTP_OK);
                 } else {
@@ -942,7 +878,7 @@ class DataCutiController extends Controller
                 }
             }
 
-            // Logika untuk menyetujui atau menolak verifikasi tahap 2
+            // Logika untuk menyetujui verifikasi tahap 2
             $status_cuti_id = $cuti->status_cuti_id;
 
             if ($request->has('verifikasi_kedua_disetujui') && $request->verifikasi_kedua_disetujui == 1) {
@@ -962,66 +898,17 @@ class DataCutiController extends Controller
                         return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data karyawan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
                     }
 
-                    // ini untuk karyawan non shifts
+                    // ini untuk karyawan non shifts dan shift
                     $jenis_karyawan = $data_karyawan->unit_kerjas->jenis_karyawan ?? null;
-                    if ($jenis_karyawan === 0) {
-                        $tglFromFormatted = Carbon::createFromFormat('Y-m-d', $tglFrom)->format('d-m-Y');
-                        $tglToFormatted = Carbon::createFromFormat('Y-m-d', $tglTo)->format('d-m-Y');
-
-                        $lemburIds = Lembur::where('user_id', $userId)
-                            ->whereBetween('tgl_pengajuan', [$tglFromFormatted, $tglToFormatted])
-                            ->pluck('id');
-                        if ($lemburIds->isNotEmpty()) {
-                            Lembur::whereIn('id', $lemburIds)->delete();
-                        }
+                    if ($jenis_karyawan === null) {
+                        Log::error("| Cuti | - Get Jenis karyawan tidak ditemukan untuk data karyawan {$data_karyawan->id}");
                     }
 
-                    // ini untuk karyawan shifts
-                    $jadwalConflicts = Jadwal::where('user_id', $cuti->user_id)
-                        ->where(function ($query) use ($tglFrom, $tglTo) {
-                            $query->whereBetween('tgl_mulai', [$tglFrom, $tglTo])
-                                ->orWhereBetween('tgl_selesai', [$tglFrom, $tglTo])
-                                ->orWhere(function ($query) use ($tglFrom, $tglTo) {
-                                    $query->where('tgl_mulai', '<=', $tglFrom)
-                                        ->where('tgl_selesai', '>=', $tglTo);
-                                });
-                        })->get();
-
-                    if ($jadwalConflicts->isNotEmpty()) {
-                        foreach ($jadwalConflicts as $jadwal) {
-                            $tukarJadwal = TukarJadwal::where('jadwal_pengajuan', $jadwal->id)
-                                ->orWhere('jadwal_ditukar', $jadwal->id)
-                                ->first();
-
-                            if ($tukarJadwal) {
-                                // Kembalikan user_id dari jadwal_pengajuan ke user_pengajuan
-                                $jadwalPengajuan = Jadwal::find($tukarJadwal->jadwal_pengajuan);
-                                if ($jadwalPengajuan) {
-                                    $jadwalPengajuan->user_id = $tukarJadwal->user_pengajuan;
-                                    $jadwalPengajuan->save();
-
-                                    $this->createNotifikasiJadwalKembali($jadwalPengajuan->user_id, $jadwalPengajuan->id);
-                                }
-
-                                // Kembalikan user_id dari jadwal_ditukar ke user_ditukar
-                                $jadwalDitukar = Jadwal::find($tukarJadwal->jadwal_ditukar);
-                                if ($jadwalDitukar) {
-                                    $jadwalDitukar->user_id = $tukarJadwal->user_ditukar;
-                                    $jadwalDitukar->save();
-
-                                    $this->createNotifikasiJadwalKembali($jadwalDitukar->user_id, $jadwalDitukar->id);
-                                }
-
-                                // Hapus tukar jadwal setelah dikembalikan
-                                $tukarJadwal->delete();
-                            }
-
-                            // Hapus lembur
-                            Lembur::where('jadwal_id', $jadwal->id)->delete();
-
-                            // Hapus jadwal
-                            Jadwal::where('user_id', $cuti->user_id)->delete();
-                        }
+                    if ($jenis_karyawan === 0) {
+                        $this->deletePresensi($userId, $tglFrom, $tglTo);
+                        $this->deleteLembur($userId, $cuti);
+                    } else if ($jenis_karyawan === 1) {
+                        $this->deletePresensiAndJadwal($userId, $tglFrom, $tglTo, $cuti);
                     }
 
                     $this->createNotifikasiCutiTahap2($cuti, 'Disetujui');
@@ -1053,6 +940,78 @@ class DataCutiController extends Controller
                 'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
+    }
+
+    private function deletePresensiAndJadwal($userId, $tglFrom, $tglTo, $cuti)
+    {
+        $this->deletePresensi($userId, $tglFrom, $tglTo);
+        $this->deleteLembur($userId, $cuti);
+
+        $jadwalConflicts = Jadwal::where('user_id', $userId)
+            ->where(function ($query) use ($tglFrom, $tglTo) {
+                $query->whereBetween('tgl_mulai', [$tglFrom, $tglTo])
+                    ->orWhereBetween('tgl_selesai', [$tglFrom, $tglTo])
+                    ->orWhere(function ($query) use ($tglFrom, $tglTo) {
+                        $query->where('tgl_mulai', '<=', $tglFrom)
+                            ->where('tgl_selesai', '>=', $tglTo);
+                    });
+            })->get();
+        foreach ($jadwalConflicts as $jadwal) {
+            Lembur::where('jadwal_id', $jadwal->id)->delete();
+
+            $tukarJadwal = TukarJadwal::where('jadwal_pengajuan', $jadwal->id)
+                ->orWhere('jadwal_ditukar', $jadwal->id)
+                ->first();
+            if ($tukarJadwal) {
+                $this->returnTukarJadwal($tukarJadwal);
+            }
+
+            $jadwal->delete();
+        }
+    }
+
+    private function deletePresensi($userId, $tglFrom, $tglTo)
+    {
+        $presensiIds = Presensi::where('user_id', $userId)
+            ->whereBetween(DB::raw("DATE(jam_masuk)"), [$tglFrom, $tglTo])
+            ->pluck('id');
+        if ($presensiIds->isNotEmpty()) {
+            Presensi::whereIn('id', $presensiIds)->delete();
+            Log::info("| Cuti | - Presensi dihapus untuk user_id {$userId} pada rentang {$tglFrom} - {$tglTo}");
+        }
+    }
+
+    private function deleteLembur($userId, $cuti)
+    {
+        $lemburIds = Lembur::where('user_id', $userId)
+            ->whereBetween('tgl_pengajuan', [$cuti->tgl_from, $cuti->tgl_to])
+            ->pluck('id');
+        if ($lemburIds->isNotEmpty()) {
+            Log::info("| Cuti | - Lembur dihapus untuk user_id {$userId} pada rentang {$cuti->tgl_from} - {$cuti->tgl_to}");
+            Lembur::whereIn('id', $lemburIds)->delete();
+        }
+    }
+
+    private function returnTukarJadwal($tukarJadwal)
+    {
+        // Kembalikan user_id dari jadwal_pengajuan ke user_pengajuan
+        $jadwalPengajuan = Jadwal::find($tukarJadwal->jadwal_pengajuan);
+        if ($jadwalPengajuan) {
+            $jadwalPengajuan->user_id = $tukarJadwal->user_pengajuan;
+            $jadwalPengajuan->save();
+            $this->createNotifikasiJadwalKembali($jadwalPengajuan->user_id, $jadwalPengajuan->id);
+        }
+
+        // Kembalikan user_id dari jadwal_ditukar ke user_ditukar
+        $jadwalDitukar = Jadwal::find($tukarJadwal->jadwal_ditukar);
+        if ($jadwalDitukar) {
+            $jadwalDitukar->user_id = $tukarJadwal->user_ditukar;
+            $jadwalDitukar->save();
+            $this->createNotifikasiJadwalKembali($jadwalDitukar->user_id, $jadwalDitukar->id);
+        }
+
+        // Hapus Tukar Jadwal
+        $tukarJadwal->delete();
     }
 
     private function createNotifikasiCutiTahap1($cuti, $status)

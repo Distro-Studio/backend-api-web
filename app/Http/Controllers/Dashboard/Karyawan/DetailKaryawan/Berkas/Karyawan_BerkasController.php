@@ -42,15 +42,6 @@ class Karyawan_BerkasController extends Controller
             $user = $berkas->first()->users;
             $baseUrl = env('STORAGE_SERVER_DOMAIN');
 
-            // $alasanDitolak = null;
-            // $statusBerkas = 'Diverifikasi';
-            // if ($berkas->contains('status_berkas_id', 1)) {
-            //     $statusBerkas = 'Menunggu';
-            // } elseif ($berkas->contains('status_berkas_id', 3)) {
-            //     $statusBerkas = 'Ditolak';
-            //     $alasanDitolak = $berkas->where('status_berkas_id', 3)->sortByDesc('updated_at')->first()->alasan;
-            // }
-
             // Format data berkas
             $formattedData = $berkas->map(function ($item) use ($baseUrl) {
                 $fileExt = $item->ext ? StorageServerHelper::getExtensionFromMimeType($item->ext) : null;

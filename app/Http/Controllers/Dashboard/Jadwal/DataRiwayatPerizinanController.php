@@ -452,13 +452,19 @@ class DataRiwayatPerizinanController extends Controller
                     $riwayat_izin->alasan = null;
                     $riwayat_izin->save();
 
-                    $data_karyawan_id = DB::table('data_karyawans')
+                    $data_karyawan = DB::table('data_karyawans')
                         ->where('user_id', $riwayat_izin->user_id)
-                        ->value('id');
+                        ->first(['id', 'status_reward_presensi']);
 
-                    DB::table('data_karyawans')
-                        ->where('id', $data_karyawan_id)
-                        ->update(['status_reward_presensi' => false]);
+                    if ($data_karyawan && $data_karyawan->status_reward_presensi) {
+                        DB::table('data_karyawans')
+                            ->where('id', $data_karyawan->id)
+                            ->update(['status_reward_presensi' => false]);
+
+                        Log::info("Status reward presensi karyawan ID {$data_karyawan->id} diubah menjadi false.");
+                    } else {
+                        Log::info("Status reward presensi karyawan ID {$data_karyawan->id} sudah false, tidak dilakukan update.");
+                    }
 
                     // Buat dan simpan notifikasi
                     $this->createNotifikasiIzin($riwayat_izin, 'Disetujui');

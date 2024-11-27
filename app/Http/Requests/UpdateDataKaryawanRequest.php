@@ -142,10 +142,10 @@ class UpdateDataKaryawanRequest extends FormRequest
             'gelar_depan.string' => 'Gelar depan karyawan hanya diperbolehkan mengandung huruf.',
             'gelar_belakang.string' => 'Gelar belakang karyawan hanya diperbolehkan mengandung huruf.',
             'tahun_lulus.numeric' => 'Tahun lulus karyawan tidak diperbolehkan mengandung selain angka.',
-            
+
             'masa_berlaku_str.string' => 'Masa berlaku STR karyawan tidak diperbolehkan mengandung selain angka.',
             'masa_berlaku_sip.string' => 'Masa berlaku SIP karyawan hanya diperbolehkan mengandung angka dan huruf.',
-            
+
             'pendidikan_terakhir.exists' => 'Pendidikan terakhir karyawan tersebut tidak valid.',
             'asal_sekolah.string' => 'Asal sekolah karyawan tidak diperbolehkan mengandung selain huruf.',
             'tgl_diangkat.string' => 'Tanggal diangkat karyawan tidak diperbolehkan mengandung selain huruf.',

@@ -26,6 +26,7 @@ class StoreShiftRequest extends FormRequest
     {
         return [
             'nama' => 'required|string|max:225',
+            'unit_kerja_id' => 'required|integer|exists:unit_kerjas,id',
             'jam_from' => 'required|string',
             'jam_to' => 'required|string',
         ];
@@ -37,6 +38,9 @@ class StoreShiftRequest extends FormRequest
             'nama.required' => 'Nama shift tidak diperbolehkan kosong.',
             'nama.string' => 'Nama shift tidak diperbolehkan mengandung angka.',
             'nama.max' => 'Nama shift melebihi batas maksimum panjang karakter.',
+            'unit_kerja_id.required' => 'Unit kerja tidak diperbolehkan kosong.',
+            'unit_kerja_id.integer' => 'Unit kerja tidak diperbolehkan mengandung selain angka.',
+            'unit_kerja_id.exists' => 'Unit kerja tersebut tidak valid.',
             'jam_from.required' => 'Jam kerja mulai shift tidak diperbolehkan kosong.',
             'jam_from.string' => 'Nama shift tidak diperbolehkan mengandung selain angka dan huruf.',
             'jam_to.required' => 'Jam kerja selesai shift tidak diperbolehkan kosong.',

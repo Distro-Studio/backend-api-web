@@ -30,6 +30,7 @@ class StoreCutiJadwalRequest extends FormRequest
             'tgl_from' => 'required|string',
             'tgl_to' => 'required|string',
             'catatan' => 'nullable|string',
+            'keterangan' => 'nullable'
             // 'status_cuti_id' => 'required|integer|exists:status_cutis,id',
         ];
     }

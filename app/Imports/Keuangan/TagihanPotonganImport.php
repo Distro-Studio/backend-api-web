@@ -4,6 +4,7 @@ namespace App\Imports\Keuangan;
 
 use Carbon\Carbon;
 use App\Models\User;
+use App\Models\DataKaryawan;
 use App\Models\TagihanPotongan;
 use App\Models\StatusTagihanPotongan;
 use App\Models\KategoriTagihanPotongan;
@@ -17,10 +18,12 @@ class TagihanPotonganImport implements ToModel, WithHeadingRow, WithValidation
     use Importable;
 
     private $User;
+    private $DataKaryawan;
     private $KategoriTagihan;
 
     public function __construct()
     {
+        $this->DataKaryawan = DataKaryawan::select('id', 'nik', 'user_id')->get();
         $this->User = User::select('id', 'nama')->get();
         $this->KategoriTagihan = KategoriTagihanPotongan::select('id', 'label')->get();
     }
@@ -28,7 +31,7 @@ class TagihanPotonganImport implements ToModel, WithHeadingRow, WithValidation
     public function rules(): array
     {
         return [
-            'nama' => 'required|string',
+            'nomor_induk_karyawan' => 'required',
             'kategori_tagihan' => 'required|string',
             'besaran' => 'required|numeric',
             'bulan_mulai' => 'nullable|string',
@@ -39,8 +42,7 @@ class TagihanPotonganImport implements ToModel, WithHeadingRow, WithValidation
     public function customValidationMessages()
     {
         return [
-            'nama.required' => 'Nama karyawan tidak diperbolehkan kosong.',
-            'nama.string' => 'Nama karyawan hanya diperbolehkan mengandung huruf.',
+            'nomor_induk_karyawan.required' => 'Nomor induk karyawan tidak diperbolehkan kosong.',
             'kategori_tagihan.required' => 'Kategori tagihan potongan tidak diperbolehkan kosong.',
             'kategori_tagihan.string' => 'Kategori tagihan potongan tidak diperbolehkan mengandung angka.',
             'besaran.required' => 'Besaran pengurang gaji tidak diperbolehkan kosong.',
@@ -52,13 +54,9 @@ class TagihanPotonganImport implements ToModel, WithHeadingRow, WithValidation
 
     public function model(array $row)
     {
-        $user = $this->User->where('nama', $row['nama'])->first();
-        if (!$user) {
-            throw new \Exception("Karyawan '" . $row['nama'] . "' tidak ditemukan.");
-        }
-        $dataKaryawan = $user->data_karyawans()->first();
+        $dataKaryawan = $this->DataKaryawan->where('nik', $row['nomor_induk_karyawan'])->first();
         if (!$dataKaryawan) {
-            throw new \Exception("Karyawan '" . $row['nama'] . "' tidak memiliki data karyawan.");
+            throw new \Exception("Karyawan dengan NIK '" . $row['nomor_induk_karyawan'] . "' tidak ditemukan.");
         }
 
         $kategoriTagihan = $this->KategoriTagihan->where('label', $row['kategori_tagihan'])->first();

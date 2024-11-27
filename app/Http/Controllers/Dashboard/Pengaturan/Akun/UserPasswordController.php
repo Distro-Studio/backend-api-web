@@ -17,10 +17,10 @@ class UserPasswordController extends Controller
 
         $user = Auth::user();
 
-        $dataKaryawan = $user->data_karyawans;
-        if ($dataKaryawan && $dataKaryawan->email == 'super_admin@admin.rski') {
-            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak dapat memperbarui kata sandi pada role Super Admin.'), Response::HTTP_FORBIDDEN);
-        }
+        // $dataKaryawan = $user->data_karyawans;
+        // if ($dataKaryawan && $dataKaryawan->email == 'super_admin@admin.rski') {
+        //     return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak dapat memperbarui kata sandi pada role Super Admin.'), Response::HTTP_FORBIDDEN);
+        // }
 
         $data = $request->validated();
         if (isset($data['password'])) {

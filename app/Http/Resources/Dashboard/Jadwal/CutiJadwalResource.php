@@ -70,6 +70,7 @@ class CutiJadwalResource extends JsonResource
                 ],
                 'unit_kerja' => $cuti_jadwal->users->data_karyawans->unit_kerjas,
                 'tipe_cuti' => $cuti_jadwal->tipe_cutis,
+                'keterangan' => $cuti_jadwal->keterangan,
                 'tgl_from' => $cuti_jadwal->tgl_from,
                 'tgl_to' => $cuti_jadwal->tgl_to,
                 'catatan' => $cuti_jadwal->catatan,

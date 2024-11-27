@@ -32,7 +32,7 @@ class CreateGajiJob implements ShouldQueue
     // Ini v2 (detail gajis)
     public function handle(): void
     {
-        $currentDate = Carbon::now();
+        $currentDate = Carbon::now('Asia/Jakarta');
         $currentMonth = $currentDate->month;
         $currentYear = $currentDate->year;
 
@@ -115,11 +115,11 @@ class CreateGajiJob implements ShouldQueue
             $status_penggajian = $currentDate->greaterThanOrEqualTo($tgl_mulai) ? $statusSudahDipublikasi : $statusBelumDipublikasi;
 
             // Hitung PPh 21 bulanan dan PPh 21 Desember
-            $currentMonth = Carbon::now()->month;
+            $currentMonth = Carbon::now('Asia/Jakarta')->month;
             $penggajianData = [
                 'riwayat_penggajian_id' => $this->riwayat_penggajian_id,
                 'data_karyawan_id' => $data_karyawan_id,
-                'tgl_penggajian' => Carbon::now(),
+                'tgl_penggajian' => Carbon::now('Asia/Jakarta'),
                 'gaji_pokok' => $dataKaryawan->gaji_pokok,
                 'total_tunjangan' => $totalTunjangan,
                 'reward' => $totalReward,
@@ -138,7 +138,7 @@ class CreateGajiJob implements ShouldQueue
                 $penggajian = Penggajian::updateOrCreate(
                     [
                         'data_karyawan_id' => $data_karyawan_id,
-                        'tgl_penggajian' => Carbon::now(),
+                        'tgl_penggajian' => Carbon::now('Asia/Jakarta'),
                     ],
                     $penggajianData
                 );
@@ -154,7 +154,7 @@ class CreateGajiJob implements ShouldQueue
                 $penggajian = Penggajian::updateOrCreate(
                     [
                         'data_karyawan_id' => $data_karyawan_id,
-                        'tgl_penggajian' => Carbon::now(),
+                        'tgl_penggajian' => Carbon::now('Asia/Jakarta'),
                     ],
                     $penggajianData
                 );
@@ -272,7 +272,7 @@ class CreateGajiJob implements ShouldQueue
         $thr = 0;
         // $tglMulaiKerja = Carbon::parse($dataKaryawan->tgl_masuk);
         $tglMulaiKerja = Carbon::parse(RandomHelper::convertToDateString($dataKaryawan->tgl_masuk));
-        $masaKerja = $tglMulaiKerja->diffInMonths(Carbon::now());
+        $masaKerja = $tglMulaiKerja->diffInMonths(Carbon::now('Asia/Jakarta'));
 
         if ($dataKaryawan->status_karyawan == "Tetap") {
             if ($masaKerja <= 12) {
@@ -404,7 +404,7 @@ class CreateGajiJob implements ShouldQueue
         // 1. Hitung bruto dan premi Desember
         $penghasilanBrutoDesember = $this->calculatedPenghasilanBruto($dataKaryawan, $reward);
         $totalPremiDesember = $this->calculatedPremi($dataKaryawan->data_karyawan_id, $penghasilanBrutoDesember, $dataKaryawan->gaji_pokok);
-        $currentYear = Carbon::now()->year;
+        $currentYear = Carbon::now('Asia/Jakarta')->year;
 
         // 2. Jumlahkan bruto dan premi dari Januari hingga Desember
         $totalBruto = DB::table('penggajians')
@@ -471,8 +471,8 @@ class CreateGajiJob implements ShouldQueue
             ->value('user_id');
 
         // Tentukan tanggal awal dan akhir bulan sebelumnya
-        $startDate = Carbon::now()->subMonth()->startOfMonth();
-        $endDate = Carbon::now()->subMonth()->endOfMonth();
+        $startDate = Carbon::now('Asia/Jakarta')->subMonth()->startOfMonth();
+        $endDate = Carbon::now('Asia/Jakarta')->subMonth()->endOfMonth();
 
         // Ambil ID untuk kategori 'Tepat Waktu'
         $kategoriTepatWaktuId = DB::table('kategori_presensis')->where('label', 'Tepat Waktu')->value('id');
@@ -565,7 +565,7 @@ class CreateGajiJob implements ShouldQueue
             // $bulanSelesai = $penyesuaianGaji->bulan_selesai ? Carbon::parse($penyesuaianGaji->bulan_selesai) : null;
             $bulanMulai = $penyesuaianGaji->bulan_mulai ? Carbon::parse(RandomHelper::convertToDateString($penyesuaianGaji->bulan_mulai)) : null;
             $bulanSelesai = $penyesuaianGaji->bulan_selesai ? Carbon::parse(RandomHelper::convertToDateString($penyesuaianGaji->bulan_selesai)) : null;
-            $currentDate = Carbon::now();
+            $currentDate = Carbon::now('Asia/Jakarta');
 
             // Cek apakah saat ini berada pada rentang bulan mulai dan selesai atau jika null
             if (
@@ -606,7 +606,7 @@ class CreateGajiJob implements ShouldQueue
             // $bulanSelesai = $penyesuaianGaji->bulan_selesai ? Carbon::parse($penyesuaianGaji->bulan_selesai) : null;
             $bulanMulai = $penyesuaianGaji->bulan_mulai ? Carbon::parse(RandomHelper::convertToDateString($penyesuaianGaji->bulan_mulai)) : null;
             $bulanSelesai = $penyesuaianGaji->bulan_selesai ? Carbon::parse(RandomHelper::convertToDateString($penyesuaianGaji->bulan_selesai)) : null;
-            $currentDate = Carbon::now();
+            $currentDate = Carbon::now('Asia/Jakarta');
 
             // Cek apakah saat ini berada pada rentang bulan mulai dan selesai atau jika null
             if (

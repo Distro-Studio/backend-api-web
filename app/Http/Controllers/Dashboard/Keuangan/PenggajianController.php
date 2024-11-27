@@ -273,7 +273,7 @@ class PenggajianController extends Controller
 
             // Buat entri baru di tabel riwayat_penggajians untuk periode bulan ini
             $periode = Carbon::now('Asia/Jakarta')->startOfMonth()->format('Y-m-d');
-            $status_riwayat_gaji = Carbon::now()->greaterThanOrEqualTo($tgl_mulai) ? $statusSudahDipublikasi : $statusBelumDipublikasi;
+            $status_riwayat_gaji = Carbon::now('Asia/Jakarta')->greaterThanOrEqualTo($tgl_mulai) ? $statusSudahDipublikasi : $statusBelumDipublikasi;
             $riwayatPenggajian = RiwayatPenggajian::create([
                 'periode' => $periode,
                 'karyawan_verifikasi' => $verifikasiKaryawan,

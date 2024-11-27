@@ -213,7 +213,8 @@ class DataTukarJadwalController extends Controller
 
             $limit = $request->input('limit', 10);
 
-            $tukarJadwal = TukarJadwal::query()->where('acc_user_ditukar', 2)->orderBy('created_at', 'desc');
+            $tukarJadwal = TukarJadwal::query()->orderBy('created_at', 'desc');
+            // $tukarJadwal = TukarJadwal::query()->where('acc_user_ditukar', 2)->orderBy('created_at', 'desc');
 
             $filters = $request->all();
 
@@ -536,6 +537,7 @@ class DataTukarJadwalController extends Controller
                         'updated_at' => $tukar_jadwal->user_ditukars->updated_at
                     ] : null,
                     'relasi_verifikasi_ditukar' => $formattedRelasiVerifikasiDitukar,
+                    'acc_user_ditukar' => $tukar_jadwal->acc_user_ditukar,
                     'pertukaran_jadwal' => [
                         [
                             'jadwal_karyawan_pengajuan' => $tukar_jadwal->jadwal_pengajuans ? [

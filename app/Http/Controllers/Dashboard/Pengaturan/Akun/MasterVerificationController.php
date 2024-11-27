@@ -33,6 +33,124 @@ class MasterVerificationController extends Controller
         ], Response::HTTP_OK);
     }
 
+    public function getAllKaryawanDiverifikasi($karyawan_diverifikasi)
+    {
+        if (!Gate::allows('view masterVerifikasi')) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
+
+        try {
+            $modulVerifikasiList = ModulVerifikasi::all();
+
+            // Iterasi setiap modul dan ordernya
+            $result = $modulVerifikasiList->flatMap(function ($modul) use ($karyawan_diverifikasi) {
+                $data = [];
+                for ($order = 1; $order <= $modul->max_order; $order++) {
+                    $relasiVerifikasi = RelasiVerifikasi::whereJsonContains('user_diverifikasi', (int) $karyawan_diverifikasi)
+                        ->where('modul_verifikasi', $modul->id)
+                        ->where('order', $order)
+                        ->with(['users', 'modul_verifikasis'])
+                        ->first();
+
+                    // Tambahkan data ke dalam array
+                    $data[] = [
+                        'modul' => [
+                            'id' => $modul->id,
+                            'label' => $modul->label,
+                            'max_order' => $modul->max_order,
+                            'created_at' => $modul->created_at,
+                            'updated_at' => $modul->updated_at,
+                        ],
+                        'order' => $order,
+                        'data' => $relasiVerifikasi ? [
+                            'id' => $relasiVerifikasi->id,
+                            'name' => $relasiVerifikasi->nama,
+                            'verifikator' => [
+                                'id' => $relasiVerifikasi->users->id,
+                                'nama' => $relasiVerifikasi->users->nama,
+                                'username' => $relasiVerifikasi->users->username,
+                                'email_verified_at' => $relasiVerifikasi->users->email_verified_at,
+                                'data_karyawan_id' => $relasiVerifikasi->users->data_karyawan_id,
+                                'foto_profil' => $relasiVerifikasi->users->foto_profil,
+                                'data_completion_step' => $relasiVerifikasi->users->data_completion_step,
+                                'status_aktif' => $relasiVerifikasi->users->status_aktif,
+                                'created_at' => $relasiVerifikasi->users->created_at,
+                                'updated_at' => $relasiVerifikasi->users->updated_at,
+                            ],
+                            'modul_verifikasi' => $relasiVerifikasi->modul_verifikasis,
+                            'order' => $relasiVerifikasi->order,
+                            'user_diverifikasi' => $relasiVerifikasi->user_diverifikasi,
+                            'created_at' => $relasiVerifikasi->created_at,
+                            'updated_at' => $relasiVerifikasi->updated_at,
+                            'deleted_at' => $relasiVerifikasi->deleted_at,
+                        ] : null,
+                    ];
+                }
+                return $data;
+            });
+
+            return response()->json([
+                'status' => Response::HTTP_OK,
+                'message' => 'Data hak verifikasi karyawan terkait berhasil ditampilkan.',
+                'data' => $result,
+            ], Response::HTTP_OK);
+        } catch (\Exception $e) {
+            Log::error("| Modul Verifikasi | - Error saat mengambil data modul verifikasi: {$e->getMessage()}");
+            return response()->json([
+                'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
+                'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.'
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    public function getAllKaryawanVerifikator(Request $request)
+    {
+        if (!Gate::allows('view masterVerifikasi')) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
+
+        try {
+            $modulVerifikasi = $request->input('modul_verifikasi');
+            $order = $request->input('order');
+
+            $verifications = RelasiVerifikasi::where('modul_verifikasi', $modulVerifikasi)
+                ->where('order', $order)
+                ->with('users')
+                ->get();
+            if ($verifications->isEmpty()) {
+                return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Tidak ada data verifikator yang ditemukan.'), Response::HTTP_NOT_FOUND);
+            }
+
+            $formattedUsers = $verifications->map(function ($verification) {
+                $user = $verification->users;
+                return [
+                    'id' => $user->id,
+                    'nama' => $user->nama,
+                    'username' => $user->username,
+                    'email_verified_at' => $user->email_verified_at,
+                    'data_karyawan_id' => $user->data_karyawan_id,
+                    'foto_profil' => $user->foto_profil,
+                    'data_completion_step' => $user->data_completion_step,
+                    'status_aktif' => $user->status_aktif,
+                    'created_at' => $user->created_at,
+                    'updated_at' => $user->updated_at
+                ];
+            });
+
+            return response()->json([
+                'status' => Response::HTTP_OK,
+                'message' => 'Data karyawan verifikator berhasil ditampilkan.',
+                'data' => $formattedUsers
+            ], Response::HTTP_OK);
+        } catch (\Exception $e) {
+            Log::error('| Master Verifikasi | - Error getAllKaryawanVerifikator: ' . $e->getMessage());
+            return response()->json([
+                'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
+                'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
     public function index()
     {
         if (!Gate::allows('view masterVerifikasi')) {
@@ -93,13 +211,14 @@ class MasterVerificationController extends Controller
         $existingVerification = RelasiVerifikasi::where('verifikator', $data['verifikator'])
             ->where('order', $data['order'])
             ->where('modul_verifikasi', $data['modul_verifikasi'])
+            ->whereNull('deleted_at')
             ->first();
         if ($existingVerification) {
             $existingVerifikator = User::find($data['verifikator']);
             $labelModulVerifikasi = $modulVerifikasi->label;
             return response()->json([
                 'status' => Response::HTTP_CONFLICT,
-                'message' => "Kombinasi verifikator dengan order dan modul verifikasi yang sama sudah ada. Verifikator '{$existingVerifikator->nama}' dengan level verifikasi '{$data['order']}' dan modul verifikasi '{$labelModulVerifikasi}' sudah terdaftar.",
+                'message' => "Kombinasi modul, level verifikasi, dan verifikator sudah ada. Verifikator '{$existingVerifikator->nama}' dengan level verifikasi '{$data['order']}' dan modul '{$labelModulVerifikasi}' sudah terdaftar.",
             ], Response::HTTP_CONFLICT);
         }
 
@@ -182,12 +301,15 @@ class MasterVerificationController extends Controller
         $existingVerification = RelasiVerifikasi::where('verifikator', $data['verifikator'])
             ->where('order', $data['order'])
             ->where('modul_verifikasi', $data['modul_verifikasi'])
-            ->where('id', '!=', $verification->id) // kecuali data saat ini
+            ->whereNull('deleted_at')
+            // ->where('id', '!=', $verification->id) // kecuali data saat ini
             ->first();
         if ($existingVerification) {
+            $existingVerifikator = User::find($data['verifikator']);
+            $labelModulVerifikasi = $modulVerifikasi->label;
             return response()->json([
                 'status' => Response::HTTP_CONFLICT,
-                'message' => "Kombinasi verifikator dengan order yang sama sudah ada. Verifikator ID '{$data['verifikator']}' dengan order '{$data['order']}' sudah terdaftar.",
+                'message' => "Kombinasi modul, level verifikasi, dan verifikator sudah ada. Verifikator '{$existingVerifikator->nama}' dengan level verifikasi '{$data['order']}' dan modul '{$labelModulVerifikasi}' sudah terdaftar.",
             ], Response::HTTP_CONFLICT);
         }
 
@@ -197,7 +319,7 @@ class MasterVerificationController extends Controller
             'modul_verifikasi' => $data['modul_verifikasi'],
             'order' => $data['order'],
             'user_diverifikasi' => $user_diverifikasi,
-            'created_at' => Carbon::now('Asia/Jakarta'),
+            'updated_at' => now('Asia/Jakarta'),
         ]);
         $successMessage = "Data master verifikasi '{$verification->nama}' berhasil diubah.";
         $formattedData = $this->formatData(collect([$verification]))->first();
@@ -227,6 +349,21 @@ class MasterVerificationController extends Controller
 
         if (!Gate::allows('delete masterVerifikasi', $verifikasi)) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
+
+        $existingVerification = RelasiVerifikasi::where('verifikator', $verifikasi->verifikator)
+            ->where('order', $verifikasi->order)
+            ->where('modul_verifikasi', $verifikasi->modul_verifikasi)
+            ->whereNull('deleted_at')
+            ->first();
+        if ($existingVerification) {
+            $existingVerifikator = User::find($verifikasi->verifikator);
+            $modulVerifikasi = ModulVerifikasi::find($verifikasi->modul_verifikasi);
+            $labelModulVerifikasi = $modulVerifikasi->label;
+            return response()->json([
+                'status' => Response::HTTP_CONFLICT,
+                'message' => "Kombinasi modul, level verifikasi, dan verifikator sudah ada. Verifikator '{$existingVerifikator->nama}' dengan level verifikasi '{$verifikasi->order}' dan modul '{$labelModulVerifikasi}' sudah terdaftar.",
+            ], Response::HTTP_CONFLICT);
         }
 
         $verifikasi->restore();

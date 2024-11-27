@@ -17,6 +17,9 @@ class JadwalShiftExport implements FromCollection, WithHeadings
     public function collection()
     {
         $jadwals = Jadwal::with(['users', 'shifts', 'users.data_karyawans.unit_kerjas'])
+            ->whereHas('users.data_karyawans.unit_kerjas', function ($query) {
+                $query->where('jenis_karyawan', 1);
+            })
             ->get();
 
         $schedules = $jadwals->map(function ($schedule, $index) {
@@ -27,16 +30,20 @@ class JadwalShiftExport implements FromCollection, WithHeadings
                 $jam_to = 'N/A';
             } else {
                 $namaShift = $schedule->shifts->nama ?? 'N/A';
-                $convertJam_From = RandomHelper::convertToTimeString($schedule->shifts->jam_from);
-                $convertJam_To = RandomHelper::convertToTimeString($schedule->shifts->jam_to);
-                $jam_from = $convertJam_From ? Carbon::parse($convertJam_From)->format('H:i:s') : 'N/A';
-                $jam_to = $convertJam_To ? Carbon::parse($convertJam_To)->format('H:i:s') : 'N/A';
+                $jam_from = $schedule->shifts->jam_from
+                    ? Carbon::parse($schedule->shifts->jam_from)->format('H:i:s')
+                    : 'N/A';
+                $jam_to = $schedule->shifts->jam_to
+                    ? Carbon::parse($schedule->shifts->jam_to)->format('H:i:s')
+                    : 'N/A';
             }
 
-            $convertTanggal_Mulai = RandomHelper::convertToDateString($schedule->tgl_mulai);
-            $convertTanggal_Selesai = RandomHelper::convertToDateString($schedule->tgl_selesai);
-            $tgl_mulai = $convertTanggal_Mulai ? Carbon::parse($convertTanggal_Mulai)->format('d-m-Y') : 'N/A';
-            $tgl_selesai = $convertTanggal_Selesai ? Carbon::parse($convertTanggal_Selesai)->format('d-m-Y') : 'N/A';
+            $tgl_mulai = $schedule->tgl_mulai
+                ? Carbon::parse($schedule->tgl_mulai)->format('d-m-Y')
+                : 'N/A';
+            $tgl_selesai = $schedule->tgl_selesai
+                ? Carbon::parse($schedule->tgl_selesai)->format('d-m-Y')
+                : 'N/A';
 
             $unitKerjas = $schedule->users->data_karyawans->unit_kerjas ?? 'N/A';
             $jenisKaryawan = $unitKerjas ? ($unitKerjas->jenis_karyawan ? 'Shift' : 'Non-Shift') : 'N/A';

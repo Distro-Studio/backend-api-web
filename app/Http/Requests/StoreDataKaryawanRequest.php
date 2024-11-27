@@ -51,7 +51,7 @@ class StoreDataKaryawanRequest extends FormRequest
             'uang_lembur' => 'nullable|numeric',
             'ptkp_id' => 'required|integer|exists:ptkps,id',
 
-            'tgl_diangkat' => 'required|string',
+            'tgl_diangkat' => 'nullable|string',
         ];
     }
 
@@ -115,7 +115,7 @@ class StoreDataKaryawanRequest extends FormRequest
             'ptkp_id.required' => 'Silahkan pilih PTKP karyawan terlebih dahulu.',
             'ptkp_id.exists' => 'Maaf PTKP yang dipilih tidak valid.',
 
-            'tgl_diangkat.required' => 'Tanggal diangkat karyawan tidak diperbolehkan kosong.',
+            // 'tgl_diangkat.required' => 'Tanggal diangkat karyawan tidak diperbolehkan kosong.',
             'tgl_diangkat.string' => 'Tanggal diangkat karyawan tidak diperbolehkan mengandung selain huruf.'
         ];
     }

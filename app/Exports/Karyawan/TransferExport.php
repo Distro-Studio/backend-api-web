@@ -26,10 +26,15 @@ class TransferExport implements FromCollection, WithHeadings, WithMapping
             'no',
             'nama',
             'tanggal_pengajuan',
+            'tanggal_mulai',
             'unit_kerja_asal',
             'unit_kerja_tujuan',
             'jabatan_asal',
             'jabatan_tujuan',
+            'kelompok_gaji_asal',
+            'kelompok_gaji_tujuan',
+            'role_asal',
+            'role_tujuan',
             'kategori_transfer',
             'alasan'
         ];
@@ -42,10 +47,15 @@ class TransferExport implements FromCollection, WithHeadings, WithMapping
             self::$number,
             $transfer->users->nama,
             Carbon::parse($transfer->created_at)->format('d-m-Y'),
+            $transfer->tgl_mulai,
             $transfer->unit_kerja_asals->nama_unit,
             $transfer->unit_kerja_tujuans->nama_unit ?? 'N/A',
             $transfer->jabatan_asals->nama_jabatan,
             $transfer->jabatan_tujuans->nama_jabatan ?? 'N/A',
+            $transfer->kelompok_gaji_asals->nama_kelompok,
+            $transfer->kelompok_gaji_tujuans->nama_kelompok ?? 'N/A',
+            $transfer->role_asals->name,
+            $transfer->role_tujuans->name ?? 'N/A',
             $transfer->kategori_transfer_karyawans->label,
             $transfer->alasan ?? 'N/A'
         ];

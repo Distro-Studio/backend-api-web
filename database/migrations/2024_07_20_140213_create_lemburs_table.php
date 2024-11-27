@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained('users');
             $table->foreignId('jadwal_id')->nullable()->constrained('jadwals');
-            $table->string('tgl_pengajuan');
+            $table->string('tgl_pengajuan'); // d-m-Y
             $table->string('durasi');
             $table->text('catatan');
             $table->timestamps();

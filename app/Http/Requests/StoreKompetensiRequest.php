@@ -27,7 +27,7 @@ class StoreKompetensiRequest extends FormRequest
         return [
             'nama_kompetensi' => 'required|string|max:225|unique:kompetensis,nama_kompetensi',
             'jenis_kompetensi' => 'required|boolean',
-            'tunjangan_kompetensi' => 'required|numeric',
+            // 'tunjangan_kompetensi' => 'required|numeric',
             'nilai_bor' => 'required|numeric',
         ];
     }
@@ -42,8 +42,8 @@ class StoreKompetensiRequest extends FormRequest
             'jenis_kompetensi.required' => 'Jenis kompetensi tidak diperbolehkan kosong.',
             'jenis_kompetensi.boolean' => 'Jenis kompetensi hanya dapat diisi Medis atau Non-Medis.',
             'jenis_kompetensi.max' => 'Jenis kompetensi melebihi batas maksimum panjang karakter.',
-            'tunjangan_kompetensi.required' => 'Jumlah tunjangan kompetensi tidak diperbolehkan kosong.',
-            'tunjangan_kompetensi.numeric' => 'Jumlah tunjangan kompetensi tidak diperbolehkan mengandung huruf.',
+            // 'tunjangan_kompetensi.required' => 'Jumlah tunjangan kompetensi tidak diperbolehkan kosong.',
+            // 'tunjangan_kompetensi.numeric' => 'Jumlah tunjangan kompetensi tidak diperbolehkan mengandung huruf.',
             'nilai_bor.required' => 'Jumlah BOR tidak diperbolehkan kosong.',
             'nilai_bor.numeric' => 'Jumlah BOR tidak diperbolehkan mengandung huruf.',
         ];

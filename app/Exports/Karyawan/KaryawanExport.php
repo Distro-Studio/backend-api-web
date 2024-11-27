@@ -72,16 +72,17 @@ class KaryawanExport implements FromCollection, WithHeadings, WithMapping
 
         if (isset($this->filters['masa_kerja'])) {
             $masaKerja = $this->filters['masa_kerja'];
+            $currentDate = Carbon::now('Asia/Jakarta');
             if (is_array($masaKerja)) {
-                $karyawan->where(function ($query) use ($masaKerja) {
+                $karyawan->where(function ($query) use ($masaKerja, $currentDate) {
                     foreach ($masaKerja as $masa) {
                         $bulan = $masa * 12;
-                        $query->orWhereRaw('TIMESTAMPDIFF(MONTH, tgl_masuk, COALESCE(tgl_keluar, NOW())) <= ?', [$bulan]);
+                        $query->orWhereRaw("TIMESTAMPDIFF(MONTH, STR_TO_DATE(tgl_masuk, '%d-%m-%Y'), COALESCE(STR_TO_DATE(tgl_keluar, '%d-%m-%Y'), ?)) <= ?", [$currentDate, $bulan]);
                     }
                 });
             } else {
                 $bulan = $masaKerja * 12;
-                $karyawan->whereRaw('TIMESTAMPDIFF(MONTH, tgl_masuk, COALESCE(tgl_keluar, NOW())) <= ?', [$bulan]);
+                $karyawan->whereRaw("TIMESTAMPDIFF(MONTH, STR_TO_DATE(tgl_masuk, '%d-%m-%Y'), COALESCE(STR_TO_DATE(tgl_keluar, '%d-%m-%Y'), ?)) <= ?", [$currentDate, $bulan]);
             }
         }
 
@@ -99,12 +100,8 @@ class KaryawanExport implements FromCollection, WithHeadings, WithMapping
         if (isset($this->filters['tgl_masuk'])) {
             $tglMasuk = $this->filters['tgl_masuk'];
             if (is_array($tglMasuk)) {
-                foreach ($tglMasuk as &$tgl) {
-                    $tgl = RandomHelper::convertToDateString($tgl);
-                }
                 $karyawan->whereIn('tgl_masuk', $tglMasuk);
             } else {
-                $tglMasuk = RandomHelper::convertToDateString($tglMasuk);
                 $karyawan->where('tgl_masuk', $tglMasuk);
             }
         }
@@ -140,6 +137,17 @@ class KaryawanExport implements FromCollection, WithHeadings, WithMapping
                     $query->whereIn('jenis_karyawan', $jenisKaryawan);
                 } else {
                     $query->where('jenis_karyawan', '=', $jenisKaryawan);
+                }
+            });
+        }
+
+        if (isset($this->filters['jenis_kompetensi'])) {
+            $jenisKaryawan = $this->filters['jenis_kompetensi'];
+            $karyawan->whereHas('kompetensis', function ($query) use ($jenisKaryawan) {
+                if (is_array($jenisKaryawan)) {
+                    $query->whereIn('jenis_kompetensi', $jenisKaryawan);
+                } else {
+                    $query->where('jenis_kompetensi', '=', $jenisKaryawan);
                 }
             });
         }
@@ -239,16 +247,9 @@ class KaryawanExport implements FromCollection, WithHeadings, WithMapping
             return $role->name;
         })->toArray();
 
-        $convertTgl_Masuk = RandomHelper::convertToDateString($karyawan->tgl_masuk);
-        $convertTgl_Lahir = RandomHelper::convertToDateString($karyawan->tgl_lahir);
-        $convertTgl_Keluar = RandomHelper::convertToDateString($karyawan->tgl_keluar);
-        $convertTgl_Diangkat = RandomHelper::convertToDateString($karyawan->tgl_diangkat);
-        $convertTgl_Berakhir_PKS = RandomHelper::convertToDateString($karyawan->tgl_berakhir_pks);
-        $tgl_masuk = Carbon::parse($convertTgl_Masuk)->format('d-m-Y');
-        $tgl_lahir = Carbon::parse($convertTgl_Lahir)->format('d-m-Y');
-        $tgl_keluar = Carbon::parse($convertTgl_Keluar)->format('d-m-Y');
-        $tgl_diangkat = Carbon::parse($convertTgl_Diangkat)->format('d-m-Y');
-        $tgl_berakhir_pks = Carbon::parse($convertTgl_Berakhir_PKS)->format('d-m-Y');
+        $formatDate = fn($date) => $date ? Carbon::parse($date)->format('d-m-Y') : 'N/A';
+
+        $masaKerja = $this->calculateMasaKerja($karyawan->tgl_masuk, $karyawan->tgl_keluar);
 
         return [
             self::$number,
@@ -256,19 +257,19 @@ class KaryawanExport implements FromCollection, WithHeadings, WithMapping
             $karyawan->users->username,
             $karyawan->users->status_aktif,
             implode(', ', $roles),
-            $karyawan->email,
-            $karyawan->no_rm,
-            $karyawan->no_manulife,
-            $tgl_masuk,
+            $karyawan->email ?? 'N/A',
+            $karyawan->no_rm ?? 'N/A',
+            $karyawan->no_manulife ?? 'N/A',
+            $formatDate($karyawan->tgl_masuk),
             optional($karyawan->unit_kerjas)->nama_unit,
             optional($karyawan->jabatans)->nama_jabatan,
             optional($karyawan->kompetensis)->nama_kompetensi,
-            $karyawan->nik_ktp,
+            $karyawan->nik_ktp ?? 'N/A',
             optional($karyawan->status_karyawans)->label,
-            $karyawan->tempat_lahir,
-            $tgl_lahir,
+            $karyawan->tempat_lahir ?? 'N/A',
+            $formatDate($karyawan->tgl_lahir),
             optional($karyawan->kelompok_gajis)->nama_kelompok,
-            $karyawan->no_rekening,
+            $karyawan->no_rekening ?? 'N/A',
             $karyawan->tunjangan_jabatan ?? 'N/A',
             $karyawan->tunjangan_fungsional ?? 'N/A',
             $karyawan->tunjangan_khusus ?? 'N/A',
@@ -276,17 +277,17 @@ class KaryawanExport implements FromCollection, WithHeadings, WithMapping
             $karyawan->uang_lembur ?? 'N/A',
             $karyawan->uang_makan ?? 'N/A',
             optional($karyawan->ptkps)->kode_ptkp,
-            $tgl_keluar,
-            $karyawan->no_kk,
-            $karyawan->alamat,
-            $karyawan->gelar_depan,
-            $karyawan->gelar_belakang,
-            $karyawan->no_hp,
-            $karyawan->no_bpjsksh,
-            $karyawan->no_bpjsktk,
-            $tgl_diangkat,
-            $karyawan->masa_kerja,
-            $karyawan->npwp,
+            $formatDate($karyawan->tgl_keluar),
+            $karyawan->no_kk ?? 'N/A',
+            $karyawan->alamat ?? 'N/A',
+            $karyawan->gelar_depan ?? 'N/A',
+            $karyawan->gelar_belakang ?? 'N/A',
+            $karyawan->no_hp ?? 'N/A',
+            $karyawan->no_bpjsksh ?? 'N/A',
+            $karyawan->no_bpjsktk ?? 'N/A',
+            $formatDate($karyawan->tgl_diangkat),
+            $masaKerja,
+            $karyawan->npwp ?? 'N/A',
             $karyawan->jenis_kelamin ? 'Laki-laki' : 'Perempuan',
             optional($karyawan->kategori_agamas)->label,
             optional($karyawan->kategori_darahs)->label,
@@ -294,12 +295,12 @@ class KaryawanExport implements FromCollection, WithHeadings, WithMapping
             $karyawan->berat_badan,
             $karyawan->bmi_value,
             $karyawan->bmi_ket,
-            $karyawan->riwayat_penyakit,
-            $karyawan->no_ijazah,
+            $karyawan->riwayat_penyakit ?? 'N/A',
+            $karyawan->no_ijazah ?? 'N/A',
             $karyawan->tahun_lulus,
-            $karyawan->no_str,
+            $karyawan->no_str ?? 'N/A',
             Carbon::parse($karyawan->masa_berlaku_str)->format('d-m-Y'),
-            $tgl_berakhir_pks,
+            $formatDate($karyawan->tgl_berakhir_pks),
             $this->formatDuration($karyawan->masa_diklat),
             Carbon::parse($karyawan->created_at)->format('d-m-Y H:i:s'),
             Carbon::parse($karyawan->updated_at)->format('d-m-Y H:i:s')
@@ -311,5 +312,15 @@ class KaryawanExport implements FromCollection, WithHeadings, WithMapping
         $hours = floor($seconds / 3600);
         $minutes = floor(($seconds % 3600) / 60);
         return sprintf("%d jam %d menit", $hours, $minutes);
+    }
+
+    public function calculateMasaKerja($tgl_masuk, $tgl_keluar = null)
+    {
+        $start = Carbon::parse($tgl_masuk);
+        $end = $tgl_keluar ? Carbon::parse($tgl_keluar) : Carbon::now('Asia/Jakarta');
+
+        $difference = $start->diff($end);
+
+        return sprintf('%d Tahun %d Bulan %d Hari', $difference->y, $difference->m, $difference->d);
     }
 }

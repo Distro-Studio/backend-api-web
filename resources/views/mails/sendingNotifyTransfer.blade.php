@@ -205,7 +205,7 @@
 																	<p style="margin: 0; margin-bottom: 15px;">Terima kasih atas perhatian dan kerja sama Anda.</p>
 																	<p style="margin: 0; margin-bottom: 15px;"> </p>
 																	<p style="margin: 0; margin-bottom: 15px;">Hormat kami,</p>
-																	<p style="margin: 0;"><strong>{{ config('app.name') }}</strong></p>
+																	<p style="margin: 0;"><strong>RSKI Personalia</strong></p>
 																</div>
 															</td>
 														</tr>

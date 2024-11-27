@@ -2,22 +2,23 @@
 
 namespace App\Http\Controllers\Dashboard\Keuangan;
 
-use App\Exports\Keuangan\TagihanPotonganExport;
-use App\Exports\TemplateTagihanPotonganImport;
 use Carbon\Carbon;
 use App\Models\User;
 use App\Models\Penggajian;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use App\Models\TagihanPotongan;
+use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Excel_Import\ImportTagihanPotonganRequest;
 use Illuminate\Support\Facades\Gate;
 use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Support\Facades\Storage;
+use App\Exports\Keuangan\TagihanPotonganExport;
+use App\Imports\Keuangan\TagihanPotonganImport;
 use App\Http\Requests\StoreTagihanPotonganRequest;
 use App\Http\Requests\UpdateTagihanPotonganRequest;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
-use App\Imports\Keuangan\TagihanPotonganImport;
+use App\Http\Requests\Excel_Import\ImportTagihanPotonganRequest;
 
 class TagihanPotonganController extends Controller
 {
@@ -255,9 +256,16 @@ class TagihanPotonganController extends Controller
     public function downloadTagihanPotonganTemplate()
     {
         try {
-            return Excel::download(new TemplateTagihanPotonganImport, 'template_import_tagihan_potongan.xls');
+            $filePath = 'templates/template_import_tagihan.xls';
+
+            if (!Storage::exists($filePath)) {
+                return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'File template tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+            }
+
+            return Storage::download($filePath, 'template_import_tagihan.xls');
         } catch (\Throwable $e) {
-            return response()->json(new WithoutDataResource(Response::HTTP_INTERNAL_SERVER_ERROR, 'Maaf sepertinya terjadi error. Pesan: ' . $e->getMessage()), Response::HTTP_INTERNAL_SERVER_ERROR);
+            Log::error('| Tagihan | - Error saat download template tagihan: ' . $e->getMessage() . ' Line: ' . $e->getLine());
+            return response()->json(new WithoutDataResource(Response::HTTP_INTERNAL_SERVER_ERROR, 'Maaf sepertinya terjadi error.'), Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 

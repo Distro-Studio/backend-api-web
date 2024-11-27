@@ -27,7 +27,7 @@ class UpdateKompetensiRequest extends FormRequest
         return [
             'nama_kompetensi' => 'required|string|max:225',
             'jenis_kompetensi' => 'required|boolean',
-            'tunjangan_kompetensi' => 'required|numeric',
+            // 'tunjangan_kompetensi' => 'required|numeric',
             'nilai_bor' => 'required|numeric',
         ];
     }
@@ -41,8 +41,8 @@ class UpdateKompetensiRequest extends FormRequest
             'nama_kompetensi.unique' => 'Nama kompetensi tersebut sudah pernah dibuat.',
             'jenis_kompetensi.required' => 'Jenis kompetensi tidak diperbolehkan kosong.',
             'jenis_kompetensi.boolean' => 'Jenis kompetensi hanya dapat diisi Medis atau Non-Medis.',
-            'tunjangan_kompetensi.required' => 'Jumlah tunjangan kompetensi tidak diperbolehkan kosong.',
-            'tunjangan_kompetensi.numeric' => 'Jumlah tunjangan kompetensi tidak diperbolehkan mengandung huruf.',
+            // 'tunjangan_kompetensi.required' => 'Jumlah tunjangan kompetensi tidak diperbolehkan kosong.',
+            // 'tunjangan_kompetensi.numeric' => 'Jumlah tunjangan kompetensi tidak diperbolehkan mengandung huruf.',
             'nilai_bor.required' => 'Jumlah BOR tidak diperbolehkan kosong.',
             'nilai_bor.numeric' => 'Jumlah BOR tidak diperbolehkan mengandung huruf.',
         ];

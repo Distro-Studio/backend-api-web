@@ -15,8 +15,9 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained('users');
             $table->foreignId('tipe_cuti_id')->constrained('tipe_cutis');
-            $table->string('tgl_from');
-            $table->string('tgl_to');
+            $table->text('keterangan')->nullable();
+            $table->string('tgl_from'); // d-m-Y
+            $table->string('tgl_to'); // d-m-Y
             $table->text('catatan')->nullable();
             $table->integer('durasi');
             $table->foreignId('status_cuti_id')->constrained('status_cutis');

@@ -284,11 +284,10 @@ class CreateGajiJob implements ShouldQueue
     private function calculatedTHR($dataKaryawan)
     {
         $thr = 0;
-        // $tglMulaiKerja = Carbon::parse($dataKaryawan->tgl_masuk);
-        $tglMulaiKerja = Carbon::parse(RandomHelper::convertToDateString($dataKaryawan->tgl_masuk));
+        $tglMulaiKerja = Carbon::createFromFormat('d-m-Y', $dataKaryawan->tgl_masuk);
         $masaKerja = $tglMulaiKerja->diffInMonths(Carbon::now('Asia/Jakarta'));
 
-        if ($dataKaryawan->status_karyawan == "Tetap") {
+        if ($dataKaryawan->status_karyawan_id == 1) {
             if ($masaKerja <= 12) {
                 $thr = ($masaKerja / 12) * $dataKaryawan->gaji_pokok;
             } else {

@@ -14,8 +14,8 @@ return new class extends Migration
         Schema::create('non_shifts', function (Blueprint $table) {
             $table->id();
             $table->string('nama');
-            $table->string('jam_from')->nullable();
-            $table->string('jam_to')->nullable();
+            $table->string('jam_from')->nullable(); // H:i:s
+            $table->string('jam_to')->nullable(); // H:i:s
             $table->softDeletes();
             $table->timestamps();
         });

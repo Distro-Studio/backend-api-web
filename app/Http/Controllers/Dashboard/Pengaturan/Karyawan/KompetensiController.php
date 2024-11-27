@@ -141,7 +141,7 @@ class KompetensiController extends Controller
                 'id' => $kompetensi->id,
                 'nama_kompetensi' => $kompetensi->nama_kompetensi,
                 'jenis_kompetensi' => $kompetensi->jenis_kompetensi,
-                'tunjangan_kompetensi' => $kompetensi->tunjangan_kompetensi,
+                // 'tunjangan_kompetensi' => $kompetensi->tunjangan_kompetensi,
                 'nilai_bor' => $kompetensi->nilai_bor,
                 'deleted_at' => $kompetensi->deleted_at,
                 'created_at' => $kompetensi->created_at,

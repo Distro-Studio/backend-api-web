@@ -78,6 +78,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/get-list-kelompok-gaji', [DataKaryawanController::class, 'getAllDataKelompokGaji']);
     Route::get('/get-list-ptkp', [DataKaryawanController::class, 'getAllDataPTKP']);
     Route::get('/get-list-kategori-transfer', [DataTransferKaryawanController::class, 'getAllKategoriTransfer']);
+    Route::get('/get-list-karyawan-verifikasi/{karyawan_diverifikasi}', [MasterVerificationController::class, 'getAllKaryawanDiverifikasi']);
+    Route::post('/get-list-karyawan-verifikator', [MasterVerificationController::class, 'getAllKaryawanVerifikator']);
     Route::get('/get-lokasi-kantor', [DataPresensiController::class, 'getLokasiKantor']);
     Route::get('/get-list-premi', [DataKaryawanController::class, 'getAllDataPremi']);
     Route::get('/get-list-pph21', [TER21Controller::class, 'getAllTer']);
@@ -85,6 +87,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/get-list-tipecuti', [CutiController::class, 'getAllTipeCuti']);
     Route::get('/get-list-harilibur', [HariLiburController::class, 'getAllHariLibur']);
     Route::get('/get-list-shift', [ShiftController::class, 'getAllShift']);
+    Route::get('/get-list-shift/{data_karyawan_id}', [ShiftController::class, 'getAllShiftUnitKerja']);
     Route::get('/get-list-non-shift', [NonShiftController::class, 'getAllNonShift']);
     Route::get('/get-list-tipe-cuti', [CutiController::class, 'getAllTipeCuti']);
     Route::get('/get-list-pertanyaan', [PertanyaanController::class, 'getAllPertanyaan']);
@@ -123,7 +126,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::get('/detail-karyawan-user/{user_id}', [DataKaryawanController::class, 'showByUserId']);
             Route::get('/detail-karyawan/{data_karyawan_id}', [DataKaryawanController::class, 'showByDataKaryawanId']);
 
-            Route::get('/detail-karyawan-presensi/{data_karyawan_id}', [Karyawan_DetailController::class, 'getDataPresensi']);
+            Route::post('/detail-karyawan-presensi/{data_karyawan_id}', [Karyawan_DetailController::class, 'getDataPresensi']);
             Route::get('/detail-karyawan-jadwal/{data_karyawan_id}', [Karyawan_DetailController::class, 'getDataJadwal']);
             Route::get('/detail-karyawan-rekam-jejak/{data_karyawan_id}', [Karyawan_DetailController::class, 'getDataRekamJejak']);
 
@@ -242,7 +245,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
             // ! Tagihan Potongan ===========>
             Route::post('/get-tagihan-potongan', [TagihanPotonganController::class, 'index']);
-            Route::post('/tagihan-potongan/export', [TagihanPotonganController::class, 'exportTagihanPotongan']);
+            Route::get('/tagihan-potongan/export', [TagihanPotonganController::class, 'exportTagihanPotongan']);
             Route::post('/tagihan-potongan/import', [TagihanPotonganController::class, 'importTagihanPotongan']);
             Route::apiResource('/tagihan-potongan', TagihanPotonganController::class);
         });
@@ -355,6 +358,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
             // ! Shift ===========>
             Route::post('/shift/restore/{id}', [ShiftController::class, 'restore']);
+            Route::post('/shift/import', [ShiftController::class, 'importShift']);
             Route::apiResource('/shift', ShiftController::class);
 
             // ! Non-Shift ===========>

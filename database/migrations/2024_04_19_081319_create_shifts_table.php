@@ -14,8 +14,9 @@ return new class extends Migration
         Schema::create('shifts', function (Blueprint $table) {
             $table->id();
             $table->string('nama');
-            $table->string('jam_from')->nullable();
-            $table->string('jam_to')->nullable();
+            $table->foreignId('unit_kerja_id')->constrained('unit_kerjas');
+            $table->string('jam_from')->nullable(); // H:i:s
+            $table->string('jam_to')->nullable(); // H:i:s
             $table->softDeletes();
             $table->timestamps();
         });

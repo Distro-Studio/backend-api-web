@@ -192,32 +192,120 @@ class DataJadwalController extends Controller
 
                 // Mengisi user_schedule_array dengan jadwal yang sebenarnya
                 if ($groupedSchedules->has($user->id) && $user->data_karyawans->unit_kerjas->jenis_karyawan == 1) {
-                    foreach ($groupedSchedules[$user->id] as $schedule) {
-                        $current_date = Carbon::createFromFormat('Y-m-d', $schedule->tgl_mulai);
-                        $end_date_for_schedule = Carbon::createFromFormat('Y-m-d', $schedule->tgl_selesai);
+                    $cutis = Cuti::where('user_id', $user->id)
+                        ->where('status_cuti_id', 4)
+                        ->where(function ($query) use ($date_range) {
+                            $query->whereBetween(DB::raw("STR_TO_DATE(tgl_from, '%d-%m-%Y')"), [Carbon::parse($date_range[0]), Carbon::parse($date_range[count($date_range) - 1])])
+                                ->orWhereBetween(DB::raw("STR_TO_DATE(tgl_to, '%d-%m-%Y')"), [Carbon::parse($date_range[0]), Carbon::parse($date_range[count($date_range) - 1])]);
+                        })
+                        ->get();
+                    Log::info("Jumlah cuti untuk user {$user->id}: " . $cutis->count());
 
-                        while ($current_date->lte($end_date_for_schedule)) {
-                            $date = $current_date->format('Y-m-d');
-                            if (array_key_exists($date, $user_schedule_array)) {
+                    foreach ($date_range as $date) {
+                        $cutiForDate = $cutis->first(function ($cuti) use ($date) {
+                            $tglFrom = Carbon::createFromFormat('d-m-Y', $cuti->tgl_from)->format('Y-m-d');
+                            $tglTo = Carbon::createFromFormat('d-m-Y', $cuti->tgl_to)->format('Y-m-d');
+                            return Carbon::parse($date)->between(Carbon::parse($tglFrom), Carbon::parse($tglTo));
+                        });
+
+                        if ($cutiForDate) {
+                            $user_schedule_array[$date] = [
+                                'id' => $cutiForDate->id,
+                                'user' => [
+                                    'id' => $cutiForDate->users->id,
+                                    'nama' => $cutiForDate->users->nama,
+                                    'username' => $cutiForDate->users->username,
+                                    'email_verified_at' => $cutiForDate->users->email_verified_at,
+                                    'data_karyawan_id' => $cutiForDate->users->data_karyawan_id,
+                                    'foto_profil' => $cutiForDate->users->foto_profil,
+                                    'data_completion_step' => $cutiForDate->users->data_completion_step,
+                                    'status_aktif' => $cutiForDate->users->status_aktif,
+                                    'created_at' => $cutiForDate->users->created_at,
+                                    'updated_at' => $cutiForDate->users->updated_at
+                                ],
+                                'unit_kerja' => $cutiForDate->users->data_karyawans->unit_kerjas,
+                                'tipe_cuti' => $cutiForDate->tipe_cutis,
+                                'keterangan' => $cutiForDate->keterangan ?? null,
+                                'tgl_from' => $cutiForDate->tgl_from,
+                                'tgl_to' => $cutiForDate->tgl_to,
+                                'catatan' => $cutiForDate->catatan,
+                                'durasi' => $cutiForDate->durasi,
+                                'status_cuti' => $cutiForDate->status_cutis,
+                                'status' => 5, // Status cuti
+                                'created_at' => $cutiForDate->created_at,
+                                'updated_at' => $cutiForDate->updated_at
+                            ];
+                            // Log::info("Cuti terassign untuk tanggal {$date}: ", ['schedule' => $user_schedule_array[$date]]);
+                        }
+
+                        if (!isset($user_schedule_array[$date])) {
+                            $scheduleForDate = $groupedSchedules[$user->id]->first(function ($schedule) use ($date) {
+                                $tglMulai = Carbon::parse($schedule->tgl_mulai)->format('Y-m-d');
+                                $tglSelesai = Carbon::parse($schedule->tgl_selesai)->format('Y-m-d');
+                                return Carbon::parse($date)->between(Carbon::parse($tglMulai), Carbon::parse($tglSelesai));
+                            });
+
+                            if ($scheduleForDate) {
                                 $user_schedule_array[$date] = [
-                                    'id' => $schedule->id,
-                                    'tgl_mulai' => $schedule->tgl_mulai,
-                                    'tgl_selesai' => $schedule->tgl_selesai,
-                                    'shift' => $schedule->shifts,
-                                    'updated_at' => $schedule->updated_at,
-                                    'status' => 1 // 1 = ada jadwal
+                                    'id' => $scheduleForDate->id,
+                                    'tgl_mulai' => $scheduleForDate->tgl_mulai,
+                                    'tgl_selesai' => $scheduleForDate->tgl_selesai,
+                                    'shift' => $scheduleForDate->shifts,
+                                    'updated_at' => $scheduleForDate->updated_at,
+                                    'status' => 1 // Jadwal normal
                                 ];
                             }
-                            $current_date->addDay();
                         }
                     }
                 } else if ($user->data_karyawans->unit_kerjas->jenis_karyawan == 0) {
-                    // Jika user non-shift, gunakan data dari tabel non_shifts dan hari libur
+                    // Jika user non-shift, gunakan data dari tabel non_shifts dan hari libur dan cuti
+                    $cutis = Cuti::where('user_id', $user->id)
+                        ->where('status_cuti_id', 4)
+                        ->where(function ($query) use ($date_range) {
+                            $query->whereBetween(DB::raw("STR_TO_DATE(tgl_from, '%d-%m-%Y')"), [Carbon::parse($date_range[0]), Carbon::parse($date_range[count($date_range) - 1])])
+                                ->orWhereBetween(DB::raw("STR_TO_DATE(tgl_to, '%d-%m-%Y')"), [Carbon::parse($date_range[0]), Carbon::parse($date_range[count($date_range) - 1])]);
+                        })
+                        ->get();
+
                     foreach ($date_range as $date) {
                         $day_of_week = Carbon::createFromFormat('Y-m-d', $date)->dayOfWeek;
                         $nonShiftForDay = NonShift::where('nama', 'like', "%{$this->getDayName($day_of_week)}%")->first();
 
-                        if (!$nonShiftForDay || is_null($nonShiftForDay->jam_from) || is_null($nonShiftForDay->jam_to)) {
+                        $cutiForDate = $cutis->first(function ($cuti) use ($date) {
+                            $tglFrom = Carbon::createFromFormat('d-m-Y', $cuti->tgl_from)->format('Y-m-d');
+                            $tglTo = Carbon::createFromFormat('d-m-Y', $cuti->tgl_to)->format('Y-m-d');
+                            return Carbon::parse($date)->between(Carbon::parse($tglFrom), Carbon::parse($tglTo));
+                        });
+                        // Log::info("Cuti non shift - Tanggal: {$date}, Data Cuti: ", ['cuti' => $cutiForDate]);
+
+                        if ($cutiForDate) {
+                            $user_schedule_array[$date] = [
+                                'id' => $cutiForDate->id,
+                                'user' => [
+                                    'id' => $cutiForDate->users->id,
+                                    'nama' => $cutiForDate->users->nama,
+                                    'username' => $cutiForDate->users->username,
+                                    'email_verified_at' => $cutiForDate->users->email_verified_at,
+                                    'data_karyawan_id' => $cutiForDate->users->data_karyawan_id,
+                                    'foto_profil' => $cutiForDate->users->foto_profil,
+                                    'data_completion_step' => $cutiForDate->users->data_completion_step,
+                                    'status_aktif' => $cutiForDate->users->status_aktif,
+                                    'created_at' => $cutiForDate->users->created_at,
+                                    'updated_at' => $cutiForDate->users->updated_at
+                                ],
+                                'unit_kerja' => $cutiForDate->users->data_karyawans->unit_kerjas,
+                                'tipe_cuti' => $cutiForDate->tipe_cutis,
+                                'keterangan' => $cutiForDate->keterangan ?? null,
+                                'tgl_from' => $cutiForDate->tgl_from,
+                                'tgl_to' => $cutiForDate->tgl_to,
+                                'catatan' => $cutiForDate->catatan,
+                                'durasi' => $cutiForDate->durasi,
+                                'status_cuti' => $cutiForDate->status_cutis,
+                                'status' => 5,
+                                'created_at' => $cutiForDate->created_at,
+                                'updated_at' => $cutiForDate->updated_at
+                            ];
+                        } elseif (!$nonShiftForDay || is_null($nonShiftForDay->jam_from) || is_null($nonShiftForDay->jam_to)) {
                             // Libur default gak ada jadwal
                             $user_schedule_array[$date] = [
                                 'id' => null,
@@ -247,12 +335,29 @@ class DataJadwalController extends Controller
                 }
 
                 if ($user->data_karyawans->unit_kerjas->jenis_karyawan == 0) {
+                    $cutis = Cuti::where('user_id', $user->id)
+                        ->where('status_cuti_id', 4) // Filter cuti verif 2 acc
+                        ->where(function ($query) use ($date_range) {
+                            $query->whereBetween(DB::raw("STR_TO_DATE(tgl_from, '%d-%m-%Y')"), [Carbon::parse($date_range[0]), Carbon::parse($date_range[count($date_range) - 1])])
+                                ->orWhereBetween(DB::raw("STR_TO_DATE(tgl_to, '%d-%m-%Y')"), [Carbon::parse($date_range[0]), Carbon::parse($date_range[count($date_range) - 1])]);
+                        })
+                        ->get();
+
+                    // Buat array tanggal yang termasuk dalam cuti
+                    $cutiDates = [];
+                    foreach ($cutis as $cuti) {
+                        $cutiStart = Carbon::createFromFormat('d-m-Y', $cuti->tgl_from);
+                        $cutiEnd = Carbon::createFromFormat('d-m-Y', $cuti->tgl_to);
+                        $cutiDates = array_merge($cutiDates, $this->generateDateRange($cutiStart, $cutiEnd));
+                    }
+
                     // Filter dan hitung total jam untuk non-shift karyawan
-                    $totalJamFilter = collect($date_range)->filter(function ($date) use ($hariLibur) {
+                    $totalJamFilter = collect($date_range)->filter(function ($date) use ($hariLibur, $cutiDates) {
                         $dayOfWeek = Carbon::createFromFormat('Y-m-d', $date)->dayOfWeek;
 
-                        // Hitung Senin (1) hingga Minggu (0 = Minggu), dan tanggal yang bukan hari libur
-                        return $dayOfWeek >= 0 && $dayOfWeek <= 6 && !isset($hariLibur[$date]);
+                        // Hitung Senin (0 = Senin) hingga Minggu (6 = Minggu), dan tanggal yang bukan hari libur, dan cuti
+                        // return $dayOfWeek >= 0 && $dayOfWeek <= 6 && !isset($hariLibur[$date]);
+                        return $dayOfWeek >= 0 && $dayOfWeek <= 6 && !isset($hariLibur[$date]) && !in_array($date, $cutiDates);
                     })->sum(function ($date) {
                         $dayOfWeek = Carbon::createFromFormat('Y-m-d', $date)->dayOfWeek;
                         $hariNama = $this->getDayName($dayOfWeek); // Mengambil nama hari
@@ -346,7 +451,7 @@ class DataJadwalController extends Controller
                 'pagination' => $paginationData
             ], Response::HTTP_OK);
         } catch (\Exception $e) {
-            Log::error('| Jadwal | - Error saat menampilkan detail data jadwal karyawan: ' . $e->getMessage());
+            Log::error('| Jadwal | - Error saat menampilkan detail data jadwal karyawan: ' . $e->getMessage() . ' Line: ' . $e->getLine());
             return response()->json([
                 'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
                 'message' => "Terjadi kesalahan pada server {$e->getMessage()}. Line: {$e->getLine()}. Silakan coba lagi nanti.",
@@ -366,13 +471,6 @@ class DataJadwalController extends Controller
             $jadwals = [];
             $tanggalMulai = Carbon::createFromFormat('d-m-Y', $data['tgl_mulai']);
             $tanggalSelesai = $data['tgl_selesai'] ? Carbon::createFromFormat('d-m-Y', $data['tgl_selesai']) : $tanggalMulai;
-
-            $today = Carbon::today();
-
-            // Validasi tanggal mulai
-            if ($tanggalMulai->lessThanOrEqualTo($today)) {
-                return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Tidak diperbolehkan menerapkan jadwal untuk hari ini atau hari terlewat. Hanya diperbolehkan H+1 hari ini.'), Response::HTTP_NOT_ACCEPTABLE);
-            }
 
             // Get unit kerja yang sedang login
             $admin = Auth::user();
@@ -404,8 +502,8 @@ class DataJadwalController extends Controller
 
                     // Cek apakah ada cuti pada rentang tanggal ini
                     $cutiConflict = Cuti::where('user_id', $userId)
+                        ->whereIn('status_cuti_id', [2, 4])
                         ->where(function ($query) use ($tanggalMulai, $tanggalSelesai) {
-                            // Konversi tgl_from dan tgl_to ke format Y-m-d sebelum melakukan perbandingan
                             $query->whereBetween(DB::raw("STR_TO_DATE(tgl_from, '%d-%m-%Y')"), [$tanggalMulai->format('Y-m-d'), $tanggalSelesai->format('Y-m-d')])
                                 ->orWhereBetween(DB::raw("STR_TO_DATE(tgl_to, '%d-%m-%Y')"), [$tanggalMulai->format('Y-m-d'), $tanggalSelesai->format('Y-m-d')])
                                 ->orWhere(function ($query) use ($tanggalMulai, $tanggalSelesai) {
@@ -414,8 +512,7 @@ class DataJadwalController extends Controller
                                 });
                         })
                         ->first();
-
-                    if ($cutiConflict && $cutiConflict->status_cuti_id > 1) {
+                    if ($cutiConflict) {
                         DB::rollBack();
                         $cutiFrom = Carbon::createFromFormat('d-m-Y', $cutiConflict->tgl_from)->format('d-m-Y');
                         $cutiTo = Carbon::createFromFormat('d-m-Y', $cutiConflict->tgl_to)->format('d-m-Y');
@@ -426,6 +523,7 @@ class DataJadwalController extends Controller
                         $tanggalAkhirShiftMalam = $tanggalMulai->copy()->addDays(2);
 
                         $cutiConflict = Cuti::where('user_id', $userId)
+                            ->whereIn('status_cuti_id', [2, 4])
                             ->where(function ($query) use ($tanggalMulai, $tanggalAkhirShiftMalam) {
                                 $query->whereBetween(DB::raw("STR_TO_DATE(tgl_from, '%d-%m-%Y')"), [$tanggalMulai->format('Y-m-d'), $tanggalAkhirShiftMalam->format('Y-m-d')])
                                     ->orWhereBetween(DB::raw("STR_TO_DATE(tgl_to, '%d-%m-%Y')"), [$tanggalMulai->format('Y-m-d'), $tanggalAkhirShiftMalam->format('Y-m-d')])
@@ -435,9 +533,7 @@ class DataJadwalController extends Controller
                                     });
                             })
                             ->first();
-
-                        // Jika ada konflik cuti, return error
-                        if ($cutiConflict && $cutiConflict->status_cuti_id > 1) {
+                        if ($cutiConflict) {
                             $cutiFrom = Carbon::createFromFormat('d-m-Y', $cutiConflict->tgl_from)->format('d-m-Y');
                             $cutiTo = Carbon::createFromFormat('d-m-Y', $cutiConflict->tgl_to)->format('d-m-Y');
                             return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Tidak dapat membuat jadwal untuk karyawan '{$user->nama}', karena memiliki cuti pada rentang tanggal {$cutiFrom} hingga {$cutiTo}."), Response::HTTP_BAD_REQUEST);
@@ -534,12 +630,6 @@ class DataJadwalController extends Controller
             $data = $request->validated();
             $shiftId = $data['shift_id'] ?? null;
             $tanggalMulai = Carbon::createFromFormat('d-m-Y', $data['tgl_mulai']);
-            $today = Carbon::now('Asia/Jakarta')->format('Y-m-d');
-
-            // Validasi tanggal mulai
-            if ($tanggalMulai->format('Y-m-d') == $today) {
-                return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Anda tidak dapat mengupdate jadwal pada tanggal hari ini.'), Response::HTTP_BAD_REQUEST);
-            }
 
             // Get admin yang sedang login
             $admin = Auth::user();
@@ -560,13 +650,13 @@ class DataJadwalController extends Controller
             }
 
             $cutiConflict = Cuti::where('user_id', $userId)
+                ->whereIn('status_cuti_id', [2, 4])
                 ->where(function ($query) use ($tanggalMulai) {
                     $query->where(DB::raw("STR_TO_DATE(tgl_from, '%d-%m-%Y')"), '<=', $tanggalMulai->format('Y-m-d'))
                         ->where(DB::raw("STR_TO_DATE(tgl_to, '%d-%m-%Y')"), '>=', $tanggalMulai->format('Y-m-d'));
                 })
                 ->first();
-
-            if ($cutiConflict && $cutiConflict->status_cuti_id > 1) {
+            if ($cutiConflict) {
                 $cutiFrom = Carbon::createFromFormat('d-m-Y', $cutiConflict->tgl_from)->format('d-m-Y');
                 $cutiTo = Carbon::createFromFormat('d-m-Y', $cutiConflict->tgl_to)->format('d-m-Y');
                 return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Tidak dapat membuat jadwal untuk karyawan '{$user->nama}', karena memiliki cuti pada rentang tanggal {$cutiFrom} hingga {$cutiTo}."), Response::HTTP_BAD_REQUEST);
@@ -577,6 +667,7 @@ class DataJadwalController extends Controller
 
                 // Cek apakah ada cuti dalam rentang tgl_mulai sampai H+2
                 $cutiConflict = Cuti::where('user_id', $userId)
+                    ->whereIn('status_cuti_id', [2, 4])
                     ->where(function ($query) use ($tanggalMulai, $tanggalAkhirShiftMalam) {
                         $query->whereBetween(DB::raw("STR_TO_DATE(tgl_from, '%d-%m-%Y')"), [$tanggalMulai->format('Y-m-d'), $tanggalAkhirShiftMalam->format('Y-m-d')])
                             ->orWhereBetween(DB::raw("STR_TO_DATE(tgl_to, '%d-%m-%Y')"), [$tanggalMulai->format('Y-m-d'), $tanggalAkhirShiftMalam->format('Y-m-d')])
@@ -586,9 +677,7 @@ class DataJadwalController extends Controller
                             });
                     })
                     ->first();
-
-                // Jika ada konflik cuti, return error
-                if ($cutiConflict && $cutiConflict->status_cuti_id > 1) {
+                if ($cutiConflict) {
                     $cutiFrom = Carbon::createFromFormat('d-m-Y', $cutiConflict->tgl_from)->format('d-m-Y');
                     $cutiTo = Carbon::createFromFormat('d-m-Y', $cutiConflict->tgl_to)->format('d-m-Y');
                     return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Tidak dapat membuat jadwal untuk karyawan '{$user->nama}', karena memiliki cuti pada rentang tanggal {$cutiFrom} hingga {$cutiTo}."), Response::HTTP_BAD_REQUEST);
@@ -733,11 +822,11 @@ class DataJadwalController extends Controller
             $data = $request->validated();
             $shiftId = $data['shift_id'] ?? null;
             $tanggalMulai = Carbon::createFromFormat('d-m-Y', $data['tgl_mulai'])->format('Y-m-d');
-            $today = Carbon::today()->format('Y-m-d');
+            // $today = Carbon::today()->format('Y-m-d');
 
-            if ($tanggalMulai == $today) {
-                return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Anda tidak dapat memperbarui jadwal pada tanggal hari ini.'), Response::HTTP_BAD_REQUEST);
-            }
+            // if ($tanggalMulai == $today) {
+            //     return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Anda tidak dapat memperbarui jadwal pada tanggal hari ini.'), Response::HTTP_BAD_REQUEST);
+            // }
 
             // Get admin yang sedang login
             $admin = Auth::user();
