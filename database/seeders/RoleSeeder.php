@@ -47,7 +47,6 @@ class RoleSeeder extends Seeder
 
         $roleSuperAdmin->givePermissionTo([
             // verifikasi
-            'verifikasi1 berkas',
             'view riwayatPerubahan',
             'view riwayatPerizinan',
 

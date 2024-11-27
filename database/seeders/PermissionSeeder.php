@@ -12,7 +12,6 @@ class PermissionSeeder extends Seeder
     {
         $permissions = [
             // Verifikasi
-            'Berkas' => ['verifikasi1 berkas'],
             'Riwayat Perubahan' => ['view riwayatPerubahan'],
             'Riwayat Izin' => ['view riwayatPerizinan'],
 
