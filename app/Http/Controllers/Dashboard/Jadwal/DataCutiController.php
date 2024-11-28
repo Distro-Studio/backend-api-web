@@ -270,7 +270,7 @@ class DataCutiController extends Controller
 
                 // Hitung jumlah hari cuti yang sudah digunakan dalam tahun ini
                 $usedDays = Cuti::where('tipe_cuti_id', $leaveType->id)
-                    // ->where('status_cuti_id', 2)
+                    ->whereNotIn('status_cuti_id', [3, 5])
                     ->where('user_id', $userId)
                     ->whereYear('created_at', Carbon::now('Asia/Jakarta')->year)
                     ->get()
@@ -432,6 +432,7 @@ class DataCutiController extends Controller
             $currentYear = Carbon::now('Asia/Jakarta')->year;
             $cutiRecords = Cuti::where('user_id', $data['user_id'])
                 ->where('tipe_cuti_id', $data['tipe_cuti_id'])
+                ->where('status_cuti_id', 4)
                 ->where(function ($query) use ($currentYear) {
                     $query->whereYear(DB::raw("STR_TO_DATE(tgl_from, '%d-%m-%Y')"), $currentYear);
                 })

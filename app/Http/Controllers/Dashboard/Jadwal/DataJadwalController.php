@@ -659,10 +659,17 @@ class DataJadwalController extends Controller
             if ($cutiConflict) {
                 $cutiFrom = Carbon::createFromFormat('d-m-Y', $cutiConflict->tgl_from)->format('d-m-Y');
                 $cutiTo = Carbon::createFromFormat('d-m-Y', $cutiConflict->tgl_to)->format('d-m-Y');
-                return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Tidak dapat membuat jadwal untuk karyawan '{$user->nama}', karena memiliki cuti pada rentang tanggal {$cutiFrom} hingga {$cutiTo}."), Response::HTTP_BAD_REQUEST);
+                return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Tidak dapat membuat jadwal untuk karyawan '{$user->nama}', karena memiliki cuti pada rentang tanggal {$cutiFrom} hingga {$cutiTo}. cek 1"), Response::HTTP_BAD_REQUEST);
             }
 
-            if ($shiftId == 3) {
+            $shifts_malam = Shift::select('id', 'unit_kerja_id', 'jam_from', 'jam_to')->get();
+            $shiftIdsMalam = $shifts_malam->filter(function ($shift) {
+                $jamFrom = Carbon::parse($shift->jam_from);
+                $jamTo = Carbon::parse($shift->jam_to);
+                return $jamTo->lessThan($jamFrom);
+            })->pluck('id');
+
+            if ($shiftIdsMalam->contains($shiftId)) {
                 $tanggalAkhirShiftMalam = $tanggalMulai->copy()->addDays(2);
 
                 // Cek apakah ada cuti dalam rentang tgl_mulai sampai H+2
@@ -911,7 +918,14 @@ class DataJadwalController extends Controller
                 return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Tidak dapat memperbarui jadwal untuk karyawan '{$user->nama}', karena memiliki cuti pada rentang tanggal {$cutiFrom} hingga {$cutiTo}."), Response::HTTP_BAD_REQUEST);
             }
 
-            if ($shiftId == 3) {
+            $shifts_malam = Shift::select('id', 'unit_kerja_id', 'jam_from', 'jam_to')->get();
+            $shiftIdsMalam = $shifts_malam->filter(function ($shift) {
+                $jamFrom = Carbon::parse($shift->jam_from);
+                $jamTo = Carbon::parse($shift->jam_to);
+                return $jamTo->lessThan($jamFrom);
+            })->pluck('id');
+
+            if ($shiftIdsMalam->contains($shiftId)) {
                 $tanggalAkhirShiftMalam = Carbon::createFromFormat('Y-m-d', $tanggalMulai)->addDays(2);
 
                 $cutiConflict = Cuti::where('user_id', $userId)
