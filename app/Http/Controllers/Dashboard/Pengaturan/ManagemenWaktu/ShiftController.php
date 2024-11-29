@@ -122,6 +122,13 @@ class ShiftController extends Controller
 
         $data = $request->validated();
 
+        $existingShift = Shift::where('nama', $data['nama'])
+            ->where('unit_kerja_id', $data['unit_kerja_id'])
+            ->first();
+        if ($existingShift) {
+            return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Shift dengan nama '{$data['nama']}' untuk unit kerja '{$existingShift->unit_kerjas->nama_unit}' sudah tersedia."), Response::HTTP_BAD_REQUEST);
+        }
+
         $shift = Shift::create($data);
         $successMessage = "Data shift '{$shift->nama}' untuk unit kerja '{$shift->unit_kerjas->nama_unit}' berhasil dibuat.";
         $formattedData = $this->formatData(collect([$shift]))->first();

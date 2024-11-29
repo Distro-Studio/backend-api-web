@@ -133,15 +133,15 @@ class DataPresensiController extends Controller
         // Tentukan limit default
         $limit = $request->input('limit', 10); // Default 10 jika tidak ada atau kosong
 
-        $presensi = Presensi::query()->orderBy('created_at', 'desc');
+        $presensi = Presensi::query()->orderBy('jam_masuk', 'desc');
 
         // Ambil semua filter dari request body
         $filters = $request->all();
 
         // Filter
         if ($request->has('tanggal')) {
-            $tanggal = RandomHelper::convertToDateString($request->tanggal);
-            $presensi->whereDate('created_at', $tanggal);
+            $tanggal = Carbon::createFromFormat('d-m-Y', $request->tanggal, 'Asia/Jakarta')->format('Y-m-d');
+            $presensi->whereDate('jam_masuk', $tanggal);
         } else {
             return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Pilih tanggal terlebih dahulu untuk menampilkan presensi.'), Response::HTTP_BAD_REQUEST);
         }

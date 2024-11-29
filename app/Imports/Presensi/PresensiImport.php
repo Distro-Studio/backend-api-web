@@ -115,28 +115,34 @@ class PresensiImport implements ToModel, WithHeadingRow, WithValidation
         }
 
         if ($jenis_karyawan === 'shift') {
-            $shifts = Shift::where('unit_kerja_id', $unit_kerja->id)->get();
-            if ($shifts->isEmpty()) {
-                throw new \Exception("Shift tidak ditemukan untuk unit kerja: {$row['unit_kerja']}.");
+            if (empty($row['nama_shift'])) {
+                throw new \Exception("Nama shift tidak ditemukan untuk karyawan dengan NIK: " . $row['nomor_induk_karyawan']);
             }
 
-            $shift = $shifts->filter(function ($shift) use ($jam_masuk, $jam_keluar) {
-                $jam_from = Carbon::parse($shift->jam_from);
-                $jam_to = Carbon::parse($shift->jam_to);
-
-                // Cek apakah jam masuk berada dalam toleransi setelah jam_from
-                $isJamMasukValid = $jam_masuk->greaterThanOrEqualTo($jam_from->copy()->subMinutes(30))
-                    && $jam_masuk->lessThanOrEqualTo($jam_to);
-
-                // Cek apakah jam keluar berada dalam toleransi setelah jam_to
-                $isJamKeluarValid = $jam_keluar->greaterThanOrEqualTo($jam_from)
-                    && $jam_keluar->lessThanOrEqualTo($jam_to->copy()->addMinutes(30));
-
-                return $isJamMasukValid && $isJamKeluarValid;
-            })->first();
+            $shift = Shift::where('unit_kerja_id', $unit_kerja->id)
+                ->where('nama', $row['nama_shift'])
+                ->first();
             if (!$shift) {
-                throw new \Exception("Shift tidak ditemukan untuk waktu jam masuk: {$row['jam_masuk']}");
+                throw new \Exception("Shift dengan nama '{$row['nama_shift']}' tidak ditemukan untuk unit kerja: {$row['unit_kerja']}.");
             }
+
+            // $shift = $shifts->filter(function ($shift) use ($jam_masuk, $jam_keluar) {
+            //     $jam_from = Carbon::parse($shift->jam_from);
+            //     $jam_to = Carbon::parse($shift->jam_to);
+
+            //     // Cek apakah jam masuk berada dalam toleransi setelah jam_from
+            //     $isJamMasukValid = $jam_masuk->greaterThanOrEqualTo($jam_from->copy()->subMinutes(30))
+            //         && $jam_masuk->lessThanOrEqualTo($jam_to);
+
+            //     // Cek apakah jam keluar berada dalam toleransi setelah jam_to
+            //     $isJamKeluarValid = $jam_keluar->greaterThanOrEqualTo($jam_from)
+            //         && $jam_keluar->lessThanOrEqualTo($jam_to->copy()->addMinutes(30));
+
+            //     return $isJamMasukValid && $isJamKeluarValid;
+            // })->first();
+            // if (!$shift) {
+            //     throw new \Exception("Shift tidak ditemukan untuk waktu jam masuk: {$row['jam_masuk']}");
+            // }
 
             // Mendapatkan kategori presensi berdasarkan jam masuk dan shift
             $kategori_presensi_id = $this->getKategoriPresensiId($shift, $jam_masuk);
@@ -163,13 +169,17 @@ class PresensiImport implements ToModel, WithHeadingRow, WithValidation
                 ]);
             }
 
+            $jam_masuk_shift = Carbon::parse($tanggal_masuk->format('Y-m-d') . ' ' . $jam_masuk->format('H:i:s'));
+
+            $jam_keluar_shift = Carbon::parse($tanggal_masuk->format('Y-m-d') . ' ' . $jam_keluar->format('H:i:s'));
+
             // Mengembalikan instance dari model Presensi dengan data yang sesuai
             return new Presensi([
                 'user_id' => $data_karyawan->user_id,
                 'data_karyawan_id' => $data_karyawan->id,
                 'jadwal_id' => $jadwal->id,
-                'jam_masuk' => $jam_masuk_full->format('Y-m-d H:i:s'),
-                'jam_keluar' => $jam_keluar_full->format('Y-m-d H:i:s'),
+                'jam_masuk' => $jam_masuk_shift,
+                'jam_keluar' => $jam_keluar_shift,
                 'durasi' => $durasi,
                 'lat' => $lokasi_kantor->lat,
                 'long' => $lokasi_kantor->long,
@@ -205,13 +215,17 @@ class PresensiImport implements ToModel, WithHeadingRow, WithValidation
                 $data_karyawan->update(['status_reward_presensi' => false]);
             }
 
+            $jam_masuk_nonshift = Carbon::parse($tanggal_masuk->format('Y-m-d') . ' ' . $jam_masuk->format('H:i:s'));
+
+            $jam_keluar_nonshift = Carbon::parse($tanggal_masuk->format('Y-m-d') . ' ' . $jam_keluar->format('H:i:s'));
+
             // Mengembalikan instance dari model Presensi dengan data yang sesuai
             return new Presensi([
                 'user_id' => $data_karyawan->user_id,
                 'data_karyawan_id' => $data_karyawan->id,
                 'jadwal_id' => null,
-                'jam_masuk' => $jam_masuk_full->format('Y-m-d H:i:s'),
-                'jam_keluar' => $jam_keluar_full->format('Y-m-d H:i:s'),
+                'jam_masuk' => $jam_masuk_nonshift,
+                'jam_keluar' => $jam_keluar_nonshift,
                 'durasi' => $durasi,
                 'lat' => $lokasi_kantor->lat,
                 'long' => $lokasi_kantor->long,
