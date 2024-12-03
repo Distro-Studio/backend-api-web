@@ -12,7 +12,6 @@ use App\Models\HariLibur;
 use App\Models\DataKaryawan;
 use App\Models\LokasiKantor;
 use Illuminate\Http\Request;
-use App\Helpers\RandomHelper;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -139,11 +138,12 @@ class DataPresensiController extends Controller
         $filters = $request->all();
 
         // Filter
-        if ($request->has('tanggal')) {
-            $tanggal = Carbon::createFromFormat('d-m-Y', $request->tanggal, 'Asia/Jakarta')->format('Y-m-d');
-            $presensi->whereDate('jam_masuk', $tanggal);
+        if ($request->has('tgl_mulai') && $request->has('tgl_selesai')) {
+            $start_date = Carbon::createFromFormat('d-m-Y', $request->input('tgl_mulai'))->format('Y-m-d');
+            $end_date = Carbon::createFromFormat('d-m-Y', $request->input('tgl_selesai'))->format('Y-m-d');
+            $presensi->whereBetween(DB::raw("DATE(jam_masuk)"), [$start_date, $end_date]);
         } else {
-            return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Pilih tanggal terlebih dahulu untuk menampilkan presensi.'), Response::HTTP_BAD_REQUEST);
+            return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Tanggal presensi mulai dan selesai tidak boleh kosong.'), Response::HTTP_BAD_REQUEST);
         }
 
         // Filter
@@ -501,7 +501,6 @@ class DataPresensiController extends Controller
 
         $month = $request->input('month');
         $year = $request->input('year');
-
         if (empty($month) || empty($year)) {
             return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Periode bulan dan tahun tidak boleh kosong.'), Response::HTTP_BAD_REQUEST);
         }

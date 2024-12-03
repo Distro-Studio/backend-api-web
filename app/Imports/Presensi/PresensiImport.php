@@ -3,12 +3,14 @@
 namespace App\Imports\Presensi;
 
 use Carbon\Carbon;
+use App\Models\Cuti;
 use App\Models\User;
 use App\Models\Shift;
 use App\Models\Jadwal;
 use App\Models\NonShift;
 use App\Models\Presensi;
 use App\Models\UnitKerja;
+use App\Models\RiwayatIzin;
 use App\Models\DataKaryawan;
 use App\Models\LokasiKantor;
 use App\Models\KategoriPresensi;
@@ -68,7 +70,6 @@ class PresensiImport implements ToModel, WithHeadingRow, WithValidation
             throw new \Exception("Unit kerja '" . $row['unit_kerja'] . "' tidak ditemukan.");
         }
 
-        // Mendapatkan data lokasi kantor
         $lokasi_kantor = LokasiKantor::first();
         if (!$lokasi_kantor) {
             throw new \Exception("Data lokasi kantor tidak ditemukan.");
@@ -96,9 +97,7 @@ class PresensiImport implements ToModel, WithHeadingRow, WithValidation
             ->whereDate('jam_masuk', $jam_masuk_full)
             ->whereDate('jam_keluar', $jam_keluar_full)
             ->first();
-
         if ($existingPresensi) {
-            // Jika data presensi sudah ada, lakukan update
             $existingPresensi->update([
                 'durasi' => $durasi,
                 'lat' => $lokasi_kantor->lat,
@@ -108,9 +107,35 @@ class PresensiImport implements ToModel, WithHeadingRow, WithValidation
                 'kategori_presensi_id' => $kategori_presensi_id ?? $existingPresensi->kategori_presensi_id,
             ]);
 
+            // Pengecekan izin
+            $izin = $this->cekSebulanIzin($data_karyawan->user_id, $jam_masuk_full, $jam_keluar_full);
+            if ($izin) {
+                $data_karyawan->update(['status_reward_presensi' => false]);
+                return $existingPresensi;
+            }
+
+            // Pengecekan cuti
+            $cekCutiSebulan = $this->cekSebulanCuti($data_karyawan->user_id, $jam_masuk_full, $jam_keluar_full);
+            if ($cekCutiSebulan) {
+                $data_karyawan->update(['status_reward_presensi' => false]);
+                return $existingPresensi;
+            }
+
+            // Pengecekan kategori presensi
             if (($kategori_presensi_id ?? $existingPresensi->kategori_presensi_id) == 2) {
                 $data_karyawan->update(['status_reward_presensi' => false]);
+            } else {
+                // Cek jika tepat waktu
+                if (($kategori_presensi_id ?? $existingPresensi->kategori_presensi_id) == 1) {
+                    $cekKehadiranSebulan = $this->cekSebulanPresensi($data_karyawan->id, $jam_masuk_full, $jam_keluar_full);
+                    if ($cekKehadiranSebulan) {
+                        $data_karyawan->update(['status_reward_presensi' => true]);
+                    } else {
+                        $data_karyawan->update(['status_reward_presensi' => false]);
+                    }
+                }
             }
+
             return $existingPresensi;
         }
 
@@ -126,30 +151,29 @@ class PresensiImport implements ToModel, WithHeadingRow, WithValidation
                 throw new \Exception("Shift dengan nama '{$row['nama_shift']}' tidak ditemukan untuk unit kerja: {$row['unit_kerja']}.");
             }
 
-            // $shift = $shifts->filter(function ($shift) use ($jam_masuk, $jam_keluar) {
-            //     $jam_from = Carbon::parse($shift->jam_from);
-            //     $jam_to = Carbon::parse($shift->jam_to);
-
-            //     // Cek apakah jam masuk berada dalam toleransi setelah jam_from
-            //     $isJamMasukValid = $jam_masuk->greaterThanOrEqualTo($jam_from->copy()->subMinutes(30))
-            //         && $jam_masuk->lessThanOrEqualTo($jam_to);
-
-            //     // Cek apakah jam keluar berada dalam toleransi setelah jam_to
-            //     $isJamKeluarValid = $jam_keluar->greaterThanOrEqualTo($jam_from)
-            //         && $jam_keluar->lessThanOrEqualTo($jam_to->copy()->addMinutes(30));
-
-            //     return $isJamMasukValid && $isJamKeluarValid;
-            // })->first();
-            // if (!$shift) {
-            //     throw new \Exception("Shift tidak ditemukan untuk waktu jam masuk: {$row['jam_masuk']}");
-            // }
-
             // Mendapatkan kategori presensi berdasarkan jam masuk dan shift
             $kategori_presensi_id = $this->getKategoriPresensiId($shift, $jam_masuk);
-
-            // Jika kategori presensi adalah 'Terlambat', perbarui status_reward_presensi
-            if ($kategori_presensi_id == 2) {
+            if ($kategori_presensi_id == 2 || $this->presensiMendahului($shift->jam_to, $jam_keluar)) {
                 $data_karyawan->update(['status_reward_presensi' => false]);
+            }
+
+            $cekIzinSebulan = $this->cekSebulanIzin($data_karyawan->user_id, $jam_masuk_full, $jam_keluar_full);
+            if ($cekIzinSebulan) {
+                $data_karyawan->update(['status_reward_presensi' => false]);
+            }
+
+            $cekCutiSebulan = $this->cekSebulanCuti($data_karyawan->user_id, $jam_masuk_full, $jam_keluar_full);
+            if ($cekCutiSebulan) {
+                $data_karyawan->update(['status_reward_presensi' => false]);
+            } else {
+                if ($kategori_presensi_id == 1) {
+                    $isRewardPresensi = $this->cekSebulanPresensi($data_karyawan->id, $jam_masuk_full, $jam_keluar_full);
+                    if ($isRewardPresensi) {
+                        $data_karyawan->update(['status_reward_presensi' => true]);
+                    } else {
+                        $data_karyawan->update(['status_reward_presensi' => false]);
+                    }
+                }
             }
 
             // Mendapatkan jadwal berdasarkan user, shift, dan tanggal masuk dari excel
@@ -169,17 +193,12 @@ class PresensiImport implements ToModel, WithHeadingRow, WithValidation
                 ]);
             }
 
-            $jam_masuk_shift = Carbon::parse($tanggal_masuk->format('Y-m-d') . ' ' . $jam_masuk->format('H:i:s'));
-
-            $jam_keluar_shift = Carbon::parse($tanggal_masuk->format('Y-m-d') . ' ' . $jam_keluar->format('H:i:s'));
-
-            // Mengembalikan instance dari model Presensi dengan data yang sesuai
             return new Presensi([
                 'user_id' => $data_karyawan->user_id,
                 'data_karyawan_id' => $data_karyawan->id,
                 'jadwal_id' => $jadwal->id,
-                'jam_masuk' => $jam_masuk_shift,
-                'jam_keluar' => $jam_keluar_shift,
+                'jam_masuk' => $jam_masuk_full,
+                'jam_keluar' => $jam_keluar_full,
                 'durasi' => $durasi,
                 'lat' => $lokasi_kantor->lat,
                 'long' => $lokasi_kantor->long,
@@ -188,7 +207,7 @@ class PresensiImport implements ToModel, WithHeadingRow, WithValidation
                 'kategori_presensi_id' => $kategori_presensi_id,
             ]);
         } elseif ($jenis_karyawan === 'non-shift') {
-            $hariNama = $tanggal_masuk->format('l'); // Nama hari dalam Inggris
+            $hariNama = $tanggal_masuk->format('l');
             // dd($hariNama);
 
             $hariNamaIndonesia = [
@@ -209,23 +228,36 @@ class PresensiImport implements ToModel, WithHeadingRow, WithValidation
 
             // Mendapatkan kategori presensi berdasarkan jam masuk dan non-shift
             $kategori_presensi_id = $this->getKategoriPresensiIdNonShift($non_shift, $jam_masuk);
-
-            // Jika kategori presensi adalah 'Terlambat', perbarui status_reward_presensi
-            if ($kategori_presensi_id == 2) {
+            if ($kategori_presensi_id == 2 || $this->presensiMendahului($non_shift->jam_to, $jam_keluar)) {
                 $data_karyawan->update(['status_reward_presensi' => false]);
             }
 
-            $jam_masuk_nonshift = Carbon::parse($tanggal_masuk->format('Y-m-d') . ' ' . $jam_masuk->format('H:i:s'));
+            $cekIzinSebulan = $this->cekSebulanIzin($data_karyawan->user_id, $jam_masuk_full, $jam_keluar_full);
+            if ($cekIzinSebulan) {
+                $data_karyawan->update(['status_reward_presensi' => false]);
+            }
 
-            $jam_keluar_nonshift = Carbon::parse($tanggal_masuk->format('Y-m-d') . ' ' . $jam_keluar->format('H:i:s'));
+            $cekCutiSebulan = $this->cekSebulanCuti($data_karyawan->user_id, $jam_masuk_full, $jam_keluar_full);
+            if ($cekCutiSebulan) {
+                $data_karyawan->update(['status_reward_presensi' => false]);
+            } else {
+                if ($kategori_presensi_id == 1) {
+                    $isRewardPresensi = $this->cekSebulanPresensi($data_karyawan->id, $jam_masuk_full, $jam_keluar_full);
+                    if ($isRewardPresensi) {
+                        $data_karyawan->update(['status_reward_presensi' => true]);
+                    } else {
+                        $data_karyawan->update(['status_reward_presensi' => false]);
+                    }
+                }
+            }
 
             // Mengembalikan instance dari model Presensi dengan data yang sesuai
             return new Presensi([
                 'user_id' => $data_karyawan->user_id,
                 'data_karyawan_id' => $data_karyawan->id,
                 'jadwal_id' => null,
-                'jam_masuk' => $jam_masuk_nonshift,
-                'jam_keluar' => $jam_keluar_nonshift,
+                'jam_masuk' => $jam_masuk_full,
+                'jam_keluar' => $jam_keluar_full,
                 'durasi' => $durasi,
                 'lat' => $lokasi_kantor->lat,
                 'long' => $lokasi_kantor->long,
@@ -234,7 +266,7 @@ class PresensiImport implements ToModel, WithHeadingRow, WithValidation
                 'kategori_presensi_id' => $kategori_presensi_id,
             ]);
         } else {
-            throw new \Exception("Jenis karyawan '{$row['jenis_karyawan']}' tidak dikenal.");
+            throw new \Exception("Jenis karyawan '{$row['jenis_karyawan']}' tidak dikenal. Pastikan yang anda masukkan adalah 'shift' atau 'non-shift'");
         }
     }
 
@@ -258,5 +290,99 @@ class PresensiImport implements ToModel, WithHeadingRow, WithValidation
         }
 
         return $this->KategoriPresensi->where('label', 'Tepat Waktu')->first()->id;
+    }
+
+    private function presensiMendahului($jam_to, $jam_keluar)
+    {
+        $jam_to = Carbon::parse($jam_to);
+        return $jam_keluar->lessThan($jam_to);
+    }
+
+    private function cekSebulanPresensi($data_karyawan_id, $jam_masuk_full, $jam_keluar_full)
+    {
+        $monthMasuk = Carbon::parse($jam_masuk_full, 'Asia/Jakarta')->month;
+        $yearMasuk = Carbon::parse($jam_masuk_full, 'Asia/Jakarta')->year;
+
+        $monthKeluar = Carbon::parse($jam_keluar_full, 'Asia/Jakarta')->month;
+        $yearKeluar = Carbon::parse($jam_keluar_full, 'Asia/Jakarta')->year;
+
+        if ($monthMasuk !== $monthKeluar || $yearMasuk !== $yearKeluar) {
+            $currentMonth = $monthMasuk;
+            $currentYear = $yearMasuk;
+        } else {
+            $currentMonth = $monthMasuk;
+            $currentYear = $yearMasuk;
+        }
+
+        $jumlahHariBulanIni = Carbon::createFromDate($currentYear, $currentMonth, 1)->daysInMonth;
+
+        $presensi = Presensi::where('data_karyawan_id', $data_karyawan_id)
+            ->whereMonth('jam_masuk', $currentMonth)
+            ->whereYear('jam_masuk', $currentYear)
+            ->where('kategori_presensi_id', 1)
+            ->get();
+        if ($presensi->count() == $jumlahHariBulanIni) {
+            return true;
+        }
+
+        return false;
+    }
+
+    private function cekSebulanCuti($user_id, $jam_masuk_full, $jam_keluar_full)
+    {
+        $monthMasuk = Carbon::parse($jam_masuk_full, 'Asia/Jakarta')->month;
+        $yearMasuk = Carbon::parse($jam_masuk_full, 'Asia/Jakarta')->year;
+
+        $monthKeluar = Carbon::parse($jam_keluar_full)->month;
+        $yearKeluar = Carbon::parse($jam_keluar_full)->year;
+
+        if ($monthMasuk !== $monthKeluar || $yearMasuk !== $yearKeluar) {
+            $currentMonth = $monthMasuk;
+            $currentYear = $yearMasuk;
+        } else {
+            $currentMonth = $monthMasuk;
+            $currentYear = $yearMasuk;
+        }
+
+        $startOfMonth = Carbon::createFromDate($currentYear, $currentMonth, 1)->format('Y-m-d');
+        $endOfMonth = Carbon::createFromDate($currentYear, $currentMonth, Carbon::now()->daysInMonth)->format('Y-m-d');
+
+        $cuti = Cuti::where('user_id', $user_id)
+            ->where(function ($query) use ($startOfMonth, $endOfMonth) {
+                $query->whereRaw('STR_TO_DATE(tgl_from, "%d-%m-%Y") BETWEEN ? AND ?', [$startOfMonth, $endOfMonth])
+                    ->orWhereRaw('STR_TO_DATE(tgl_to, "%d-%m-%Y") BETWEEN ? AND ?', [$startOfMonth, $endOfMonth]);
+            })
+            ->where('status_cuti_id', 4)
+            ->whereHas('tipe_cutis', function ($query) {
+                $query->where('cuti_administratif', 0);
+            })
+            ->exists();
+
+        return $cuti;
+    }
+
+    private function cekSebulanIzin($user_id, $jam_masuk_full, $jam_keluar_full)
+    {
+        $monthMasuk = Carbon::parse($jam_masuk_full, 'Asia/Jakarta')->month;
+        $yearMasuk = Carbon::parse($jam_masuk_full, 'Asia/Jakarta')->year;
+
+        $monthKeluar = Carbon::parse($jam_keluar_full, 'Asia/Jakarta')->month;
+        $yearKeluar = Carbon::parse($jam_keluar_full, 'Asia/Jakarta')->year;
+
+        if ($monthMasuk !== $monthKeluar || $yearMasuk !== $yearKeluar) {
+            $currentMonth = $monthMasuk;
+            $currentYear = $yearMasuk;
+        } else {
+            $currentMonth = $monthMasuk;
+            $currentYear = $yearMasuk;
+        }
+
+        $izin = RiwayatIzin::where('user_id', $user_id)
+            ->whereMonth('tgl_izin', $currentMonth)
+            ->whereYear('tgl_izin', $currentYear)
+            ->where('status_izin_id', 2)
+            ->exists();
+
+        return $izin;
     }
 }

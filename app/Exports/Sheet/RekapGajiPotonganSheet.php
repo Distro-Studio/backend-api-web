@@ -35,6 +35,7 @@ class RekapGajiPotonganSheet implements FromCollection, WithHeadings, WithMappin
             ->join('unit_kerjas', 'data_karyawans.unit_kerja_id', '=', 'unit_kerjas.id')
             ->select(
                 'data_karyawans.id as data_karyawan',
+                'data_karyawans.nik as nik',
                 'users.nama as nama_karyawan',
                 'unit_kerjas.nama_unit as unit_kerja',
                 'penggajians.gaji_bruto',
@@ -99,6 +100,7 @@ class RekapGajiPotonganSheet implements FromCollection, WithHeadings, WithMappin
             $data = [
                 'no' => $counter++,
                 'nama_karyawan' => $firstDetail->nama_karyawan,
+                'nik' => $firstDetail->nik,
                 'gaji_bruto' => $firstDetail->gaji_bruto ?? 0,
                 'pph_21' => $firstDetail->pph_21 ?? 0,
                 'total_premi' => $firstDetail->total_premi ?? 0,
@@ -151,6 +153,7 @@ class RekapGajiPotonganSheet implements FromCollection, WithHeadings, WithMappin
                 [
                     'no',
                     'nama_karyawan',
+                    'nik',
                     'gaji_bruto',
                     'pph_21',
                     'total_premi',
@@ -170,6 +173,7 @@ class RekapGajiPotonganSheet implements FromCollection, WithHeadings, WithMappin
         $mappedRow = [
             $row['no'],
             $row['nama_karyawan'],
+            $row['nik'],
             $row['gaji_bruto'],
             $row['pph_21'],
             $row['total_premi'],

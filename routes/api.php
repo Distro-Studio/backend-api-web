@@ -127,6 +127,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::get('/detail-karyawan/{data_karyawan_id}', [DataKaryawanController::class, 'showByDataKaryawanId']);
 
             Route::post('/detail-karyawan-presensi/{data_karyawan_id}', [Karyawan_DetailController::class, 'getDataPresensi']);
+            Route::post('/detail-karyawan-presensi/{data_karyawan_id}/export', [Karyawan_DetailController::class, 'exportDataPresensi']);
             Route::get('/detail-karyawan-jadwal/{data_karyawan_id}', [Karyawan_DetailController::class, 'getDataJadwal']);
             Route::get('/detail-karyawan-rekam-jejak/{data_karyawan_id}', [Karyawan_DetailController::class, 'getDataRekamJejak']);
 
@@ -230,7 +231,6 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
             Route::apiResource('/penggajian', PenggajianController::class);
             Route::post('/publikasi-penggajian', [PenggajianController::class, 'publikasiPenggajian']);
-            
 
             // ! Penyesuaian Gaji ===========>
             Route::post('/get-penyesuaian-gaji', [PenyesuaianGajiController::class, 'index']);
@@ -247,6 +247,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::post('/get-tagihan-potongan', [TagihanPotonganController::class, 'index']);
             Route::get('/tagihan-potongan/export', [TagihanPotonganController::class, 'exportTagihanPotongan']);
             Route::post('/tagihan-potongan/import', [TagihanPotonganController::class, 'importTagihanPotongan']);
+            Route::post('/tagihan-potongan/{id}/pelunasan', [TagihanPotonganController::class, 'pelunasan']);
             Route::apiResource('/tagihan-potongan', TagihanPotonganController::class);
         });
 

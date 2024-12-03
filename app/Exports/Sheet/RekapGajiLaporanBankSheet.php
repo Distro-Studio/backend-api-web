@@ -32,6 +32,7 @@ class RekapGajiLaporanBankSheet implements FromCollection, WithHeadings, WithMap
             ->join('users', 'data_karyawans.user_id', '=', 'users.id')
             ->select(
                 'data_karyawans.id as data_karyawan',
+                'data_karyawans.nik as nik',
                 'data_karyawans.no_rekening as nomor_rekening',
                 'users.nama as nama_karyawan',
                 'penggajians.gaji_bruto',
@@ -51,6 +52,7 @@ class RekapGajiLaporanBankSheet implements FromCollection, WithHeadings, WithMap
             [
                 'no',
                 'nama_karyawan',
+                'nik',
                 'nomor_rekening',
                 'gaji_bruto',
                 'pph_21',
@@ -65,6 +67,7 @@ class RekapGajiLaporanBankSheet implements FromCollection, WithHeadings, WithMap
         return [
             $this->counter++,
             $row->nama_karyawan,
+            $row->nik,
             $row->nomor_rekening,
             $row->gaji_bruto,
             $row->pph_21,

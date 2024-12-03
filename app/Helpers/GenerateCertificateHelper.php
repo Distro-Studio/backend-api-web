@@ -48,7 +48,7 @@ class GenerateCertificateHelper
 				'kategori_berkas_id' => 1,
 				'status_berkas_id' => 2,
 				'path' => $dataupload['path'],
-				'tgl_upload' => now(),
+				'tgl_upload' => now('Asia/Jakarta'),
 				'nama_file' => $dataupload['nama_file'],
 				'ext' => $dataupload['ext'],
 				'size' => $dataupload['size'],

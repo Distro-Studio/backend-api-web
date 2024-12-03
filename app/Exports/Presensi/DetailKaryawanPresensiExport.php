@@ -1,54 +1,43 @@
 <?php
 
-namespace App\Exports\Sheet;
+namespace App\Exports\Presensi;
 
 use Carbon\Carbon;
 use App\Models\NonShift;
 use App\Models\Presensi;
-use App\Helpers\RandomHelper;
 use Illuminate\Support\Facades\DB;
-use Maatwebsite\Excel\Concerns\WithTitle;
 use Maatwebsite\Excel\Concerns\Exportable;
 use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\FromCollection;
 
-class PresensiSheet implements FromCollection, WithHeadings, WithMapping, WithTitle
+class DetailKaryawanPresensiExport implements FromCollection, WithHeadings, WithMapping
 {
     use Exportable;
 
     private $number;
-    private $filter;
-    private $title;
-    private $months;
-    private $year;
+    private $start_date;
+    private $end_date;
+    private $data_karyawan_id;
 
-    public function __construct($filter, $title, $months, $year)
+    public function __construct($start_date, $end_date, $data_karyawan_id)
     {
-        $this->filter = $filter;
-        $this->title = $title;
-        $this->months = $months;
-        $this->year = $year;
-        $this->number = 0; // Reset numbering for each sheet
+        $this->start_date = $start_date;
+        $this->end_date = $end_date;
+        $this->data_karyawan_id = $data_karyawan_id;
     }
 
     public function collection()
     {
-        $query = Presensi::with([
+        return Presensi::with([
             'users',
             'jadwals.shifts',
             'data_karyawans.unit_kerjas',
             'kategori_presensis'
-        ])->whereHas('kategori_presensis', function ($query) {
-            $query->where('label', $this->filter);
-        });
-
-        if (!empty($this->months) && !empty($this->year)) {
-            $query->whereYear('jam_masuk', $this->year)
-                ->whereIn(DB::raw('MONTH(jam_masuk)'), $this->months);
-        }
-
-        return $query->get();
+        ])
+            ->where('data_karyawan_id', $this->data_karyawan_id)
+            ->whereBetween(DB::raw("DATE(jam_masuk)"), [$this->start_date, $this->end_date])
+            ->get();
     }
 
     public function headings(): array
@@ -97,6 +86,7 @@ class PresensiSheet implements FromCollection, WithHeadings, WithMapping, WithTi
             $jamMasukNonShift = $nonShift ? $nonShift->jam_from : 'N/A';
             $jamKeluarNonShift = $nonShift ? $nonShift->jam_to : 'N/A';
         }
+
         return [
             $this->number,
             optional($presensi->users)->nama,
@@ -104,16 +94,16 @@ class PresensiSheet implements FromCollection, WithHeadings, WithMapping, WithTi
             $shift ? $shift->nama : 'N/A',
             $shift && isset($shift->jam_from) ? $shift->jam_from : 'N/A',
             $shift && isset($shift->jam_to) ? $shift->jam_to : 'N/A',
-            optional($presensi->jadwals)->tgl_mulai ? RandomHelper::convertToDateString($presensi->jadwals->tgl_mulai) : 'N/A',
-            optional($presensi->jadwals)->tgl_selesai ? RandomHelper::convertToDateString($presensi->jadwals->tgl_selesai) : 'N/A',
+            optional($presensi->jadwals)->tgl_mulai ? $this->convertToDateString($presensi->jadwals->tgl_mulai) : 'N/A',
+            optional($presensi->jadwals)->tgl_selesai ? $this->convertToDateString($presensi->jadwals->tgl_selesai) : 'N/A',
             $jamMasukNonShift,
             $jamKeluarNonShift,
             $unitKerja,
-            $presensi->jam_masuk ? RandomHelper::convertToDateTimeString($presensi->jam_masuk) : 'N/A',
-            $presensi->jam_keluar ? RandomHelper::convertToDateTimeString($presensi->jam_keluar) : 'N/A',
+            $presensi->jam_masuk ? $this->convertToDateTimeString($presensi->jam_masuk) : 'N/A',
+            $presensi->jam_keluar ? $this->convertToDateTimeString($presensi->jam_keluar) : 'N/A',
             $this->formatDuration($presensi->durasi),
-            $presensi->lat,
-            $presensi->long,
+            $presensi->lat ? $presensi->lat : 'N/A',
+            $presensi->long ? $presensi->long : 'N/A',
             $presensi->latkeluar,
             $presensi->longkeluar,
             optional($presensi->kategori_presensis)->label,
@@ -122,15 +112,20 @@ class PresensiSheet implements FromCollection, WithHeadings, WithMapping, WithTi
         ];
     }
 
+    private function convertToDateTimeString($date)
+    {
+        return $date ? Carbon::parse($date)->format('d-m-Y H:i:s') : null;
+    }
+
+    private function convertToDateString($date)
+    {
+        return $date ? Carbon::parse($date)->format('d-m-Y') : null;
+    }
+
     private function formatDuration($seconds)
     {
         $hours = floor($seconds / 3600);
         $minutes = floor(($seconds % 3600) / 60);
         return sprintf("%d jam %d menit", $hours, $minutes);
-    }
-
-    public function title(): string
-    {
-        return $this->title;
     }
 }

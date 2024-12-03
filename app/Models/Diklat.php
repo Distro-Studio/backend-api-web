@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -105,5 +106,15 @@ class Diklat extends Model
     public function certificate_diklats(): BelongsTo
     {
         return $this->belongsTo(User::class, 'certificate_verified_by', 'id');
+    }
+
+    /**
+     * Get the internal_diklat_templates associated with the Diklat
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasOne
+     */
+    public function internal_diklat_templates(): HasOne
+    {
+        return $this->hasOne(TemplateCertificate::class, 'diklat_id', 'id');
     }
 }

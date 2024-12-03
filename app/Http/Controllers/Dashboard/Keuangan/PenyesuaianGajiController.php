@@ -540,7 +540,6 @@ class PenyesuaianGajiController extends Controller
       ->whereMonth('periode', $currentMonth)
       ->whereYear('periode', $currentYear)
       ->first();
-
     if (!$riwayatPenggajian) {
       return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Riwayat penggajian tidak ditemukan untuk periode bulan dan tahun saat ini.'), Response::HTTP_NOT_FOUND);
     }

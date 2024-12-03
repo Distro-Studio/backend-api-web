@@ -6,6 +6,7 @@ use App\Models\UnitKerja;
 use Maatwebsite\Excel\Concerns\Exportable;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithMultipleSheets;
+use App\Exports\Sheet\RekapGajiPenerimaanAllUnitsSheet;
 use App\Exports\Keuangan\LaporanPenggajian\Sheet\RekapGajiPenerimaanSheet;
 use App\Exports\Sheet\RekapGajiPenerimaanSheet as SheetRekapGajiPenerimaanSheet;
 
@@ -30,6 +31,8 @@ class RekapGajiPenerimaanExport implements FromCollection, WithMultipleSheets
     public function sheets(): array
     {
         $sheets = [];
+
+        $sheets[] = new RekapGajiPenerimaanAllUnitsSheet($this->months, $this->years);
 
         foreach ($this->years as $year) {
             foreach ($this->months as $month) {

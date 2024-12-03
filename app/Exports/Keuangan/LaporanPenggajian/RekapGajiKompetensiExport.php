@@ -46,6 +46,14 @@ class RekapGajiKompetensiExport implements FromCollection, WithMultipleSheets
                     })
                     ->get();
 
+                // Gabungkan kompetensi medis dan non-medis
+                $gabunganKompetensi = $kompetensiMedis->merge($kompetensiNonMedis);
+
+                // gabungan kompetensi
+                if ($gabunganKompetensi->isNotEmpty()) {
+                    $sheets[] = new RekapGajiKompetensiSheet('Medis dan Non-Medis', $gabunganKompetensi, $month, $year);
+                }
+
                 // Add Medis sheet
                 if ($kompetensiMedis->isNotEmpty()) {
                     $sheets[] = new RekapGajiKompetensiSheet('Medis', $kompetensiMedis, $month, $year);

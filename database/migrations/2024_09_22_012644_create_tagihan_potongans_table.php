@@ -23,6 +23,7 @@ return new class extends Migration
             $table->integer('sisa_tagihan')->nullable();
             $table->string('bulan_mulai')->nullable();
             $table->string('bulan_selesai')->nullable();
+            $table->foreignId('is_pelunasan')->nullable()->constrained('users');
             $table->timestamps();
         });
     }

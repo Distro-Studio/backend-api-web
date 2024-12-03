@@ -399,9 +399,9 @@ class DataTransferKaryawanController extends Controller
                 'tgl_mulai' => RandomHelper::convertToDateTimeString($tgl_mulai),
             ];
 
-            if ($request->has('beri_tahu_manajer_direktur') && $request->beri_tahu_manajer_direktur == 1) {
-                TransferEmailJob::dispatch('manager@example.com', ['direktur@example.com'], $details);
-            }
+            // if ($request->has('beri_tahu_manajer_direktur') && $request->beri_tahu_manajer_direktur == 1) {
+            //     TransferEmailJob::dispatch('manager@example.com', ['direktur@example.com'], $details);
+            // }
             if ($request->has('beri_tahu_karyawan') && $request->beri_tahu_karyawan == 1) {
                 TransferEmailJob::dispatch($users->data_karyawans->email, [], $details);
             }

@@ -2,6 +2,8 @@
 
 namespace App\Console\Commands;
 
+use Carbon\Carbon;
+use App\Models\Cuti;
 use App\Models\DataKaryawan;
 use App\Models\RewardbulanLalu;
 use Illuminate\Console\Command;
@@ -31,7 +33,6 @@ class UpdateAndResetReward extends Command
     {
         try {
             DB::transaction(function () {
-                // Ambil daftar data_karyawan_id yang memenuhi kriteria
                 $data_karyawan_ids = DataKaryawan::where('id', '!=', 1)
                     ->whereHas('users', function ($query) {
                         $query->where('status_aktif', 2);
@@ -58,10 +59,16 @@ class UpdateAndResetReward extends Command
                     }
                 }
 
-                // Step 2: Reset kolom status_reward_presensi pada tabel data_karyawans menjadi true
+                // Step 2: Ambil id dari karyawan dengan cuti aktif pada bulan ini
+                $karyawanDenganCutiIds = $this->getKaryawanDenganCuti();
+
+                // Step 3: Update `status_reward_presensi` menjadi true, kecuali untuk karyawan dengan cuti
                 DB::table('data_karyawans')
                     ->whereIn('id', $data_karyawan_ids)
+                    ->whereNotIn('id', $karyawanDenganCutiIds)
                     ->update(['status_reward_presensi' => true]);
+
+                Log::info('Update status_reward_presensi berhasil untuk karyawan: ' . implode(', ', $data_karyawan_ids));
             });
 
             $this->info('Status reward telah di-reset dan diperiksa.');
@@ -70,5 +77,25 @@ class UpdateAndResetReward extends Command
             Log::error('Terjadi kesalahan saat melakukan reset dan cek reward: ' . $e->getMessage());
             $this->error('Terjadi kesalahan. Proses dibatalkan.');
         }
+    }
+
+    private function getKaryawanDenganCuti(): array
+    {
+        $currentMonth = Carbon::now('Asia/Jakarta')->month;
+        $currentYear = Carbon::now('Asia/Jakarta')->year;
+        $startOfMonth = Carbon::createFromDate($currentYear, $currentMonth, 1)->format('Y-m-d');
+        $endOfMonth = Carbon::createFromDate($currentYear, $currentMonth, Carbon::now()->daysInMonth)->format('Y-m-d');
+
+        $karyawanDenganCutiUserIds = Cuti::where('status_cuti_id', 4)
+            ->where(function ($query) use ($startOfMonth, $endOfMonth) {
+                $query->whereRaw('STR_TO_DATE(tgl_from, "%d-%m-%Y") <= ?', [$endOfMonth])
+                    ->whereRaw('STR_TO_DATE(tgl_to, "%d-%m-%Y") >= ?', [$startOfMonth]);
+            })
+            ->pluck('user_id')
+            ->toArray();
+
+        return DataKaryawan::whereIn('user_id', $karyawanDenganCutiUserIds)
+            ->pluck('id')
+            ->toArray();
     }
 }

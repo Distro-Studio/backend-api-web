@@ -11,12 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('kompetensis', function (Blueprint $table) {
+        Schema::create('template_certificates', function (Blueprint $table) {
             $table->id();
-            $table->string('nama_kompetensi');
-            $table->boolean('jenis_kompetensi'); // 1 = Medis 2 = Non Medis
-            $table->integer('nilai_bor');
-            $table->softDeletes();
+            $table->string('sertfikat_id')->unique(); // cek duplikat ndak, nek ndak buat random aja
+            $table->foreignId('diklat_id')->constrained('diklats');
+            $table->foreignId('submitted_by')->constrained('users');
+            $table->text('konten');
             $table->timestamps();
         });
     }
@@ -26,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('kompetensis');
+        Schema::dropIfExists('template_certificates');
     }
 };

@@ -19,6 +19,7 @@ use App\Http\Requests\StoreTagihanPotonganRequest;
 use App\Http\Requests\UpdateTagihanPotonganRequest;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
 use App\Http\Requests\Excel_Import\ImportTagihanPotonganRequest;
+use Illuminate\Support\Facades\Auth;
 
 class TagihanPotonganController extends Controller
 {
@@ -251,6 +252,31 @@ class TagihanPotonganController extends Controller
 
         $bulan_mulai = Carbon::createFromFormat('d-m-Y', $tagihanPotongan->bulan_mulai)->locale('id')->isoFormat('MMMM YYYY');
         return response()->json(new WithoutDataResource(Response::HTTP_OK, "Data tagihan potongan kategori '{$tagihanPotongan->tagihan_kategoris->label}' periode '{$bulan_mulai}' berhasil diperbaharui."), Response::HTTP_OK);
+    }
+
+    public function pelunasan($id)
+    {
+        if (!Gate::allows('edit penggajianKaryawan')) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
+
+        $tagihanPotongan = TagihanPotongan::find($id);
+        if (!$tagihanPotongan) {
+            return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Tagihan potongan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+        }
+
+        $tagihanPotongan->update([
+            'status_tagihan_id' => 3,
+            'sisa_tenor' => null,
+            'sisa_tagihan' => null,
+            'is_pelunasan' => Auth::id(),
+            'updated_at' => Carbon::now('Asia/Jakarta')
+        ]);
+
+        $response_karyawan = $tagihanPotongan->tagihan_karyawans->users->nama;
+        $response_bulan_mulai = Carbon::createFromFormat('d-m-Y', $tagihanPotongan->bulan_mulai)->locale('id')->isoFormat('MMMM YYYY');
+        $response_bulan_selesai = Carbon::createFromFormat('d-m-Y', $tagihanPotongan->bulan_selesai)->locale('id')->isoFormat('MMMM YYYY');
+        return response()->json(new WithoutDataResource(Response::HTTP_OK, "Tagihan potongan '{$tagihanPotongan->tagihan_kategoris->label}' dari karyawan '{$response_karyawan}' berhasil dilunasi untuk preiode '{$response_bulan_mulai}' - '{$response_bulan_selesai}'."), Response::HTTP_OK);
     }
 
     public function downloadTagihanPotonganTemplate()

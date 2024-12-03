@@ -42,7 +42,7 @@ class Kernel extends ConsoleKernel
         // Update & reset reward presensi
         $schedule->command('app:update-and-reset-reward-presensi')
             ->timezone('Asia/Jakarta')
-            ->monthlyOn(Carbon::now()->endOfMonth()->day, '00:00');
+            ->monthlyOn(Carbon::now('Asia/Jakarta')->endOfMonth()->day, '00:00');
 
         // Reset masa diklat
         $schedule->command('app:reset-masa-diklat')

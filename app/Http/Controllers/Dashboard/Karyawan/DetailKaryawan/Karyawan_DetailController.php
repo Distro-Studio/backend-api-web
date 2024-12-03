@@ -13,31 +13,33 @@ use App\Models\Penilaian;
 use App\Models\TrackRecord;
 use App\Models\TukarJadwal;
 use App\Models\DataKaryawan;
+use Illuminate\Http\Request;
 use App\Models\PesertaDiklat;
 use Illuminate\Http\Response;
 use App\Models\RiwayatPerubahan;
 use App\Models\TransferKaryawan;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Gate;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\Presensi\DetailKaryawanPresensiExport;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
 
 class Karyawan_DetailController extends Controller
 {
-    public function getDataPresensi($data_karyawan_id)
+    public function getDataPresensi(Request $request, $data_karyawan_id)
     {
         try {
             if (!Gate::allows('view dataKaryawan')) {
                 return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
             }
 
-            $month = request()->input('month');
-            $year = request()->input('year');
-            if (!is_numeric($month) || $month < 1 || $month > 12 || !is_numeric($year) || strlen($year) != 4) {
-                return response()->json([
-                    'status' => Response::HTTP_BAD_REQUEST,
-                    'message' => 'Format bulan berupa angka 1-12 dan tahun berupa angka dengan format yyyy.',
-                ], Response::HTTP_BAD_REQUEST);
+            if ($request->has('tgl_mulai') && $request->has('tgl_selesai')) {
+                $start_date = Carbon::createFromFormat('d-m-Y', $request->input('tgl_mulai'))->format('Y-m-d');
+                $end_date = Carbon::createFromFormat('d-m-Y', $request->input('tgl_selesai'))->format('Y-m-d');
+            } else {
+                return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Tanggal presensi mulai dan selesai tidak boleh kosong.'), Response::HTTP_BAD_REQUEST);
             }
 
             $dataPresensi = Presensi::with([
@@ -62,8 +64,7 @@ class Karyawan_DetailController extends Controller
                 'kategori_presensis'
             ])
                 ->where('data_karyawan_id', $data_karyawan_id)
-                ->whereYear('created_at', $year)
-                ->whereMonth('created_at', $month)
+                ->whereBetween(DB::raw("DATE(jam_masuk)"), [$start_date, $end_date])
                 ->orderBy('created_at', 'desc')
                 ->get();
             $formattedData = $listPresensi->map(function ($presensi) {
@@ -71,12 +72,12 @@ class Karyawan_DetailController extends Controller
                     'id' => $presensi->id,
                     'user' => $presensi->users,
                     'unit_kerja' => $presensi->data_karyawans->unit_kerjas,
-                    'jadwal' => [
-                        'id' => $presensi->jadwals->id ?? null,
-                        'tgl_mulai' => $presensi->jadwals->tgl_mulai ?? null,
-                        'tgl_selesai' => $presensi->jadwals->tgl_selesai ?? null,
-                        'shift' => $presensi->jadwals->shifts ?? null,
-                    ],
+                    'jadwal' => $presensi->jadwals ? [
+                        'id' => $presensi->jadwals->id,
+                        'tgl_mulai' => $presensi->jadwals->tgl_mulai,
+                        'tgl_selesai' => $presensi->jadwals->tgl_selesai,
+                        'shift' => $presensi->jadwals->shifts,
+                    ] : null,
                     'jam_masuk' => $presensi->jam_masuk,
                     'jam_keluar' => $presensi->jam_keluar,
                     'durasi' => $presensi->durasi,
@@ -99,99 +100,52 @@ class Karyawan_DetailController extends Controller
             Log::error('| Karyawan | - Error function getDataPresensi: ' . $e->getMessage());
             return response()->json([
                 'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
-                'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti. Error: ' . $e->getMessage(),
+                'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 
-    // public function getDataJadwal($data_karyawan_id)
-    // {
-    //     try {
-    //         if (!Gate::allows('view dataKaryawan')) {
-    //             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
-    //         }
+    public function exportDataPresensi(Request $request, $data_karyawan_id)
+    {
+        try {
+            if (!Gate::allows('view dataKaryawan')) {
+                return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+            }
 
-    //         $karyawan = DataKaryawan::with(['users.jadwals.shifts', 'unit_kerjas'])
-    //             ->where('id', '!=', 1)
-    //             ->find($data_karyawan_id);
-    //         if (!$karyawan) {
-    //             return response()->json([
-    //                 'status' => Response::HTTP_NOT_FOUND,
-    //                 'message' => 'Data karyawan tidak ditemukan.'
-    //             ], Response::HTTP_NOT_FOUND);
-    //         }
+            if ($request->has('tgl_mulai') && $request->has('tgl_selesai')) {
+                $start_date = Carbon::createFromFormat('d-m-Y', $request->input('tgl_mulai'))->format('Y-m-d');
+                $end_date = Carbon::createFromFormat('d-m-Y', $request->input('tgl_selesai'))->format('Y-m-d');
+            } else {
+                return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Tanggal presensi mulai dan selesai tidak boleh kosong.'), Response::HTTP_BAD_REQUEST);
+            }
 
-    //         $user = $karyawan->users;
-    //         if (!$user) {
-    //             return response()->json([
-    //                 'status' => Response::HTTP_NOT_FOUND,
-    //                 'message' => 'Data akun karyawan tidak ditemukan.'
-    //             ], Response::HTTP_NOT_FOUND);
-    //         }
+            $listPresensi = Presensi::with([
+                'users',
+                'jadwals.shifts',
+                'data_karyawans.unit_kerjas',
+                'kategori_presensis'
+            ])
+                ->where('data_karyawan_id', $data_karyawan_id)
+                ->whereBetween(DB::raw("DATE(jam_masuk)"), [$start_date, $end_date])
+                ->orderBy('created_at', 'desc')
+                ->get();
+            if ($listPresensi->isEmpty()) {
+                return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Tidak ada data presensi karyawan yang tersedia untuk diekspor.'), Response::HTTP_NOT_FOUND);
+            }
 
-    //         // Tampilkan jadwal dalam 1 minggu
-    //         $startOfWeek = Carbon::now('Asia/Jakarta')->startOfWeek(Carbon::MONDAY)->startOfDay();
-    //         $endOfWeek = Carbon::now('Asia/Jakarta')->endOfWeek(Carbon::SUNDAY)->endOfDay();
-
-    //         // Format data jadwal
-    //         $user_schedule_array = [];
-    //         foreach ($user->jadwals as $schedule) {
-    //             $current_date = Carbon::parse($schedule->tgl_mulai);
-    //             $end_date = Carbon::parse($schedule->tgl_selesai);
-    //             while ($current_date->lte($end_date)) {
-    //                 if ($current_date->between($startOfWeek, $endOfWeek)) {
-    //                     $user_schedule_array[] = [
-    //                         'id' => $schedule->id,
-    //                         'tgl_mulai' => $current_date->format('d-m-Y'),
-    //                         'tgl_selesai' => $end_date->format('d-m-Y'),
-    //                         'shift' => $schedule->shifts,
-    //                         'created_at' => $schedule->created_at,
-    //                         'updated_at' => $schedule->updated_at
-    //                     ];
-    //                 }
-    //                 $current_date->addDay();
-    //             }
-    //         }
-
-    //         if (empty($user_schedule_array)) {
-    //             return response()->json([
-    //                 'status' => Response::HTTP_NOT_FOUND,
-    //                 'message' => 'Jadwal karyawan tidak ditemukan.',
-    //             ], Response::HTTP_NOT_FOUND);
-    //         }
-
-    //         // Format respons
-    //         $formattedData = [
-    //             'id' => $karyawan->id,
-    //             'user' => [
-    //                 'id' => $user->id,
-    //                 'nama' => $user->nama,
-    //                 'username' => $user->username,
-    //                 'email_verified_at' => $user->email_verified_at,
-    //                 'data_karyawan_id' => $user->data_karyawan_id,
-    //                 'foto_profil' => $user->foto_profil,
-    //                 'data_completion_step' => $user->data_completion_step,
-    //                 'status_aktif' => $user->status_aktif,
-    //                 'created_at' => $user->created_at,
-    //                 'updated_at' => $user->updated_at
-    //             ],
-    //             'unit_kerja' => $karyawan->unit_kerjas,
-    //             'list_jadwal' => $user_schedule_array,
-    //         ];
-
-    //         return response()->json([
-    //             'status' => Response::HTTP_OK,
-    //             'message' => "Detail jadwal karyawan '{$user->nama}' berhasil ditampilkan.",
-    //             'data' => $formattedData,
-    //         ], Response::HTTP_OK);
-    //     } catch (\Exception $e) {
-    //         Log::error('| Karyawan | - Error function getDataJadwal: ' . $e->getMessage() . ' | Line: ' . $e->getLine());
-    //         return response()->json([
-    //             'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
-    //             'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
-    //         ], Response::HTTP_INTERNAL_SERVER_ERROR);
-    //     }
-    // }
+            try {
+                return Excel::download(new DetailKaryawanPresensiExport($start_date, $end_date, $data_karyawan_id), 'presensi-detail-karyawan.xls');
+            } catch (\Throwable $e) {
+                return response()->json(new WithoutDataResource(Response::HTTP_INTERNAL_SERVER_ERROR, 'Maaf sepertinya terjadi error. Pesan: ' . $e->getMessage() . $e->getLine()), Response::HTTP_INTERNAL_SERVER_ERROR);
+            }
+        } catch (\Exception $e) {
+            Log::error('| Karyawan | - Error function exportDataPresensi: ' . $e->getMessage());
+            return response()->json([
+                'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
+                'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
 
     public function getDataJadwal($data_karyawan_id)
     {

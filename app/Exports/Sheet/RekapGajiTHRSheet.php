@@ -50,6 +50,7 @@ class RekapGajiTHRSheet implements FromCollection, WithHeadings, WithTitle
                     // 'jumlah_karyawan_gaji' => $riwayatGaji->karyawan_verifikasi,
                     // 'status_riwayat_gaji' => $riwayatGaji->status_gajis->label,
                     'nama_karyawan' => $user->nama,
+                    'nik' => $user->data_karyawans->nik,
                     'gaji_pokok' => $penggajian->gaji_pokok,
                     'total_tunjangan' => $penggajian->total_tunjangan,
                     'reward' => $penggajian->reward ?? 'N/A',

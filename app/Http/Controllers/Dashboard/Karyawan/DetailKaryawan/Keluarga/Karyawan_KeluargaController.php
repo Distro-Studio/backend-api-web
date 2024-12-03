@@ -5,10 +5,12 @@ namespace App\Http\Controllers\Dashboard\Karyawan\DetailKaryawan\Keluarga;
 use Carbon\Carbon;
 use App\Models\User;
 use App\Models\Notifikasi;
+use App\Models\Penggajian;
 use App\Models\DataKaryawan;
 use App\Models\DataKeluarga;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use App\Models\RiwayatPenggajian;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
@@ -115,6 +117,21 @@ class Karyawan_KeluargaController extends Controller
                 ], Response::HTTP_FORBIDDEN);
             }
 
+            // $currentMonth = Carbon::now('Asia/Jakarta')->month;
+            // $currentYear = Carbon::now('Asia/Jakarta')->year;
+            // $penggajianAda = Penggajian::where('data_karyawan_id', $data_karyawan_id)
+            //     ->whereHas('riwayat_penggajians', function ($query) use ($currentMonth, $currentYear) {
+            //         $query->whereMonth('periode', $currentMonth)
+            //             ->whereYear('periode', $currentYear);
+            //     })
+            //     ->exists();
+            // if ($penggajianAda) {
+            //     return response()->json(new WithoutDataResource(
+            //         Response::HTTP_FORBIDDEN,
+            //         'Tidak dapat menyimpan data keluarga karena bulan ini sudah dilaksanakan penggajian. Silahkan create data keluarga sebelum penggajian.'
+            //     ), Response::HTTP_FORBIDDEN);
+            // }
+
             if (!Gate::allows('edit dataKaryawan')) {
                 return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
             }
@@ -168,6 +185,21 @@ class Karyawan_KeluargaController extends Controller
                 ], Response::HTTP_FORBIDDEN);
             }
 
+            // $currentMonth = Carbon::now('Asia/Jakarta')->month;
+            // $currentYear = Carbon::now('Asia/Jakarta')->year;
+            // $penggajianAda = Penggajian::where('data_karyawan_id', $data_karyawan_id)
+            //     ->whereHas('riwayat_penggajians', function ($query) use ($currentMonth, $currentYear) {
+            //         $query->whereMonth('periode', $currentMonth)
+            //             ->whereYear('periode', $currentYear);
+            //     })
+            //     ->exists();
+            // if ($penggajianAda) {
+            //     return response()->json(new WithoutDataResource(
+            //         Response::HTTP_FORBIDDEN,
+            //         'Tidak dapat melakukan perubahan data keluarga karena bulan ini sudah dilaksanakan penggajian. Silahkan update data keluarga sebelum penggajian.'
+            //     ), Response::HTTP_FORBIDDEN);
+            // }
+
             if (!Gate::allows('edit dataKaryawan')) {
                 return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
             }
@@ -198,7 +230,7 @@ class Karyawan_KeluargaController extends Controller
             Log::error('| Karyawan | - Error function updateDataKeluarga: ' . $e->getMessage());
             return response()->json([
                 'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
-                'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
+                'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.' . $e->getMessage(),
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
@@ -209,6 +241,21 @@ class Karyawan_KeluargaController extends Controller
             if (!Gate::allows('edit dataKaryawan')) {
                 return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
             }
+
+            // $currentMonth = Carbon::now('Asia/Jakarta')->month;
+            // $currentYear = Carbon::now('Asia/Jakarta')->year;
+            // $penggajianAda = Penggajian::where('data_karyawan_id', $data_karyawan_id)
+            //     ->whereHas('riwayat_penggajians', function ($query) use ($currentMonth, $currentYear) {
+            //         $query->whereMonth('periode', $currentMonth)
+            //             ->whereYear('periode', $currentYear);
+            //     })
+            //     ->exists();
+            // if ($penggajianAda) {
+            //     return response()->json(new WithoutDataResource(
+            //         Response::HTTP_FORBIDDEN,
+            //         'Tidak dapat melakukan verifikasi data keluarga karena bulan ini sudah dilaksanakan penggajian. Silahkan verifikasi data keluarga sebelum penggajian.'
+            //     ), Response::HTTP_FORBIDDEN);
+            // }
 
             $karyawan = DataKaryawan::find($data_karyawan_id);
             if (!$karyawan) {

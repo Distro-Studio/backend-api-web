@@ -46,6 +46,14 @@ class RekapGajiUnitExport implements FromCollection, WithMultipleSheets
                     })
                     ->get();
 
+                // Gabungkan data shift dan non-shift
+                $gabunganUnits = $shiftUnits->merge($nonShiftUnits);
+
+                // Tambahkan sheet gabungan
+                if ($gabunganUnits->isNotEmpty()) {
+                    $sheets[] = new RekapGajiUnitSheet('Shift dan Non-Shift', $gabunganUnits, $month, $year);
+                }
+
                 // Add Shift sheet
                 if ($shiftUnits->isNotEmpty()) {
                     $sheets[] = new RekapGajiUnitSheet('Shift', $shiftUnits, $month, $year);

@@ -3,6 +3,7 @@
 namespace App\Exports\Keuangan\LaporanPenggajian;
 
 use App\Exports\Keuangan\LaporanPenggajian\Sheet\RekapGajiPotonganSheet;
+use App\Exports\Sheet\RekapGajiAllPotonganSheet;
 use App\Exports\Sheet\RekapGajiPotonganSheet as SheetRekapGajiPotonganSheet;
 use App\Models\UnitKerja;
 use Maatwebsite\Excel\Concerns\Exportable;
@@ -38,6 +39,8 @@ class RekapGajiPotonganExport implements FromCollection, WithMultipleSheets
                     $query->whereMonth('tgl_penggajian', $month)
                         ->whereYear('tgl_penggajian', $year);
                 })->get();
+
+                $sheets[] = new RekapGajiAllPotonganSheet($month, $year);
 
                 foreach ($unitKerjas as $unitKerja) {
                     $sheets[] = new SheetRekapGajiPotonganSheet($unitKerja->id, $month, $year);

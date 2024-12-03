@@ -161,7 +161,7 @@ class CreateGajiJob implements ShouldQueue
                 Log::info("| TAKE HOME PAY | Karyawan ID {$data_karyawan_id} bulan [{$currentMonth}] adalah {$takeHomePay}.");
             } elseif ($currentMonth == 12) {
                 // Desember
-                $pph21Desember = $this->calculatedPPH21ForDecember($dataKaryawan, $totalReward);
+                $pph21Desember = $this->calculatedPPH21ForDecember($dataKaryawan, $totalReward, $penghasilanTHR, $uangMakanSebulan, $penghasilanBruto);
                 $takeHomePayDesember = $penghasilanBrutoTotal - $totalPremi - $pph21Desember;
                 $penggajianData['pph_21'] = $pph21Desember;
                 $penggajianData['take_home_pay'] = $takeHomePayDesember;
@@ -402,6 +402,7 @@ class CreateGajiJob implements ShouldQueue
                 $query->where('sisa_tagihan', '>', 0)
                     ->orWhereNull('sisa_tagihan');
             })
+            ->where('status_tagihan_id', '!=', 3)
             ->get();
 
         // Loop untuk menghitung potongan per bulan dan sisa tagihan
@@ -625,12 +626,12 @@ class CreateGajiJob implements ShouldQueue
         return ceil($pph21Bulanan);
     }
 
-    private function calculatedPPH21ForDecember($dataKaryawan, $reward, $penghasilanTHR, $uangMakanSebulan)
+    private function calculatedPPH21ForDecember($dataKaryawan, $reward, $penghasilanTHR, $uangMakanSebulan, $penghasilanBruto)
     {
         // 1. Hitung bruto dan premi Desember
         $penghasilanBrutoTotalDesember = $this->calculatedPenghasilanBrutoTotal($dataKaryawan, $reward, $penghasilanTHR, $uangMakanSebulan);
-        $totalPremiDesember = $this->calculatedPremi($dataKaryawan->data_karyawan_id, $penghasilanBrutoTotalDesember, $dataKaryawan->gaji_pokok);
-        $totalPotonganTagihanDesember = $this->calculatedTagihanPotongan($dataKaryawan->data_karyawan_id);
+        $totalPremiDesember = $this->calculatedPremi($dataKaryawan->data_karyawan_id, $penghasilanBruto, $penghasilanBrutoTotalDesember, $dataKaryawan->gaji_pokok);
+        $totalPotonganTagihanDesember = $this->calculatedTagihanPotongan($dataKaryawan);
         $totalPotonganTagihan = $totalPotonganTagihanDesember['total_potongan_per_bulan'];
         $currentYear = Carbon::now('Asia/Jakarta')->year;
 

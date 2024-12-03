@@ -3,28 +3,23 @@
 namespace App\Exports\Sheet;
 
 use Carbon\Carbon;
-use App\Models\UnitKerja;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Concerns\WithTitle;
 use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\FromCollection;
 
-class RekapGajiPenerimaanSheet implements FromCollection, WithHeadings, WithMapping, WithTitle
+class RekapGajiPenerimaanAllUnitsSheet implements FromCollection, WithHeadings, WithMapping, WithTitle
 {
-    protected $unit_kerja_id;
-    protected $unit_kerja_nama;
+    protected $months;
+    protected $years;
     protected $periode_sekarang;
-    protected $month;
-    protected $year;
 
-    public function __construct($unit_kerja_id, $month, $year)
+    public function __construct(array $months, array $years)
     {
-        $this->unit_kerja_id = $unit_kerja_id;
-        $this->unit_kerja_nama = UnitKerja::find($unit_kerja_id)->nama_unit;
-        $this->periode_sekarang = Carbon::create($year, $month)->locale('id')->isoFormat('MMMM Y');
-        $this->month = $month;
-        $this->year = $year;
+        $this->months = $months;
+        $this->years = $years;
+        $this->periode_sekarang = Carbon::createFromFormat('Y-m', "{$years[0]}-{$months[0]}")->locale('id')->isoFormat('MMMM Y');
     }
 
     public function collection()
@@ -43,9 +38,8 @@ class RekapGajiPenerimaanSheet implements FromCollection, WithHeadings, WithMapp
                 'penggajians.total_premi as total_premi',
                 'penggajians.take_home_pay as take_home_pay'
             )
-            ->where('data_karyawans.unit_kerja_id', $this->unit_kerja_id)
-            ->whereMonth('penggajians.tgl_penggajian', $this->month)
-            ->whereYear('penggajians.tgl_penggajian', $this->year)
+            ->whereIn(DB::raw('MONTH(penggajians.tgl_penggajian)'), $this->months)
+            ->whereIn(DB::raw('YEAR(penggajians.tgl_penggajian)'), $this->years)
             ->get()
             ->groupBy('data_karyawan');
 
@@ -100,7 +94,7 @@ class RekapGajiPenerimaanSheet implements FromCollection, WithHeadings, WithMapp
     public function headings(): array
     {
         $heading = [
-            ["Unit Kerja: {$this->unit_kerja_nama}"],
+            ['Rekap Penggajian Semua Unit Kerja'],
             ["Periode: {$this->periode_sekarang}"],
             array_merge(
                 [
@@ -155,6 +149,6 @@ class RekapGajiPenerimaanSheet implements FromCollection, WithHeadings, WithMapp
 
     public function title(): string
     {
-        return $this->unit_kerja_nama . ' - ' . $this->periode_sekarang;
+        return 'Rekap Penggajian Semua Unit Kerja ' . $this->periode_sekarang;
     }
 }

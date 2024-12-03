@@ -20,7 +20,8 @@ class TagihanPotongan extends Model
         'besaran' => 'integer',
         'tenor' => 'integer',
         'sisa_tenor' => 'integer',
-        'sisa_tagihan' => 'integer'
+        'sisa_tagihan' => 'integer',
+        'is_pelunasan' => 'integer'
     ];
 
     /**
@@ -51,5 +52,15 @@ class TagihanPotongan extends Model
     public function tagihan_status(): BelongsTo
     {
         return $this->belongsTo(StatusTagihanPotongan::class, 'status_tagihan_id', 'id');
+    }
+
+    /**
+     * Get the user_verifikator that owns the TagihanPotongan
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function user_verifikator(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'is_pelunasan', 'id');
     }
 }

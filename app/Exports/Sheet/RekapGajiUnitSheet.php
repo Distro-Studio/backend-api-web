@@ -3,8 +3,9 @@
 namespace App\Exports\Sheet;
 
 use Carbon\Carbon;
-use App\Models\DataKaryawan;
+use App\Models\Premi;
 use App\Models\Penggajian;
+use App\Models\DataKaryawan;
 use Maatwebsite\Excel\Concerns\WithTitle;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\FromCollection;
@@ -32,6 +33,8 @@ class RekapGajiUnitSheet implements FromCollection, WithHeadings, WithTitle
             return collect([]);
         }
 
+        $premis = Premi::whereNull('deleted_at')->get();
+
         $rows = [];
 
         foreach ($this->unitKerjas as $unitKerja) {
@@ -42,9 +45,6 @@ class RekapGajiUnitSheet implements FromCollection, WithHeadings, WithTitle
                 ->get();
 
             $gajiBruto = $penggajians->sum('gaji_bruto');
-            $jumlahPotongan = $penggajians->sum(function ($penggajian) {
-                return $penggajian->detail_gajis->where('kategori_gaji_id', 3)->sum('besaran');
-            });
 
             $gajiPokok = $penggajians->sum(function ($penggajian) {
                 return $penggajian->detail_gajis->where('nama_detail', 'Gaji Pokok')->sum('besaran');
@@ -97,28 +97,69 @@ class RekapGajiUnitSheet implements FromCollection, WithHeadings, WithTitle
                     ])->sum('besaran');
             });
 
-            // Calculate the total number of employees in this unit
+            // tunjangan, uang lembur, uang makan, bor, reward
+            $tambahan = $tunjanganJabatan + $tunjanganFungsional + $tunjanganKhusus + $tunjanganLainnya + $uangLembur + $uangMakan + $bor + $rewardAbsensi + $tambahanLain;
+
+            // gaji bruto, tambahan
+            $totalPenghasilan = $gajiBruto + $tambahan;
+
+            // potongan
+            $pph21 = $penggajians->sum(function ($penggajian) {
+                return $penggajian->detail_gajis->where('nama_detail', 'PPh21')->sum('besaran');
+            });
+
+            $koperasi = $penggajians->sum(function ($penggajian) {
+                return $penggajian->detail_gajis->where('nama_detail', 'Koperasi')->sum('besaran');
+            });
+
+            $obat = $penggajians->sum(function ($penggajian) {
+                return $penggajian->detail_gajis->where('nama_detail', 'Obat/Perawatan')->sum('besaran');
+            });
+
+            $premiNames = $premis->pluck('nama_premi')->toArray();
+            $potonganLain = $penggajians->sum(function ($penggajian) use ($premiNames) {
+                return $penggajian->detail_gajis->where('kategori_gaji_id', 3)
+                    ->whereNotIn('nama_detail', [
+                        'PPh21',
+                        'Koperasi',
+                        'Obat/Perawatan'
+                    ])
+                    ->whereNotIn('nama_detail', $premiNames)
+                    ->sum('besaran');
+            });
+
+            $jumlahPotongan = $penggajians->sum(function ($penggajian) {
+                return $penggajian->detail_gajis->where('kategori_gaji_id', 3)->sum('besaran');
+            });
+
+            // Calculate total number employees in this unit
             $jumlahKaryawan = Penggajian::whereHas('data_karyawans', function ($query) use ($unitKerja) {
                 $query->where('unit_kerja_id', $unitKerja->id);
             })->distinct('data_karyawan_id')->count('data_karyawan_id');
 
             $totalKaryawanUnitKerja = DataKaryawan::where('unit_kerja_id', $unitKerja->id)->count();
 
+            $premiValues = [];
+            foreach ($premis as $premi) {
+                $besaranPremi = 0;
+                foreach ($penggajians as $penggajian) {
+                    $besaranPremi += $penggajian->detail_gajis->where('nama_detail', $premi->nama_premi)->sum('besaran');
+                }
+                $premiValues[] = $besaranPremi;
+            }
+
             $rows[] = [
                 $unitKerja->nama_unit,
                 $totalKaryawanUnitKerja,
                 $jumlahKaryawan,
-                $gajiPokok,
-                $tunjanganJabatan,
-                $tunjanganFungsional,
-                $tunjanganKhusus,
-                $tunjanganLainnya,
-                $uangLembur,
-                $bor,
-                $rewardAbsensi,
-                $uangMakan,
-                $tambahanLain,
                 $gajiBruto,
+                $tambahan,
+                $totalPenghasilan,
+                $pph21,
+                $koperasi,
+                $obat,
+                ...$premiValues,
+                $potonganLain,
                 $jumlahPotongan
             ];
         }
@@ -128,23 +169,28 @@ class RekapGajiUnitSheet implements FromCollection, WithHeadings, WithTitle
 
     public function headings(): array
     {
-        return [
+        $premis = Premi::whereNull('deleted_at')->get();
+
+        $headers = [
             'Nama Unit',
             'Jumlah Karyawan Unit',
             'Jumlah Karyawan Digaji',
-            'Gaji Pokok',
-            'Tunjangan Jabatan',
-            'Tunjangan Fungsional',
-            'Tunjangan Khusus',
-            'Tunjangan Lainnya',
-            'Uang Lembur',
-            'Reward BOR',
-            'Reward Absensi',
-            'Uang Makan',
-            'Tambahan Lain',
             'Gaji Bruto',
-            'Jumlah Potongan'
+            'Tambahan',
+            'Total Penghasilan',
+            'PPh21',
+            'Pot. Koperasi',
+            'Pot. Obat'
         ];
+
+        foreach ($premis as $premi) {
+            $headers[] = $premi->nama_premi;
+        }
+
+        $headers[] = 'Potongan Lainnya';
+        $headers[] = 'Jumlah Potongan';
+
+        return $headers;
     }
 
     public function title(): string
