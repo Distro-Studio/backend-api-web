@@ -375,7 +375,13 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
             // ! Cuti ===========>
             Route::post('/cuti/restore/{id}', [CutiController::class, 'restore']);
-            Route::apiResource('/cuti', CutiController::class);
+            Route::apiResource('/cuti', CutiController::class)->names([
+                'index'   => 'cuti.indexPengaturan',
+                'store'   => 'cuti.storePengaturan',
+                'show'    => 'cuti.showPengaturan',
+                'update'  => 'cuti.updatePengaturan',
+                'destroy' => 'cuti.destroyPengaturan',
+            ]);
 
             // ! Lokasi Presensi ===========>
             Route::get('/get-lokasi-kantor/{id}', [LokasiKantorController::class, 'getLokasiKantor']);
