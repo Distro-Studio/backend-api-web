@@ -10,7 +10,7 @@ use Maatwebsite\Excel\Concerns\WithTitle;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\FromCollection;
 
-class RekapGajiUnitSheet implements FromCollection, WithHeadings, WithTitle
+class RekapGajiUnitPengurangSheet implements FromCollection, WithHeadings, WithTitle
 {
     protected $sheetType;
     protected $unitKerjas;
@@ -44,65 +44,6 @@ class RekapGajiUnitSheet implements FromCollection, WithHeadings, WithTitle
             })->whereMonth('tgl_penggajian', $this->month)
                 ->whereYear('tgl_penggajian', $this->year)
                 ->get();
-
-            $gajiBruto = $penggajians->sum('gaji_bruto');
-
-            $gajiPokok = $penggajians->sum(function ($penggajian) {
-                return $penggajian->detail_gajis->where('nama_detail', 'Gaji Pokok')->sum('besaran');
-            });
-
-            $tunjanganJabatan = $penggajians->sum(function ($penggajian) {
-                return $penggajian->detail_gajis->where('nama_detail', 'Tunjangan Jabatan')->sum('besaran');
-            });
-
-            $tunjanganFungsional = $penggajians->sum(function ($penggajian) {
-                return $penggajian->detail_gajis->where('nama_detail', 'Tunjangan Fungsional')->sum('besaran');
-            });
-
-            $tunjanganKhusus = $penggajians->sum(function ($penggajian) {
-                return $penggajian->detail_gajis->where('nama_detail', 'Tunjangan Khusus')->sum('besaran');
-            });
-
-            $tunjanganLainnya = $penggajians->sum(function ($penggajian) {
-                return $penggajian->detail_gajis->where('nama_detail', 'Tunjangan Lainnya')->sum('besaran');
-            });
-
-            $uangLembur = $penggajians->sum(function ($penggajian) {
-                return $penggajian->detail_gajis->where('nama_detail', 'Uang Lembur')->sum('besaran');
-            });
-
-            $bor = $penggajians->sum(function ($penggajian) {
-                return $penggajian->detail_gajis->where('nama_detail', 'Reward BOR')->sum('besaran');
-            });
-
-            $rewardAbsensi = $penggajians->sum(function ($penggajian) {
-                return $penggajian->detail_gajis->where('nama_detail', 'Reward Absensi')->sum('besaran');
-            });
-
-            $uangMakan = $penggajians->sum(function ($penggajian) {
-                return $penggajian->detail_gajis->where('nama_detail', 'Uang Makan')->sum('besaran');
-            });
-
-            $tambahanLain = $penggajians->sum(function ($penggajian) {
-                return $penggajian->detail_gajis->where('kategori_gaji_id', 2)
-                    ->whereNotIn('nama_detail', [
-                        'Gaji Pokok',
-                        'Tunjangan Jabatan',
-                        'Tunjangan Fungsional',
-                        'Tunjangan Khusus',
-                        'Tunjangan Lainnya',
-                        'Uang Lembur',
-                        'Uang Makan',
-                        'Reward BOR',
-                        'Reward Absensi'
-                    ])->sum('besaran');
-            });
-
-            // tunjangan, uang lembur, uang makan, bor, reward
-            $tambahan = $tunjanganJabatan + $tunjanganFungsional + $tunjanganKhusus + $tunjanganLainnya + $uangLembur + $uangMakan + $bor + $rewardAbsensi + $tambahanLain;
-
-            // gaji bruto, tambahan
-            $totalPenghasilan = $gajiBruto + $tambahan;
 
             // potongan
             $pph21 = $penggajians->sum(function ($penggajian) {
@@ -155,9 +96,6 @@ class RekapGajiUnitSheet implements FromCollection, WithHeadings, WithTitle
                 $unitKerja->nama_unit,
                 $totalKaryawanUnitKerja,
                 $jumlahKaryawan,
-                $gajiBruto,
-                $tambahan,
-                $totalPenghasilan,
                 $pph21,
                 $koperasi,
                 $obat,
@@ -179,9 +117,6 @@ class RekapGajiUnitSheet implements FromCollection, WithHeadings, WithTitle
             'Nama Unit',
             'Jumlah Karyawan Unit',
             'Jumlah Karyawan Digaji',
-            'Gaji Bruto',
-            'Tambahan',
-            'Total Penghasilan',
             'PPh21',
             'Pot. Koperasi',
             'Pot. Obat'

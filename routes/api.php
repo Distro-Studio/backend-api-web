@@ -115,7 +115,6 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('/download-template-presensi', [DataPresensiController::class, 'downloadPresensiTemplate']);
         Route::get('/download-template-tagihan-potongan', [TagihanPotonganController::class, 'downloadTagihanPotonganTemplate']);
 
-        // TODO: ganti email di create & transfer karyawan
         Route::group(['prefix' => '/karyawan'], function () {
             // ! Data Karyawan ===========>
             Route::post('/get-data-karyawan', [DataKaryawanController::class, 'index']);
