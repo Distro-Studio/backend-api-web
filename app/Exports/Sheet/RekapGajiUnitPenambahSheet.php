@@ -10,7 +10,7 @@ use Maatwebsite\Excel\Concerns\WithTitle;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\FromCollection;
 
-class RekapGajiUnitSheet implements FromCollection, WithHeadings, WithTitle
+class RekapGajiUnitPenambahSheet implements FromCollection, WithHeadings, WithTitle
 {
     protected $sheetType;
     protected $unitKerjas;
@@ -34,8 +34,6 @@ class RekapGajiUnitSheet implements FromCollection, WithHeadings, WithTitle
             return collect([]);
         }
 
-        $premis = Premi::whereNull('deleted_at')->get();
-
         $rows = [];
 
         foreach ($this->unitKerjas as $unitKerja) {
@@ -46,10 +44,6 @@ class RekapGajiUnitSheet implements FromCollection, WithHeadings, WithTitle
                 ->get();
 
             $gajiBruto = $penggajians->sum('gaji_bruto');
-
-            $gajiPokok = $penggajians->sum(function ($penggajian) {
-                return $penggajian->detail_gajis->where('nama_detail', 'Gaji Pokok')->sum('besaran');
-            });
 
             $tunjanganJabatan = $penggajians->sum(function ($penggajian) {
                 return $penggajian->detail_gajis->where('nama_detail', 'Tunjangan Jabatan')->sum('besaran');
@@ -104,50 +98,12 @@ class RekapGajiUnitSheet implements FromCollection, WithHeadings, WithTitle
             // gaji bruto, tambahan
             $totalPenghasilan = $gajiBruto + $tambahan;
 
-            // potongan
-            $pph21 = $penggajians->sum(function ($penggajian) {
-                return $penggajian->detail_gajis->where('nama_detail', 'PPh21')->sum('besaran');
-            });
-
-            $koperasi = $penggajians->sum(function ($penggajian) {
-                return $penggajian->detail_gajis->where('nama_detail', 'Koperasi')->sum('besaran');
-            });
-
-            $obat = $penggajians->sum(function ($penggajian) {
-                return $penggajian->detail_gajis->where('nama_detail', 'Obat/Perawatan')->sum('besaran');
-            });
-
-            $premiNames = $premis->pluck('nama_premi')->toArray();
-            $potonganLain = $penggajians->sum(function ($penggajian) use ($premiNames) {
-                return $penggajian->detail_gajis->where('kategori_gaji_id', 3)
-                    ->whereNotIn('nama_detail', [
-                        'PPh21',
-                        'Koperasi',
-                        'Obat/Perawatan'
-                    ])
-                    ->whereNotIn('nama_detail', $premiNames)
-                    ->sum('besaran');
-            });
-
-            $jumlahPotongan = $penggajians->sum(function ($penggajian) {
-                return $penggajian->detail_gajis->where('kategori_gaji_id', 3)->sum('besaran');
-            });
-
             // Calculate total number employees in this unit
             $jumlahKaryawan = Penggajian::whereHas('data_karyawans', function ($query) use ($unitKerja) {
                 $query->where('unit_kerja_id', $unitKerja->id);
             })->distinct('data_karyawan_id')->count('data_karyawan_id');
 
             $totalKaryawanUnitKerja = DataKaryawan::where('unit_kerja_id', $unitKerja->id)->count();
-
-            $premiValues = [];
-            foreach ($premis as $premi) {
-                $besaranPremi = 0;
-                foreach ($penggajians as $penggajian) {
-                    $besaranPremi += $penggajian->detail_gajis->where('nama_detail', $premi->nama_premi)->sum('besaran');
-                }
-                $premiValues[] = $besaranPremi;
-            }
 
             self::$number++;
             $rows[] = [
@@ -157,13 +113,7 @@ class RekapGajiUnitSheet implements FromCollection, WithHeadings, WithTitle
                 $jumlahKaryawan,
                 $gajiBruto,
                 $tambahan,
-                $totalPenghasilan,
-                $pph21,
-                $koperasi,
-                $obat,
-                ...$premiValues,
-                $potonganLain,
-                $jumlahPotongan
+                $totalPenghasilan
             ];
         }
 
@@ -172,8 +122,6 @@ class RekapGajiUnitSheet implements FromCollection, WithHeadings, WithTitle
 
     public function headings(): array
     {
-        $premis = Premi::whereNull('deleted_at')->get();
-
         $headers = [
             'No',
             'Nama Unit',
@@ -182,17 +130,7 @@ class RekapGajiUnitSheet implements FromCollection, WithHeadings, WithTitle
             'Gaji Bruto',
             'Tambahan',
             'Total Penghasilan',
-            'PPh21',
-            'Pot. Koperasi',
-            'Pot. Obat'
         ];
-
-        foreach ($premis as $premi) {
-            $headers[] = $premi->nama_premi;
-        }
-
-        $headers[] = 'Potongan Lainnya';
-        $headers[] = 'Jumlah Potongan';
 
         return $headers;
     }

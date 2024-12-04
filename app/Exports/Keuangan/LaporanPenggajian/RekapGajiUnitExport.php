@@ -2,6 +2,8 @@
 
 namespace App\Exports\Keuangan\LaporanPenggajian;
 
+use App\Exports\Sheet\RekapGajiUnitPenambahSheet;
+use App\Exports\Sheet\RekapGajiUnitPengurangSheet;
 use App\Models\UnitKerja;
 use App\Exports\Sheet\RekapGajiUnitSheet;
 use Maatwebsite\Excel\Concerns\Exportable;
@@ -32,36 +34,25 @@ class RekapGajiUnitExport implements FromCollection, WithMultipleSheets
 
         foreach ($this->years as $year) {
             foreach ($this->months as $month) {
-                $shiftUnits = UnitKerja::where('jenis_karyawan', 1)
-                    ->whereHas('data_karyawan.penggajians', function ($query) use ($month, $year) {
+                $unitKerjas = UnitKerja::whereHas('data_karyawan.penggajians', function ($query) use ($month, $year) {
                         $query->whereMonth('tgl_penggajian', $month)
                             ->whereYear('tgl_penggajian', $year);
                     })
                     ->get();
-
-                $nonShiftUnits = UnitKerja::where('jenis_karyawan', 0)
-                    ->whereHas('data_karyawan.penggajians', function ($query) use ($month, $year) {
-                        $query->whereMonth('tgl_penggajian', $month)
-                            ->whereYear('tgl_penggajian', $year);
-                    })
-                    ->get();
-
-                // Gabungkan data shift dan non-shift
-                $gabunganUnits = $shiftUnits->merge($nonShiftUnits);
 
                 // Tambahkan sheet gabungan
-                if ($gabunganUnits->isNotEmpty()) {
-                    $sheets[] = new RekapGajiUnitSheet('Shift dan Non-Shift', $gabunganUnits, $month, $year);
+                if ($unitKerjas->isNotEmpty()) {
+                    $sheets[] = new RekapGajiUnitSheet('Rekap Gaji Unit Kerja', $unitKerjas, $month, $year);
                 }
 
                 // Add Shift sheet
-                if ($shiftUnits->isNotEmpty()) {
-                    $sheets[] = new RekapGajiUnitSheet('Shift', $shiftUnits, $month, $year);
+                if ($unitKerjas->isNotEmpty()) {
+                    $sheets[] = new RekapGajiUnitPengurangSheet('Rekap Gaji Unit Kerja Pengurang', $unitKerjas, $month, $year);
                 }
 
                 // Add Non-Shift sheet
-                if ($nonShiftUnits->isNotEmpty()) {
-                    $sheets[] = new RekapGajiUnitSheet('Non-Shift', $nonShiftUnits, $month, $year);
+                if ($unitKerjas->isNotEmpty()) {
+                    $sheets[] = new RekapGajiUnitPenambahSheet('Rekap Gaji Unit Kerja Penambah', $unitKerjas, $month, $year);
                 }
             }
         }
