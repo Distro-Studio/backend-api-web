@@ -52,7 +52,7 @@ class RekapGajiUnitExport implements FromCollection, WithMultipleSheets
 
                 // Add Non-Shift sheet
                 if ($unitKerjas->isNotEmpty()) {
-                    $sheets[] = new RekapGajiUnitPenambahSheet('Rekap Gaji Unit Kerja Penambah', $unitKerjas, $month, $year);
+                    $sheets[] = new RekapGajiUnitPenambahSheet('Rekap Gaji Unit Kerja Penerimaan', $unitKerjas, $month, $year);
                 }
             }
         }

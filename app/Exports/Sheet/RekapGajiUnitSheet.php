@@ -99,10 +99,7 @@ class RekapGajiUnitSheet implements FromCollection, WithHeadings, WithTitle
             });
 
             // tunjangan, uang lembur, uang makan, bor, reward
-            $tambahan = $tunjanganJabatan + $tunjanganFungsional + $tunjanganKhusus + $tunjanganLainnya + $uangLembur + $uangMakan + $bor + $rewardAbsensi + $tambahanLain;
-
-            // gaji bruto, tambahan
-            $totalPenghasilan = $gajiBruto + $tambahan;
+            $totalPenghasilan = $gajiPokok + $tunjanganJabatan + $tunjanganFungsional + $tunjanganKhusus + $tunjanganLainnya + $uangLembur + $uangMakan + $bor + $rewardAbsensi + $tambahanLain;
 
             // potongan
             $pph21 = $penggajians->sum(function ($penggajian) {
@@ -155,8 +152,16 @@ class RekapGajiUnitSheet implements FromCollection, WithHeadings, WithTitle
                 $unitKerja->nama_unit,
                 $totalKaryawanUnitKerja,
                 $jumlahKaryawan,
-                $gajiBruto,
-                $tambahan,
+                $gajiPokok,
+                $tunjanganJabatan,
+                $tunjanganFungsional,
+                $tunjanganKhusus,
+                $tunjanganLainnya,
+                $uangLembur,
+                $uangMakan,
+                $bor,
+                $rewardAbsensi,
+                $tambahanLain,
                 $totalPenghasilan,
                 $pph21,
                 $koperasi,
@@ -179,8 +184,16 @@ class RekapGajiUnitSheet implements FromCollection, WithHeadings, WithTitle
             'Nama Unit',
             'Jumlah Karyawan Unit',
             'Jumlah Karyawan Digaji',
-            'Gaji Bruto',
-            'Tambahan',
+            'Gaji Pokok',
+            'Tunjangan Jabatan',
+            'Tunjangan Fungsional',
+            'Tunjangan Khusus',
+            'Tunjangan Lainnya',
+            'Uang Lembur',
+            'Uang Makan',
+            'Reward BOR',
+            'Reward Absensi',
+            'Tambahan Lainnya',
             'Total Penghasilan',
             'PPh21',
             'Pot. Koperasi',

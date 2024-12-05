@@ -60,6 +60,7 @@ class RekapGajiPotonganSheet implements FromCollection, WithHeadings, WithMappin
             ->where('data_karyawans.unit_kerja_id', $this->unit_kerja_id)
             ->whereMonth('pengurang_gajis.created_at', $this->month)
             ->whereYear('pengurang_gajis.created_at', $this->year)
+            ->whereNull('pengurang_gajis.deleted_at')
             ->get()
             ->groupBy('data_karyawan');
 
@@ -131,6 +132,7 @@ class RekapGajiPotonganSheet implements FromCollection, WithHeadings, WithMappin
         // Add unique headings from pengurang_gajis
         $pengurangHeadings = DB::table('pengurang_gajis')
             ->join('premis', 'pengurang_gajis.premi_id', '=', 'premis.id')
+            ->whereNull('pengurang_gajis.deleted_at')
             ->distinct()
             ->pluck('premis.nama_premi')
             ->map(function ($item) {

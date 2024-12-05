@@ -479,7 +479,7 @@ class DataKaryawanController extends Controller
         return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
       }
 
-      $premi = Premi::all();
+      $premi = Premi::withoutTrashed()->get();
       if ($premi->isEmpty()) {
         return response()->json([
           'status' => Response::HTTP_NOT_FOUND,
@@ -1107,6 +1107,7 @@ class DataKaryawanController extends Controller
         'potongan_gaji' => DB::table('pengurang_gajis')
           ->join('premis', 'pengurang_gajis.premi_id', '=', 'premis.id')
           ->where('pengurang_gajis.data_karyawan_id', $karyawan->id)
+          ->whereNull('pengurang_gajis.deleted_at')
           ->select(
             'premis.id',
             'premis.nama_premi',
@@ -1321,6 +1322,7 @@ class DataKaryawanController extends Controller
         'potongan_gaji' => DB::table('pengurang_gajis')
           ->join('premis', 'pengurang_gajis.premi_id', '=', 'premis.id')
           ->where('pengurang_gajis.data_karyawan_id', $karyawan->id)
+          ->whereNull('pengurang_gajis.deleted_at')
           ->select(
             'premis.id',
             'premis.nama_premi',
