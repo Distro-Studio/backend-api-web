@@ -4,8 +4,10 @@ namespace App\Http\Controllers\Dashboard\Pengaturan\Finance;
 
 use App\Models\Premi;
 use Illuminate\Http\Request;
+use App\Models\PengurangGaji;
 use Illuminate\Http\Response;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Gate;
 use App\Http\Requests\StorePremiRequest;
@@ -104,32 +106,53 @@ class PremiController extends Controller
 
     public function destroy(Premi $premi)
     {
-        if (!Gate::allows('delete premi', $premi)) {
-            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        try {
+            if (!Gate::allows('delete premi', $premi)) {
+                return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+            }
+
+            $pengurangGajis = PengurangGaji::where('premi_id', $premi->id)->get();
+            $jumlahKaryawan = $pengurangGajis->count();
+            if ($jumlahKaryawan > 0) {
+                foreach ($pengurangGajis as $pengurangGaji) {
+                    $pengurangGaji->delete();
+                }
+            }
+
+            $premi->delete();
+
+            $successMessage = "Potongan '{$premi->nama_premi}' berhasil dihapus. Beberapa potongan pada karyawan ({$jumlahKaryawan} karyawan) terkait juga ikut terhapus.";
+            return response()->json(new WithoutDataResource(Response::HTTP_OK, $successMessage), Response::HTTP_OK);
+        } catch (\Exception $e) {
+            Log::error('| Premi | - Error function destroy: ' . $e->getMessage());
+            return response()->json(new WithoutDataResource(Response::HTTP_INTERNAL_SERVER_ERROR, 'Terjadi kesalahan saat menghapus premi. Silakan coba lagi.'), Response::HTTP_INTERNAL_SERVER_ERROR);
         }
-
-        $premi->delete();
-
-        $successMessage = "Data premi '{$premi->nama_premi}' berhasil dihapus.";
-        return response()->json(new WithoutDataResource(Response::HTTP_OK, $successMessage), Response::HTTP_OK);
     }
 
     public function restore($id)
     {
-        $premi = Premi::withTrashed()->find($id);
+        try {
+            $premi = Premi::withTrashed()->find($id);
 
-        if (!Gate::allows('delete premi', $premi)) {
-            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
-        }
+            if (!Gate::allows('delete premi', $premi)) {
+                return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+            }
 
-        $premi->restore();
+            $pengurangGajis = PengurangGaji::withTrashed()->where('premi_id', $premi->id)->get();
+            $jumlahKaryawan = $pengurangGajis->count();
+            if ($jumlahKaryawan > 0) {
+                foreach ($pengurangGajis as $pengurangGaji) {
+                    $pengurangGaji->restore();
+                }
+            }
 
-        if (is_null($premi->deleted_at)) {
-            $successMessage = "Data premi '{$premi->nama_premi}' berhasil dipulihkan.";
+            $premi->restore();
+
+            $successMessage = "Potongan '{$premi->nama_premi}' berhasil dipulihkan. Beberapa potongan pada karyawan terkait ({$jumlahKaryawan} karyawan) juga ikut dipulihkan.";
             return response()->json(new WithoutDataResource(Response::HTTP_OK, $successMessage), Response::HTTP_OK);
-        } else {
-            $successMessage = 'Restore data tidak dapat diproses, Silahkan hubungi admin untuk dilakukan pengecekan ulang.';
-            return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, $successMessage), Response::HTTP_BAD_REQUEST);
+        } catch (\Exception $e) {
+            Log::error('| Premi | - Error function restore: ' . $e->getMessage());
+            return response()->json(new WithoutDataResource(Response::HTTP_INTERNAL_SERVER_ERROR, 'Terjadi kesalahan pada server. Silakan coba lagi nanti.'), Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 

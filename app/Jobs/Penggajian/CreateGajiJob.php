@@ -252,6 +252,7 @@ class CreateGajiJob implements ShouldQueue
             $premis = DB::table('pengurang_gajis')
                 ->join('premis', 'pengurang_gajis.premi_id', '=', 'premis.id')
                 ->where('pengurang_gajis.data_karyawan_id', $data_karyawan_id)
+                ->whereNull('pengurang_gajis.deleted_at')
                 ->select('premis.*')
                 ->get();
 
@@ -305,6 +306,7 @@ class CreateGajiJob implements ShouldQueue
         $premis = DB::table('pengurang_gajis')
             ->join('premis', 'pengurang_gajis.premi_id', '=', 'premis.id')
             ->where('pengurang_gajis.data_karyawan_id', $data_karyawan_id)
+            ->whereNull('pengurang_gajis.deleted_at')
             ->select('premis.*')
             ->get();
 

@@ -82,6 +82,7 @@ class KaryawanResource extends JsonResource
                 'potongan_gaji' => DB::table('pengurang_gajis')
                     ->join('premis', 'pengurang_gajis.premi_id', '=', 'premis.id')
                     ->where('pengurang_gajis.data_karyawan_id', $karyawan->id)
+                    ->whereNull('pengurang_gajis.deleted_at')
                     ->select(
                         'premis.id',
                         'premis.nama_premi',

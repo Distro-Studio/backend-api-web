@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('data_karyawan_id')->constrained('data_karyawans');
             $table->foreignId('premi_id')->constrained('premis');
+            $table->softDeletes();
             $table->timestamps();
         });
     }

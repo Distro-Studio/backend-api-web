@@ -45,6 +45,10 @@ class RekapGajiUnitPenambahSheet implements FromCollection, WithHeadings, WithTi
 
             $gajiBruto = $penggajians->sum('gaji_bruto');
 
+            $gajiPokok = $penggajians->sum(function ($penggajian) {
+                return $penggajian->detail_gajis->where('nama_detail', 'Gaji Pokok')->sum('besaran');
+            });
+
             $tunjanganJabatan = $penggajians->sum(function ($penggajian) {
                 return $penggajian->detail_gajis->where('nama_detail', 'Tunjangan Jabatan')->sum('besaran');
             });
@@ -93,10 +97,7 @@ class RekapGajiUnitPenambahSheet implements FromCollection, WithHeadings, WithTi
             });
 
             // tunjangan, uang lembur, uang makan, bor, reward
-            $tambahan = $tunjanganJabatan + $tunjanganFungsional + $tunjanganKhusus + $tunjanganLainnya + $uangLembur + $uangMakan + $bor + $rewardAbsensi + $tambahanLain;
-
-            // gaji bruto, tambahan
-            $totalPenghasilan = $gajiBruto + $tambahan;
+            $totalPenghasilan = $gajiPokok + $tunjanganJabatan + $tunjanganFungsional + $tunjanganKhusus + $tunjanganLainnya + $uangLembur + $uangMakan + $bor + $rewardAbsensi + $tambahanLain;
 
             // Calculate total number employees in this unit
             $jumlahKaryawan = Penggajian::whereHas('data_karyawans', function ($query) use ($unitKerja) {
@@ -111,8 +112,16 @@ class RekapGajiUnitPenambahSheet implements FromCollection, WithHeadings, WithTi
                 $unitKerja->nama_unit,
                 $totalKaryawanUnitKerja,
                 $jumlahKaryawan,
-                $gajiBruto,
-                $tambahan,
+                $gajiPokok,
+                $tunjanganJabatan,
+                $tunjanganFungsional,
+                $tunjanganKhusus,
+                $tunjanganLainnya,
+                $uangLembur,
+                $uangMakan,
+                $bor,
+                $rewardAbsensi,
+                $tambahanLain,
                 $totalPenghasilan
             ];
         }
@@ -127,8 +136,16 @@ class RekapGajiUnitPenambahSheet implements FromCollection, WithHeadings, WithTi
             'Nama Unit',
             'Jumlah Karyawan Unit',
             'Jumlah Karyawan Digaji',
-            'Gaji Bruto',
-            'Tambahan',
+            'Gaji Pokok',
+            'Tunjangan Jabatan',
+            'Tunjangan Fungsional',
+            'Tunjangan Khusus',
+            'Tunjangan Lainnya',
+            'Uang Lembur',
+            'Uang Makan',
+            'Reward BOR',
+            'Reward Absensi',
+            'Tambahan Lainnya',
             'Total Penghasilan',
         ];
 
