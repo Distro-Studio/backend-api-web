@@ -6,21 +6,20 @@ use Carbon\Carbon;
 use App\Models\DetailGaji;
 use App\Models\Notifikasi;
 use App\Models\Penggajian;
-use App\Models\DataKaryawan;
 use Illuminate\Http\Request;
 use App\Helpers\RandomHelper;
 use Illuminate\Http\Response;
 use App\Models\PenyesuaianGaji;
+use App\Models\TagihanPotongan;
 use App\Helpers\CalculateHelper;
 use App\Helpers\DetailGajiHelper;
 use App\Models\RiwayatPenggajian;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Maatwebsite\Excel\Facades\Excel;
-use App\Jobs\Penggajian\CreateGajiJob;
+use App\Models\KategoriTagihanPotongan;
 use App\Exports\Keuangan\PenyesuaianGajiExport;
 use App\Http\Requests\StorePenyesuaianGajiCustomRequest;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
@@ -556,6 +555,8 @@ class PenyesuaianGajiController extends Controller
     try {
       $penggajians = Penggajian::where('riwayat_penggajian_id', $riwayatPenggajianId)->pluck('id');
 
+      $this->revertTagihan($penggajians);
+
       DetailGaji::whereIn('penggajian_id', $penggajians)->delete();
       PenyesuaianGaji::whereIn('penggajian_id', $penggajians)->delete();
       Penggajian::where('riwayat_penggajian_id', $riwayatPenggajianId)->delete();
@@ -809,5 +810,86 @@ class PenyesuaianGajiController extends Controller
         'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
       ], Response::HTTP_INTERNAL_SERVER_ERROR);
     }
+  }
+
+  private function revertTagihan($penggajian)
+  {
+    try {
+      $penggajianDetailGaji = DetailGaji::whereIn('penggajian_id', $penggajian)
+        ->where('kategori_gaji_id', 3)
+        ->get();
+      if ($penggajianDetailGaji->isEmpty()) {
+        return;
+      }
+
+      $kategoriTagihanLabels = KategoriTagihanPotongan::pluck('label', 'id');
+
+      foreach ($penggajianDetailGaji as $detailGaji) {
+        $kategoriTagihanId = $kategoriTagihanLabels->search($detailGaji->nama_detail);
+
+        if ($kategoriTagihanId) {
+          $Potongans = TagihanPotongan::where('data_karyawan_id', $detailGaji->penggajians->data_karyawan_id)
+            ->where('kategori_tagihan_id', $kategoriTagihanId)
+            ->whereNull('is_pelunasan')
+            ->whereIn('status_tagihan_id', [2, 3])
+            ->get();
+
+          foreach ($Potongans as $tagihanPotongan) {
+            $tenor = $tagihanPotongan->tenor;
+            $sisaTenor = $tagihanPotongan->sisa_tenor;
+
+            // Case 1: Status "Belum Tertagih"
+            if (($tenor - $sisaTenor) === 1) {
+              $this->handleTagihanBelumTertagih($tagihanPotongan, $detailGaji);
+            }
+
+            // Case 2: Status "Terbayar"
+            if (is_null($sisaTenor) && $tenor > 0) {
+              $this->handleTagihanTerbayar($tagihanPotongan, $detailGaji);
+            }
+
+            // Case 3: Status "Tertagih"
+            if ($tenor > 0 && $sisaTenor !== null && ($tenor - $sisaTenor) > 1) {
+              $this->handleTagihanTertagih($tagihanPotongan, $detailGaji);
+            }
+          }
+        }
+      }
+    } catch (\Exception $e) {
+      Log::error('| Gaji | - Error function revertTagihan: ' . $e->getMessage());
+      return response()->json([
+        'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
+        'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
+      ], Response::HTTP_INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  private function handleTagihanBelumTertagih($tagihanPotongan, $detailGaji)
+  {
+    $newSisaTagihan = $tagihanPotongan->sisa_tagihan + $detailGaji->besaran;
+
+    // Jika total sisa_tagihan sama dengan nilai `besaran`, set sisa_tagihan dan sisa_tenor menjadi null
+    if ($newSisaTagihan == $tagihanPotongan->besaran) {
+      $tagihanPotongan->sisa_tagihan = null;
+      $tagihanPotongan->sisa_tenor = null;
+      $tagihanPotongan->status_tagihan_id = 1; // "Belum Tertagih"
+      $tagihanPotongan->save();
+    }
+  }
+
+  private function handleTagihanTerbayar($tagihanPotongan, $detailGaji)
+  {
+    $tagihanPotongan->sisa_tagihan += $detailGaji->besaran;
+    $tagihanPotongan->sisa_tenor = 1;
+    $tagihanPotongan->status_tagihan_id = 2; // "Tertagih"
+    $tagihanPotongan->save();
+  }
+
+  private function handleTagihanTertagih($tagihanPotongan, $detailGaji)
+  {
+    $tagihanPotongan->sisa_tagihan += $detailGaji->besaran;
+    $tagihanPotongan->sisa_tenor += 1;
+    $tagihanPotongan->status_tagihan_id = 2; // "Tertagih"
+    $tagihanPotongan->save();
   }
 }

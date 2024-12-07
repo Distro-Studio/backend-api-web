@@ -161,7 +161,7 @@ class CreateGajiJob implements ShouldQueue
                 Log::info("| TAKE HOME PAY | Karyawan ID {$data_karyawan_id} bulan [{$currentMonth}] adalah {$takeHomePay}.");
             } elseif ($currentMonth == 12) {
                 // Desember
-                $pph21Desember = $this->calculatedPPH21ForDecember($dataKaryawan, $totalReward, $penghasilanTHR, $uangMakanSebulan, $penghasilanBruto);
+                $pph21Desember = $this->calculatedPPH21ForDecember($dataKaryawan, $potonganTagihan['total_potongan_per_bulan'], $penghasilanBrutoTotal, $totalPremi);
                 $takeHomePayDesember = $penghasilanBrutoTotal - $totalPremi - $pph21Desember;
                 $penggajianData['pph_21'] = $pph21Desember;
                 $penggajianData['take_home_pay'] = $takeHomePayDesember;
@@ -628,13 +628,16 @@ class CreateGajiJob implements ShouldQueue
         return ceil($pph21Bulanan);
     }
 
-    private function calculatedPPH21ForDecember($dataKaryawan, $reward, $penghasilanTHR, $uangMakanSebulan, $penghasilanBruto)
+    private function calculatedPPH21ForDecember($dataKaryawan, $potonganTagihan, $penghasilanBrutoTotal, $totalPremis)
     {
         // 1. Hitung bruto dan premi Desember
-        $penghasilanBrutoTotalDesember = $this->calculatedPenghasilanBrutoTotal($dataKaryawan, $reward, $penghasilanTHR, $uangMakanSebulan);
-        $totalPremiDesember = $this->calculatedPremi($dataKaryawan->data_karyawan_id, $penghasilanBruto, $penghasilanBrutoTotalDesember, $dataKaryawan->gaji_pokok);
-        $totalPotonganTagihanDesember = $this->calculatedTagihanPotongan($dataKaryawan);
-        $totalPotonganTagihan = $totalPotonganTagihanDesember['total_potongan_per_bulan'];
+        $penghasilanBrutoTotalDesember = $penghasilanBrutoTotal;
+        $totalPremiDesember = $totalPremis;
+        // $penghasilanBrutoTotalDesember = $this->calculatedPenghasilanBrutoTotal($dataKaryawan, $reward, $penghasilanTHR, $uangMakanSebulan);
+        // $totalPremiDesember = $this->calculatedPremi($dataKaryawan->data_karyawan_id, $penghasilanBruto, $penghasilanBrutoTotalDesember, $dataKaryawan->gaji_pokok);
+        // $totalPotonganTagihanDesember = $this->calculatedTagihanPotongan($dataKaryawan);
+        // $totalPotonganTagihanDesember = $this->calculatedTagihanPotongan($dataKaryawan);
+        $totalPotonganTagihan = $potonganTagihan;
         $currentYear = Carbon::now('Asia/Jakarta')->year;
 
         // 2. Jumlahkan bruto dan premi dari Januari hingga Desember
