@@ -21,8 +21,8 @@ return new class extends Migration
             $table->integer('tenor')->nullable();
             $table->integer('sisa_tenor')->nullable();
             $table->integer('sisa_tagihan')->nullable();
-            $table->string('bulan_mulai')->nullable();
-            $table->string('bulan_selesai')->nullable();
+            $table->string('bulan_mulai')->nullable(); // d-m-Y
+            $table->string('bulan_selesai')->nullable(); // d-m-Y
             $table->foreignId('is_pelunasan')->nullable()->constrained('users');
             $table->timestamps();
         });

@@ -19,6 +19,7 @@ use App\Http\Requests\StoreTagihanPotonganRequest;
 use App\Http\Requests\UpdateTagihanPotonganRequest;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
 use App\Http\Requests\Excel_Import\ImportTagihanPotonganRequest;
+use App\Models\KategoriTagihanPotongan;
 use Illuminate\Support\Facades\Auth;
 
 class TagihanPotonganController extends Controller
@@ -93,6 +94,7 @@ class TagihanPotonganController extends Controller
                 'besaran' => $tagihanPotongan->besaran,
                 'tenor' => $tagihanPotongan->tenor ?? null,
                 'sisa_tagihan' => $tagihanPotongan->sisa_tagihan ?? null,
+                'sisa_tenor' => $tagihanPotongan->sisa_tenor ?? null,
                 'bulan_mulai' => $tagihanPotongan->bulan_mulai ?? null,
                 'bulan_selesai' => $tagihanPotongan->bulan_selesai ?? null,
                 'created_at' => $tagihanPotongan->created_at,
@@ -131,11 +133,29 @@ class TagihanPotonganController extends Controller
         }
 
         foreach ($dataKaryawanIds as $dataKaryawanId) {
+            $existingTagihan = TagihanPotongan::where('data_karyawan_id', $dataKaryawanId)
+                ->where('kategori_tagihan_id', $data['kategori_tagihan_id'])
+                ->where('status_tagihan_id', '!=', 3)
+                ->where(function ($query) use ($bulanMulai, $bulanSelesai) {
+                    $query->where(function ($subQuery) use ($bulanMulai) {
+                        $subQuery->whereRaw('STR_TO_DATE(bulan_mulai, "%d-%m-%Y") <= ?', [$bulanMulai->format('Y-m-d')])
+                            ->whereRaw('STR_TO_DATE(bulan_selesai, "%d-%m-%Y") >= ?', [$bulanMulai->format('Y-m-d')]);
+                    })->orWhere(function ($subQuery) use ($bulanSelesai) {
+                        $subQuery->whereRaw('STR_TO_DATE(bulan_mulai, "%d-%m-%Y") <= ?', [$bulanSelesai->format('Y-m-d')])
+                            ->whereRaw('STR_TO_DATE(bulan_selesai, "%d-%m-%Y") >= ?', [$bulanSelesai->format('Y-m-d')]);
+                    });
+                })
+                ->exists();
+            $namaKaryawan = User::where('data_karyawan_id', $dataKaryawanId)->value('nama');
+            $kategoriTagihan = KategoriTagihanPotongan::where('id', $data['kategori_tagihan_id'])->value('label');
+            if ($existingTagihan) {
+                return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Pembuatan tagihan potongan tidak dapat diproses, karena ada tagihan '{$kategoriTagihan}' yang masih berjalan untuk karyawan '{$namaKaryawan}'."), Response::HTTP_BAD_REQUEST);
+            }
+
             $existingPenggajian = Penggajian::where('data_karyawan_id', $dataKaryawanId)
                 ->whereYear('tgl_penggajian', $bulanMulai->year)
                 ->whereMonth('tgl_penggajian', $bulanMulai->month)
                 ->first();
-
             if ($existingPenggajian) {
                 return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Pembuatan tagihan potongan tidak dapat diproses, karena penggajian sudah dilakukan pada bulan '{$bulanMulai->format('F Y')}'."), Response::HTTP_BAD_REQUEST);
             }
@@ -187,6 +207,7 @@ class TagihanPotonganController extends Controller
             'besaran' => $tagihanPotongan->besaran,
             'tenor' => $tagihanPotongan->tenor ?? null,
             'sisa_tagihan' => $tagihanPotongan->sisa_tagihan ?? null,
+            'sisa_tenor' => $tagihanPotongan->sisa_tenor ?? null,
             'bulan_mulai' => $tagihanPotongan->bulan_mulai ?? null,
             'bulan_selesai' => $tagihanPotongan->bulan_selesai ?? null,
             'created_at' => $tagihanPotongan->created_at,

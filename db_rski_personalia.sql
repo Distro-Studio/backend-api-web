@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Dec 05, 2024 at 02:24 PM
+-- Generation Time: Dec 07, 2024 at 05:42 PM
 -- Server version: 10.4.28-MariaDB
 -- PHP Version: 8.2.4
 
@@ -5592,7 +5592,8 @@ INSERT INTO `personal_access_tokens` (`id`, `tokenable_type`, `tokenable_id`, `n
 (804, 'App\\Models\\User', 1, 'create_token_a9473ea2-d77c-47e2-85c6-1e5f85a3f0b7', '8fd5e64232e08e6d2aa9a5e8ae35b90df85f4c4335a3d8a183fe8e88b4e80e7c', '[\"*\"]', '2024-12-02 07:39:53', NULL, '2024-12-01 06:51:23', '2024-12-02 07:39:53'),
 (805, 'App\\Models\\User', 1, 'create_token_4f0b44c2-aa4a-47f8-8210-2ddda6d4aff0', '83c3dd4eda14568c548b0ccc8bf8138c07dc2fafae13ae35ad8005704dbb4ac0', '[\"*\"]', '2024-12-02 15:09:07', NULL, '2024-12-02 14:42:04', '2024-12-02 15:09:07'),
 (806, 'App\\Models\\User', 1, 'create_token_80bcac37-2aa6-4f2f-a472-5084942955ff', '8b3eab9b919849bf16b5c72b69eff2822958bf82929614e0bd9cc100dc16de1b', '[\"*\"]', '2024-12-04 19:15:24', NULL, '2024-12-04 13:39:30', '2024-12-04 19:15:24'),
-(808, 'App\\Models\\User', 1, 'create_token_652ef635-3a17-4fb7-894a-b6724e2a7699', 'ec61ea8f3d3a7fb4c46f7c8f86b805ce1a423a126c15cf7a18c8c873271b0b22', '[\"*\"]', '2024-12-05 06:23:51', NULL, '2024-12-05 06:01:08', '2024-12-05 06:23:51');
+(808, 'App\\Models\\User', 1, 'create_token_652ef635-3a17-4fb7-894a-b6724e2a7699', 'ec61ea8f3d3a7fb4c46f7c8f86b805ce1a423a126c15cf7a18c8c873271b0b22', '[\"*\"]', '2024-12-05 06:23:51', NULL, '2024-12-05 06:01:08', '2024-12-05 06:23:51'),
+(809, 'App\\Models\\User', 1, 'create_token_88f14dff-869b-4000-8bb6-2119d4829c18', 'efe418698c5b5bbeb1bceb8b6642099f0560d88dbc87cdd525f7f9b3f3c8749e', '[\"*\"]', '2024-12-07 09:42:28', NULL, '2024-12-07 09:41:51', '2024-12-07 09:42:28');
 
 -- --------------------------------------------------------
 
@@ -8314,6 +8315,7 @@ CREATE TABLE `tagihan_potongans` (
   `sisa_tagihan` int(11) DEFAULT NULL,
   `bulan_mulai` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `bulan_selesai` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `is_pelunasan` bigint(20) UNSIGNED DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
@@ -10085,7 +10087,8 @@ ALTER TABLE `tagihan_potongans`
   ADD PRIMARY KEY (`id`),
   ADD KEY `fk_data_karyawan_tagihan_potongans` (`data_karyawan_id`),
   ADD KEY `fk_kategori_tagihan_tagihan_potongans` (`kategori_tagihan_id`),
-  ADD KEY `fk_status_tagihan_tagihan_potongans` (`status_tagihan_id`);
+  ADD KEY `fk_status_tagihan_tagihan_potongans` (`status_tagihan_id`),
+  ADD KEY `fk_is_pelunasan` (`is_pelunasan`);
 
 --
 -- Indexes for table `ters`
@@ -10455,7 +10458,7 @@ ALTER TABLE `permissions`
 -- AUTO_INCREMENT for table `personal_access_tokens`
 --
 ALTER TABLE `personal_access_tokens`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=809;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=810;
 
 --
 -- AUTO_INCREMENT for table `pertanyaans`
@@ -10989,6 +10992,7 @@ ALTER TABLE `shifts`
 --
 ALTER TABLE `tagihan_potongans`
   ADD CONSTRAINT `fk_data_karyawan_tagihan_potongans` FOREIGN KEY (`data_karyawan_id`) REFERENCES `data_karyawans` (`id`),
+  ADD CONSTRAINT `fk_is_pelunasan` FOREIGN KEY (`is_pelunasan`) REFERENCES `users` (`id`) ON DELETE SET NULL,
   ADD CONSTRAINT `fk_kategori_tagihan_tagihan_potongans` FOREIGN KEY (`kategori_tagihan_id`) REFERENCES `kategori_tagihan_potongans` (`id`),
   ADD CONSTRAINT `fk_status_tagihan_tagihan_potongans` FOREIGN KEY (`status_tagihan_id`) REFERENCES `status_tagihan_potongans` (`id`);
 
