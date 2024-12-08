@@ -105,6 +105,7 @@ class RekapGajiPotonganSheet implements FromCollection, WithHeadings, WithMappin
                 'nama_karyawan' => $firstDetail->nama_karyawan,
                 'status_karyawan' => $firstDetail->status_karyawan,
                 'nik' => $firstDetail->nik,
+                'unit_kerja' => $firstDetail->unit_kerja,
                 'gaji_bruto' => $firstDetail->gaji_bruto ?? 0,
                 'pph_21' => $firstDetail->pph_21 ?? 0,
                 'total_premi' => $firstDetail->total_premi ?? 0,
@@ -138,17 +139,17 @@ class RekapGajiPotonganSheet implements FromCollection, WithHeadings, WithMappin
             ->whereNull('pengurang_gajis.deleted_at')
             ->distinct()
             ->pluck('premis.nama_premi')
-            ->map(function ($item) {
-                return 'premi_' . str_replace(' ', '_', strtolower($item));
-            })
+            // ->map(function ($item) {
+            //     return 'premi_' . str_replace(' ', '_', strtolower($item));
+            // })
             ->toArray();
 
         $tagihanHeadings = DB::table('kategori_tagihan_potongans')
             ->distinct()
             ->pluck('label')
-            ->map(function ($item) {
-                return 'tagihan_' . str_replace(' ', '_', strtolower($item));
-            })
+            // ->map(function ($item) {
+            //     return 'tagihan_' . str_replace(' ', '_', strtolower($item));
+            // })
             ->toArray();
 
         $heading = [
@@ -160,6 +161,7 @@ class RekapGajiPotonganSheet implements FromCollection, WithHeadings, WithMappin
                     'nama_karyawan',
                     'status_karyawan',
                     'nik',
+                    'unit_kerja',
                     'gaji_bruto',
                     'pph_21',
                     'total_premi',
@@ -181,6 +183,7 @@ class RekapGajiPotonganSheet implements FromCollection, WithHeadings, WithMappin
             $row['nama_karyawan'],
             $row['status_karyawan'],
             $row['nik'],
+            $row['unit_kerja'],
             $row['gaji_bruto'],
             $row['pph_21'],
             $row['total_premi'],
