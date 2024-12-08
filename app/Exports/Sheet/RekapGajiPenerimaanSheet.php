@@ -34,11 +34,13 @@ class RekapGajiPenerimaanSheet implements FromCollection, WithHeadings, WithMapp
             ->join('data_karyawans', 'penggajians.data_karyawan_id', '=', 'data_karyawans.id')
             ->join('users', 'data_karyawans.user_id', '=', 'users.id')
             ->join('status_karyawans', 'data_karyawans.status_karyawan_id', '=', 'status_karyawans.id')
+            ->join('unit_kerjas', 'data_karyawans.unit_kerja_id', '=', 'unit_kerjas.id')
             ->select(
                 'data_karyawans.id as data_karyawan',
                 'data_karyawans.nik as nik',
                 'users.nama as nama_karyawan',
                 'status_karyawans.label as status_karyawan',
+                'unit_kerjas.nama_unit as unit_kerja',
                 'detail_gajis.nama_detail',
                 'detail_gajis.besaran',
                 'penggajians.gaji_bruto as gaji_bruto',
@@ -79,6 +81,7 @@ class RekapGajiPenerimaanSheet implements FromCollection, WithHeadings, WithMapp
                 'nama_karyawan' => $firstDetail->nama_karyawan,
                 'status_karyawan' => $firstDetail->status_karyawan,
                 'nik' => $firstDetail->nik,
+                'unit_kerja' => $firstDetail->unit_kerja,
                 'gaji_pokok' => $details->where('nama_detail', 'Gaji Pokok')->first()->besaran ?? 0,
                 'tunjangan_jabatan' => $details->where('nama_detail', 'Tunjangan Jabatan')->first()->besaran ?? 0,
                 'tunjangan_fungsional' => $details->where('nama_detail', 'Tunjangan Fungsional')->first()->besaran ?? 0,
@@ -111,6 +114,7 @@ class RekapGajiPenerimaanSheet implements FromCollection, WithHeadings, WithMapp
                     'nama_karyawan',
                     'status_karyawan',
                     'nik',
+                    'unit_kerja',
                     'gaji_pokok',
                     'tunjangan_jabatan',
                     'tunjangan_fungsional',
@@ -140,6 +144,7 @@ class RekapGajiPenerimaanSheet implements FromCollection, WithHeadings, WithMapp
             $row['nama_karyawan'],
             $row['status_karyawan'],
             $row['nik'],
+            $row['unit_kerja'],
             $row['gaji_pokok'],
             $row['tunjangan_jabatan'],
             $row['tunjangan_fungsional'],
