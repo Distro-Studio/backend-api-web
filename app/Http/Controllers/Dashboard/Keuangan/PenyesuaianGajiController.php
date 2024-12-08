@@ -879,6 +879,15 @@ class PenyesuaianGajiController extends Controller
 
   private function handleTagihanTerbayar($tagihanPotongan, $detailGaji)
   {
+    $currentMonth = Carbon::now('Asia/Jakarta')->month;
+    $currentYear = Carbon::now('Asia/Jakarta')->year;
+
+    // Validasi bulan_selesai
+    $bulanSelesai = Carbon::createFromFormat('d-m-Y', $tagihanPotongan->bulan_selesai, 'Asia/Jakarta');
+    if ($bulanSelesai->month != $currentMonth || $bulanSelesai->year != $currentYear) {
+      return;
+    }
+
     $tagihanPotongan->sisa_tagihan += $detailGaji->besaran;
     $tagihanPotongan->sisa_tenor = 1;
     $tagihanPotongan->status_tagihan_id = 2; // "Tertagih"
