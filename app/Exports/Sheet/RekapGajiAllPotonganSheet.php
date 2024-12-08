@@ -32,12 +32,14 @@ class RekapGajiAllPotonganSheet implements FromCollection, WithHeadings, WithMap
         foreach ($unitKerjas as $unitKerja) {
             $penggajianData = DB::table('penggajians')
                 ->join('data_karyawans', 'penggajians.data_karyawan_id', '=', 'data_karyawans.id')
+                ->join('status_karyawans', 'data_karyawans.status_karyawan_id', '=', 'status_karyawans.id')
                 ->join('users', 'data_karyawans.user_id', '=', 'users.id')
                 ->join('unit_kerjas', 'data_karyawans.unit_kerja_id', '=', 'unit_kerjas.id')
                 ->select(
                     'data_karyawans.id as data_karyawan',
                     'data_karyawans.nik as nik',
                     'users.nama as nama_karyawan',
+                    'status_karyawans.label as status_karyawan',
                     'unit_kerjas.nama_unit as unit_kerja',
                     'penggajians.gaji_bruto',
                     'penggajians.pph_21',
@@ -99,6 +101,7 @@ class RekapGajiAllPotonganSheet implements FromCollection, WithHeadings, WithMap
                 $data = [
                     'no' => $counter++,
                     'nama_karyawan' => $firstDetail->nama_karyawan,
+                    'status_karyawan' => $firstDetail->status_karyawan,
                     'nik' => $firstDetail->nik,
                     'gaji_bruto' => $firstDetail->gaji_bruto ?? 0,
                     'pph_21' => $firstDetail->pph_21 ?? 0,
@@ -134,17 +137,17 @@ class RekapGajiAllPotonganSheet implements FromCollection, WithHeadings, WithMap
             ->whereNull('pengurang_gajis.deleted_at')
             ->distinct()
             ->pluck('premis.nama_premi')
-            ->map(function ($item) {
-                return 'premi_' . str_replace(' ', '_', strtolower($item));
-            })
+            // ->map(function ($item) {
+            //     return 'premi_' . str_replace(' ', '_', strtolower($item));
+            // })
             ->toArray();
 
         $tagihanHeadings = DB::table('kategori_tagihan_potongans')
             ->distinct()
             ->pluck('label')
-            ->map(function ($item) {
-                return 'tagihan_' . str_replace(' ', '_', strtolower($item));
-            })
+            // ->map(function ($item) {
+            //     return 'tagihan_' . str_replace(' ', '_', strtolower($item));
+            // })
             ->toArray();
 
         $heading = [
@@ -153,6 +156,7 @@ class RekapGajiAllPotonganSheet implements FromCollection, WithHeadings, WithMap
                 [
                     'no',
                     'nama_karyawan',
+                    'status_karyawan',
                     'nik',
                     'gaji_bruto',
                     'pph_21',
@@ -173,6 +177,7 @@ class RekapGajiAllPotonganSheet implements FromCollection, WithHeadings, WithMap
         $mappedRow = [
             $row['no'],
             $row['nama_karyawan'],
+            $row['status_karyawan'],
             $row['nik'],
             $row['gaji_bruto'],
             $row['pph_21'],
