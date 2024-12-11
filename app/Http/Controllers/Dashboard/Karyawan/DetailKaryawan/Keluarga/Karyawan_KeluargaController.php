@@ -5,12 +5,10 @@ namespace App\Http\Controllers\Dashboard\Karyawan\DetailKaryawan\Keluarga;
 use Carbon\Carbon;
 use App\Models\User;
 use App\Models\Notifikasi;
-use App\Models\Penggajian;
 use App\Models\DataKaryawan;
 use App\Models\DataKeluarga;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use App\Models\RiwayatPenggajian;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
@@ -92,7 +90,10 @@ class Karyawan_KeluargaController extends Controller
                     'status_keluarga' => [
                         'status' => $status_keluarga,
                         'alasan' => $alasanDitolak,
-                        'terakhir_diperbarui' => $keluarga->sortByDesc('updated_at')->first()->updated_at
+                        'terakhir_diperbarui' => $user->status_aktif == 1
+                            ? null
+                            : $keluarga->sortByDesc('updated_at')->first()->updated_at
+                        // 'terakhir_diperbarui' => $keluarga->sortByDesc('updated_at')->first()->updated_at
                     ],
                     'data_keluarga' => $formattedData,
                 ],
