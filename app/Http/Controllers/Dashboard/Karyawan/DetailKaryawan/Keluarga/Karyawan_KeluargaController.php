@@ -93,7 +93,6 @@ class Karyawan_KeluargaController extends Controller
                         'terakhir_diperbarui' => $user->status_aktif == 1
                             ? null
                             : $keluarga->sortByDesc('updated_at')->first()->updated_at
-                        // 'terakhir_diperbarui' => $keluarga->sortByDesc('updated_at')->first()->updated_at
                     ],
                     'data_keluarga' => $formattedData,
                 ],
