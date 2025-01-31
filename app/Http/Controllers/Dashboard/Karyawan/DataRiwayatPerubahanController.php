@@ -511,6 +511,7 @@ class DataRiwayatPerubahanController extends Controller
                             'nama_keluarga' => $update['nama_keluarga'],
                             'hubungan' => $update['hubungan'],
                             'pendidikan_terakhir' => $update['pendidikan_terakhir'],
+                            'tgl_lahir' => $update['tgl_lahir'],
                             'status_hidup' => $update['status_hidup'],
                             'pekerjaan' => $update['pekerjaan'],
                             'no_hp' => $update['no_hp'],

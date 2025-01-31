@@ -14,6 +14,7 @@ use App\Http\Controllers\Dashboard\Karyawan\DetailKaryawan\Berkas\Karyawan_Berka
 use App\Http\Controllers\Dashboard\Karyawan\DetailKaryawan\Karyawan_DetailController;
 use App\Http\Controllers\Dashboard\Karyawan\DetailKaryawan\Keluarga\Karyawan_KeluargaController;
 use App\Http\Controllers\Dashboard\Keuangan\PenggajianController;
+use App\Http\Controllers\Dashboard\Keuangan\PenggajianKemenkeuController;
 use App\Http\Controllers\Dashboard\Keuangan\PenyesuaianGajiController;
 use App\Http\Controllers\Dashboard\Keuangan\TagihanPotonganController;
 use App\Http\Controllers\Dashboard\Keuangan\THRPenggajianController;
@@ -32,6 +33,7 @@ use App\Http\Controllers\Dashboard\Pengaturan\Karyawan\KompetensiController;
 use App\Http\Controllers\Dashboard\Pengaturan\Karyawan\MateriPelatihanController;
 use App\Http\Controllers\Dashboard\Pengaturan\Karyawan\PendidikanTerakhirController;
 use App\Http\Controllers\Dashboard\Pengaturan\Karyawan\PertanyaanController;
+use App\Http\Controllers\Dashboard\Pengaturan\Karyawan\StatusKaryawanController;
 use App\Http\Controllers\Dashboard\Pengaturan\Karyawan\UnitKerjaController;
 use App\Http\Controllers\Dashboard\Pengaturan\ManagemenWaktu\CutiController;
 use App\Http\Controllers\Dashboard\Pengaturan\ManagemenWaktu\HariLiburController;
@@ -218,6 +220,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::post('/penggajian/export-penerimaan-kompetensi', [PenggajianController::class, 'exportRekapPenerimaanGajiKompetensi']);
             Route::post('/penggajian/export-potongan', [PenggajianController::class, 'exportRekapPotonganGaji']);
             Route::post('/penggajian/export-bank', [PenggajianController::class, 'exportLaporanGajiBank']);
+            Route::post('/penggajian/export-kemenkeu', [PenggajianKemenkeuController::class, 'rekapPDFKemenkeu']);
+            Route::post('/penggajian/export-kemenkeu-debug', [PenggajianKemenkeuController::class, 'exportSingleKaryawanPDF']);
             Route::get('/penggajian/detail/{penggajian_id}', [PenggajianController::class, 'showDetailGajiUser']);
 
             // Penyesuaian gaji single
@@ -308,6 +312,10 @@ Route::middleware(['auth:sanctum'])->group(function () {
             // ! Jabatan ===========>
             Route::post('/jabatan/restore/{id}', [JabatanController::class, 'restore']);
             Route::apiResource('/jabatan', JabatanController::class);
+
+            // ! Status Karyawan ===========>
+            Route::post('/status-karyawan/restore/{id}', [StatusKaryawanController::class, 'restore']);
+            Route::apiResource('/status-karyawan', StatusKaryawanController::class);
 
             // ! Materi Pelatihan
             Route::apiResource('/materi-pelatihan', MateriPelatihanController::class);

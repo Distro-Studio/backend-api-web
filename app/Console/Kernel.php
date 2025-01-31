@@ -2,7 +2,10 @@
 
 namespace App\Console;
 
+use App\Console\Commands\DetectChangeEnv;
+use App\Console\Commands\NotificationAnakBPJS;
 use App\Console\Commands\NotificationSIP;
+use App\Console\Commands\NotificationSTR;
 use App\Console\Commands\ResetMasaDiklat;
 use App\Console\Commands\UpdateAndResetReward;
 use App\Console\Commands\UpdateAutoAlfaPresensi;
@@ -16,11 +19,14 @@ use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 class Kernel extends ConsoleKernel
 {
     protected $commands = [
+        DetectChangeEnv::class,
         UpdateDataKaryawanTransfer::class,
         UpdateAutoPublishPenggajian::class,
         UpdateAndResetReward::class,
         ResetMasaDiklat::class,
         NotificationSIP::class,
+        NotificationSTR::class,
+        NotificationAnakBPJS::class,
         UpdateAutoAlfaPresensi::class
     ];
 
@@ -29,6 +35,11 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule): void
     {
+        // Check for changes in .env
+        $schedule->command('app:detect-change-env')
+            ->timezone('Asia/Jakarta')
+            ->dailyAt('23:59');
+
         // Update transfer karyawan
         $schedule->command('app:update-data-karyawan-transfer')
             ->timezone('Asia/Jakarta')
@@ -51,6 +62,16 @@ class Kernel extends ConsoleKernel
 
         // Notification SIP
         $schedule->command('app:notification-warning-sip')
+            ->timezone('Asia/Jakarta')
+            ->dailyAt('01:00');
+
+        // Notification STR
+        $schedule->command('app:notification-warning-str')
+            ->timezone('Asia/Jakarta')
+            ->dailyAt('01:00');
+
+        // Notification Anak BPJS
+        $schedule->command('app:notification-anak-bpjs')
             ->timezone('Asia/Jakarta')
             ->dailyAt('01:00');
 

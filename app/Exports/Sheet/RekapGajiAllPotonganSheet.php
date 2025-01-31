@@ -5,12 +5,14 @@ namespace App\Exports\Sheet;
 use Carbon\Carbon;
 use App\Models\UnitKerja;
 use Illuminate\Support\Facades\DB;
+use Maatwebsite\Excel\Events\AfterSheet;
 use Maatwebsite\Excel\Concerns\WithTitle;
+use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\FromCollection;
 
-class RekapGajiAllPotonganSheet implements FromCollection, WithHeadings, WithMapping, WithTitle
+class RekapGajiAllPotonganSheet implements FromCollection, WithHeadings, WithMapping, WithTitle, WithEvents
 {
     protected $month;
     protected $year;
@@ -28,6 +30,14 @@ class RekapGajiAllPotonganSheet implements FromCollection, WithHeadings, WithMap
         $unitKerjas = UnitKerja::all();
         $exportData = collect([]);
         $counter = 1;
+
+        $totals = [
+            'gaji_bruto' => 0,
+            'pph_21' => 0,
+            'total_premi' => 0,
+            'total_penyesuaian' => 0,
+            'take_home_pay' => 0,
+        ];
 
         foreach ($unitKerjas as $unitKerja) {
             $penggajianData = DB::table('penggajians')
@@ -100,9 +110,9 @@ class RekapGajiAllPotonganSheet implements FromCollection, WithHeadings, WithMap
 
                 $data = [
                     'no' => $counter++,
+                    'nik' => $firstDetail->nik,
                     'nama_karyawan' => $firstDetail->nama_karyawan,
                     'status_karyawan' => $firstDetail->status_karyawan,
-                    'nik' => $firstDetail->nik,
                     'unit_kerja' => $firstDetail->unit_kerja,
                     'gaji_bruto' => $firstDetail->gaji_bruto ?? 0,
                     'pph_21' => $firstDetail->pph_21 ?? 0,
@@ -123,9 +133,20 @@ class RekapGajiAllPotonganSheet implements FromCollection, WithHeadings, WithMap
                     }
                 }
 
+                foreach ($totals as $key => &$total) {
+                    $total += $data[$key];
+                }
+
                 $exportData->push($data);
             }
         }
+
+        $totalRow = array_merge(
+            ['no' => '', 'nik' => '', 'nama_karyawan' => 'Total', 'status_karyawan' => '', 'unit_kerja' => ''],
+            $totals
+        );
+
+        $exportData->push($totalRow);
 
         return $exportData;
     }
@@ -156,9 +177,9 @@ class RekapGajiAllPotonganSheet implements FromCollection, WithHeadings, WithMap
             array_merge(
                 [
                     'no',
+                    'nik',
                     'nama_karyawan',
                     'status_karyawan',
-                    'nik',
                     'unit_kerja',
                     'gaji_bruto',
                     'pph_21',
@@ -178,9 +199,9 @@ class RekapGajiAllPotonganSheet implements FromCollection, WithHeadings, WithMap
     {
         $mappedRow = [
             $row['no'],
+            $row['nik'],
             $row['nama_karyawan'],
             $row['status_karyawan'],
-            $row['nik'],
             $row['unit_kerja'],
             $row['gaji_bruto'],
             $row['pph_21'],
@@ -212,5 +233,29 @@ class RekapGajiAllPotonganSheet implements FromCollection, WithHeadings, WithMap
     public function title(): string
     {
         return 'Rekap Semua Potongan Unit Kerja' . ' - ' . $this->periode_sekarang;
+    }
+
+    public function registerEvents(): array
+    {
+        return [
+            AfterSheet::class => function (AfterSheet $event) {
+                $sheet = $event->sheet;
+                $highestRow = $sheet->getHighestRow();
+
+                // Merge kolom A sampai E di baris terakhir
+                $sheet->mergeCells("A{$highestRow}:E{$highestRow}");
+
+                // Set style untuk baris terakhir
+                $sheet->getStyle("A{$highestRow}:E{$highestRow}")->applyFromArray([
+                    'alignment' => [
+                        'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
+                        'vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER,
+                    ],
+                    'font' => [
+                        'bold' => true,
+                    ],
+                ]);
+            },
+        ];
     }
 }

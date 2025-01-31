@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formulir 1721-A1</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        .header {
+            width: 800px;
+            margin: 20px auto;
+            border: 1px solid #000;
+            padding: 10px;
+            display: grid;
+            grid-template-areas:
+                "logo title title"
+                "logo subtitle subtitle"
+                "info info info"
+                "table table table";
+            grid-template-columns: 80px 1fr 1fr;
+            gap: 10px;
+        }
+        .header img {
+            grid-area: logo;
+            max-width: 70px;
+        }
+        .header .title {
+            grid-area: title;
+            text-align: center;
+            font-size: 14px;
+            font-weight: bold;
+            line-height: 1.4;
+        }
+        .header .subtitle {
+            grid-area: subtitle;
+            text-align: center;
+            font-size: 12px;
+        }
+        .header .right-info {
+            grid-area: info;
+            text-align: right;
+            font-size: 12px;
+        }
+        .header .info-table {
+            grid-area: table;
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+        .header .info-table td {
+            border: 1px solid #000;
+            padding: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <img src="djp_logo.png" alt="Logo">
+        <div class="title">
+            BUKTI PEMOTONGAN PAJAK PENGHASILAN PASAL 21 BAGI PEGAWAI TETAP ATAU PENERIMA PENSIUN ATAU TUNJANGAN HARI TUA/JAMINAN HARI TUA BERKALA
+        </div>
+        <div class="subtitle">
+            KEMENTERIAN KEUANGAN RI DIREKTORAT JENDERAL PAJAK
+        </div>
+        <div class="right-info">
+            FORMULIR 1721 - A1<br>
+            Lembar ke-1: untuk Penerima Penghasilan<br>
+            Lembar ke-2: untuk Pemotong
+        </div>
+        <table class="info-table">
+            <tr>
+                <td>NPWP PEMOTONG</td>
+                <td>015155302</td>
+                <td rowspan="2" style="text-align: center;">MASA PEROLEHAN PENGHASILAN<br>01 - 12</td>
+            </tr>
+            <tr>
+                <td>NAMA PEMOTONG</td>
+                <td>PT KONDANG SEHAT KASIH IBU</td>
+            </tr>
+        </table>
+    </div>
+</body>
+</html>

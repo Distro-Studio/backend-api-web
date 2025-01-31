@@ -4,12 +4,14 @@ namespace App\Exports\Sheet;
 
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Maatwebsite\Excel\Events\AfterSheet;
 use Maatwebsite\Excel\Concerns\WithTitle;
 use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\FromCollection;
+use Maatwebsite\Excel\Concerns\WithEvents;
 
-class RekapGajiPenerimaanAllUnitsSheet implements FromCollection, WithHeadings, WithMapping, WithTitle
+class RekapGajiPenerimaanAllUnitsSheet implements FromCollection, WithHeadings, WithMapping, WithTitle, WithEvents
 {
     protected $months;
     protected $years;
@@ -49,6 +51,23 @@ class RekapGajiPenerimaanAllUnitsSheet implements FromCollection, WithHeadings, 
 
         $exportData = collect([]);
         $counter = 1;
+        $totals = [
+            'gaji_pokok' => 0,
+            'tunjangan_jabatan' => 0,
+            'tunjangan_fungsional' => 0,
+            'tunjangan_khusus' => 0,
+            'tunjangan_lainnya' => 0,
+            'uang_lembur' => 0,
+            'uang_makan' => 0,
+            'bonus_bor' => 0,
+            'bonus_presensi' => 0,
+            'pph21' => 0,
+            'penambah_gaji' => 0,
+            'pengurang_gaji' => 0,
+            'jumlah_penghasilan' => 0,
+            'jumlah_premi' => 0,
+            'gaji_diterima' => 0,
+        ];
 
         foreach ($detailGajiData as $karyawanId => $details) {
             $firstDetail = $details->first();
@@ -72,9 +91,9 @@ class RekapGajiPenerimaanAllUnitsSheet implements FromCollection, WithHeadings, 
 
             $data = [
                 'no' => $counter++,
+                'nik' => $firstDetail->nik,
                 'nama_karyawan' => $firstDetail->nama_karyawan,
                 'status_karyawan' => $firstDetail->status_karyawan,
-                'nik' => $firstDetail->nik,
                 'unit_kerja' => $firstDetail->unit_kerja,
                 'gaji_pokok' => $details->where('nama_detail', 'Gaji Pokok')->first()->besaran ?? 0,
                 'tunjangan_jabatan' => $details->where('nama_detail', 'Tunjangan Jabatan')->first()->besaran ?? 0,
@@ -90,10 +109,24 @@ class RekapGajiPenerimaanAllUnitsSheet implements FromCollection, WithHeadings, 
                 'pengurang_gaji' => $penyesuaian_pengurang,
                 'jumlah_penghasilan' => $firstDetail->gaji_bruto ?? 0,
                 'jumlah_premi' => $firstDetail->total_premi ?? 0,
-                'gaji_diterima' => $firstDetail->take_home_pay ?? 0,
+                'gaji_diterima' => $firstDetail->take_home_pay ?? 0
             ];
+
+            foreach ($totals as $key => &$total) {
+                $total += $data[$key];
+            }
+
             $exportData->push($data);
         }
+
+        // Tambahkan baris Total
+        $totalsRow = array_merge(
+            ['no' => 'Total', 'nik' => '', 'nama_karyawan' => '', 'status_karyawan' => '', 'unit_kerja' => ''],
+            $totals
+        );
+
+        $exportData->push($totalsRow);
+
         return $exportData;
     }
 
@@ -105,9 +138,9 @@ class RekapGajiPenerimaanAllUnitsSheet implements FromCollection, WithHeadings, 
             array_merge(
                 [
                     'no',
+                    'nik',
                     'nama_karyawan',
                     'status_karyawan',
-                    'nik',
                     'unit_kerja',
                     'gaji_pokok',
                     'tunjangan_jabatan',
@@ -135,9 +168,9 @@ class RekapGajiPenerimaanAllUnitsSheet implements FromCollection, WithHeadings, 
     {
         return [
             $row['no'],
+            $row['nik'],
             $row['nama_karyawan'],
             $row['status_karyawan'],
-            $row['nik'],
             $row['unit_kerja'],
             $row['gaji_pokok'],
             $row['tunjangan_jabatan'],
@@ -160,5 +193,29 @@ class RekapGajiPenerimaanAllUnitsSheet implements FromCollection, WithHeadings, 
     public function title(): string
     {
         return 'Rekap Penggajian Semua Unit Kerja ' . $this->periode_sekarang;
+    }
+
+    public function registerEvents(): array
+    {
+        return [
+            AfterSheet::class => function (AfterSheet $event) {
+                $sheet = $event->sheet;
+                $highestRow = $sheet->getHighestRow();
+
+                // Merge kolom A sampai E di baris terakhir
+                $sheet->mergeCells("A{$highestRow}:E{$highestRow}");
+
+                // Set style untuk baris terakhir
+                $sheet->getStyle("A{$highestRow}:E{$highestRow}")->applyFromArray([
+                    'alignment' => [
+                        'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
+                        'vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER,
+                    ],
+                    'font' => [
+                        'bold' => true,
+                    ],
+                ]);
+            },
+        ];
     }
 }

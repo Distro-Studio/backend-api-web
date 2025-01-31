@@ -61,7 +61,7 @@ class RekapGajiKompetensiExport implements FromCollection, WithMultipleSheets
 
                 // Add Non-Medis sheet
                 if ($kompetensiNonMedis->isNotEmpty()) {
-                    $sheets[] = new RekapGajiKompetensiSheet('Non-Medis', $kompetensiNonMedis, $month, $year);
+                    $sheets[] = new RekapGajiKompetensiSheet('NonMedis', $kompetensiNonMedis, $month, $year);
                 }
             }
         }

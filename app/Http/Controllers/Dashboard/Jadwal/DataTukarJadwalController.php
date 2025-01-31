@@ -1071,7 +1071,18 @@ class DataTukarJadwalController extends Controller
                     // Load actual User objects
                     $userPengajuan = User::findOrFail($tukar_jadwal->user_pengajuan);
                     $userDitukar = User::findOrFail($tukar_jadwal->user_ditukar);
-                    $this->CreateTukarJadwal($userPengajuan, $userDitukar, $jadwalPengajuan, $jadwalDitukar);
+
+                    // Hari libur di jadwal user ditukar (jika ada)
+                    $jadwalLiburDitukar = Jadwal::where('tgl_mulai', $jadwalDitukar->tgl_mulai)
+                        ->where('user_id', $userPengajuan->id)
+                        ->where('shift_id', 0)
+                        ->first();
+                    $jadwalLiburPengajuan = Jadwal::where('tgl_mulai', $jadwalPengajuan->tgl_mulai)
+                        ->where('user_id', $userDitukar->id)
+                        ->where('shift_id', 0)
+                        ->first();
+
+                    $this->CreateTukarJadwal($userPengajuan, $userDitukar, $jadwalPengajuan, $jadwalDitukar, $jadwalLiburPengajuan, $jadwalLiburDitukar);
 
                     $this->createNotifikasiVerifikasiTahap2($tukar_jadwal, true);
 
@@ -1185,55 +1196,55 @@ class DataTukarJadwalController extends Controller
         }
     }
 
-    private function createNotifikasiTukarJadwal($userPengajuan, $userDitukar, $jadwalPengajuan, $jadwalDitukar)
-    {
-        try {
-            // Konversi tanggal pengajuan
-            $konversiNotif_tgl_mulai = Carbon::parse($jadwalPengajuan->tgl_mulai)->locale('id')->isoFormat('D MMMM YYYY');
-            $message = "'{$userPengajuan->nama}', Jadwal anda telah ditukar dengan karyawan '{$userDitukar->nama}' pada tanggal {$konversiNotif_tgl_mulai}.";
-            $messageSuperAdmin = "Notifikasi untuk Super Admin: Jadwal '{$userPengajuan->nama}' berhasil ditukar dengan karyawan '{$userDitukar->nama}' pada tanggal {$konversiNotif_tgl_mulai}.";
-            $timezone = Carbon::now('Asia/Jakarta');
+    // private function createNotifikasiTukarJadwal($userPengajuan, $userDitukar, $jadwalPengajuan, $jadwalDitukar)
+    // {
+    //     try {
+    //         // Konversi tanggal pengajuan
+    //         $konversiNotif_tgl_mulai = Carbon::parse($jadwalPengajuan->tgl_mulai)->locale('id')->isoFormat('D MMMM YYYY');
+    //         $message = "'{$userPengajuan->nama}', Jadwal anda telah ditukar dengan karyawan '{$userDitukar->nama}' pada tanggal {$konversiNotif_tgl_mulai}.";
+    //         $messageSuperAdmin = "Notifikasi untuk Super Admin: Jadwal '{$userPengajuan->nama}' berhasil ditukar dengan karyawan '{$userDitukar->nama}' pada tanggal {$konversiNotif_tgl_mulai}.";
+    //         $timezone = Carbon::now('Asia/Jakarta');
 
-            // Kirim notifikasi ke user pengajuan dan Super Admin
-            $userIdsPengajuan = [$userPengajuan->id, 1];
-            foreach ($userIdsPengajuan as $userIdPengajuan) {
-                $messageToSend = $userIdPengajuan === 1 ? $messageSuperAdmin : $message;
-                Notifikasi::create([
-                    'kategori_notifikasi_id' => 2,
-                    'user_id' => $userIdPengajuan,
-                    'message' => $messageToSend,
-                    'is_read' => false,
-                    'is_verifikasi' => true,
-                    'created_at' => $timezone,
-                ]);
-            }
+    //         // Kirim notifikasi ke user pengajuan dan Super Admin
+    //         $userIdsPengajuan = [$userPengajuan->id, 1];
+    //         foreach ($userIdsPengajuan as $userIdPengajuan) {
+    //             $messageToSend = $userIdPengajuan === 1 ? $messageSuperAdmin : $message;
+    //             Notifikasi::create([
+    //                 'kategori_notifikasi_id' => 2,
+    //                 'user_id' => $userIdPengajuan,
+    //                 'message' => $messageToSend,
+    //                 'is_read' => false,
+    //                 'is_verifikasi' => true,
+    //                 'created_at' => $timezone,
+    //             ]);
+    //         }
 
-            // Konversi tanggal jadwal ditukar
-            $konversiNotif_tgl_mulai_ajuan = Carbon::parse($jadwalDitukar->tgl_mulai)->locale('id')->isoFormat('D MMMM YYYY');
-            $messageDitukar = "'{$userDitukar->nama}', Jadwal anda telah ditukar dengan karyawan '{$userPengajuan->nama}' pada tanggal {$konversiNotif_tgl_mulai_ajuan}.";
-            $messageSuperAdminDitukar = "Notifikasi untuk Super Admin: Jadwal '{$userDitukar->nama}' berhasil ditukar dengan karyawan '{$userPengajuan->nama}' pada tanggal {$konversiNotif_tgl_mulai_ajuan}.";
+    //         // Konversi tanggal jadwal ditukar
+    //         $konversiNotif_tgl_mulai_ajuan = Carbon::parse($jadwalDitukar->tgl_mulai)->locale('id')->isoFormat('D MMMM YYYY');
+    //         $messageDitukar = "'{$userDitukar->nama}', Jadwal anda telah ditukar dengan karyawan '{$userPengajuan->nama}' pada tanggal {$konversiNotif_tgl_mulai_ajuan}.";
+    //         $messageSuperAdminDitukar = "Notifikasi untuk Super Admin: Jadwal '{$userDitukar->nama}' berhasil ditukar dengan karyawan '{$userPengajuan->nama}' pada tanggal {$konversiNotif_tgl_mulai_ajuan}.";
 
-            // Kirim notifikasi ke user yang ditukar dan Super Admin
-            $userIdsDitukar = [$userDitukar->id, 1];
-            foreach ($userIdsDitukar as $userIdDitukar) {
-                $messageToSend = $userIdDitukar === 1 ? $messageSuperAdminDitukar : $messageDitukar;
-                Notifikasi::create([
-                    'kategori_notifikasi_id' => 2,
-                    'user_id' => $userIdDitukar,
-                    'message' => $messageToSend,
-                    'is_read' => false,
-                    'is_verifikasi' => true,
-                    'created_at' => $timezone,
-                ]);
-            }
-        } catch (\Exception $e) {
-            Log::error('| Tukar Jadwal | - Error saat menampilkan detail data tukar jadwal: ' . $e->getMessage());
-            return response()->json([
-                'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
-                'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
-            ], Response::HTTP_INTERNAL_SERVER_ERROR);
-        }
-    }
+    //         // Kirim notifikasi ke user yang ditukar dan Super Admin
+    //         $userIdsDitukar = [$userDitukar->id, 1];
+    //         foreach ($userIdsDitukar as $userIdDitukar) {
+    //             $messageToSend = $userIdDitukar === 1 ? $messageSuperAdminDitukar : $messageDitukar;
+    //             Notifikasi::create([
+    //                 'kategori_notifikasi_id' => 2,
+    //                 'user_id' => $userIdDitukar,
+    //                 'message' => $messageToSend,
+    //                 'is_read' => false,
+    //                 'is_verifikasi' => true,
+    //                 'created_at' => $timezone,
+    //             ]);
+    //         }
+    //     } catch (\Exception $e) {
+    //         Log::error('| Tukar Jadwal | - Error saat menampilkan detail data tukar jadwal: ' . $e->getMessage());
+    //         return response()->json([
+    //             'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
+    //             'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
+    //         ], Response::HTTP_INTERNAL_SERVER_ERROR);
+    //     }
+    // }
 
     private function createNotifikasiVerifikasiTahap1($tukarJadwal, $isApproved)
     {
@@ -1353,13 +1364,10 @@ class DataTukarJadwalController extends Controller
         }
     }
 
-    private function CreateTukarJadwal($userPengajuan, $userDitukar, $jadwalPengajuan, $jadwalDitukar)
+    private function CreateTukarJadwal($userPengajuan, $userDitukar, $jadwalPengajuan, $jadwalDitukar, $jadwalLiburPengajuan, $jadwalLiburDitukar)
     {
         // Jika shift_id bukan libur (tidak sama dengan 0)
         if ($jadwalPengajuan->shift_id != 0 && $jadwalDitukar->shift_id != 0) {
-            $tglMulaiPengajuan = RandomHelper::convertToDateString($jadwalPengajuan->tgl_mulai);
-            $tglMulaiDitukar = RandomHelper::convertToDateString($jadwalDitukar->tgl_mulai);
-
             // Jika salah satu shift adalah shift malam (shift_id == 3)
             if ($jadwalPengajuan->shift_id == 3 || $jadwalDitukar->shift_id == 3) {
                 $tanggalMulaiPengajuan = Carbon::createFromFormat('Y-m-d', $jadwalPengajuan->tgl_mulai);
@@ -1394,8 +1402,29 @@ class DataTukarJadwalController extends Controller
             $tempUserId = $jadwalPengajuan->user_id;
             $jadwalPengajuan->user_id = $jadwalDitukar->user_id;
             $jadwalDitukar->user_id = $tempUserId;
+
+            if ($jadwalLiburPengajuan == null && $jadwalLiburDitukar == null) {
+                return;
+            } elseif ($jadwalLiburPengajuan == null) {
+                $jadwalLiburDitukar->tgl_mulai = $jadwalPengajuan->tgl_mulai;
+                $jadwalLiburDitukar->tgl_selesai = $jadwalPengajuan->tgl_selesai;
+            } elseif ($jadwalLiburDitukar == null) {
+                $jadwalLiburPengajuan->tgl_mulai = $jadwalDitukar->tgl_mulai;
+                $jadwalLiburPengajuan->tgl_selesai = $jadwalDitukar->tgl_selesai;
+            } else {
+                $tempUserIdLibur = $jadwalLiburPengajuan->user_id;
+                $jadwalLiburPengajuan->user_id = $jadwalLiburDitukar->user_id;
+                $jadwalLiburDitukar->user_id = $tempUserIdLibur;
+            }
+
             $jadwalPengajuan->save();
             $jadwalDitukar->save();
+            if ($jadwalLiburPengajuan) {
+                $jadwalLiburPengajuan->save();
+            }
+            if ($jadwalLiburDitukar) {
+                $jadwalLiburDitukar->save();
+            }
         }
         // Jika keduanya libur (shift_id == 0)
         else if ($jadwalPengajuan->shift_id == 0 && $jadwalDitukar->shift_id == 0) {
