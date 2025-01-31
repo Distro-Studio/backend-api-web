@@ -24,7 +24,7 @@ class ShiftController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
-        $shift = Shift::with('unit_kerjas')->get();
+        $shift = Shift::withoutTrashed()->with('unit_kerjas')->get();
         $formattedData = $shift->map(function ($shifts) {
             return [
                 'id' => $shifts->id,
@@ -61,7 +61,7 @@ class ShiftController extends Controller
                 return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Unit kerja tidak ditemukan untuk karyawan ini.'), Response::HTTP_NOT_FOUND);
             }
 
-            $shifts = Shift::where('unit_kerja_id', $unitKerjaId)->get();
+            $shifts = Shift::withoutTrashed()->where('unit_kerja_id', $unitKerjaId)->get();
             if ($shifts->isEmpty()) {
                 return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Tidak ada jadwal shift yang ditemukan untuk unit kerja ini.'), Response::HTTP_NOT_FOUND);
             }

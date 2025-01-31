@@ -125,6 +125,10 @@ class RoleSeeder extends Seeder
             'create pelatihanKaryawan', // 138
             'edit aboutHospital', // 139
             'view aboutHospital', // 140
+            'create statusKaryawan', // 144
+            'edit statusKaryawan', // 145
+            'delete statusKaryawan', // 146
+            'view statusKaryawan', // 147
             'create unitKerja',
             'edit unitKerja',
             'delete unitKerja',

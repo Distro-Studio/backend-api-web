@@ -109,7 +109,7 @@ class CreateGajiJob implements ShouldQueue
             $totalReward = $rewardBOR + $rewardBonusPresensi + $rewardLembur;
 
             // uang makan sebulan
-            $uangMakanSebulan = $this->calculatedUangMakanSebulan($dataKaryawan);
+            // $uangMakanSebulan = $this->calculatedUangMakanSebulan($dataKaryawan);
 
             // Potongan tagihan
             $potonganTagihan = $this->calculatedTagihanPotongan($dataKaryawan);
@@ -123,7 +123,8 @@ class CreateGajiJob implements ShouldQueue
             // Hitung penghasilan THR, bruto, total tunjangan, dan total premi
             $totalTunjangan = $this->calculatedTotalTunjangan($dataKaryawan);
             $penghasilanBruto = $this->calculatedPenghasilanBruto($dataKaryawan, $totalTunjangan);
-            $penghasilanBrutoTotal = $this->calculatedPenghasilanBrutoTotal($dataKaryawan, $totalReward, $penghasilanTHR, $uangMakanSebulan);
+            $penghasilanBrutoTotal = $this->calculatedPenghasilanBrutoTotal($dataKaryawan, $totalReward, $penghasilanTHR);
+            // $penghasilanBrutoTotal = $this->calculatedPenghasilanBrutoTotal($dataKaryawan, $totalReward, $penghasilanTHR, $uangMakanSebulan);
             $totalPremi = $this->calculatedPremi($data_karyawan_id, $penghasilanBruto, $penghasilanBrutoTotal, $dataKaryawan->gaji_pokok);
 
             // Tentukan status penggajian
@@ -220,7 +221,7 @@ class CreateGajiJob implements ShouldQueue
                     'penggajian_id' => $penggajian->id,
                     'kategori_gaji_id' => $kategori_penambah,
                     'nama_detail' => 'Uang Makan',
-                    'besaran' => $uangMakanSebulan == 0 ? null : $uangMakanSebulan
+                    'besaran' => $dataKaryawan->uang_makan == 0 ? null : $dataKaryawan->uang_makan
                 ],
                 [
                     'penggajian_id' => $penggajian->id,
@@ -697,21 +698,21 @@ class CreateGajiJob implements ShouldQueue
         return $totalBOR;
     }
 
-    private function calculatedUangMakanSebulan($dataKaryawan)
-    {
-        // Get current month and year
-        $currentMonth = Carbon::now('Asia/Jakarta')->month;
-        $currentYear = Carbon::now('Asia/Jakarta')->year;
-        $daysInMonth = Carbon::createFromDate($currentYear, $currentMonth)->daysInMonth;
+    // private function calculatedUangMakanSebulan($dataKaryawan)
+    // {
+    //     // Get current month and year
+    //     $currentMonth = Carbon::now('Asia/Jakarta')->month;
+    //     $currentYear = Carbon::now('Asia/Jakarta')->year;
+    //     $daysInMonth = Carbon::createFromDate($currentYear, $currentMonth)->daysInMonth;
 
-        $rate_uang_makan = $dataKaryawan->uang_makan;
+    //     $rate_uang_makan = $dataKaryawan->uang_makan;
 
-        if (!$rate_uang_makan || $rate_uang_makan == 0) {
-            return 0;
-        }
+    //     if (!$rate_uang_makan || $rate_uang_makan == 0) {
+    //         return 0;
+    //     }
 
-        return $rate_uang_makan * $daysInMonth;
-    }
+    //     return $rate_uang_makan * $daysInMonth;
+    // }
 
     // ini yg pake scheduller
     private function calculatedRewardPresensi($data_karyawan_id)
@@ -730,7 +731,7 @@ class CreateGajiJob implements ShouldQueue
         return $bonusPresensi;
     }
 
-    private function calculatedPenghasilanBrutoTotal($dataKaryawan, $reward, $penghasilanTHR, $uangMakanSebulan)
+    private function calculatedPenghasilanBrutoTotal($dataKaryawan, $reward, $penghasilanTHR)
     {
         return $dataKaryawan->gaji_pokok
             + $reward
@@ -739,7 +740,7 @@ class CreateGajiJob implements ShouldQueue
             + $dataKaryawan->tunjangan_fungsional
             + $dataKaryawan->tunjangan_khusus
             + $dataKaryawan->tunjangan_lainnya
-            + $uangMakanSebulan;
+            + $dataKaryawan->uang_makan;
     }
 
     private function calculatedPenghasilanBruto($dataKaryawan, $totalTunjangan)

@@ -35,9 +35,9 @@ class RekapGajiUnitExport implements FromCollection, WithMultipleSheets
         foreach ($this->years as $year) {
             foreach ($this->months as $month) {
                 $unitKerjas = UnitKerja::whereHas('data_karyawan.penggajians', function ($query) use ($month, $year) {
-                        $query->whereMonth('tgl_penggajian', $month)
-                            ->whereYear('tgl_penggajian', $year);
-                    })
+                    $query->whereMonth('tgl_penggajian', $month)
+                        ->whereYear('tgl_penggajian', $year);
+                })
                     ->get();
 
                 // Tambahkan sheet gabungan
@@ -47,18 +47,18 @@ class RekapGajiUnitExport implements FromCollection, WithMultipleSheets
 
                 // Add Shift sheet
                 if ($unitKerjas->isNotEmpty()) {
-                    $sheets[] = new RekapGajiUnitPengurangSheet('Rekap Gaji Unit Kerja Pengurang', $unitKerjas, $month, $year);
+                    $sheets[] = new RekapGajiUnitPengurangSheet('Pengurang', $unitKerjas, $month, $year);
                 }
 
                 // Add Non-Shift sheet
                 if ($unitKerjas->isNotEmpty()) {
-                    $sheets[] = new RekapGajiUnitPenambahSheet('Rekap Gaji Unit Kerja Penerimaan', $unitKerjas, $month, $year);
+                    $sheets[] = new RekapGajiUnitPenambahSheet('Penerimaan', $unitKerjas, $month, $year);
+                }
+
+                if ($unitKerjas->isEmpty()) {
+                    continue;
                 }
             }
-        }
-
-        if (empty($sheets)) {
-            $sheets[] = new RekapGajiUnitSheet('Sheet Kosong', collect([]), null, null);
         }
 
         return $sheets;

@@ -25,11 +25,13 @@ class StoreDataKeluargaRequest extends FormRequest
             'nama_keluarga' => 'required|string|max:255',
             'hubungan' => 'required',
             'pendidikan_terakhir' => 'required|integer|exists:kategori_pendidikans,id',
+            'tgl_lahir' => 'required',
             'status_hidup' => 'required|boolean',
             'pekerjaan' => 'nullable|string|max:255',
             'no_hp' => 'nullable|numeric',
             'email' => 'nullable|email|max:255',
             'is_bpjs' => 'required|boolean',
+            'is_menikah' => 'nullable|boolean',
         ];
     }
 
@@ -43,6 +45,7 @@ class StoreDataKeluargaRequest extends FormRequest
             'pendidikan_terakhir.required' => 'Pendidikan terakhir harus diisi.',
             'pendidikan_terakhir.integer' => 'Pendidikan terakhir harus berupa angka.',
             'pendidikan_terakhir.exists' => 'Pendidikan terakhir tidak ditemukan dalam daftar yang valid.',
+            'tgl_lahir.required' => 'Tanggal lahir anggota keluarga harus diisi.',
             'status_hidup.required' => 'Status hidup harus diisi.',
             'status_hidup.boolean' => 'Status hidup harus berupa true atau false.',
             'pekerjaan.string' => 'Pekerjaan harus berupa string.',
@@ -52,6 +55,7 @@ class StoreDataKeluargaRequest extends FormRequest
             'email.max' => 'Email maksimal 255 karakter.',
             'is_bpjs.required' => 'Status BPJS harus diisi.',
             'is_bpjs.boolean' => 'Status BPJS harus berupa true atau false.',
+            'is_menikah.boolean' => 'Status menikah harus berupa true atau false.',
         ];
     }
 

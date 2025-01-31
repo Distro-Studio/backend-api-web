@@ -185,6 +185,7 @@ class KaryawanExport implements FromCollection, WithHeadings, WithMapping
     {
         return [
             'no',
+            'nik',
             'nama',
             'username',
             'status_aktif',
@@ -253,9 +254,10 @@ class KaryawanExport implements FromCollection, WithHeadings, WithMapping
 
         return [
             self::$number,
+            $karyawan->nik,
             $karyawan->users->nama,
             $karyawan->users->username,
-            $karyawan->users->status_aktif,
+            $karyawan->users->status_aktifs->label,
             implode(', ', $roles),
             $karyawan->email ?? 'N/A',
             $karyawan->no_rm ?? 'N/A',

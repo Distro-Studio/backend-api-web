@@ -58,12 +58,14 @@ class Karyawan_KeluargaController extends Controller
                     'nama_keluarga' => $item->nama_keluarga,
                     'hubungan' => $item->hubungan,
                     'pendidikan_terakhir' => $item->kategori_pendidikans,
+                    'tgl_lahir' => $item->tgl_lahir,
                     'status_hidup' => $item->status_hidup,
                     'pekerjaan' => $item->pekerjaan,
                     'no_hp' => $item->no_hp,
                     'email' => $item->email,
                     'status_keluarga' => $item->status_keluargas,
                     'is_bpjs' => $item->is_bpjs,
+                    'is_menikah' => $item->is_menikah,
                     'created_at' => $item->created_at,
                     'updated_at' => $item->updated_at
                 ];
@@ -145,6 +147,18 @@ class Karyawan_KeluargaController extends Controller
             }
 
             $data = $request->validated();
+
+            // Validasi umur dan is_bpjs
+            if (in_array($data['hubungan'], ['Anak Ke-1', 'Anak Ke-2', 'Anak Ke-3'])) {
+                $cekUmur = Carbon::parse($data['tgl_lahir'])->age;
+                if ($cekUmur > 21 && $data['is_bpjs'] == 1 && $data['is_menikah'] == 1) {
+                    return response()->json([
+                        'status' => Response::HTTP_BAD_REQUEST,
+                        'message' => "Tidak dapat memperbarui data karena anak '{$data['nama_keluarga']}' dengan usia {$cekUmur} tahun tidak memenuhi syarat untuk BPJS Kesehatan"
+                    ], Response::HTTP_BAD_REQUEST);
+                }
+            }
+
             DB::beginTransaction();
             $dataKeluarga = DataKeluarga::create([
                 'data_karyawan_id' => $data_karyawan_id,
@@ -152,11 +166,13 @@ class Karyawan_KeluargaController extends Controller
                 'hubungan' => $data['hubungan'],
                 'pendidikan_terakhir' => $data['pendidikan_terakhir'],
                 'status_hidup' => $data['status_hidup'],
+                'tgl_lahir' => $data['tgl_lahir'],
                 'pekerjaan' => $data['pekerjaan'] ?? null,
                 'no_hp' => $data['no_hp'] ?? null,
                 'email' => $data['email'] ?? null,
                 'status_keluarga_id' => 2,
                 'is_bpjs' => $data['is_bpjs'],
+                'is_menikah' => $data['is_menikah'],
                 'verifikator_1' => $currentUser->id,
             ]);
             DB::commit();
@@ -214,15 +230,27 @@ class Karyawan_KeluargaController extends Controller
 
             $validatedData = $request->validated();
 
+            if (in_array($validatedData['hubungan'], ['Anak Ke-1', 'Anak Ke-2', 'Anak Ke-3'])) {
+                $cekUmur = Carbon::parse($validatedData['tgl_lahir'])->age;
+                if ($cekUmur > 21 && $validatedData['is_bpjs'] == 1 && $validatedData['is_menikah'] == 1) {
+                    return response()->json([
+                        'status' => Response::HTTP_FORBIDDEN,
+                        'message' => "Tidak dapat memperbarui data karena anak '{$validatedData['nama_keluarga']}' dengan usia {$cekUmur} tahun tidak memenuhi syarat untuk BPJS Kesehatan."
+                    ], Response::HTTP_FORBIDDEN);
+                }
+            }
+
             $dataKeluarga->update([
                 'nama_keluarga' => $validatedData['nama_keluarga'],
                 'hubungan' => $validatedData['hubungan'],
                 'pendidikan_terakhir' => $validatedData['pendidikan_terakhir'],
                 'status_hidup' => $validatedData['status_hidup'],
                 'pekerjaan' => $validatedData['pekerjaan'] ?? $dataKeluarga->pekerjaan,
+                'tgl_lahir' => $validatedData['tgl_lahir'] ?? $dataKeluarga->tgl_lahir,
                 'no_hp' => $validatedData['no_hp'] ?? $dataKeluarga->no_hp,
                 'email' => $validatedData['email'] ?? $dataKeluarga->email,
                 'is_bpjs' => $validatedData['is_bpjs'],
+                'is_menikah' => $validatedData['is_menikah'],
             ]);
 
             return response()->json(new WithoutDataResource(Response::HTTP_OK, "Data keluarga '{$dataKeluarga->nama_keluarga}' dari karyawan '{$dataKeluarga->data_karyawans->users->nama}' berhasil diperbarui."), Response::HTTP_OK);

@@ -560,11 +560,16 @@ class DataJadwalController extends Controller
                         if ($shift) {
                             $jamFrom = Carbon::parse(RandomHelper::convertToTimeString($shift->jam_from));
                             $jamTo = Carbon::parse(RandomHelper::convertToTimeString($shift->jam_to));
-                            if ($jamTo->lessThan($jamFrom)) {
+
+                            if ($jamTo->format('H:i:s') === '00:00:00') {
+                                $tglSelesai = $currentTanggalMulai->copy();
+                            } elseif ($jamTo->lessThan($jamFrom)) {
                                 $tglSelesai->addDay();
+                            } else {
+                                $tglSelesai = $currentTanggalMulai->copy();
                             }
                         } else {
-                            $tglSelesai = $currentTanggalMulai; // When shift_id is null, tgl_selesai is same as tgl_mulai
+                            $tglSelesai = $currentTanggalMulai; // Ketika shift_id null, tgl_selesai = tgl_mulai
                         }
 
                         if ($data['shift_id'] == 3) {
@@ -729,8 +734,13 @@ class DataJadwalController extends Controller
                     $shift = Shift::findOrFail($shiftId);
                     $jamFrom = Carbon::parse($shift->jam_from);
                     $jamTo = Carbon::parse($shift->jam_to);
-                    if ($jamTo->lessThan($jamFrom)) {
+
+                    if ($jamTo->format('H:i:s') === '00:00:00') {
+                        $tglSelesai = $tanggalMulai->copy();
+                    } elseif ($jamTo->lessThan($jamFrom)) {
                         $tglSelesai->addDay();
+                    } else {
+                        $tglSelesai = $tanggalMulai->copy();
                     }
                 }
 
@@ -994,8 +1004,12 @@ class DataJadwalController extends Controller
                         $jamFrom = Carbon::parse(RandomHelper::convertToTimeString($shift->jam_from));
                         $jamTo = Carbon::parse(RandomHelper::convertToTimeString($shift->jam_to));
 
-                        if ($jamTo->lessThanOrEqualTo($jamFrom)) {
+                        if ($jamTo->format('H:i:s') === '00:00:00') {
+                            $tglSelesai = $tglSelesai->copy();
+                        } elseif ($jamTo->lessThan($jamFrom)) {
                             $tglSelesai->addDay();
+                        } else {
+                            $tglSelesai = $tglSelesai->copy();
                         }
                     }
 

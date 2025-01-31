@@ -2,14 +2,17 @@
 
 namespace App\Http\Controllers\Dashboard\Keuangan;
 
+use ZipArchive;
 use Carbon\Carbon;
 use App\Models\Premi;
 use App\Models\Notifikasi;
 use App\Models\Penggajian;
+use Illuminate\Support\Str;
 use App\Models\DataKaryawan;
 use Illuminate\Http\Request;
 use App\Helpers\RandomHelper;
 use Illuminate\Http\Response;
+use Barryvdh\DomPDF\Facade\Pdf;
 use App\Helpers\DetailGajiHelper;
 use App\Models\RiwayatPenggajian;
 use Illuminate\Support\Facades\DB;
@@ -19,12 +22,13 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Jobs\Penggajian\CreateGajiJob;
+use Illuminate\Support\Facades\Storage;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
-use App\Exports\Keuangan\LaporanPenggajian\LaporanGajiBankExport;
-use App\Exports\Keuangan\LaporanPenggajian\RekapGajiKompetensiExport;
-use App\Exports\Keuangan\LaporanPenggajian\RekapGajiPotonganExport;
-use App\Exports\Keuangan\LaporanPenggajian\RekapGajiPenerimaanExport;
 use App\Exports\Keuangan\LaporanPenggajian\RekapGajiUnitExport;
+use App\Exports\Keuangan\LaporanPenggajian\LaporanGajiBankExport;
+use App\Exports\Keuangan\LaporanPenggajian\RekapGajiPotonganExport;
+use App\Exports\Keuangan\LaporanPenggajian\RekapGajiKompetensiExport;
+use App\Exports\Keuangan\LaporanPenggajian\RekapGajiPenerimaanExport;
 
 class PenggajianController extends Controller
 {
@@ -48,7 +52,7 @@ class PenggajianController extends Controller
         }
 
         $tgl_mulai = Carbon::create($currentYear, $currentMonth, $jadwalPenggajian->tgl_mulai);
-        $currentDate = Carbon::now();
+        $currentDate = Carbon::now('Asia/Jakarta');
 
         // Ambil semua penggajian untuk periode saat ini dengan status_gaji_id 1
         $penggajians = Penggajian::whereMonth('tgl_penggajian', $currentMonth)
@@ -590,7 +594,7 @@ class PenggajianController extends Controller
         ], Response::HTTP_OK);
     }
 
-    public function exportRekapPenerimaanGaji(Request $request)
+    public function exportRekapPenerimaanGaji(Request $request) // karyawan
     {
         if (!Gate::allows('export penggajianKaryawan')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
@@ -605,15 +609,37 @@ class PenggajianController extends Controller
         $years = $request->input('years', []);
 
         try {
-            return Excel::download(new RekapGajiPenerimaanExport($months, $years), 'rekap-penerimaan-gaji.xls');
+            // **Generate Excel**
+            $excelPath = $this->generateExcelPenerimaanGaji($months, $years);
+
+            // **Generate PDF dari Sheet lainnya**
+            $pdfPathOtherSheet = $this->generatePDFPenerimaanGajiSheets($months, $years);
+
+            // **Generate PDF**
+            $pdfPathSheet_1 = $this->generatePDFPenerimaanGaji($months, $years);
+
+            // **Gabungkan semua file**
+            $allFiles = array_merge([$excelPath, $pdfPathSheet_1], $pdfPathOtherSheet);
+
+            // **Create ZIP**
+            $zipPath = $this->generateZIPPenerimaanGaji($allFiles);
+
+            // Return ZIP for download
+            return response()->download($zipPath)->deleteFileAfterSend(true);
         } catch (\Throwable $e) {
-            return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya terjadi error. Pesan: ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
+            return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya terjadi error.'), Response::HTTP_NOT_ACCEPTABLE);
+        } finally {
+            foreach ($allFiles as $file) {
+                if (file_exists($file)) {
+                    unlink($file);
+                }
+            }
         }
 
         return response()->json(new WithoutDataResource(Response::HTTP_OK, 'Data penggajian karyawan berhasil di download.'), Response::HTTP_OK);
     }
 
-    public function exportRekapPenerimaanGajiUnit(Request $request)
+    public function exportRekapPenerimaanGajiUnit(Request $request) // unit kerja
     {
         if (!Gate::allows('export penggajianKaryawan')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
@@ -628,21 +654,43 @@ class PenggajianController extends Controller
         $years = $request->input('years', []);
 
         try {
-            $sheets = new RekapGajiUnitExport($months, $years);
-            // if ($sheets->sheets() === []) {
-            //     return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Tidak ada data penggajian karyawan yang tersedia untuk diekspor.'), Response::HTTP_NOT_FOUND);
-            // }
+            // **Generate Excel**
+            $excelPath = $this->generateExcelPenerimaanGajiUnit($months, $years);
 
-            return Excel::download($sheets, 'rekap-penerimaan-gaji-unit-kerja.xls');
+            // **Generate PDF**
+            $pdfPathSheet_1 = $this->generatePDFPenerimaanGajiUnit($months, $years);
+
+            // **Generate PDF dari Sheet penambah**
+            $pdfPathSheet_2 = $this->generatePDFPenerimaanGajiUnitPenambah($months, $years);
+
+            // **Generate PDF dari Sheet pengurang**
+            $pdfPathSheet_3 = $this->generatePDFPenerimaanGajiUnitPengurang($months, $years);
+
+            // **Gabungkan semua file**
+            // $allFiles = array_merge([$excelPath, $pdfPathSheet_1], $pdfPathSheet_2, $pdfPathSheet_3);
+            $allFiles = array_merge(
+                [$excelPath, $pdfPathSheet_1],
+                is_array($pdfPathSheet_2) ? $pdfPathSheet_2 : [$pdfPathSheet_2],
+                is_array($pdfPathSheet_3) ? $pdfPathSheet_3 : [$pdfPathSheet_3]
+            );
+
+            // **Create ZIP**
+            $zipPath = $this->generateZIPPenerimaanGajiUnit($allFiles);
+
+            // Return ZIP for download
+            return response()->download($zipPath)->deleteFileAfterSend(true);
         } catch (\Throwable $e) {
-            return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf, tidak ada data yang dapat diekspor atau terjadi error. Pesan: ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
+            return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya terjadi error.' . ' Line: ' . $e->getLine()), Response::HTTP_NOT_ACCEPTABLE);
+        } finally {
+            foreach ($allFiles as $file) {
+                if (file_exists($file)) {
+                    unlink($file);
+                }
+            }
         }
-
-
-        return response()->json(new WithoutDataResource(Response::HTTP_OK, 'Data penggajian karyawan berhasil di download.'), Response::HTTP_OK);
     }
 
-    public function exportRekapPenerimaanGajiKompetensi(Request $request)
+    public function exportRekapPenerimaanGajiKompetensi(Request $request) // profesi / kompetensi
     {
         if (!Gate::allows('export penggajianKaryawan')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
@@ -657,16 +705,32 @@ class PenggajianController extends Controller
         $years = $request->input('years', []);
 
         try {
-            $sheets = new RekapGajiKompetensiExport($months, $years);
-            // if ($sheets->sheets() === []) {
-            //     return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Tidak ada data penggajian karyawan yang tersedia untuk diekspor.'), Response::HTTP_NOT_FOUND);
-            // }
+            // **Generate Excel**
+            $excelPath = $this->generateExcelPenerimaanGajiProfesi($months, $years);
 
-            return Excel::download($sheets, 'rekap-penerimaan-gaji-kompetensi.xls');
+            // **Generate PDF dari Sheet lainnya**
+            $pdfPathOtherSheet = $this->generatePDFPenerimaanGajiProfesiSheets($months, $years);
+
+            // **Generate PDF**
+            $pdfPathSheet_1 = $this->generatePDFPenerimaanGajiProfesi($months, $years);
+
+            // **Gabungkan semua file**
+            $allFiles = array_merge([$excelPath, $pdfPathSheet_1], $pdfPathOtherSheet);
+
+            // **Create ZIP**
+            $zipPath = $this->generateZIPPenerimaanGajiProfesi($allFiles);
+
+            // Return ZIP for download
+            return response()->download($zipPath)->deleteFileAfterSend(true);
         } catch (\Throwable $e) {
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf, tidak ada data yang dapat diekspor atau terjadi error. Pesan: ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
+        } finally {
+            foreach ($allFiles as $file) {
+                if (file_exists($file)) {
+                    unlink($file);
+                }
+            }
         }
-
 
         return response()->json(new WithoutDataResource(Response::HTTP_OK, 'Data penggajian karyawan berhasil di download.'), Response::HTTP_OK);
     }
@@ -689,7 +753,7 @@ class PenggajianController extends Controller
         try {
             return Excel::download(new RekapGajiPotonganExport($months, $years), 'rekap-potongan-gaji.xls');
         } catch (\Throwable $e) {
-            return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya terjadi error. Pesan: ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
+            return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya terjadi error.'), Response::HTTP_NOT_ACCEPTABLE);
         }
 
         return response()->json(new WithoutDataResource(Response::HTTP_OK, 'Data rekap potongan gaji karyawan berhasil di download.'), Response::HTTP_OK);
@@ -713,7 +777,7 @@ class PenggajianController extends Controller
         try {
             return Excel::download(new LaporanGajiBankExport($months, $years), 'laporan-penggajian-bank.xls');
         } catch (\Throwable $e) {
-            return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya terjadi error. Pesan: ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
+            return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya terjadi error.'), Response::HTTP_NOT_ACCEPTABLE);
         }
 
         return response()->json(new WithoutDataResource(Response::HTTP_OK, 'Data laporan penggajian setoran bank berhasil di download.'), Response::HTTP_OK);
@@ -762,4 +826,383 @@ class PenggajianController extends Controller
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
+
+    // ** Export Rekap Penerimaan gaji per karyawan **
+    private function generateExcelPenerimaanGaji(array $months, array $years)
+    {
+        $fileName = 'rekap-penerimaan-gaji-karyawan.xls';
+        $filePath = storage_path('app/public/' . $fileName);
+
+        Excel::store(new RekapGajiPenerimaanExport($months, $years), 'public/' . $fileName);
+
+        return $filePath;
+    }
+
+    private function generatePDFPenerimaanGaji(array $months, array $years)
+    {
+        $data = (new RekapGajiPenerimaanExport($months, $years))->sheets()[0]->collection();
+
+        $filteredData = $data->filter(function ($row) {
+            return $row['no'] !== 'Total'; // filter
+        });
+
+        $dataChunks = $filteredData->chunk(20); // Maksimal data per halaman
+
+        $totals = $filteredData->reduce(function ($carry, $item) {
+            foreach ($item as $key => $value) {
+                if (is_numeric($value)) {
+                    $carry[$key] = ($carry[$key] ?? 0) + $value;
+                }
+            }
+            return $carry;
+        }, []);
+
+        $pdf = Pdf::loadView('gajis.PenerimaanKaryawan', [
+            'dataChunks' => $dataChunks,
+            'months' => $months,
+            'years' => $years,
+            'totals' => $totals,
+        ])->setPaper('F4', 'landscape');
+
+        $fileName = 'rekap-penerimaan-gaji-karyawan.pdf';
+        $filePath = storage_path('app/public/' . $fileName);
+
+        Storage::put('public/' . $fileName, $pdf->output());
+
+        return $filePath;
+    }
+
+    private function generatePDFPenerimaanGajiSheets(array $months, array $years)
+    {
+        $export = new RekapGajiPenerimaanExport($months, $years);
+        $sheets = $export->sheets();
+
+        $pdfPaths = [];
+
+        ini_set('memory_limit', '512M');
+        set_time_limit(300);
+
+        foreach ($sheets as $index => $sheet) {
+            if ($index === 0) {
+                continue; // Skip sheet pertama (all karyawan)
+            }
+
+            // Ambil data dari sheet
+            $data = $sheet->collection();
+
+            $filteredData = $data->filter(function ($row) {
+                return isset($row['no']) && $row['no'] !== 'Total';
+            });
+
+            $dataChunks = $filteredData->chunk(20);
+
+            $totals = $filteredData->reduce(function ($carry, $item) {
+                foreach ($item as $key => $value) {
+                    if (is_numeric($value)) {
+                        $carry[$key] = ($carry[$key] ?? 0) + $value;
+                    }
+                }
+                return $carry;
+            }, []);
+
+            $title = $sheet->title();
+            $unitKerjaNama = explode(' - ', $title)[0];
+
+            $pdf = Pdf::loadView('gajis.PenerimaanKaryawan', [
+                'dataChunks' => $dataChunks,
+                'months' => $months,
+                'years' => $years,
+                'totals' => $totals,
+                'nama_unit' => $unitKerjaNama,
+            ])->setPaper('F4', 'landscape');
+
+            // Pastikan nama file tidak memiliki karakter ilegal
+            $safeTitle = Str::slug($sheet->title(), '-');
+            $fileName = 'rekap-penerimaan-gaji-karyawan-' . $safeTitle . '.pdf';
+            $filePath = storage_path('app/public/' . $fileName);
+
+            Storage::put('public/' . $fileName, $pdf->output());
+
+            $pdfPaths[] = $filePath;
+        }
+
+        return $pdfPaths;
+    }
+
+    private function generateZIPPenerimaanGaji(array $files)
+    {
+        $zipFileName = 'rekap-penerimaan-gaji-karyawan.zip';
+        $zipPath = storage_path('app/public/' . $zipFileName);
+
+        $zip = new ZipArchive;
+
+        if ($zip->open($zipPath, ZipArchive::CREATE) === TRUE) {
+            foreach ($files as $file) {
+                $zip->addFile($file, basename($file));
+            }
+            $zip->close();
+        }
+
+        return $zipPath;
+    }
+    // ** Export Rekap Penerimaan gaji per karyawan **
+
+    // ** Export Rekap Penerimaan gaji per unit kerja **
+    private function generateExcelPenerimaanGajiUnit(array $months, array $years)
+    {
+        $fileName = 'rekap-penerimaan-gaji-unit.xls';
+        $filePath = storage_path('app/public/' . $fileName);
+
+        Excel::store(new RekapGajiUnitExport($months, $years), 'public/' . $fileName);
+
+        return $filePath;
+    }
+
+    private function generatePDFPenerimaanGajiUnit(array $months, array $years)
+    {
+        $data = (new RekapGajiUnitExport($months, $years))->sheets()[0]->collection();
+
+        $filteredData = $data->filter(function ($row) {
+            return $row['No'] !== 'Total';
+        });
+
+        $dataChunks = $filteredData->chunk(20);
+
+        $totals = $filteredData->reduce(function ($carry, $item) {
+            foreach ($item as $key => $value) {
+                if (is_numeric($value)) {
+                    $carry[$key] = ($carry[$key] ?? 0) + $value;
+                }
+            }
+            return $carry;
+        }, []);
+
+        $premis = Premi::pluck('nama_premi', 'id')->toArray();
+        $pdf = Pdf::loadView('gajis.PenerimaanUnitKerja', [
+            'dataChunks' => $dataChunks,
+            'months' => $months,
+            'years' => $years,
+            'totals' => $totals,
+            'premis' => $premis,
+        ])->setPaper('F4', 'landscape');
+
+        $fileName = 'rekap-penerimaan-gaji-unit.pdf';
+        $filePath = storage_path('app/public/' . $fileName);
+
+        Storage::put('public/' . $fileName, $pdf->output());
+
+        return $filePath;
+    }
+
+    private function generatePDFPenerimaanGajiUnitPenambah(array $months, array $years)
+    {
+        $data = (new RekapGajiUnitExport($months, $years))->sheets()[2]->collection();
+
+        $filteredData = $data->filter(function ($row) {
+            return $row['No'] !== 'Total';
+        });
+
+        $dataChunks = $filteredData->chunk(20);
+
+        $totals = $filteredData->reduce(function ($carry, $item) {
+            foreach ($item as $key => $value) {
+                if (is_numeric($value)) {
+                    $carry[$key] = ($carry[$key] ?? 0) + $value;
+                }
+            }
+            return $carry;
+        }, []);
+
+        $premis = Premi::pluck('nama_premi', 'id')->toArray();
+
+        $pdf = Pdf::loadView('gajis.PenerimaanUnitKerjaPenambah', [
+            'dataChunks' => $dataChunks,
+            'months' => $months,
+            'years' => $years,
+            'totals' => $totals,
+            'premis' => $premis,
+        ])->setPaper('F4', 'landscape');
+
+        $fileName = 'rekap-penerimaan-gaji-unit-penambah.pdf';
+        $filePath = storage_path('app/public/' . $fileName);
+
+        Storage::put('public/' . $fileName, $pdf->output());
+
+        return [$filePath];
+    }
+
+    private function generatePDFPenerimaanGajiUnitPengurang(array $months, array $years)
+    {
+        $data = (new RekapGajiUnitExport($months, $years))->sheets()[1]->collection();
+
+        $filteredData = $data->filter(function ($row) {
+            return $row['No'] !== 'Total';
+        });
+
+        $dataChunks = $filteredData->chunk(15);
+
+        $totals = $filteredData->reduce(function ($carry, $item) {
+            foreach ($item as $key => $value) {
+                if (is_numeric($value)) {
+                    $carry[$key] = ($carry[$key] ?? 0) + $value;
+                }
+            }
+            return $carry;
+        }, []);
+
+        $premis = Premi::pluck('nama_premi', 'id')->toArray();
+
+        $pdf = Pdf::loadView('gajis.PenerimaanUnitKerjaPengurang', [
+            'dataChunks' => $dataChunks,
+            'months' => $months,
+            'years' => $years,
+            'totals' => $totals,
+            'premis' => $premis,
+        ])->setPaper('F4', 'landscape');
+
+        $fileName = 'rekap-penerimaan-gaji-unit-pengurang.pdf';
+        $filePath = storage_path('app/public/' . $fileName);
+
+        Storage::put('public/' . $fileName, $pdf->output());
+
+        return [$filePath];
+    }
+
+    private function generateZIPPenerimaanGajiUnit(array $files)
+    {
+        $zipFileName = 'rekap-penerimaan-gaji-unit.zip';
+        $zipPath = storage_path('app/public/' . $zipFileName);
+
+        $zip = new ZipArchive;
+
+        if ($zip->open($zipPath, ZipArchive::CREATE) === TRUE) {
+            foreach ($files as $file) {
+                $zip->addFile($file, basename($file));
+            }
+            $zip->close();
+        }
+
+        return $zipPath;
+    }
+    // ** Export Rekap Penerimaan gaji per unit kerja **
+
+    // ** Export Rekap Penerimaan gaji per profesi **
+    private function generateExcelPenerimaanGajiProfesi(array $months, array $years)
+    {
+        $fileName = 'rekap-penerimaan-gaji-profesi.xls';
+        $filePath = storage_path('app/public/' . $fileName);
+
+        Excel::store(new RekapGajiKompetensiExport($months, $years), 'public/' . $fileName);
+
+        return $filePath;
+    }
+
+    private function generatePDFPenerimaanGajiProfesi(array $months, array $years)
+    {
+        $data = (new RekapGajiKompetensiExport($months, $years))->sheets()[0]->collection();
+
+        $filteredData = $data->filter(function ($row) {
+            return $row['No'] !== 'Total'; // filter
+        });
+
+        $dataChunks = $filteredData->chunk(20); // Maksimal data per halaman
+
+        $totals = $filteredData->reduce(function ($carry, $item) {
+            foreach ($item as $key => $value) {
+                if (is_numeric($value)) {
+                    $carry[$key] = ($carry[$key] ?? 0) + $value;
+                }
+            }
+            return $carry;
+        }, []);
+
+        $pdf = Pdf::loadView('gajis.PenerimaanProfesi', [
+            'dataChunks' => $dataChunks,
+            'months' => $months,
+            'years' => $years,
+            'totals' => $totals,
+        ])->setPaper('F4', 'landscape');
+
+        $fileName = 'rekap-penerimaan-gaji-profesi.pdf';
+        $filePath = storage_path('app/public/' . $fileName);
+
+        Storage::put('public/' . $fileName, $pdf->output());
+
+        return $filePath;
+    }
+
+    private function generatePDFPenerimaanGajiProfesiSheets(array $months, array $years)
+    {
+        $export = new RekapGajiKompetensiExport($months, $years);
+        $sheets = $export->sheets();
+
+        $pdfPaths = [];
+
+        ini_set('memory_limit', '512M');
+        set_time_limit(300);
+
+        foreach ($sheets as $index => $sheet) {
+            if ($index === 0) {
+                continue; // Skip sheet pertama (all karyawan)
+            }
+
+            // Ambil data dari sheet
+            $data = $sheet->collection();
+
+            $filteredData = $data->filter(function ($row) {
+                return $row['No'] !== 'Total';
+            });
+
+            $dataChunks = $filteredData->chunk(20);
+
+            $totals = $filteredData->reduce(function ($carry, $item) {
+                foreach ($item as $key => $value) {
+                    if (is_numeric($value)) {
+                        $carry[$key] = ($carry[$key] ?? 0) + $value;
+                    }
+                }
+                return $carry;
+            }, []);
+
+            $title = $sheet->title();
+            $profesiNama = explode(' - ', $title)[0];
+
+            $pdf = Pdf::loadView('gajis.PenerimaanProfesi', [
+                'dataChunks' => $dataChunks,
+                'months' => $months,
+                'years' => $years,
+                'totals' => $totals,
+                'nama_profesi' => $profesiNama,
+            ])->setPaper('F4', 'landscape');
+
+            // Pastikan nama file tidak memiliki karakter ilegal
+            $safeTitle = Str::slug($sheet->title(), '-');
+            $fileName = 'rekap-penerimaan-gaji-profesi-' . $safeTitle . '.pdf';
+            $filePath = storage_path('app/public/' . $fileName);
+
+            Storage::put('public/' . $fileName, $pdf->output());
+
+            $pdfPaths[] = $filePath;
+        }
+
+        return $pdfPaths;
+    }
+
+    private function generateZIPPenerimaanGajiProfesi(array $files)
+    {
+        $zipFileName = 'rekap-penerimaan-gaji-profesi.zip';
+        $zipPath = storage_path('app/public/' . $zipFileName);
+
+        $zip = new ZipArchive;
+
+        if ($zip->open($zipPath, ZipArchive::CREATE) === TRUE) {
+            foreach ($files as $file) {
+                $zip->addFile($file, basename($file));
+            }
+            $zip->close();
+        }
+
+        return $zipPath;
+    }
+    // ** Export Rekap Penerimaan gaji per profesi **
 }

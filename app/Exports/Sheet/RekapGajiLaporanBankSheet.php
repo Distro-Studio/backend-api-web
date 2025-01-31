@@ -51,8 +51,8 @@ class RekapGajiLaporanBankSheet implements FromCollection, WithHeadings, WithMap
             ["Periode: {$this->periode_sekarang}"],
             [
                 'no',
-                'nama_karyawan',
                 'nik',
+                'nama_karyawan',
                 'nomor_rekening',
                 'gaji_bruto',
                 'pph_21',
@@ -66,8 +66,8 @@ class RekapGajiLaporanBankSheet implements FromCollection, WithHeadings, WithMap
     {
         return [
             $this->counter++,
-            $row->nama_karyawan,
             $row->nik,
+            $row->nama_karyawan,
             $row->nomor_rekening,
             $row->gaji_bruto,
             $row->pph_21,

@@ -257,8 +257,7 @@
 																	<span class="tinyMce-placeholder">Selamat Datang <span
 																			style="color: #000000;">{{ $nama
 																			}}</span>,<br>Kami
-																		telah mendaftarkan anda kedalam sistem
-																		karyawan RSKI.<br></span>
+																		telah mendaftarkan anda kedalam Sistem Informasi Karyawan Kasih Ibu.<br></span>
 																</h1>
 															</td>
 														</tr>
