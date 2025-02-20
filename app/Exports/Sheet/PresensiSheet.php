@@ -20,15 +20,15 @@ class PresensiSheet implements FromCollection, WithHeadings, WithMapping, WithTi
     private $number;
     private $filter;
     private $title;
-    private $months;
-    private $year;
+    private $startDate;
+    private $endDate;
 
-    public function __construct($filter, $title, $months, $year)
+    public function __construct($filter, $title, $startDate, $endDate)
     {
         $this->filter = $filter;
         $this->title = $title;
-        $this->months = $months;
-        $this->year = $year;
+        $this->startDate = $startDate;
+        $this->endDate = $endDate;
         $this->number = 0; // Reset numbering for each sheet
     }
 
@@ -43,9 +43,8 @@ class PresensiSheet implements FromCollection, WithHeadings, WithMapping, WithTi
             $query->where('label', $this->filter);
         });
 
-        if (!empty($this->months) && !empty($this->year)) {
-            $query->whereYear('jam_masuk', $this->year)
-                ->whereIn(DB::raw('MONTH(jam_masuk)'), $this->months);
+        if (!empty($this->startDate) && !empty($this->endDate)) {
+            $query->whereBetween('jam_masuk', [$this->startDate, $this->endDate]);
         }
 
         return $query->get();

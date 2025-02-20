@@ -11,13 +11,13 @@ class PresensiExport implements WithMultipleSheets
 {
     use Exportable;
 
-    private $months;
-    private $year;
+    private $startDate;
+    private $endDate;
 
-    public function __construct($months, $year)
+    public function __construct($startDate, $endDate)
     {
-        $this->months = $months;
-        $this->year = $year;
+        $this->startDate = $startDate;
+        $this->endDate = $endDate;
     }
 
     public function sheets(): array
@@ -27,7 +27,7 @@ class PresensiExport implements WithMultipleSheets
         // Menambahkan sheet untuk setiap kategori presensi
         $categories = ['Terlambat', 'Tepat Waktu', 'Alpha'];
         foreach ($categories as $category) {
-            $sheets[] = new PresensiSheet($category, 'Laporan ' . str_replace(' ', '', $category), $this->months, $this->year);
+            $sheets[] = new PresensiSheet($category, 'Laporan ' . str_replace(' ', '', $category), $this->startDate, $this->endDate);
         }
 
         return $sheets;

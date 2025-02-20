@@ -499,15 +499,22 @@ class DataPresensiController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
-        $month = $request->input('month');
-        $year = $request->input('year');
-        if (empty($month) || empty($year)) {
-            return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Periode bulan dan tahun tidak boleh kosong.'), Response::HTTP_BAD_REQUEST);
+        // $month = $request->input('month');
+        // $year = $request->input('year');
+        // if (empty($month) || empty($year)) {
+        //     return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Periode bulan dan tahun tidak boleh kosong.'), Response::HTTP_BAD_REQUEST);
+        // }
+
+        // NEW UPDATE
+        $tgl_mulai = $request->input('tgl_mulai');
+        $tgl_selesai = $request->input('tgl_selesai');
+        if (empty($tgl_mulai) || empty($tgl_selesai)) {
+            return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Periode tanggal mulai dan tanggal selesai tidak boleh kosong.'), Response::HTTP_BAD_REQUEST);
         }
 
         try {
-            $startDate = Carbon::createFromDate($year, $month, 1)->startOfMonth();
-            $endDate = Carbon::createFromDate($year, $month, 1)->endOfMonth();
+            $startDate = Carbon::createFromFormat('d-m-Y', $tgl_mulai)->startOfDay();
+            $endDate = Carbon::createFromFormat('d-m-Y', $tgl_selesai)->endOfDay();
         } catch (\Exception $e) {
             return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Tanggal yang dimasukkan tidak valid.'), Response::HTTP_BAD_REQUEST);
         }
@@ -518,7 +525,7 @@ class DataPresensiController extends Controller
         }
 
         try {
-            return Excel::download(new PresensiExport([$month], $year), 'presensi-karyawan.xls');
+            return Excel::download(new PresensiExport($startDate, $endDate), 'presensi-karyawan.xls');
         } catch (\Throwable $e) {
             return response()->json(new WithoutDataResource(Response::HTTP_INTERNAL_SERVER_ERROR, 'Maaf sepertinya terjadi error. Pesan: ' . $e->getMessage()), Response::HTTP_INTERNAL_SERVER_ERROR);
         }
