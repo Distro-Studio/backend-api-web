@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('tgl_mulai'); // Y-m-d
             $table->string('tgl_selesai')->nullable(); // Y-m-d
             $table->unsignedBigInteger('shift_id')->nullable();
+            $table->softDeletes();
             $table->timestamps();
         });
     }

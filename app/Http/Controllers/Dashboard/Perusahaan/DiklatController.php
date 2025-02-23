@@ -1004,7 +1004,7 @@ class DiklatController extends Controller
                     $totalPeserta = PesertaDiklat::where('diklat_id', $diklat->id)->pluck('peserta');
                     $users = User::whereIn('id', $totalPeserta)->get();
                     foreach ($users as $user) {
-                        $this->createNotifikasiSertifikat($diklat, $user, 'Disetujui');
+                        $this->createNotifikasiSertifikat($diklat, $user, 'Disetujui', false);
                     }
 
                     // Kirim juga ke user_id = 1 (Super Admin)

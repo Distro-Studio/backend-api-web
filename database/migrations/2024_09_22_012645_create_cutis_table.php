@@ -24,6 +24,12 @@ return new class extends Migration
             $table->foreignId('verifikator_1')->nullable()->constrained('users');
             $table->foreignId('verifikator_2')->nullable()->constrained('users');
             $table->text('alasan')->nullable();
+
+            // New Updates
+            $table->string('presensi_ids')->nullable();
+            $table->string('jadwal_ids')->nullable();
+            $table->string('izin_ids')->nullable();
+            $table->string('lembur_ids')->nullable();
             $table->timestamps();
         });
     }

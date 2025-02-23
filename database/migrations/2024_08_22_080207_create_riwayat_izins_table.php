@@ -21,6 +21,7 @@ return new class extends Migration
             $table->foreignId('status_izin_id')->nullable()->constrained('status_riwayat_izins');
             $table->foreignId('verifikator_1')->nullable()->constrained('users');
             $table->text('alasan')->nullable();
+            $table->softDeletes();
             $table->timestamps();
         });
     }

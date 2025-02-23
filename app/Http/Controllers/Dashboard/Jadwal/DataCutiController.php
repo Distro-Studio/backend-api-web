@@ -28,6 +28,7 @@ use App\Http\Requests\StoreCutiJadwalRequest;
 use App\Http\Requests\UpdateCutiJadwalRequest;
 use App\Http\Resources\Dashboard\Jadwal\CutiJadwalResource;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
+use App\Models\RiwayatIzin;
 
 class DataCutiController extends Controller
 {
@@ -415,6 +416,8 @@ class DataCutiController extends Controller
                 return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Tipe cuti tidak ditemukan.'), Response::HTTP_NOT_FOUND);
             }
 
+            DB::beginTransaction();
+
             // Mengonversi tanggal dari request menggunakan helper hanya untuk perhitungan durasi
             $tglFrom = Carbon::createFromFormat('d-m-Y', $data['tgl_from'])->format('Y-m-d');
             $tglTo = Carbon::createFromFormat('d-m-Y', $data['tgl_to'])->format('Y-m-d');
@@ -514,8 +517,15 @@ class DataCutiController extends Controller
             // Menambahkan durasi ke data sebelum menyimpan
             $data['durasi'] = $durasi;
             $data['status_cuti_id'] = 1;
+
+            // New Update
+            $data['presensi_ids'] = $this->getPresensiIds($data['user_id'], $data['tgl_from'], $data['tgl_to']);
+            $data['jadwal_ids'] = $this->getJadwalIds($data['user_id'], $data['tgl_from'], $data['tgl_to']);
+            $data['izin_ids'] = $this->getIzinIds($data['user_id'], $data['tgl_from'], $data['tgl_to']);
+            $data['lembur_ids'] = $this->getLemburIds($data['user_id'], $data['tgl_from'], $data['tgl_to']);
             // $data['status_cuti_id'] = $statusCutiId;
-            $dataCuti = Cuti::create($data);
+            // $dataCuti = Cuti::create($data);
+            dd("Presensi: {$data['presensi_ids']}, Jadwal: {$data['jadwal_ids']}, Izin: {$data['izin_ids']}, Lembur: {$data['lembur_ids']}");
 
             // Setelah pembuatan cuti, cari cuti yang baru dibuat dan periksa cuti_administratif
             // $cutiTerbaru = Cuti::where('user_id', $data['user_id'])->latest()->first();
@@ -542,6 +552,8 @@ class DataCutiController extends Controller
                     'created_at' => Carbon::now('Asia/Jakarta'),
                 ]);
             }
+
+            DB::commit();
 
             return response()->json(new CutiJadwalResource(Response::HTTP_OK, $message, $dataCuti), Response::HTTP_OK);
         } catch (\Exception $e) {
@@ -690,6 +702,60 @@ class DataCutiController extends Controller
             return response()->json(new CutiJadwalResource(Response::HTTP_OK, $message, $dataCuti), Response::HTTP_OK);
         } catch (\Exception $e) {
             Log::error('| Cuti | - Error saat update data cuti karyawan: ' . $e->getMessage());
+            return response()->json([
+                'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
+                'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    // TODO | New Update
+    public function deleteCuti(Request $request)
+    {
+        try {
+            if (!Gate::allows('delete cutiKaryawan')) {
+                return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+            }
+
+            // Validasi request
+            $request->validate([
+                'ids_cuti' => 'required|array',
+                'ids_cuti.*' => 'integer|exists:cutis,id'
+            ]);
+
+            $idsCuti = $request->input('ids_cuti');
+
+            DB::beginTransaction();
+
+            // Looping untuk mendapatkan ID yang perlu di-restore sebelum menghapus cuti
+            foreach ($idsCuti as $cutiId) {
+                $cuti = Cuti::find($cutiId);
+                if ($cuti) {
+                    $restoreData = [
+                        Presensi::class => json_decode($cuti->presensi_ids, true) ?? [],
+                        Jadwal::class => json_decode($cuti->jadwal_ids, true) ?? [],
+                        RiwayatIzin::class => json_decode($cuti->izin_ids, true) ?? [],
+                        Lembur::class => json_decode($cuti->lembur_ids, true) ?? []
+                    ];
+
+                    // Loop untuk restore semua entitas
+                    foreach ($restoreData as $model => $ids) {
+                        $this->restoreEntities($model, $ids);
+                    }
+                }
+            }
+
+            // Setelah semua data di-restore, hapus cuti
+            $deletedCount = Cuti::whereIn('id', $idsCuti)->delete();
+
+            DB::commit();
+
+            return response()->json([
+                'status' => Response::HTTP_OK,
+                'message' => "Total $deletedCount data cuti berhasil dihapus."
+            ], Response::HTTP_OK);
+        } catch (\Exception $e) {
+            Log::error('| Cuti | - Error saat restore data cuti karyawan: ' . $e->getMessage());
             return response()->json([
                 'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
                 'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
@@ -908,8 +974,9 @@ class DataCutiController extends Controller
                     if ($jenis_karyawan === 0) {
                         $this->deletePresensi($userId, $tglFrom, $tglTo);
                         $this->deleteLembur($userId, $cuti);
+                        $this->deleteIzin($userId, $tglFrom, $tglTo, $cuti);
                     } else if ($jenis_karyawan === 1) {
-                        $this->deletePresensiAndJadwal($userId, $tglFrom, $tglTo, $cuti);
+                        $this->deletePresensiJadwalIzin($userId, $tglFrom, $tglTo, $cuti);
                     }
 
                     $this->createNotifikasiCutiTahap2($cuti, 'Disetujui');
@@ -943,10 +1010,11 @@ class DataCutiController extends Controller
         }
     }
 
-    private function deletePresensiAndJadwal($userId, $tglFrom, $tglTo, $cuti)
+    private function deletePresensiJadwalIzin($userId, $tglFrom, $tglTo, $cuti)
     {
         $this->deletePresensi($userId, $tglFrom, $tglTo);
         $this->deleteLembur($userId, $cuti);
+        $this->deleteIzin($userId, $tglFrom, $tglTo, $cuti);
 
         $jadwalConflicts = Jadwal::where('user_id', $userId)
             ->where(function ($query) use ($tglFrom, $tglTo) {
@@ -990,6 +1058,84 @@ class DataCutiController extends Controller
         if ($lemburIds->isNotEmpty()) {
             Log::info("| Cuti | - Lembur dihapus untuk user_id {$userId} pada rentang {$cuti->tgl_from} - {$cuti->tgl_to}");
             Lembur::whereIn('id', $lemburIds)->delete();
+        }
+    }
+
+    private function deleteIzin($userId, $tglFrom, $tglTo, $cuti)
+    {
+        $izinIds = RiwayatIzin::where('user_id', $userId)
+            ->whereBetween(DB::raw("DATE(tgl_izin)"), [$tglFrom, $tglTo])
+            ->pluck('id');
+        if ($izinIds->isNotEmpty()) {
+            Log::info("| Cuti | - Izin dihapus untuk user_id {$userId} pada rentang {$cuti->tgl_from} - {$cuti->tgl_to}");
+            RiwayatIzin::whereIn('id', $izinIds)->delete();
+        }
+    }
+
+    // New Features
+    // (1) - Get id Presensi, Jadwal, Izin, Lembur
+    private function getPresensiIds($user_id_cuti, $tgl_from_cuti, $tgl_to_cuti)
+    {
+        $tgl_from = Carbon::createFromFormat('d-m-Y', $tgl_from_cuti)->format('Y-m-d');
+        $tgl_to = Carbon::createFromFormat('d-m-Y', $tgl_to_cuti)->format('Y-m-d');
+
+        return json_encode(
+            Presensi::where('user_id', $user_id_cuti)
+                ->whereBetween(DB::raw("DATE(jam_masuk)"), [$tgl_from, $tgl_to])
+                ->pluck('id')
+                ->map(fn($id) => (string) $id)
+                ->toArray()
+        );
+    }
+
+    private function getJadwalIds($user_id_cuti, $tgl_from_cuti, $tgl_to_cuti)
+    {
+        $tgl_from = Carbon::createFromFormat('d-m-Y', $tgl_from_cuti)->format('Y-m-d');
+        $tgl_to = Carbon::createFromFormat('d-m-Y', $tgl_to_cuti)->format('Y-m-d');
+
+        return json_encode(
+            Jadwal::where('user_id', $user_id_cuti)
+                ->where(function ($query) use ($tgl_from, $tgl_to) {
+                    $query->where('tgl_mulai', '<=', $tgl_to)
+                        ->where('tgl_selesai', '>=', $tgl_from);
+                })
+                ->pluck('id')
+                ->map(fn($id) => (string) $id)
+                ->toArray()
+        );
+    }
+
+    private function getIzinIds($user_id_cuti, $tgl_from_cuti, $tgl_to_cuti)
+    {
+        $tgl_from = Carbon::createFromFormat('d-m-Y', $tgl_from_cuti)->format('Y-m-d');
+        $tgl_to = Carbon::createFromFormat('d-m-Y', $tgl_to_cuti)->format('Y-m-d');
+
+        return json_encode(
+            RiwayatIzin::where('user_id', $user_id_cuti)
+                ->whereBetween(DB::raw("DATE(tgl_izin)"), [$tgl_from, $tgl_to])
+                ->where('status_izin_id', 2)
+                ->pluck('id')
+                ->map(fn($id) => (string) $id)
+                ->toArray()
+        );
+    }
+
+    private function getLemburIds($user_id_cuti, $tgl_from_cuti, $tgl_to_cuti)
+    {
+        return json_encode(
+            Lembur::where('user_id', $user_id_cuti)
+                ->whereBetween('tgl_pengajuan', [$tgl_from_cuti, $tgl_to_cuti]) // Karena tgl_pengajuan sudah dalam format d-m-Y
+                ->pluck('id')
+                ->map(fn($id) => (string) $id)
+                ->toArray()
+        );
+    }
+
+    // (2) - Restore Presensi, Jadwal, Izin, Lembur
+    private function restoreEntities($model, $ids)
+    {
+        if (!empty($ids)) {
+            $model::whereIn('id', $ids)->restore();
         }
     }
 

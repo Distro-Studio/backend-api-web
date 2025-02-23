@@ -11,12 +11,16 @@ class StorageServerHelper
 {
 	private static $token = null;
 	private static $storageDomain = null;
+	private static $storageUsername = null;
+	private static $storagePassword = null;
 
 	// Initialize storageDomain once
 	private static function initDomain()
 	{
 		if (self::$storageDomain === null) {
 			self::$storageDomain = env('STORAGE_SERVER_DOMAIN');
+			self::$storageUsername = env('USERNAME_STORAGE');
+			self::$storagePassword = env('PASSWORD_STORAGE');
 		}
 	}
 
@@ -24,8 +28,8 @@ class StorageServerHelper
 	{
 		self::initDomain(); // Ensure domain is initialized
 		$response = Http::asForm()->post(self::$storageDomain . '/api/login', [
-			'username' => env('USERNAME_STORAGE'),
-			'password' => env('PASSWORD_STORAGE')
+			'username' => self::$storageUsername,
+			'password' => self::$storagePassword
 		]);
 
 		$logininfo = $response->json();
