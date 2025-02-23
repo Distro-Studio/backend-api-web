@@ -19,6 +19,11 @@ class Cuti extends Model
         'status_cuti_id' => 'integer',
         'verifikator_1' => 'integer',
         'verifikator_2' => 'integer',
+        'presensi_id' => 'integer',
+        'jadwal_id' => 'integer',
+        'tukar_jadwal_id' => 'integer',
+        'izin_id' => 'integer',
+        'lembur_id' => 'integer',
     ];
 
     /**
@@ -69,5 +74,55 @@ class Cuti extends Model
     public function verifikator_2_cutis(): BelongsTo
     {
         return $this->belongsTo(User::class, 'verifikator_2', 'id');
+    }
+
+    /**
+     * Get the presensis that owns the Cuti
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function presensis(): BelongsTo
+    {
+        return $this->belongsTo(Presensi::class, 'presensi_id', 'id');
+    }
+
+    /**
+     * Get the jadwals that owns the Cuti
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function jadwals(): BelongsTo
+    {
+        return $this->belongsTo(Jadwal::class, 'jadwal_id', 'id');
+    }
+
+    /**
+     * Get the tukar_jadwals that owns the Cuti
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function tukar_jadwals(): BelongsTo
+    {
+        return $this->belongsTo(TukarJadwal::class, 'tukar_jadwal_id', 'id');
+    }
+
+    /**
+     * Get the riwayat_izins that owns the Cuti
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function riwayat_izins(): BelongsTo
+    {
+        return $this->belongsTo(RiwayatIzin::class, 'izin_id', 'id');
+    }
+
+    /**
+     * Get the lemburs that owns the Cuti
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function lemburs(): BelongsTo
+    {
+        return $this->belongsTo(Lembur::class, 'lembur_id', 'id');
     }
 }

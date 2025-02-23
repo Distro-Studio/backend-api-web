@@ -18,6 +18,7 @@ return new class extends Migration
             $table->string('tgl_pengajuan'); // d-m-Y
             $table->string('durasi');
             $table->text('catatan');
+            $table->softDeletes();
             $table->timestamps();
         });
     }
