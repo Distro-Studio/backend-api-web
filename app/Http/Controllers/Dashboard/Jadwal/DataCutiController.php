@@ -524,8 +524,8 @@ class DataCutiController extends Controller
             $data['izin_ids'] = $this->getIzinIds($data['user_id'], $data['tgl_from'], $data['tgl_to']);
             $data['lembur_ids'] = $this->getLemburIds($data['user_id'], $data['tgl_from'], $data['tgl_to']);
             // $data['status_cuti_id'] = $statusCutiId;
-            // $dataCuti = Cuti::create($data);
-            dd("Presensi: {$data['presensi_ids']}, Jadwal: {$data['jadwal_ids']}, Izin: {$data['izin_ids']}, Lembur: {$data['lembur_ids']}");
+            $dataCuti = Cuti::create($data);
+            // dd("Presensi: {$data['presensi_ids']}, Jadwal: {$data['jadwal_ids']}, Izin: {$data['izin_ids']}, Lembur: {$data['lembur_ids']}");
 
             // Setelah pembuatan cuti, cari cuti yang baru dibuat dan periksa cuti_administratif
             // $cutiTerbaru = Cuti::where('user_id', $data['user_id'])->latest()->first();
