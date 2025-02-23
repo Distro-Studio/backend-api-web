@@ -271,7 +271,7 @@ class DiklatController extends Controller
                 ];
             });
 
-            $path_berkas = env('STORAGE_SERVER_DOMAIN') . $diklat->berkas_dokumen_eksternals->path;
+            $path_berkas = "https://192.168.0.20/RskiSistem24/file-storage/public" . $diklat->berkas_dokumen_eksternals->path;
 
             $userId = $diklat->peserta_diklat->pluck('users.id')->first() ?? null;
             $relasiVerifikasi = $userId ? RelasiVerifikasi::whereJsonContains('user_diverifikasi', (int) $userId)
@@ -598,7 +598,7 @@ class DiklatController extends Controller
         }
 
         // Ambil path untuk gambar dan dokumen eksternal
-        $baseUrl = env('STORAGE_SERVER_DOMAIN'); // Ganti dengan URL domain Anda
+        $baseUrl = "https://192.168.0.20/RskiSistem24/file-storage/public"; // Ganti dengan URL domain Anda
 
         $gambarUrl = null;
         if ($diklat->gambar) {

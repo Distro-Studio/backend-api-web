@@ -1284,7 +1284,7 @@ class DataKaryawanController extends Controller
       //   'file_sertifikat' => $karyawan->file_sertifikat ?? null,
       // ];
 
-      // $baseUrl = env('STORAGE_SERVER_DOMAIN');
+      // $baseUrl = "https://192.168.0.20/RskiSistem24/file-storage/public";
 
       // $formattedPaths = [];
       // foreach ($berkasFields as $field => $berkasId) {

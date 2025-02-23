@@ -40,7 +40,7 @@ class Karyawan_BerkasController extends Controller
 
             // Ambil data user dari berkas yang pertama
             $user = $berkas->first()->users;
-            $baseUrl = env('STORAGE_SERVER_DOMAIN');
+            $baseUrl = "https://192.168.0.20/RskiSistem24/file-storage/public";
 
             // Format data berkas
             $formattedData = $berkas->map(function ($item) use ($baseUrl) {

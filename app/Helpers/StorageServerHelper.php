@@ -18,9 +18,9 @@ class StorageServerHelper
 	private static function initDomain()
 	{
 		if (self::$storageDomain === null) {
-			self::$storageDomain = env('STORAGE_SERVER_DOMAIN');
-			self::$storageUsername = env('USERNAME_STORAGE');
-			self::$storagePassword = env('PASSWORD_STORAGE');
+			self::$storageDomain = "https://192.168.0.20/RskiSistem24/file-storage/public";
+			self::$storageUsername = "userwebrski";
+			self::$storagePassword = "12345678";
 		}
 	}
 

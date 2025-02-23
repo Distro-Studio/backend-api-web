@@ -340,7 +340,7 @@ class Karyawan_DetailController extends Controller
                         'role_asal' => $transfer->role_asals,
                         'role_tujuan' => $transfer->role_tujuans,
                         'alasan' => $transfer->alasan,
-                        'dokumen' => env('STORAGE_SERVER_DOMAIN') . $transfer->dokumen,
+                        'dokumen' => "https://192.168.0.20/RskiSistem24/file-storage/public" . $transfer->dokumen,
                         'created_at' => $item->created_at,
                         'updated_at' => $item->updated_at
                     ],
@@ -745,7 +745,7 @@ class Karyawan_DetailController extends Controller
             $userName = $pesertaDiklats->first()->users;
             $formattedData = $pesertaDiklats->map(function ($pesertaDiklat) {
                 $diklat = $pesertaDiklat->diklats;
-                $server_url = env('STORAGE_SERVER_DOMAIN');
+                $server_url = "https://192.168.0.20/RskiSistem24/file-storage/public";
 
                 return [
                     'id' => $diklat->id,

@@ -29,7 +29,7 @@ class AboutHospitalController extends Controller
                 return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data detail perusahaan RSKI tidak ditemukan.'), Response::HTTP_NOT_FOUND);
             }
 
-            $baseUrl = env('STORAGE_SERVER_DOMAIN');
+            $baseUrl = "https://192.168.0.20/RskiSistem24/file-storage/public";
             $formattedData = [
                 'id' => $hospital->id,
                 'konten' => $hospital->konten,

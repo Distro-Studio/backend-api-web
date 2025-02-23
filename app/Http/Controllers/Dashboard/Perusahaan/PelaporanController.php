@@ -219,7 +219,7 @@ class PelaporanController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data pelaporan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
         }
 
-        $baseUrl = env('STORAGE_SERVER_DOMAIN'); // Ganti dengan URL server Anda
+        $baseUrl = "https://192.168.0.20/RskiSistem24/file-storage/public"; // Ganti dengan URL server Anda
 
         // Format data untuk output
         $formattedData = $dataPelaporan->map(function ($pelaporan) use ($baseUrl) {

@@ -34,7 +34,7 @@ class MateriPelatihanController extends Controller
                 ], Response::HTTP_NOT_FOUND);
             }
 
-            $baseUrl = env('STORAGE_SERVER_DOMAIN');
+            $baseUrl = "https://192.168.0.20/RskiSistem24/file-storage/public";
             $formattedData = $data_pelatihan->map(function ($pelatihan) use ($baseUrl) {
                 return [
                     'id' => $pelatihan->id,
@@ -199,7 +199,7 @@ class MateriPelatihanController extends Controller
                 ], Response::HTTP_NOT_FOUND);
             }
 
-            $baseUrl = env('STORAGE_SERVER_DOMAIN');
+            $baseUrl = "https://192.168.0.20/RskiSistem24/file-storage/public";
             $formattedData = [
                 'id' => $data_pelatihan->id,
                 'judul' => $data_pelatihan->judul,
@@ -314,7 +314,7 @@ class MateriPelatihanController extends Controller
 
                         $berkasIds[$index] = $berkas->id;
                         Log::info('Berkas ' . $field . ' berhasil diupload.');
-                    } 
+                    }
                     // else if (is_string($request->input($field))) {
                     //     unset($data[$field]);
                     // }

@@ -389,7 +389,7 @@ class DataPresensiController extends Controller
         $fotoMasukBerkas = Berkas::where('id', $presensiHariIni->foto_masuk)->first();
         $fotoKeluarBerkas = Berkas::where('id', $presensiHariIni->foto_keluar)->first();
 
-        $baseUrl = env('STORAGE_SERVER_DOMAIN'); // Ganti dengan URL domain Anda
+        $baseUrl = "https://192.168.0.20/RskiSistem24/file-storage/public"; // Ganti dengan URL domain Anda
 
         $fotoMasukExt = $fotoMasukBerkas ? StorageServerHelper::getExtensionFromMimeType($fotoMasukBerkas->ext) : null;
         $fotoMasukUrl = $fotoMasukBerkas ? $baseUrl . $fotoMasukBerkas->path : null;
