@@ -64,7 +64,7 @@ class JadwalImport implements ToModel, WithHeadingRow, WithValidation
 
         // Cek apakah shift adalah "Libur"
         if (stripos($row['shift'], 'Libur') !== false) {
-            $shift_id = null;
+            $shift_id = 0;
         } else {
             $shifts = $this->Shift
                 ->where('nama', $row['shift'])
