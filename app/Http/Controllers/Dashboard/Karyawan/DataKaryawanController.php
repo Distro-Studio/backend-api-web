@@ -601,7 +601,7 @@ class DataKaryawanController extends Controller
       // Per page
       $limit = $request->input('limit', 10);
 
-      $karyawan = DataKaryawan::query()->where('id', '!=', 1)->orderBy('created_at', 'desc');
+      $karyawan = DataKaryawan::query()->where('id', '!=', 1)->orderBy('nik', 'asc');
 
       // Ambil semua filter dari request body
       $filters = $request->all();

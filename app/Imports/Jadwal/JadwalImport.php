@@ -62,12 +62,20 @@ class JadwalImport implements ToModel, WithHeadingRow, WithValidation
             throw new \Exception("Unit kerja '" . $row['unit_kerja'] . "' tidak ditemukan.");
         }
 
-        $shifts = $this->Shift
-            ->where('nama', $row['shift'])
-            ->where('unit_kerja_id', $unitKerja->id)
-            ->first();
-        if (!$shifts) {
-            throw new \Exception("Shift '" . $row['shift'] . "' untuk unit kerja '" . $row['unit_kerja'] . "' tidak ditemukan.");
+        // Cek apakah shift adalah "Libur"
+        if (stripos($row['shift'], 'Libur') !== false) {
+            $shift_id = null;
+        } else {
+            $shifts = $this->Shift
+                ->where('nama', $row['shift'])
+                ->where('unit_kerja_id', $unitKerja->id)
+                ->first();
+
+            if (!$shifts) {
+                throw new \Exception("Shift '" . $row['shift'] . "' untuk unit kerja '" . $row['unit_kerja'] . "' tidak ditemukan.");
+            }
+
+            $shift_id = $shifts->id;
         }
 
         $tgl_mulai = Carbon::createFromFormat('d-m-Y', $row['tanggal_mulai'])->format('Y-m-d');
@@ -77,7 +85,7 @@ class JadwalImport implements ToModel, WithHeadingRow, WithValidation
             'user_id' => $dataKaryawan->user_id,
             'tgl_mulai' => $tgl_mulai,
             'tgl_selesai' => $tgl_selesai,
-            'shift_id' => $shifts->id,
+            'shift_id' => $shift_id,
         ]);
     }
 }
