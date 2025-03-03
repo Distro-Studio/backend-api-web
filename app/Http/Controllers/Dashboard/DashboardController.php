@@ -22,10 +22,14 @@ class DashboardController extends Controller
     {
         $today = Carbon::today('Asia/Jakarta')->format('d-m-Y');
 
-        $kategoriAbsenId = DB::table('kategori_presensis')->where('label', 'Alpha')->value('id');
-
         // Calculate total number of employees excluding the super admin
-        $calculatedKaryawan = DataKaryawan::where('id', '!=', 1)->count();
+        $calculatedKaryawanAktif = DataKaryawan::whereHas('users', function ($query) {
+            $query->where('status_aktif', 2);
+        })->where('id', '!=', 1)->count();
+
+        $calculatedKaryawanNonAktif = DataKaryawan::whereHas('users', function ($query) {
+            $query->where('status_aktif', 3);
+        })->where('id', '!=', 1)->count();
 
         // Hitung karyawan shift yang libur berdasarkan user_id
         $countLiburShift = Jadwal::where('shift_id', 0)
@@ -52,19 +56,14 @@ class DashboardController extends Controller
             ->whereDate(DB::raw("STR_TO_DATE(tgl_to, '%d-%m-%Y')"), '>=', Carbon::createFromFormat('d-m-Y', $today)->format('Y-m-d'))
             ->count('user_id');
 
-        // $countAbsen = Presensi::where('kategori_presensi_id', $kategoriAbsenId)
-        //     ->whereDate('jam_masuk', Carbon::createFromFormat('d-m-Y', $today)->format('Y-m-d'))
-        //     ->count('user_id');
-        $countAbsen = $countCuti + $countLibur;
-
         return response()->json([
             'status' => Response::HTTP_OK,
             'message' => "Header calculation successful.",
             'data' => [
-                'total_karyawan' => $calculatedKaryawan,
+                'total_karyawan' => $calculatedKaryawanAktif,
+                'karyawan_nonaktif' => $calculatedKaryawanNonAktif,
                 'jumlah_libur' => $countLibur,
                 'jumlah_cuti' => $countCuti,
-                'jumlah_absen' => $countAbsen,
             ]
         ], Response::HTTP_OK);
     }
