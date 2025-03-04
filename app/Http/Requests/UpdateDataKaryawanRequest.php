@@ -65,8 +65,10 @@ class UpdateDataKaryawanRequest extends FormRequest
             'no_ijazah' => 'nullable',
 
             'no_str' => 'nullable',
+            'created_str' => 'nullable|string',
             'masa_berlaku_str' => 'nullable|string',
             'no_sip' => 'nullable',
+            'created_sip' => 'nullable|string',
             'masa_berlaku_sip' => 'nullable|string',
             'no_bpjsksh' => 'nullable',
             'no_bpjsktk' => 'nullable',
@@ -143,8 +145,10 @@ class UpdateDataKaryawanRequest extends FormRequest
             'gelar_belakang.string' => 'Gelar belakang karyawan hanya diperbolehkan mengandung huruf.',
             'tahun_lulus.numeric' => 'Tahun lulus karyawan tidak diperbolehkan mengandung selain angka.',
 
+            'created_str.string' => 'Tanggal mulai STR karyawan hanya diperbolehkan mengandung angka.',
             'masa_berlaku_str.string' => 'Masa berlaku STR karyawan tidak diperbolehkan mengandung selain angka.',
-            'masa_berlaku_sip.string' => 'Masa berlaku SIP karyawan hanya diperbolehkan mengandung angka dan huruf.',
+            'created_sip.string' => 'Tanggal mulai SIP karyawan hanya diperbolehkan mengandung angka.',
+            'masa_berlaku_sip.string' => 'Masa berlaku SIP karyawan hanya diperbolehkan mengandung angka.',
 
             'pendidikan_terakhir.exists' => 'Pendidikan terakhir karyawan tersebut tidak valid.',
             'asal_sekolah.string' => 'Asal sekolah karyawan tidak diperbolehkan mengandung selain huruf.',

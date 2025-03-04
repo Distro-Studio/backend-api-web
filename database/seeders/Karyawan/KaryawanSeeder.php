@@ -192,7 +192,7 @@ class KaryawanSeeder extends Seeder
             $tgl_keluar = date('d-m-Y', rand(mktime(0, 0, 0, 1, 1, 2023), mktime(0, 0, 0, 12, 31, 2024)));
             $tgl_lahir = date('d-m-Y', rand(mktime(0, 0, 0, 1, 1, 1900), mktime(0, 0, 0, 12, 31, 2003)));
             $tgl_str = date('d-m-Y', rand(mktime(0, 0, 0, 1, 1, 2023), mktime(0, 0, 0, 12, 31, 2028)));
-            $tgl_sip = '10-10-2024';
+            $tgl_sip = date('d-m-Y', rand(mktime(0, 0, 0, 1, 1, 2023), mktime(0, 0, 0, 12, 31, 2028)));
 
             // Create DataKaryawan
             $dataKaryawan = DataKaryawan::create([
@@ -240,8 +240,10 @@ class KaryawanSeeder extends Seeder
                 "no_ijazah" => "IJ/VII/" . rand(1214, 500000000),
                 "tahun_lulus" => rand(1800, 2017),
                 "no_str" => "STR/01/RA/" . rand(1214, 500000),
+                "created_str" => $tgl_str,
                 "masa_berlaku_str" => $tgl_str,
                 "no_sip" => "SIP/01/VI/" . rand(1214, 500000),
+                "created_sip" => $tgl_sip,
                 "masa_berlaku_sip" => $tgl_sip,
                 "tgl_berakhir_pks" => $tgl_keluar,
                 "masa_diklat" => null,

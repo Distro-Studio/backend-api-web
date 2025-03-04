@@ -62,6 +62,10 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
+// Untuk case nambah data
+// Route::post('/add-data-karyawan', [TambahanDataController::class, 'insertDataKaryawan']);
+// Route::post('/cek-nik-karyawan', [TambahanDataController::class, 'cekNIK']);
+
 Route::post('/login', [LoginController::class, 'login']);
 Route::post('/forgot-password-sendOtp', [ForgotPasswordController::class, 'sendOtp']);
 Route::post('/forgot-password-verifyOtp', [ForgotPasswordController::class, 'verifyOtp']);
