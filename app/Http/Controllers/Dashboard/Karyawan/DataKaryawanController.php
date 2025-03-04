@@ -807,6 +807,8 @@ class DataKaryawanController extends Controller
             'foto_profil' => $karyawan->users->foto_profil,
             'data_completion_step' => $karyawan->users->data_completion_step,
             'status_aktif' => $karyawan->users->status_aktif,
+            'tgl_dinonaktifkan' => $karyawan->users->tgl_dinonaktifkan,
+            'alasan' => $karyawan->users->alasan,
             'created_at' => $karyawan->users->created_at,
             'updated_at' => $karyawan->users->updated_at
           ],
@@ -859,7 +861,10 @@ class DataKaryawanController extends Controller
           'no_ijazah' => $karyawan->no_ijazah,
           'tahun_lulus' => $karyawan->tahun_lulus,
           'no_str' => $karyawan->no_str,
+          'created_str' => $karyawan->created_str,
           'masa_berlaku_str' => $karyawan->masa_berlaku_str,
+          'no_sip' => $karyawan->no_sip,
+          'created_sip' => $karyawan->created_sip,
           'masa_berlaku_sip' => $karyawan->masa_berlaku_sip,
           'tgl_berakhir_pks' => $karyawan->tgl_berakhir_pks,
           'masa_diklat' => $karyawan->masa_diklat,
@@ -1087,6 +1092,8 @@ class DataKaryawanController extends Controller
           'foto_profil' => $karyawan->users->foto_profil,
           'data_completion_step' => $karyawan->users->data_completion_step,
           'status_aktif' => $karyawan->users->status_aktif,
+          'tgl_dinonaktifkan' => $karyawan->users->tgl_dinonaktifkan,
+          'alasan' => $karyawan->users->alasan,
           'created_at' => $karyawan->users->created_at,
           'updated_at' => $karyawan->users->updated_at
         ],
@@ -1123,7 +1130,6 @@ class DataKaryawanController extends Controller
         'nik' => $karyawan->nik,
         'email' => $karyawan->email,
         'no_rm' => $karyawan->no_rm,
-        'no_sip' => $karyawan->no_sip,
         'no_manulife' => $karyawan->no_manulife,
         'tgl_masuk' => $karyawan->tgl_masuk,
         'unit_kerja' => $karyawan->unit_kerjas,
@@ -1163,7 +1169,10 @@ class DataKaryawanController extends Controller
         'no_ijazah' => $karyawan->no_ijazah,
         'tahun_lulus' => $karyawan->tahun_lulus,
         'no_str' => $karyawan->no_str,
+        'created_str' => $karyawan->created_str,
         'masa_berlaku_str' => $karyawan->masa_berlaku_str,
+        'no_sip' => $karyawan->no_sip,
+        'created_sip' => $karyawan->created_sip,
         'masa_berlaku_sip' => $karyawan->masa_berlaku_sip,
         'tgl_berakhir_pks' => $karyawan->tgl_berakhir_pks,
         'masa_diklat' => $karyawan->masa_diklat,
@@ -1284,7 +1293,7 @@ class DataKaryawanController extends Controller
       //   'file_sertifikat' => $karyawan->file_sertifikat ?? null,
       // ];
 
-      // $baseUrl = "https://192.168.0.20/RskiSistem24/file-storage/public";
+      // $baseUrl = env('STORAGE_SERVER_DOMAIN');
 
       // $formattedPaths = [];
       // foreach ($berkasFields as $field => $berkasId) {
@@ -1309,6 +1318,8 @@ class DataKaryawanController extends Controller
           'foto_profil' => $karyawan->users->foto_profil,
           'data_completion_step' => $karyawan->users->data_completion_step,
           'status_aktif' => $karyawan->users->status_aktif,
+          'tgl_dinonaktifkan' => $karyawan->users->tgl_dinonaktifkan,
+          'alasan' => $karyawan->users->alasan,
           'created_at' => $karyawan->users->created_at,
           'updated_at' => $karyawan->users->updated_at
         ],
@@ -1338,8 +1349,6 @@ class DataKaryawanController extends Controller
         'email' => $karyawan->email,
         'nik' => $karyawan->nik,
         'no_rm' => $karyawan->no_rm,
-        'no_sip' => $karyawan->no_sip,
-        'masa_berlaku_sip' => $karyawan->masa_berlaku_sip,
         'no_manulife' => $karyawan->no_manulife,
         'tgl_masuk' => $karyawan->tgl_masuk,
         'unit_kerja' => $karyawan->unit_kerjas, // unit_kerja_id
@@ -1379,8 +1388,12 @@ class DataKaryawanController extends Controller
         'no_ijazah' => $karyawan->no_ijazah,
         'tahun_lulus' => $karyawan->tahun_lulus,
         'no_str' => $karyawan->no_str,
+        'created_str' => $karyawan->created_str,
         'masa_berlaku_str' => $karyawan->masa_berlaku_str,
         'tgl_berakhir_pks' => $karyawan->tgl_berakhir_pks,
+        'no_sip' => $karyawan->no_sip,
+        'created_sip' => $karyawan->created_sip,
+        'masa_berlaku_sip' => $karyawan->masa_berlaku_sip,
         'masa_diklat' => $karyawan->masa_diklat,
         'total_durasi_internal' => $total_durasi_internal,
         'total_durasi_eksternal' => $total_durasi_eksternal,
@@ -1554,7 +1567,7 @@ class DataKaryawanController extends Controller
     }
   }
 
-  public function toggleStatusUser($data_karyawan_id)
+  public function toggleStatusUser(Request $request, $data_karyawan_id)
   {
     try {
       if (!Gate::allows('edit dataKaryawan')) {
@@ -1592,9 +1605,13 @@ class DataKaryawanController extends Controller
         $message = "Karyawan '{$karyawan->users->nama}' berhasil diaktifkan.";
       } elseif ($user->status_aktif === 2) {
         $user->status_aktif = 3;
+        $user->tgl_dinonaktifkan = Carbon::now('Asia/Jakarta');
+        $user->alasan = $request->input('alasan');
         $message = "Karyawan '{$karyawan->users->nama}' berhasil dinonaktifkan.";
       } elseif ($user->status_aktif === 3) {
         $user->status_aktif = 2;
+        $user->tgl_dinonaktifkan = null;
+        $user->alasan = null;
         $message = "Karyawan '{$karyawan->users->nama}' berhasil diaktifkan kembali.";
       } else {
         return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, "Karyawan '{$karyawan->users->nama}' belum melengkapi data karyawan."), Response::HTTP_NOT_ACCEPTABLE);

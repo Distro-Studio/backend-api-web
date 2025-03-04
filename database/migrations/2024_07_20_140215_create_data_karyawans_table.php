@@ -58,9 +58,14 @@ return new class extends Migration
             $table->foreignId('status_karyawan_id')->nullable()->constrained('status_karyawans'); // Tetap, Kontrak, Magang
             $table->foreignId('kelompok_gaji_id')->nullable()->constrained('kelompok_gajis');
             $table->string('no_str')->nullable();
-            $table->string('masa_berlaku_str')->nullable();
+            $table->string('masa_berlaku_str')->nullable(); // Ended STR
             $table->string('no_sip')->nullable();
-            $table->string('masa_berlaku_sip')->nullable();
+            $table->string('masa_berlaku_sip')->nullable(); // Ended SIP
+
+            // New Features
+            $table->string('created_str')->nullable();
+            $table->string('created_sip')->nullable();
+
             $table->foreignId('ptkp_id')->nullable()->constrained('ptkps');
             $table->string('tgl_berakhir_pks')->nullable();
             $table->integer('masa_diklat')->nullable();
