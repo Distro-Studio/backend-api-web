@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Mar 05, 2025 at 02:47 PM
+-- Generation Time: Mar 05, 2025 at 02:56 PM
 -- Server version: 8.0.30
 -- PHP Version: 8.2.27
 
@@ -5703,6 +5703,7 @@ INSERT INTO `role_has_permissions` (`permission_id`, `role_id`) VALUES
 (146, 1),
 (147, 1),
 (148, 1),
+(149, 1),
 (2, 14),
 (4, 14),
 (7, 14),
