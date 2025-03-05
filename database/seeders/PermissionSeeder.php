@@ -15,15 +15,18 @@ class PermissionSeeder extends Seeder
             'Riwayat Perubahan' => ['view riwayatPerubahan'],
             'Riwayat Izin' => ['view riwayatPerizinan'],
 
+            'Filter Data' => ['bypass filterData'],
+            'Dashboard Karyawan' => ['view dashboardKaryawan'],
+
             // Perusahaan
             'Diklat' => ['create diklat', 'view diklat', 'export diklat', 'publikasi sertifikat'],
 
             // Keuangan
             'Penggajian THR Karyawan' => ['create thrKaryawan', 'view thrKaryawan', 'export thrKaryawan'],
-            'Penggajian Karyawan' => ['create penggajianKaryawan', 'edit penggajianKaryawan', 'view penggajianKaryawan', 'delete penggajianKaryawan','export penggajianKaryawan', 'import penggajianKaryawan'],
+            'Penggajian Karyawan' => ['create penggajianKaryawan', 'edit penggajianKaryawan', 'view penggajianKaryawan', 'delete penggajianKaryawan', 'export penggajianKaryawan', 'import penggajianKaryawan'],
 
             // Jadwals
-            'Jadwal Karyawan' => ['create jadwalKaryawan', 'edit jadwalKaryawan', 'delete jadwalKaryawan', 'view jadwalKaryawan', 'import jadwalKaryawan', 'export jadwalKaryawan', 'bypass jadwalKaryawan'],
+            'Jadwal Karyawan' => ['create jadwalKaryawan', 'edit jadwalKaryawan', 'delete jadwalKaryawan', 'view jadwalKaryawan', 'import jadwalKaryawan', 'export jadwalKaryawan'],
             'Jadwal Tukar Karyawan' => ['delete tukarJadwal', 'view tukarJadwal',  'export tukarJadwal'],
             'Jadwal Lembur Karyawan' => ['create lemburKaryawan', 'edit lemburKaryawan', 'delete lemburKaryawan', 'view lemburKaryawan', 'export lemburKaryawan'],
             'Jadwal Cuti Karyawan' => ['create cutiKaryawan', 'edit cutiKaryawan', 'delete cutiKaryawan', 'view cutiKaryawan', 'export cutiKaryawan'],
