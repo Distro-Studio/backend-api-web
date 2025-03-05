@@ -21,7 +21,7 @@ class DashboardController extends Controller
 {
     public function calculatedHeader()
     {
-        if (!Gate::allows('view dataKaryawan')) {
+        if (!Gate::allows('view dashboardKaryawan')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
         
@@ -75,7 +75,7 @@ class DashboardController extends Controller
 
     public function calculatedKelamin()
     {
-        if (!Gate::allows('view dataKaryawan')) {
+        if (!Gate::allows('view dashboardKaryawan')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
@@ -122,7 +122,7 @@ class DashboardController extends Controller
 
     public function calculatedJabatan()
     {
-        if (!Gate::allows('view dataKaryawan')) {
+        if (!Gate::allows('view dashboardKaryawan')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
@@ -157,7 +157,7 @@ class DashboardController extends Controller
 
     public function calculatedKompetensi()
     {
-        if (!Gate::allows('view dataKaryawan')) {
+        if (!Gate::allows('view dashboardKaryawan')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
@@ -192,7 +192,7 @@ class DashboardController extends Controller
 
     public function calculatedKepegawaian()
     {
-        if (!Gate::allows('view dataKaryawan')) {
+        if (!Gate::allows('view dashboardKaryawan')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
@@ -227,7 +227,7 @@ class DashboardController extends Controller
 
     public function getLemburToday()
     {
-        if (!Gate::allows('view dataKaryawan')) {
+        if (!Gate::allows('view dashboardKaryawan')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 

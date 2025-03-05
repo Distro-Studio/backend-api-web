@@ -16,6 +16,7 @@ class PermissionSeeder extends Seeder
             'Riwayat Izin' => ['view riwayatPerizinan'],
 
             'Filter Data' => ['bypass filterData'],
+            'Dashboard Karyawan' => ['view dashboardKaryawan'],
 
             // Perusahaan
             'Diklat' => ['create diklat', 'view diklat', 'export diklat', 'publikasi sertifikat'],
