@@ -15,11 +15,16 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
+use Illuminate\Support\Facades\Gate;
 
 class DashboardController extends Controller
 {
     public function calculatedHeader()
     {
+        if (!Gate::allows('view dataKaryawan')) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
+        
         $today = Carbon::today('Asia/Jakarta')->format('d-m-Y');
 
         // Calculate total number of employees excluding the super admin
@@ -70,6 +75,10 @@ class DashboardController extends Controller
 
     public function calculatedKelamin()
     {
+        if (!Gate::allows('view dataKaryawan')) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
+
         // Retrieve all employees excluding the super admin
         $totalEmployees = DataKaryawan::where('id', '!=', 1)->count();
 
@@ -113,6 +122,10 @@ class DashboardController extends Controller
 
     public function calculatedJabatan()
     {
+        if (!Gate::allows('view dataKaryawan')) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
+
         // Retrieve all positions
         $jabatans = Jabatan::all();
 
@@ -144,6 +157,10 @@ class DashboardController extends Controller
 
     public function calculatedKompetensi()
     {
+        if (!Gate::allows('view dataKaryawan')) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
+
         // Retrieve all positions
         $kompetensis = Kompetensi::all();
 
@@ -175,6 +192,10 @@ class DashboardController extends Controller
 
     public function calculatedKepegawaian()
     {
+        if (!Gate::allows('view dataKaryawan')) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
+
         // Retrieve all statuses
         $statuses = DB::table('status_karyawans')->get();
 
@@ -206,6 +227,10 @@ class DashboardController extends Controller
 
     public function getLemburToday()
     {
+        if (!Gate::allows('view dataKaryawan')) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
+
         $today = Carbon::today('Asia/Jakarta')->format('d-m-Y');
         // dd($today);
 

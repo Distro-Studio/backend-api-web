@@ -71,7 +71,7 @@ class RoleSeeder extends Seeder
             'view jadwalKaryawan',
             'import jadwalKaryawan',
             'export jadwalKaryawan',
-            'bypass jadwalKaryawan',
+            'bypass filterData',
             'delete tukarJadwal',
             'view tukarJadwal',
             'export tukarJadwal',
