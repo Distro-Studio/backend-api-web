@@ -10,7 +10,7 @@ class CalculateBMIHelper
 		if (is_null($weight) || is_null($height) || $weight <= 0 || $height <= 0) {
 			return [
 				'bmi_value' => null,
-				'bmi_ket' => null
+				'bmi_ket' => 'Data belum lengkap'
 			];
 		}
 
@@ -33,7 +33,7 @@ class CalculateBMIHelper
 
 		// Return hasil perhitungan BMI dan kategori
 		return [
-			'bmi_value' => $bmi,
+			'bmi_value' => round($bmi, 2),
 			'bmi_ket' => $category
 		];
 	}

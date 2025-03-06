@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Dashboard\Karyawan;
 
+use App\Helpers\CalculateBMIHelper;
 use App\Http\Controllers\Controller;
 use App\Models\DataKaryawan;
 use Carbon\Carbon;
@@ -85,6 +86,8 @@ class TambahanDataController extends Controller
                 $no_sip = null;
                 $created_sip = null;
                 $masa_berlaku_sip = null;
+                $tinggi_badan = null;
+                $berat_badan = null;
 
                 foreach ($cellIterator as $cell) {
                     $column = $cell->getColumn();
@@ -106,6 +109,10 @@ class TambahanDataController extends Controller
                         $created_sip = $this->convertDateFormat($value);
                     } elseif ($column === 'H') {
                         $masa_berlaku_sip = $this->convertDateFormat($value);
+                    } elseif ($column === 'I') {
+                        $tinggi_badan = is_numeric($value) ? (int) $value : null;
+                    } elseif ($column === 'J') {
+                        $berat_badan = is_numeric($value) ? (int) $value : null;
                     }
                 }
 
@@ -136,6 +143,25 @@ class TambahanDataController extends Controller
                         if (!empty($masa_berlaku_sip)) {
                             $karyawan->masa_berlaku_sip = $masa_berlaku_sip;
                         }
+                        if (!empty($tinggi_badan)) {
+                            $karyawan->tinggi_badan = $tinggi_badan;
+                        }
+                        if (!empty($berat_badan)) {
+                            $karyawan->berat_badan = $berat_badan;
+                        }
+
+                        if (!is_null($berat_badan) && !is_null($tinggi_badan) && $berat_badan > 0 && $tinggi_badan > 0) {
+                            $bmi_result = CalculateBMIHelper::calculateBMI($berat_badan, $tinggi_badan);
+                            $bmi_value = $bmi_result['bmi_value'];
+                            $bmi_ket = $bmi_result['bmi_ket'];
+                        } else {
+                            $bmi_value = null;
+                            $bmi_ket = 'Data belum lengkap';
+                        }
+
+                        $karyawan->bmi_value = $bmi_value;
+                        $karyawan->bmi_ket = $bmi_ket;
+
                         $karyawan->save();
                         $updatedRecords++;
                     }
