@@ -61,7 +61,9 @@ class DataPresensiController extends Controller
         }
 
         // Calculate total number of employees excluding the super admin
-        $calculatedKaryawan = DataKaryawan::where('id', '!=', 1)->count();
+        $calculatedKaryawan = DataKaryawan::whereHas('users', function ($query) {
+            $query->where('status_aktif', 2);
+        })->where('id', '!=', 1)->count();
 
         // Hitung jumlah presensi dalam setiap kategori
         $countTepatWaktu = Presensi::where('kategori_presensi_id', $kategoriTepatWaktuId)
@@ -94,6 +96,8 @@ class DataPresensiController extends Controller
         // Hitung karyawan non-shift yang libur berdasarkan hari libur
         $countLiburNonShift = DataKaryawan::whereHas('unit_kerjas', function ($query) {
             $query->where('jenis_karyawan', 0);
+        })->whereHas('users', function ($query) {
+            $query->where('status_aktif', 2);
         })->when($isHariLibur, function ($query) {
             return $query->distinct('id')->count('id');  // Hitung berdasarkan user_id
         }, function ($query) {

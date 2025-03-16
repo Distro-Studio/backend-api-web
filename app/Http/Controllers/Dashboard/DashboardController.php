@@ -80,7 +80,9 @@ class DashboardController extends Controller
         }
 
         // Retrieve all employees excluding the super admin
-        $totalEmployees = DataKaryawan::where('id', '!=', 1)->count();
+        $totalEmployees = DataKaryawan::whereHas('users', function ($query) {
+            $query->where('status_aktif', 2);
+        })->where('id', '!=', 1)->count();;
 
         if ($totalEmployees == 0) {
             return response()->json([
@@ -94,8 +96,12 @@ class DashboardController extends Controller
         }
 
         // Retrieve the count of male and female employees
-        $countMale = DataKaryawan::where('jenis_kelamin', true)->count();
-        $countFemale = DataKaryawan::where('jenis_kelamin', false)->count();
+        $countMale = DataKaryawan::whereHas('users', function ($query) {
+            $query->where('status_aktif', 2);
+        })->where('jenis_kelamin', true)->count();
+        $countFemale = DataKaryawan::whereHas('users', function ($query) {
+            $query->where('status_aktif', 2);
+        })->where('jenis_kelamin', false)->count();
 
         // Calculate the percentage
         $percentMale = ($countMale / $totalEmployees) * 100;
@@ -141,7 +147,9 @@ class DashboardController extends Controller
 
         // Iterate over each position and count the number of employees holding that position
         foreach ($jabatans as $jabatan) {
-            $countKaryawan = DataKaryawan::where('jabatan_id', $jabatan->id)->count();
+            $countKaryawan = DataKaryawan::whereHas('users', function ($query) {
+                $query->where('status_aktif', 2);
+            })->where('jabatan_id', $jabatan->id)->count();
             $result[] = [
                 'nama_jabatan' => $jabatan->nama_jabatan,
                 'jumlah_karyawan' => $countKaryawan,
@@ -176,7 +184,9 @@ class DashboardController extends Controller
 
         // Iterate over each position and count the number of employees holding that position
         foreach ($kompetensis as $kompetensi) {
-            $countKaryawan = DataKaryawan::where('kompetensi_id', $kompetensi->id)->count();
+            $countKaryawan = DataKaryawan::whereHas('users', function ($query) {
+                $query->where('status_aktif', 2);
+            })->where('kompetensi_id', $kompetensi->id)->count();
             $result[] = [
                 'nama_kompetensi' => $kompetensi->nama_kompetensi,
                 'jumlah_karyawan' => $countKaryawan,
@@ -211,7 +221,9 @@ class DashboardController extends Controller
 
         // Iterate over each status and count the number of employees with that status
         foreach ($statuses as $status) {
-            $countKaryawan = DataKaryawan::where('status_karyawan_id', $status->id)->count();
+            $countKaryawan = DataKaryawan::whereHas('users', function ($query) {
+                $query->where('status_aktif', 2);
+            })->where('status_karyawan_id', $status->id)->count();
             $result[] = [
                 'status_karyawan' => $status->label,
                 'jumlah_karyawan' => $countKaryawan,
