@@ -26,7 +26,8 @@ class StoreJadwalShiftKaryawanRequest extends FormRequest
     {
         return [
             'tgl_mulai' => 'required|string',
-            'shift_id' => 'required|integer'
+            'shift_id' => 'required|integer',
+            'ex_libur' => 'nullable|boolean'
         ];
     }
 
@@ -38,6 +39,7 @@ class StoreJadwalShiftKaryawanRequest extends FormRequest
             'shift_id.required' => 'Silahkan pilih shift jadwal karyawan terlebih dahulu.',
             'shift_id.integer' => 'Shift jadwal karyawan tidak diperbolehkan mengandung selain angka.',
             // 'shift_id.exists' => 'Shift jadwal karyawan tersebut tidak valid.',
+            'ex_libur.boolean' => 'Extra Libur jadwal karyawan tidak diperbolehkan mengandung selain angka.',
         ];
     }
 

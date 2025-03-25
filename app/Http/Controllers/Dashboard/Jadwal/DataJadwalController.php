@@ -251,6 +251,7 @@ class DataJadwalController extends Controller
                                     'tgl_mulai' => $scheduleForDate->tgl_mulai,
                                     'tgl_selesai' => $scheduleForDate->tgl_selesai,
                                     'shift' => $scheduleForDate->shifts,
+                                    'ex_libur' => $scheduleForDate->ex_libur,
                                     'updated_at' => $scheduleForDate->updated_at,
                                     'status' => 1 // Jadwal normal
                                 ];
@@ -312,6 +313,7 @@ class DataJadwalController extends Controller
                                 'nama' => 'Minggu',
                                 'jam_from' => null,
                                 'jam_to' => null,
+                                'ex_libur' => null,
                                 'status' => 4 // libur gak ada jadwal (null)
                             ];
                         } elseif (isset($hariLibur[$date])) {
@@ -320,6 +322,7 @@ class DataJadwalController extends Controller
                                 'nama' => $hariLibur[$date]->nama,
                                 'jam_from' => null,
                                 'jam_to' => null,
+                                'ex_libur' => null,
                                 'status' => 3 // libur besar
                             ];
                         } else if ($nonShift) {
@@ -328,6 +331,7 @@ class DataJadwalController extends Controller
                                 'nama' => $nonShiftForDay->nama,
                                 'jam_from' => $nonShiftForDay->jam_from,
                                 'jam_to' => $nonShiftForDay->jam_to,
+                                'ex_libur' => $nonShiftForDay->ex_libur,
                                 'status' => 2 // non-shift
                             ];
                         }
@@ -601,6 +605,10 @@ class DataJadwalController extends Controller
                             'shift_id' => $data['shift_id'],
                         ];
 
+                        if ($request->has('ex_libur')) {
+                            $jadwalArray['ex_libur'] = $data['ex_libur'];
+                        }
+
                         $jadwal = Jadwal::create($jadwalArray);
                         $jadwal->load(['users', 'shifts']);
                         $jadwals[] = $jadwal;
@@ -634,6 +642,7 @@ class DataJadwalController extends Controller
 
             $data = $request->validated();
             $shiftId = $data['shift_id'] ?? null;
+            $exLibur = $data['ex_libur'] ?? null;
             $tanggalMulai = Carbon::createFromFormat('d-m-Y', $data['tgl_mulai']);
 
             // Get admin yang sedang login
@@ -750,6 +759,9 @@ class DataJadwalController extends Controller
                 $newJadwal->shift_id = $shiftId;
                 $newJadwal->tgl_mulai = $tanggalMulai->format('Y-m-d');
                 $newJadwal->tgl_selesai = $tglSelesai->format('Y-m-d');
+                if ($request->has('ex_libur')) {
+                    $newJadwal->ex_libur = $exLibur;
+                }
                 $newJadwal->save();
 
                 DB::commit();
@@ -792,6 +804,7 @@ class DataJadwalController extends Controller
                         'tgl_mulai' => $tglMulai,
                         'tgl_selesai' => $tglSelesai,
                         'shift' => $schedule->shifts,
+                        'ex_libur' => $schedule->ex_libur,
                         'updated_at' => $schedule->updated_at
                     ];
                     $current_date->addDay();
@@ -838,6 +851,7 @@ class DataJadwalController extends Controller
 
             $data = $request->validated();
             $shiftId = $data['shift_id'] ?? null;
+            $exLibur = $data['ex_libur'] ?? null;
             $tanggalMulai = Carbon::createFromFormat('d-m-Y', $data['tgl_mulai'])->format('Y-m-d');
             // $today = Carbon::today()->format('Y-m-d');
 
@@ -1016,6 +1030,9 @@ class DataJadwalController extends Controller
                     // Format tglSelesai to 'Y-m-d' before saving it to the database
                     $existingShift->shift_id = $shiftId;
                     $existingShift->tgl_selesai = $tglSelesai->format('Y-m-d');
+                    if ($request->has('ex_libur')) {
+                        $existingShift->ex_libur = $exLibur;
+                    }
                     $existingShift->save();
 
                     DB::commit();

@@ -13,7 +13,12 @@ use App\Helpers\StorageServerHelper;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Str;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
+use App\Models\DataKaryawan;
+use Exception;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 
 class Karyawan_BerkasController extends Controller
 {
@@ -162,6 +167,90 @@ class Karyawan_BerkasController extends Controller
     //         ], Response::HTTP_INTERNAL_SERVER_ERROR);
     //     }
     // }
+
+    public function createPersonalFile(Request $request, $data_karyawan_id)
+    {
+        try {
+            if (!Gate::allows('edit dataKaryawan')) {
+                if (!Gate::allows('edit dataKaryawan')) {
+                    return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+                }
+            }
+
+            // buat validasi dokumen
+            $validator = Validator::make($request->all(), [
+                'label' => 'required|string',
+                'dokumen' => 'required|file|max:10240|mimes:pdf,jpg,jpeg,png',
+            ], [
+                'label.required' => 'Nama dokumen harus diisi.',
+                'dokumen.required' => 'Dokumen harus diisi.',
+                'dokumen.file' => 'Dokumen harus berupa file.',
+                'dokumen.mimes' => 'Dokumen harus berupa file PDF, JPG, JPEG, atau PNG.',
+                'dokumen.max' => 'Ukuran dokumen maksimal 10 MB.',
+            ]);
+            if ($validator->fails()) {
+                return response()->json([
+                    'status' => Response::HTTP_BAD_REQUEST,
+                    'message' => implode(' ', $validator->errors()->all()),
+                ], Response::HTTP_BAD_REQUEST);
+            }
+
+            $karyawan = DataKaryawan::where('id', '!=', 1)->find($data_karyawan_id);
+            if (!$karyawan) {
+                return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data karyawan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+            }
+
+            if ($request->hasFile('dokumen')) {
+                StorageServerHelper::login();
+
+                $file = $request->file('dokumen');
+                $random_filename = Str::random(20);
+
+                DB::beginTransaction();
+
+                $dataupload = StorageServerHelper::uploadToServer($request, $random_filename);
+
+                if (!$dataupload || !isset($dataupload['path'], $dataupload['id_file']['id'])) {
+                    DB::rollBack(); // ← GAGAL, ROLLBACK
+                    throw new \Exception('Gagal upload file ke server dokumen.');
+                }
+
+                $data['dokumen'] = $dataupload['path'];
+
+                $berkas = Berkas::create([
+                    'user_id' => $karyawan->user_id,
+                    'file_id' => $dataupload['id_file']['id'],
+                    'nama' => $request->input('label'),
+                    'kategori_berkas_id' => 2, // umum
+                    'status_berkas_id' => 2,
+                    'path' => $dataupload['path'],
+                    'tgl_upload' => now(),
+                    'nama_file' => $dataupload['nama_file'],
+                    'ext' => $dataupload['ext'],
+                    'size' => $dataupload['size'],
+                ]);
+
+                if (!$berkas) {
+                    DB::rollBack(); // ← JIKA GAGAL SIMPAN
+                    throw new \Exception('Berkas gagal disimpan ke database.');
+                }
+
+                DB::commit(); // ← SUKSES, COMMIT
+
+                Log::info('Berkas ' . $karyawan->users->nama . ' berhasil di upload.');
+
+                StorageServerHelper::logout();
+            }
+
+            return response()->json(new WithoutDataResource(Response::HTTP_CREATED, 'Berkas dari karyawan ' . $karyawan->users->nama . ' berhasil diupload.'), Response::HTTP_CREATED);
+        } catch (\Exception $e) {
+            // Log::error('| Karyawan | - Error function store: ' . $e->getMessage());
+            return response()->json([
+                'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
+                'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
 
     // Bulk verification berkas
     public function verifikasiBerkas(Request $request, $data_karyawan_id)
