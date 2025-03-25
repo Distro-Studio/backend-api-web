@@ -141,6 +141,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
             // ! Data Berkas Section ===========>
             Route::get('/detail-karyawan-dokumen/{data_karyawan_id}', [Karyawan_BerkasController::class, 'getDataDokumen']);
             Route::post('/detail-karyawan-dokumen/{data_karyawan_id}/verifikasi', [Karyawan_BerkasController::class, 'verifikasiBerkas']);
+            Route::post('/detail-karyawan-dokumen/{data_karyawan_id}/create-berkas', [Karyawan_BerkasController::class, 'createPersonalFile']);
 
             Route::get('/detail-karyawan-cuti/{data_karyawan_id}', [Karyawan_DetailController::class, 'getDataCuti']);
             Route::get('/detail-karyawan-tukar-jadwal/{data_karyawan_id}', [Karyawan_DetailController::class, 'getDataTukarJadwal']);
