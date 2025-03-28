@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Mar 06, 2025 at 06:46 AM
+-- Generation Time: Mar 27, 2025 at 08:09 AM
 -- Server version: 8.0.30
 -- PHP Version: 8.2.27
 
@@ -85,6 +85,14 @@ CREATE TABLE `berkas` (
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `berkas`
+--
+
+INSERT INTO `berkas` (`id`, `user_id`, `file_id`, `nama`, `kategori_berkas_id`, `status_berkas_id`, `path`, `tgl_upload`, `nama_file`, `ext`, `size`, `verifikator_1`, `alasan`, `created_at`, `updated_at`) VALUES
+(1, 2504, '9e83353b-0097-4089-b124-4ac9d330961a', 'label', 2, 2, '/storage/file/PhY3Vcyq1beD6sZl0xu5', '2025-03-25 00:48:29', 'PhY3Vcyq1beD6sZl0xu5', 'application/pdf', '55959 KB', NULL, NULL, '2025-03-24 17:48:29', '2025-03-24 17:48:29'),
+(2, 2504, '9e8335a7-94b9-4103-b76e-d6f2a4ef5282', 'label', 2, 2, '/storage/file/sxSsMrggItwiHlsyq7au', '2025-03-25 00:49:41', 'sxSsMrggItwiHlsyq7au', 'application/pdf', '55959 KB', NULL, NULL, '2025-03-24 17:49:41', '2025-03-24 17:49:41');
 
 -- --------------------------------------------------------
 
@@ -1116,6 +1124,7 @@ CREATE TABLE `jadwals` (
   `tgl_mulai` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
   `tgl_selesai` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `shift_id` bigint UNSIGNED DEFAULT NULL,
+  `ex_libur` tinyint(1) NOT NULL DEFAULT '0',
   `deleted_at` timestamp NULL DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
@@ -5224,7 +5233,10 @@ INSERT INTO `personal_access_tokens` (`id`, `tokenable_type`, `tokenable_id`, `n
 (7, 'App\\Models\\User', 1, 'create_token_b20fee81-cd8e-4917-a55f-f6e6bc621366', '018708c6fc63b0c500757d62f39c90749a5e12c2c3fb825e7ac9248ef2cbc427', '[\"*\"]', '2025-02-22 20:49:35', NULL, '2025-02-22 20:49:19', '2025-02-22 20:49:35'),
 (8, 'App\\Models\\User', 2623, 'create_token_82e58bde-d399-4b93-a7d8-db132bcdbc3d', 'c56aa7758e1ad14ecd4b8afbba5d787befe1c962e132e3105fa2d1c708111c41', '[\"*\"]', NULL, NULL, '2025-02-22 20:50:22', '2025-02-22 20:50:22'),
 (9, 'App\\Models\\User', 2623, 'TLogin', '8d7592e9309e6c93537fa31fb25c2d6f330c05ec6c99329a042695c0b9e0272e', '[\"*\"]', '2025-02-23 03:51:39', NULL, '2025-02-23 03:50:31', '2025-02-23 03:51:39'),
-(10, 'App\\Models\\User', 1, 'create_token_d10e371f-0e54-484d-a911-28087ee55cd0', '60ae83cf685d32f478b2a4fab193ca72d47ce82f09fb779da976912e2684d477', '[\"*\"]', '2025-02-22 22:32:52', NULL, '2025-02-22 20:52:56', '2025-02-22 22:32:52');
+(10, 'App\\Models\\User', 1, 'create_token_d10e371f-0e54-484d-a911-28087ee55cd0', '60ae83cf685d32f478b2a4fab193ca72d47ce82f09fb779da976912e2684d477', '[\"*\"]', '2025-02-22 22:32:52', NULL, '2025-02-22 20:52:56', '2025-02-22 22:32:52'),
+(11, 'App\\Models\\User', 1, 'create_token_0530930b-b665-41dd-91ef-2a2cfb2f293e', '948aa4c3b84b9d9f3099d947d1cedca652525bd39f26655517999f2ec18b6d46', '[\"*\"]', '2025-03-24 08:44:12', NULL, '2025-03-24 08:30:13', '2025-03-24 08:44:12'),
+(12, 'App\\Models\\User', 1, 'create_token_870a364c-30d1-4c6a-a9d2-86747190139b', '424f1990b9ad3933cc54b5d346d94c25e44edda1ca35788717f330c2c84edc80', '[\"*\"]', '2025-03-24 09:01:58', NULL, '2025-03-24 08:41:45', '2025-03-24 09:01:58'),
+(13, 'App\\Models\\User', 1, 'create_token_80eba819-a325-4bb7-a63f-1b4eabed4015', '34f0a3f309e4e179ef0ecdf0af6e3e17741262e26e27cf4d6d351368a4ff6a99', '[\"*\"]', '2025-03-24 17:49:39', NULL, '2025-03-24 17:26:56', '2025-03-24 17:49:39');
 
 -- --------------------------------------------------------
 
@@ -9823,7 +9835,7 @@ ALTER TABLE `activity_logs`
 -- AUTO_INCREMENT for table `berkas`
 --
 ALTER TABLE `berkas`
-  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `cutis`
@@ -10087,7 +10099,7 @@ ALTER TABLE `permissions`
 -- AUTO_INCREMENT for table `personal_access_tokens`
 --
 ALTER TABLE `personal_access_tokens`
-  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
 
 --
 -- AUTO_INCREMENT for table `pertanyaans`
