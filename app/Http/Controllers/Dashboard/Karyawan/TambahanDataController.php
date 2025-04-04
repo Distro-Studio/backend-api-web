@@ -5,6 +5,9 @@ namespace App\Http\Controllers\Dashboard\Karyawan;
 use App\Helpers\CalculateBMIHelper;
 use App\Http\Controllers\Controller;
 use App\Models\DataKaryawan;
+use App\Models\Shift;
+use App\Models\UnitKerja;
+use PhpOffice\PhpSpreadsheet\Shared\Date;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -49,6 +52,63 @@ class TambahanDataController extends Controller
                 'total_karyawan_db' => count($niksFromDB),
                 'nik_not_found_in_excel' => array_values($notFoundInExcel),
                 'nik_not_found_in_db' => array_values($notFoundInDB)
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['errors' => $e->getMessage()]);
+        }
+    }
+
+    public function cekUnitKerja(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'jadwal_file' => 'required|mimes:xlsx,xls',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()->first()]);
+        }
+
+        try {
+            $file = $request->file('jadwal_file');
+            $spreadsheet = IOFactory::load($file->getRealPath());
+            $sheet = $spreadsheet->getActiveSheet();
+
+            $unitsFromExcelOriginal = [];
+            $unitsFromExcelNormalized = [];
+
+            foreach ($sheet->getRowIterator(2) as $row) {
+                $cell = $row->getCellIterator('E', 'E'); // hanya kolom E
+                $cell->setIterateOnlyExistingCells(true);
+                foreach ($cell as $c) {
+                    $unitOriginal = trim($c->getValue());
+                    if (!empty($unitOriginal)) {
+                        $normalized = strtolower($unitOriginal);
+                        $unitsFromExcelNormalized[$normalized] = $unitOriginal;
+                    }
+                }
+            }
+
+            $unitsFromDB = UnitKerja::withoutTrashed()->pluck('nama_unit')->toArray();
+            $unitsFromDBNormalized = [];
+            foreach ($unitsFromDB as $unitDb) {
+                $normalized = strtolower($unitDb);
+                $unitsFromDBNormalized[$normalized] = $unitDb;
+            }
+
+            $excelKeys = array_keys($unitsFromExcelNormalized);
+            $dbKeys = array_keys($unitsFromDBNormalized);
+
+            $notFoundInExcelKeys = array_diff($dbKeys, $excelKeys);
+            $notFoundInDBKeys = array_diff($excelKeys, $dbKeys);
+
+            $notFoundInExcel = array_values(array_map(fn($key) => $unitsFromDBNormalized[$key], $notFoundInExcelKeys));
+            $notFoundInDB = array_values(array_map(fn($key) => $unitsFromExcelNormalized[$key], $notFoundInDBKeys));
+
+            return response()->json([
+                'total_unit_excel' => count($excelKeys),
+                'total_unit_db' => count($dbKeys),
+                'unit_not_found_in_excel' => $notFoundInExcel,
+                'unit_not_found_in_db' => $notFoundInDB
             ]);
         } catch (\Exception $e) {
             return response()->json(['errors' => $e->getMessage()]);
@@ -179,6 +239,113 @@ class TambahanDataController extends Controller
         }
     }
 
+    public function insertMasterShift(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'shift_file' => 'required|mimes:xlsx,xls',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()->first()]);
+        }
+
+        try {
+            $file = $request->file('shift_file');
+            $spreadsheet = IOFactory::load($file->getRealPath());
+            $sheet = $spreadsheet->getActiveSheet();
+
+            // Ambil semua unit kerja dari DB dan normalisasi ke lowercase
+            $unitKerjaDB = UnitKerja::whereNull('deleted_at')->get();
+            $unitMap = [];
+            foreach ($unitKerjaDB as $unit) {
+                $unitMap[strtolower(trim($unit->nama_unit))] = $unit->id;
+            }
+
+            $inserted = [];
+            $skipped = [];
+            $seenCombinations = [];
+
+            DB::beginTransaction();
+
+            try {
+                foreach ($sheet->getRowIterator(2) as $row) {
+                    $cells = $row->getCellIterator('A', 'D');
+                    $cells->setIterateOnlyExistingCells(true);
+
+                    $rowRaw = [];
+                    foreach ($cells as $cell) {
+                        $rowRaw[] = trim($cell->getValue());
+                    }
+
+                    [$namaShift, $jamFrom, $jamTo, $namaUnit] = $rowRaw;
+
+                    // ✅ Konversi jam setelah parsing
+                    $jamFrom = $this->convertTimeFormat($jamFrom);
+                    $jamTo = $this->convertTimeFormat($jamTo);
+
+                    // ✅ Update rowData supaya skipped log-nya pakai jam hasil konversi
+                    $rowData = [$namaShift, $jamFrom, $jamTo, $namaUnit];
+
+                    if (empty($namaShift) || empty($jamFrom) || empty($jamTo) || empty($namaUnit)) {
+                        $skipped[] = [
+                            'row' => $row->getRowIndex(),
+                            'reason' => 'Ada kolom kosong',
+                            'data' => $rowData
+                        ];
+                        continue;
+                    }
+
+                    $unitKey = strtolower($namaUnit);
+                    if (!isset($unitMap[$unitKey])) {
+                        $skipped[] = [
+                            'row' => $row->getRowIndex(),
+                            'reason' => 'Nama unit tidak ditemukan di DB',
+                            'data' => $rowData
+                        ];
+                        continue;
+                    }
+
+                    $uniqueKey = strtolower($namaShift) . '|' . $jamFrom . '|' . $jamTo . '|' . $unitMap[$unitKey];
+                    if (isset($seenCombinations[$uniqueKey]) || $this->isDuplicateInDB($namaShift, $jamFrom, $jamTo, $unitMap[$unitKey])) {
+                        // $skipped[] = [
+                        //     'row' => $row->getRowIndex(),
+                        //     'reason' => 'Duplikat di dalam file atau sudah ada di DB',
+                        //     'data' => $rowData
+                        // ];
+                        continue;
+                    }
+
+                    // Tandai sudah pernah dilihat
+                    $seenCombinations[$uniqueKey] = true;
+
+                    Shift::create([
+                        'nama' => $namaShift,
+                        'jam_from' => $jamFrom,
+                        'jam_to' => $jamTo,
+                        'unit_kerja_id' => $unitMap[$unitKey],
+                    ]);
+
+                    $inserted[] = $row->getRowIndex();
+                }
+
+                DB::commit(); // Commit semua jika tidak ada error
+            } catch (\Throwable $e) {
+                DB::rollBack();
+                return response()->json([
+                    'errors' => 'Terjadi kesalahan saat menyimpan data: ' . $e->getMessage()
+                ]);
+            }
+
+            return response()->json([
+                'inserted_rows' => $inserted,
+                'skipped_rows' => $skipped,
+                'message' => 'Import selesai.'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['errors' => $e->getMessage()]);
+        }
+    }
+
     private function convertDateFormat($date)
     {
         if (empty($date)) {
@@ -200,5 +367,33 @@ class TambahanDataController extends Controller
                 return null;
             }
         }
+    }
+
+    private function convertTimeFormat($value): ?string
+    {
+        if (is_numeric($value)) {
+            try {
+                $timestamp = Date::excelToDateTimeObject($value);
+                return $timestamp->format('H:i:s');
+            } catch (\Exception $e) {
+                return null; // fallback jika gagal konversi
+            }
+        }
+
+        if (is_string($value)) {
+            return str_replace('.', ':', $value);
+        }
+
+        return null;
+    }
+
+    private function isDuplicateInDB(string $nama, string $jamFrom, string $jamTo, int $unitKerjaId): bool
+    {
+        return Shift::where('nama', $nama)
+            ->where('jam_from', $jamFrom)
+            ->where('jam_to', $jamTo)
+            ->where('unit_kerja_id', $unitKerjaId)
+            ->whereNull('deleted_at')
+            ->exists();
     }
 }

@@ -13,6 +13,7 @@ use App\Http\Controllers\Dashboard\Karyawan\DataTransferKaryawanController;
 use App\Http\Controllers\Dashboard\Karyawan\DetailKaryawan\Berkas\Karyawan_BerkasController;
 use App\Http\Controllers\Dashboard\Karyawan\DetailKaryawan\Karyawan_DetailController;
 use App\Http\Controllers\Dashboard\Karyawan\DetailKaryawan\Keluarga\Karyawan_KeluargaController;
+use App\Http\Controllers\Dashboard\Karyawan\TambahanDataController;
 use App\Http\Controllers\Dashboard\Keuangan\PenggajianController;
 use App\Http\Controllers\Dashboard\Keuangan\PenggajianKemenkeuController;
 use App\Http\Controllers\Dashboard\Keuangan\PenyesuaianGajiController;
@@ -65,6 +66,8 @@ use Illuminate\Support\Facades\Route;
 // Untuk case nambah data
 // Route::post('/add-data-karyawan', [TambahanDataController::class, 'insertDataKaryawan']);
 // Route::post('/cek-nik-karyawan', [TambahanDataController::class, 'cekNIK']);
+// Route::post('/test-unit', [TambahanDataController::class, 'cekUnitKerja']);
+// Route::post('/add-data-shifts', [TambahanDataController::class, 'insertMasterShift']);
 
 Route::post('/login', [LoginController::class, 'login']);
 Route::post('/forgot-password-sendOtp', [ForgotPasswordController::class, 'sendOtp']);
