@@ -97,10 +97,6 @@ class DataKaryawanController extends Controller
   public function getAllDataUserNonShift()
   {
     try {
-      if (!Gate::allows('view dataKaryawan')) {
-        return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
-      }
-
       $userNonShift = User::whereHas('data_karyawans.unit_kerjas', function ($query) {
         $query->where('jenis_karyawan', 0); // 0 = non shift
       })->where('nama', '!=', 'Super Admin')->where('status_aktif', 2)->get();
@@ -154,10 +150,6 @@ class DataKaryawanController extends Controller
   public function getAllDataUserShift()
   {
     try {
-      if (!Gate::allows('view dataKaryawan')) {
-        return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
-      }
-
       $userShift = User::whereHas('data_karyawans.unit_kerjas', function ($query) {
         $query->where('jenis_karyawan', 1); // 1 = shift
       })->where('nama', '!=', 'Super Admin')->where('status_aktif', 2)->get();
@@ -211,10 +203,6 @@ class DataKaryawanController extends Controller
   public function getAllDataUser()
   {
     try {
-      if (!Gate::allows('view dataKaryawan')) {
-        return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
-      }
-
       $users = User::where('nama', '!=', 'Super Admin')->where('status_aktif', 2)->get();
       if ($users->isEmpty()) {
         return response()->json([
@@ -265,10 +253,6 @@ class DataKaryawanController extends Controller
   public function getAllDataUnitKerja()
   {
     try {
-      if (!Gate::allows('view dataKaryawan')) {
-        return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
-      }
-
       $unit_kerja = UnitKerja::all();
       if ($unit_kerja->isEmpty()) {
         return response()->json([
@@ -294,10 +278,6 @@ class DataKaryawanController extends Controller
   public function getAllDataJabatan()
   {
     try {
-      if (!Gate::allows('view dataKaryawan')) {
-        return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
-      }
-
       $jabatan = Jabatan::all();
       if ($jabatan->isEmpty()) {
         return response()->json([
@@ -323,10 +303,6 @@ class DataKaryawanController extends Controller
   public function getAllDataStatusKaryawan()
   {
     try {
-      if (!Gate::allows('view dataKaryawan')) {
-        return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
-      }
-
       $status_karyawan = StatusKaryawan::all();
       if ($status_karyawan->isEmpty()) {
         return response()->json([
@@ -352,10 +328,6 @@ class DataKaryawanController extends Controller
   public function getAllDataKompetensi()
   {
     try {
-      if (!Gate::allows('view dataKaryawan')) {
-        return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
-      }
-
       $kompetensi = Kompetensi::all();
       if ($kompetensi->isEmpty()) {
         return response()->json([
@@ -381,10 +353,6 @@ class DataKaryawanController extends Controller
   public function getAllDataRole()
   {
     try {
-      if (!Gate::allows('view dataKaryawan')) {
-        return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
-      }
-
       $user = Auth::user();
       $roles = Role::all();
       if ($roles->isEmpty()) {
@@ -417,10 +385,6 @@ class DataKaryawanController extends Controller
   public function getAllDataKelompokGaji()
   {
     try {
-      if (!Gate::allows('view dataKaryawan')) {
-        return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
-      }
-
       $kelompok_gaji = KelompokGaji::all();
       if ($kelompok_gaji->isEmpty()) {
         return response()->json([
@@ -446,10 +410,6 @@ class DataKaryawanController extends Controller
   public function getAllDataPTKP()
   {
     try {
-      if (!Gate::allows('view dataKaryawan')) {
-        return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
-      }
-
       $ptkp = Ptkp::all();
       if ($ptkp->isEmpty()) {
         return response()->json([
@@ -475,10 +435,6 @@ class DataKaryawanController extends Controller
   public function getAllDataPremi()
   {
     try {
-      if (!Gate::allows('view dataKaryawan')) {
-        return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
-      }
-
       $premi = Premi::withoutTrashed()->get();
       if ($premi->isEmpty()) {
         return response()->json([
@@ -504,10 +460,6 @@ class DataKaryawanController extends Controller
   public function getAllDataKaryawan()
   {
     try {
-      if (!Gate::allows('view dataKaryawan')) {
-        return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
-      }
-
       $dataKaryawan = DataKaryawan::where('id', '!=', 1)->get();
       if ($dataKaryawan->isEmpty()) {
         return response()->json([
@@ -533,10 +485,6 @@ class DataKaryawanController extends Controller
   public function getAllPendidikan()
   {
     try {
-      if (!Gate::allows('view dataKaryawan')) {
-        return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
-      }
-
       $kategori_pendidikan = KategoriPendidikan::all();
       if ($kategori_pendidikan->isEmpty()) {
         return response()->json([
@@ -562,10 +510,6 @@ class DataKaryawanController extends Controller
   public function getAllDataTagihanPotongan()
   {
     try {
-      if (!Gate::allows('view dataKaryawan')) {
-        return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
-      }
-
       $kategori_tagihan = KategoriTagihanPotongan::all();
       if ($kategori_tagihan->isEmpty()) {
         return response()->json([
