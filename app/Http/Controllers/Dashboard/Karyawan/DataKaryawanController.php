@@ -1028,13 +1028,6 @@ class DataKaryawanController extends Controller
           'created_at' => $karyawan->users->created_at,
           'updated_at' => $karyawan->users->updated_at
         ],
-        // 'role' => $isSuperAdmin ? [
-        //   'id' => $role->id,
-        //   'name' => $role->name,
-        //   'deskripsi' => $role->deskripsi,
-        //   'created_at' => $role->created_at,
-        //   'updated_at' => $role->updated_at
-        // ] : null,
         'role' => $role ? [
           'id' => $role->id,
           'name' => $role->name,
@@ -1042,22 +1035,6 @@ class DataKaryawanController extends Controller
           'created_at' => $role->created_at,
           'updated_at' => $role->updated_at
         ] : null,
-        'potongan_gaji' => DB::table('pengurang_gajis')
-          ->join('premis', 'pengurang_gajis.premi_id', '=', 'premis.id')
-          ->where('pengurang_gajis.data_karyawan_id', $karyawan->id)
-          ->whereNull('pengurang_gajis.deleted_at')
-          ->select(
-            'premis.id',
-            'premis.nama_premi',
-            'premis.kategori_potongan_id',
-            'premis.jenis_premi',
-            'premis.besaran_premi',
-            'premis.minimal_rate',
-            'premis.maksimal_rate',
-            'premis.created_at',
-            'premis.updated_at'
-          )
-          ->get(),
         'nik' => $karyawan->nik,
         'email' => $karyawan->email,
         'no_rm' => $karyawan->no_rm,
@@ -1072,12 +1049,6 @@ class DataKaryawanController extends Controller
         'tgl_lahir' => $karyawan->tgl_lahir,
         'kelompok_gaji' => $karyawan->kelompok_gajis,
         'no_rekening' => $karyawan->no_rekening,
-        'tunjangan_jabatan' => $karyawan->tunjangan_jabatan,
-        'tunjangan_fungsional' => $karyawan->tunjangan_fungsional,
-        'tunjangan_khusus' => $karyawan->tunjangan_khusus,
-        'tunjangan_lainnya' => $karyawan->tunjangan_lainnya,
-        'uang_lembur' => $karyawan->uang_lembur,
-        'uang_makan' => $karyawan->uang_makan,
         'ptkp' => $karyawan->ptkps,
         'tgl_keluar' => $karyawan->tgl_keluar,
         'no_kk' => $karyawan->no_kk,
@@ -1118,6 +1089,41 @@ class DataKaryawanController extends Controller
         'created_at' => $karyawan->created_at,
         'updated_at' => $karyawan->updated_at
       ];
+
+      // Data sensitif hanya ditampilkan jika Super Admin
+      if ($isSuperAdmin) {
+        $formattedData['potongan_gaji'] = DB::table('pengurang_gajis')
+          ->join('premis', 'pengurang_gajis.premi_id', '=', 'premis.id')
+          ->where('pengurang_gajis.data_karyawan_id', $karyawan->id)
+          ->whereNull('pengurang_gajis.deleted_at')
+          ->select(
+            'premis.id',
+            'premis.nama_premi',
+            'premis.kategori_potongan_id',
+            'premis.jenis_premi',
+            'premis.besaran_premi',
+            'premis.minimal_rate',
+            'premis.maksimal_rate',
+            'premis.created_at',
+            'premis.updated_at'
+          )
+          ->get();
+
+        $formattedData['tunjangan_jabatan'] = $karyawan->tunjangan_jabatan;
+        $formattedData['tunjangan_fungsional'] = $karyawan->tunjangan_fungsional;
+        $formattedData['tunjangan_khusus'] = $karyawan->tunjangan_khusus;
+        $formattedData['tunjangan_lainnya'] = $karyawan->tunjangan_lainnya;
+        $formattedData['uang_lembur'] = $karyawan->uang_lembur;
+        $formattedData['uang_makan'] = $karyawan->uang_makan;
+      }
+
+      if (!$isSuperAdmin && isset($formattedData['kompetensi'])) {
+        if (is_array($formattedData['kompetensi'])) {
+          unset($formattedData['kompetensi']['nilai_bor']);
+        } elseif (is_object($formattedData['kompetensi'])) {
+          unset($formattedData['kompetensi']->nilai_bor);
+        }
+      }
 
       return response()->json([
         'status' => Response::HTTP_OK,
