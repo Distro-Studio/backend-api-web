@@ -262,7 +262,7 @@ class KaryawanExport implements FromCollection, WithHeadings, WithMapping
             $karyawan->nik,
             $karyawan->users->nama,
             $karyawan->users->username,
-            $karyawan->users->status_aktifs->label,
+            $karyawan->users->user_status_aktif->label,
             $karyawan->users->tgl_dinonaktifkan,
             implode(', ', $roles),
             $karyawan->email ?? 'N/A',
