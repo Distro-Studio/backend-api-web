@@ -213,6 +213,7 @@ class DataKaryawanController extends Controller
 
       $formattedData = $users->map(function ($user) {
         $unitKerja = $user->data_karyawans->unit_kerjas ?? null;
+        $statusKaryawan = $user->data_karyawans->status_karyawans ?? null;
 
         return [
           'id' => $user->id,
@@ -233,6 +234,10 @@ class DataKaryawanController extends Controller
             'nama_unit' => $unitKerja->nama_unit,
             'jenis_karyawan' => $unitKerja->jenis_karyawan
           ] : null,
+          'status_karyawan' => $statusKaryawan ? [
+            'id' => $statusKaryawan->id,
+            'label' => $statusKaryawan->label,
+          ] : null
         ];
       });
 
