@@ -13,11 +13,13 @@ class PresensiExport implements WithMultipleSheets
 
     private $startDate;
     private $endDate;
+    private $filters;
 
-    public function __construct($startDate, $endDate)
+    public function __construct($startDate, $endDate, $filters = [])
     {
         $this->startDate = $startDate;
         $this->endDate = $endDate;
+        $this->filters = $filters;
     }
 
     public function sheets(): array
