@@ -163,38 +163,22 @@ class PresensiSheet implements FromCollection, WithHeadings, WithMapping, WithTi
 
         if (isset($this->filters['jenis_karyawan'])) {
             $jenisKaryawan = $this->filters['jenis_karyawan'];
-            $query->whereHas('data_karyawans.unit_kerjas', function ($query) use ($jenisKaryawan) {
+            $query->whereHas('users.data_karyawans.unit_kerjas', function ($query) use ($jenisKaryawan) {
                 if (is_array($jenisKaryawan)) {
-                    $query->whereHas('users.data_karyawans.unit_kerjas', function ($query) use ($jenisKaryawan) {
-                        $query->where(function ($query) use ($jenisKaryawan) {
-                            foreach ($jenisKaryawan as $jk) {
-                                $query->orWhere('jenis_karyawan', $jk);
-                            }
-                        });
-                    });
+                    $query->whereIn('jenis_karyawan', $jenisKaryawan);
                 } else {
-                    $query->whereHas('users.data_karyawans.unit_kerjas', function ($query) use ($jenisKaryawan) {
-                        $query->where('jenis_karyawan', $jenisKaryawan);
-                    });
+                    $query->where('jenis_karyawan', $jenisKaryawan);
                 }
             });
         }
 
         if (isset($this->filters['jenis_kompetensi'])) {
-            $jenisKaryawan = $this->filters['jenis_kompetensi'];
-            $query->whereHas('data_karyawans.kompetensis', function ($query) use ($jenisKaryawan) {
-                if (is_array($jenisKaryawan)) {
-                    $query->whereHas('users.data_karyawans.kompetensis', function ($query) use ($jenisKaryawan) {
-                        $query->where(function ($query) use ($jenisKaryawan) {
-                            foreach ($jenisKaryawan as $jk) {
-                                $query->orWhere('jenis_kompetensi', $jk);
-                            }
-                        });
-                    });
+            $jenisKompetensi = $this->filters['jenis_kompetensi'];
+            $query->whereHas('users.data_karyawans.kompetensis', function ($query) use ($jenisKompetensi) {
+                if (is_array($jenisKompetensi)) {
+                    $query->whereIn('jenis_kompetensi', $jenisKompetensi);
                 } else {
-                    $query->whereHas('users.data_karyawans.kompetensis', function ($query) use ($jenisKaryawan) {
-                        $query->where('jenis_kompetensi', $jenisKaryawan);
-                    });
+                    $query->where('jenis_kompetensi', $jenisKompetensi);
                 }
             });
         }
