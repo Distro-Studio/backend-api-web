@@ -991,25 +991,24 @@ class DataKaryawanController extends Controller
       $isSuperAdmin = $loggedInUser->id == 1 || $loggedInUser->nama == 'Super Admin';
 
       // diklat calculated
-      $total_durasi_internal = PesertaDiklat::whereHas('diklats', function ($query) {
-        $query->where('kategori_diklat_id', 1); // 1 = Internal
-      })
-        ->where('peserta', $karyawan->users->id)
+      $currentYear = now('Asia/Jakarta')->year;
+      $total_durasi_internal = PesertaDiklat::where('peserta', $karyawan->users->id)
+        ->whereHas('diklats', function ($query) use ($currentYear) {
+          $query->where('kategori_diklat_id', 1) // Internal
+            ->whereRaw("YEAR(STR_TO_DATE(tgl_mulai, '%d-%m-%Y')) = ?", [$currentYear]);
+        })
         ->with('diklats')
         ->get()
-        ->sum(function ($pesertaDiklat) {
-          return $pesertaDiklat->diklats->durasi;
-        });
+        ->sum(fn($pd) => $pd->diklats?->durasi ?? 0);
 
-      $total_durasi_eksternal = PesertaDiklat::whereHas('diklats', function ($query) {
-        $query->where('kategori_diklat_id', 2); // 2 = Eksternal
-      })
-        ->where('peserta', $karyawan->users->id)
+      $total_durasi_eksternal = PesertaDiklat::where('peserta', $karyawan->users->id)
+        ->whereHas('diklats', function ($query) use ($currentYear) {
+          $query->where('kategori_diklat_id', 2) // Eksternal
+            ->whereRaw("YEAR(STR_TO_DATE(tgl_mulai, '%d-%m-%Y')) = ?", [$currentYear]);
+        })
         ->with('diklats')
         ->get()
-        ->sum(function ($pesertaDiklat) {
-          return $pesertaDiklat->diklats->durasi;
-        });
+        ->sum(fn($pd) => $pd->diklats?->durasi ?? 0);
 
       // Format the karyawan data
       $formattedData = [
@@ -1134,7 +1133,7 @@ class DataKaryawanController extends Controller
       Log::error('| Karyawan | - Error function showByUserId: ' . $e->getMessage());
       return response()->json([
         'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
-        'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
+        'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.' . $e->getMessage(),
       ], Response::HTTP_INTERNAL_SERVER_ERROR);
     }
   }
@@ -1200,25 +1199,24 @@ class DataKaryawanController extends Controller
       $isSuperAdmin = $loggedInUser->id == 1 || $loggedInUser->nama == 'Super Admin';
 
       // diklat calculated
-      $total_durasi_internal = PesertaDiklat::whereHas('diklats', function ($query) {
-        $query->where('kategori_diklat_id', 1); // 1 = Internal
-      })
-        ->where('peserta', $data_karyawan_id)
+      $currentYear = now('Asia/Jakarta')->year;
+      $total_durasi_internal = PesertaDiklat::where('peserta', $karyawan->users->id)
+        ->whereHas('diklats', function ($query) use ($currentYear) {
+          $query->where('kategori_diklat_id', 1) // Internal
+            ->whereRaw("EXTRACT(YEAR FROM TO_DATE(tgl_mulai, 'DD-MM-YYYY')) = ?", [$currentYear]);
+        })
         ->with('diklats')
         ->get()
-        ->sum(function ($pesertaDiklat) {
-          return $pesertaDiklat->diklats->durasi;
-        });
+        ->sum(fn($pd) => $pd->diklats?->durasi ?? 0);
 
-      $total_durasi_eksternal = PesertaDiklat::whereHas('diklats', function ($query) {
-        $query->where('kategori_diklat_id', 2); // 2 = Eksternal
-      })
-        ->where('peserta', $data_karyawan_id)
+      $total_durasi_eksternal = PesertaDiklat::where('peserta', $karyawan->users->id)
+        ->whereHas('diklats', function ($query) use ($currentYear) {
+          $query->where('kategori_diklat_id', 2) // Eksternal
+            ->whereRaw("EXTRACT(YEAR FROM TO_DATE(tgl_mulai, 'DD-MM-YYYY')) = ?", [$currentYear]);
+        })
         ->with('diklats')
         ->get()
-        ->sum(function ($pesertaDiklat) {
-          return $pesertaDiklat->diklats->durasi;
-        });
+        ->sum(fn($pd) => $pd->diklats?->durasi ?? 0);
 
       // $berkasFields = [
       //   'file_ktp' => $karyawan->file_ktp ?? null,
@@ -1353,7 +1351,7 @@ class DataKaryawanController extends Controller
       Log::error('| Karyawan | - Error function showByDataKaryawanId: ' . $e->getMessage());
       return response()->json([
         'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
-        'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
+        'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.' . $e->getMessage(),
       ], Response::HTTP_INTERNAL_SERVER_ERROR);
     }
   }
