@@ -763,7 +763,7 @@ class DataCutiController extends Controller
         }
     }
 
-    public function exportJadwalCuti()
+    public function exportJadwalCuti(Request $request)
     {
         try {
             if (!Gate::allows('export cutiKaryawan')) {
@@ -776,7 +776,7 @@ class DataCutiController extends Controller
             }
 
             try {
-                return Excel::download(new CutiJadwalExport(), 'cuti-karyawan.xls');
+                return Excel::download(new CutiJadwalExport($request->all()), 'cuti-karyawan.xls');
             } catch (\Throwable $e) {
                 return response()->json(new WithoutDataResource(Response::HTTP_INTERNAL_SERVER_ERROR, 'Maaf sepertinya terjadi error. Pesan: ' . $e->getMessage()), Response::HTTP_INTERNAL_SERVER_ERROR);
             }
