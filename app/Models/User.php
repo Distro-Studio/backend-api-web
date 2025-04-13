@@ -199,11 +199,11 @@ class User extends Authenticatable
     }
 
     /**
-     * Get the status_aktif that owns the User
+     * Get the user_status_aktif that owns the User
      *
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function status_aktif(): BelongsTo
+    public function user_status_aktif(): BelongsTo
     {
         return $this->belongsTo(StatusAktif::class, 'status_aktif', 'id');
     }
