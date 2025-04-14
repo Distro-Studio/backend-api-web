@@ -984,11 +984,6 @@ class DataJadwalController extends Controller
             $shiftId = $data['shift_id'] ?? null;
             $exLibur = $data['ex_libur'] ?? null;
             $tanggalMulai = Carbon::createFromFormat('d-m-Y', $data['tgl_mulai'])->format('Y-m-d');
-            $today = Carbon::today()->format('Y-m-d');
-
-            if ($tanggalMulai == $today) {
-                return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Anda tidak dapat memperbarui jadwal pada tanggal hari ini.'), Response::HTTP_BAD_REQUEST);
-            }
 
             // Get admin yang sedang login
             $admin = Auth::user();
