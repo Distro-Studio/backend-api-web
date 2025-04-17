@@ -906,9 +906,9 @@ class DataKaryawanController extends Controller
 
         DB::commit();
 
-        if (!empty($data['email'])) {
-          AccountEmailJob::dispatch($data['email'], $generatedPassword, $data['nama']);
-        }
+        // if (!empty($data['email'])) {
+        //   AccountEmailJob::dispatch($data['email'], $generatedPassword, $data['nama']);
+        // }
 
         // Mail::to($data['email'])->send(new SendAccoundUsersMail($data['email'], $generatedPassword, $data['nama']));
         return response()->json(new KaryawanResource(Response::HTTP_OK, "Data karyawan '{$createDataKaryawan->users->nama}' berhasil dibuat.", $createDataKaryawan), Response::HTTP_OK);
@@ -1375,6 +1375,7 @@ class DataKaryawanController extends Controller
         return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data karyawan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
       }
 
+      DB::beginTransaction();
       $user = $karyawan->users;
       $oldEmail = $karyawan->email;
       $newEmail = $data['email'];
@@ -1393,10 +1394,9 @@ class DataKaryawanController extends Controller
         $user->save();
 
         // Kirim email dengan password baru
-        AccountEmailJob::dispatch($newEmail, $generatedPassword, $data['nama']);
+        // AccountEmailJob::dispatch($newEmail, $generatedPassword, $data['nama']);
       }
 
-      DB::beginTransaction();
       try {
         // Update nama di tabel users
         $user->nama = $data['nama'];
