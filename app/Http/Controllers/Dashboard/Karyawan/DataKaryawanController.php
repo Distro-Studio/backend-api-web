@@ -1522,8 +1522,10 @@ class DataKaryawanController extends Controller
 
       $user = $karyawan->users;
 
-      // Validasi pertama kali untuk memastikan data_completion_step = 0
-      if ($user->data_completion_step !== 0) {
+      $authUser = Auth::user();
+
+      // Validasi hanya jika yang login bukan Super Admin
+      if ($authUser->role_id !== 1 && $user->data_completion_step !== 0) {
         return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, "Proses ini tidak bisa dilanjutkan karena langkah pengisian data belum mencapai tahap akhir."), Response::HTTP_NOT_ACCEPTABLE);
       }
 
@@ -1540,7 +1542,9 @@ class DataKaryawanController extends Controller
       if ($user->status_aktif === 1) {
         $user->status_aktif = 2;
         $karyawan->verifikator_1 = Auth::id();
-        // $user->data_completion_step = 0;
+        if ($user->data_completion_step !== 0) {
+          $user->data_completion_step = 0;
+        }
         $karyawan->save();
         $message = "Karyawan '{$karyawan->users->nama}' berhasil diaktifkan.";
       } elseif ($user->status_aktif === 2) {
