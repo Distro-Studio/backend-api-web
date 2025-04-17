@@ -32,12 +32,26 @@ class ForgotPasswordController extends Controller
         $user->remember_token_expired_at = now()->addMinutes(10);
         $user->save();
 
-        // Kirim email dengan OTP
-        $nama_user = $user->nama;
-        Mail::to($data['email'])->send(new SendOTPAccount($nama_user, $otp));
-        Log::info("| Auth | - OTP successfully sent to email: {$data['email']}.");
+        try {
+            // Percobaan kirim email
+            Mail::to($data['email'])->send(new SendOTPAccount($user->nama, $otp));
 
-        return response()->json(new WithoutDataResource(Response::HTTP_OK, 'Kode OTP berhasil dikirim, Silahkan cek inbox atau spam di email anda.'), Response::HTTP_OK);
+            // Jika berhasil kirim
+            Log::info("| Auth | - OTP successfully sent to email: {$data['email']}.");
+
+            return response()->json(new WithoutDataResource(
+                Response::HTTP_OK,
+                'Kode OTP berhasil dikirim, silakan cek inbox atau spam di email anda.'
+            ), Response::HTTP_OK);
+        } catch (\Exception $e) {
+            // Kalau terjadi error saat kirim email (SMTP error)
+            Log::error('| Auth | - Failed to send OTP email: ' . $e->getMessage());
+
+            return response()->json(new WithoutDataResource(
+                Response::HTTP_NOT_ACCEPTABLE,
+                'SMTP Google Mail sedang offline. Silakan lakukan reset password melalui Dashboard Super Admin Personalia.'
+            ), Response::HTTP_NOT_ACCEPTABLE);
+        }
     }
 
     public function verifyOtp(VerifyOTPRequest $request)
