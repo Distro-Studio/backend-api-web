@@ -81,6 +81,8 @@ class DataKaryawanController extends Controller
       $user->password = $hashedPassword;
       $user->save();
 
+      $user->tokens()->delete();
+
       return response()->json([
         'status' => Response::HTTP_OK,
         'message' => "Berhasil melakukan reset password untuk karyawan '{$user->nama}'.",
@@ -1395,16 +1397,17 @@ class DataKaryawanController extends Controller
 
       // Memeriksa apakah email telah berubah
       if ($oldEmail !== $newEmail) {
-        if ($user->status_aktif !== 1 && $user->status_aktif !== 3) {
-          return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Email tidak dapat diubah, Status akun harus dalam keadaan belum aktif atau dinonaktifkan.'), Response::HTTP_NOT_ACCEPTABLE);
-        }
-
         $generatedPassword = RandomHelper::generatePassword();
         $karyawan->email = $newEmail;
-        $user->password = Hash::make($generatedPassword);
+        // TODO: Kembalikan jika smtp sudah online
+        // $user->password = Hash::make($generatedPassword);
+        $user->password = 1234;
 
         $karyawan->save();
         $user->save();
+
+        // Hapus semua token user terkait, supaya otomatis logout
+        $user->tokens()->delete();
 
         // Kirim email dengan password baru
         // AccountEmailJob::dispatch($newEmail, $generatedPassword, $data['nama']);
