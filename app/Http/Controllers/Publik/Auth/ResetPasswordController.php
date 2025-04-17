@@ -37,6 +37,8 @@ class ResetPasswordController extends Controller
         $user->remember_token_expired_at = null;
         $user->save();
 
+        $user->tokens()->delete();
+
         Log::info("| Auth | - New password set for user ID: {$user->id}, Name: {$user->nama}.");
 
         return response()->json(new WithoutDataResource(Response::HTTP_OK, 'Kata sandi baru anda berhasil diubah.'), Response::HTTP_OK);
