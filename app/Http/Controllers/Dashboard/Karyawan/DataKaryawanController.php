@@ -1388,10 +1388,9 @@ class DataKaryawanController extends Controller
         $karyawan->email = $newEmail;
         // TODO: Kembalikan jika smtp sudah online
         // $user->password = Hash::make($generatedPassword);
-        $user->password = 1234;
 
         $karyawan->save();
-        $user->save();
+        // $user->save();
 
         // Hapus semua token user terkait, supaya otomatis logout
         $user->tokens()->delete();
