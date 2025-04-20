@@ -22,7 +22,6 @@ return new class extends Migration
             $table->integer('data_completion_step')->default(1); // 1 = not complete, 0 = complete
             $table->foreignId('status_aktif')->constrained('status_aktifs'); // 1 = tidak aktif, 2 = aktif, 3 = dinonaktifkan
 
-            // New Features
             $table->string('tgl_dinonaktifkan')->nullable();
             $table->text('alasan')->nullable();
 
