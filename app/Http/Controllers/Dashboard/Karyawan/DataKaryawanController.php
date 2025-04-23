@@ -40,6 +40,8 @@ use App\Http\Requests\UpdateDataKaryawanRequest;
 use App\Http\Requests\Excel_Import\ImportKaryawanRequest;
 use App\Http\Resources\Dashboard\Karyawan\KaryawanResource;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
+use App\Mail\SendUpdateAccoundUsersMail;
+use Illuminate\Support\Facades\Mail;
 
 class DataKaryawanController extends Controller
 {
@@ -1397,7 +1399,7 @@ class DataKaryawanController extends Controller
         $user->tokens()->delete();
 
         // Kirim email dengan password baru
-        AccountEmailJob::dispatch($newEmail, $generatedPassword, $data['nama']);
+        Mail::to($newEmail)->send(new SendUpdateAccoundUsersMail($newEmail, $generatedPassword, $data['nama']));
       }
 
       try {
