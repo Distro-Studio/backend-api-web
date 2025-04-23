@@ -34,7 +34,8 @@ class JadwalImport implements ToModel, WithHeadingRow, WithValidation
             'unit_kerja' => 'required',
             'tanggal_mulai' => 'required|string',
             'tanggal_selesai' => 'string',
-            'shift' => 'required'
+            'shift' => 'required',
+            'extra_libur' => 'string'
         ];
     }
 
@@ -62,22 +63,36 @@ class JadwalImport implements ToModel, WithHeadingRow, WithValidation
             throw new \Exception("Unit kerja '" . $row['unit_kerja'] . "' tidak ditemukan.");
         }
 
-        $shifts = $this->Shift
-            ->where('nama', $row['shift'])
-            ->where('unit_kerja_id', $unitKerja->id)
-            ->first();
-        if (!$shifts) {
-            throw new \Exception("Shift '" . $row['shift'] . "' untuk unit kerja '" . $row['unit_kerja'] . "' tidak ditemukan.");
+        // Cek apakah shift adalah "Libur"
+        if (stripos($row['shift'], 'Libur') !== false) {
+            $shift_id = 0;
+        } else {
+            $shifts = $this->Shift
+                ->where('nama', $row['shift'])
+                ->where('unit_kerja_id', $unitKerja->id)
+                ->first();
+
+            if (!$shifts) {
+                throw new \Exception("Shift '" . $row['shift'] . "' untuk unit kerja '" . $row['unit_kerja'] . "' tidak ditemukan.");
+            }
+
+            $shift_id = $shifts->id;
         }
 
         $tgl_mulai = Carbon::createFromFormat('d-m-Y', $row['tanggal_mulai'])->format('Y-m-d');
         $tgl_selesai = Carbon::createFromFormat('d-m-Y', $row['tanggal_selesai'])->format('Y-m-d');
 
+        $ex_libur = 0;
+        if (isset($row['extra_libur']) && stripos($row['extra_libur'], 'Ya') !== false) {
+            $ex_libur = 1;
+        }
+
         return new Jadwal([
             'user_id' => $dataKaryawan->user_id,
             'tgl_mulai' => $tgl_mulai,
             'tgl_selesai' => $tgl_selesai,
-            'shift_id' => $shifts->id,
+            'shift_id' => $shift_id,
+            'ex_libur' => $ex_libur,
         ]);
     }
 }

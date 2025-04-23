@@ -13,6 +13,7 @@ use App\Http\Controllers\Dashboard\Karyawan\DataTransferKaryawanController;
 use App\Http\Controllers\Dashboard\Karyawan\DetailKaryawan\Berkas\Karyawan_BerkasController;
 use App\Http\Controllers\Dashboard\Karyawan\DetailKaryawan\Karyawan_DetailController;
 use App\Http\Controllers\Dashboard\Karyawan\DetailKaryawan\Keluarga\Karyawan_KeluargaController;
+use App\Http\Controllers\Dashboard\Karyawan\TambahanDataController;
 use App\Http\Controllers\Dashboard\Keuangan\PenggajianController;
 use App\Http\Controllers\Dashboard\Keuangan\PenggajianKemenkeuController;
 use App\Http\Controllers\Dashboard\Keuangan\PenyesuaianGajiController;
@@ -61,6 +62,12 @@ use Illuminate\Support\Facades\Route;
 | is assigned the "api" middleware group. Enjoy building your API!
 |
 */
+
+// Untuk case nambah data
+// Route::post('/add-data-karyawan', [TambahanDataController::class, 'insertDataKaryawan']);
+// Route::post('/cek-nik-karyawan', [TambahanDataController::class, 'cekNIK']);
+// Route::post('/test-unit', [TambahanDataController::class, 'cekUnitKerja']);
+// Route::post('/add-data-shifts', [TambahanDataController::class, 'insertMasterShift']);
 
 Route::post('/login', [LoginController::class, 'login']);
 Route::post('/forgot-password-sendOtp', [ForgotPasswordController::class, 'sendOtp']);
@@ -141,6 +148,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
             // ! Data Berkas Section ===========>
             Route::get('/detail-karyawan-dokumen/{data_karyawan_id}', [Karyawan_BerkasController::class, 'getDataDokumen']);
             Route::post('/detail-karyawan-dokumen/{data_karyawan_id}/verifikasi', [Karyawan_BerkasController::class, 'verifikasiBerkas']);
+            Route::post('/detail-karyawan-dokumen/{data_karyawan_id}/create-berkas', [Karyawan_BerkasController::class, 'createPersonalFile']);
 
             Route::get('/detail-karyawan-cuti/{data_karyawan_id}', [Karyawan_DetailController::class, 'getDataCuti']);
             Route::get('/detail-karyawan-tukar-jadwal/{data_karyawan_id}', [Karyawan_DetailController::class, 'getDataTukarJadwal']);
@@ -202,7 +210,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::post('/cuti/{cutiId}/verifikasi-tahap-2', [DataCutiController::class, 'verifikasiTahap2']);
             Route::post('/get-cuti', [DataCutiController::class, 'index']);
             Route::post('/delete-cuti', [DataCutiController::class, 'deleteCuti']);
-            Route::get('/cuti/export', [DataCutiController::class, 'exportJadwalCuti']);
+            Route::post('/cuti/export', [DataCutiController::class, 'exportJadwalCuti']);
             Route::apiResource('/cuti', DataCutiController::class);
 
             // ! Izin ===========>

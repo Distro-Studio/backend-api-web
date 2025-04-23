@@ -59,6 +59,7 @@ class JadwalShiftExport implements FromCollection, WithHeadings
                 $tgl_selesai,
                 $jam_from,
                 $jam_to,
+                'ex_libur' => $schedule->ex_libur ? 'Ya' : 'Tidak',
                 'created_at' => Carbon::parse($schedule->created_at)->format('d-m-Y H:i:s'),
                 'updated_at' => Carbon::parse($schedule->updated_at)->format('d-m-Y H:i:s'),
             ];
@@ -79,6 +80,7 @@ class JadwalShiftExport implements FromCollection, WithHeadings
             'tanggal_selesai',
             'jam_mulai',
             'jam_selesai',
+            'extra_libur',
             'created_at',
             'updated_at',
         ];

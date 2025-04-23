@@ -240,9 +240,19 @@ class DataJadwalController extends Controller
 
                         if (!isset($user_schedule_array[$date])) {
                             $scheduleForDate = $groupedSchedules[$user->id]->first(function ($schedule) use ($date) {
-                                $tglMulai = Carbon::parse($schedule->tgl_mulai)->format('Y-m-d');
-                                $tglSelesai = Carbon::parse($schedule->tgl_selesai)->format('Y-m-d');
-                                return Carbon::parse($date)->between(Carbon::parse($tglMulai), Carbon::parse($tglSelesai));
+                                $isSameDate = Carbon::parse($schedule->tgl_mulai)->toDateString() === $date;
+
+                                // Cek shift malam
+                                $shift = $schedule->shifts;
+                                $isShiftMalam = $shift && $shift->jam_to < $shift->jam_from;
+
+                                // Jika shift malam, hanya tampil di tgl_mulai
+                                if ($isShiftMalam) {
+                                    return $isSameDate;
+                                }
+
+                                // Jika bukan shift malam, tetap gunakan range
+                                return Carbon::parse($date)->between(Carbon::parse($schedule->tgl_mulai), Carbon::parse($schedule->tgl_selesai));
                             });
 
                             if ($scheduleForDate) {
@@ -251,6 +261,7 @@ class DataJadwalController extends Controller
                                     'tgl_mulai' => $scheduleForDate->tgl_mulai,
                                     'tgl_selesai' => $scheduleForDate->tgl_selesai,
                                     'shift' => $scheduleForDate->shifts,
+                                    'ex_libur' => $scheduleForDate->ex_libur,
                                     'updated_at' => $scheduleForDate->updated_at,
                                     'status' => 1 // Jadwal normal
                                 ];
@@ -312,6 +323,7 @@ class DataJadwalController extends Controller
                                 'nama' => 'Minggu',
                                 'jam_from' => null,
                                 'jam_to' => null,
+                                'ex_libur' => null,
                                 'status' => 4 // libur gak ada jadwal (null)
                             ];
                         } elseif (isset($hariLibur[$date])) {
@@ -320,6 +332,7 @@ class DataJadwalController extends Controller
                                 'nama' => $hariLibur[$date]->nama,
                                 'jam_from' => null,
                                 'jam_to' => null,
+                                'ex_libur' => null,
                                 'status' => 3 // libur besar
                             ];
                         } else if ($nonShift) {
@@ -328,6 +341,7 @@ class DataJadwalController extends Controller
                                 'nama' => $nonShiftForDay->nama,
                                 'jam_from' => $nonShiftForDay->jam_from,
                                 'jam_to' => $nonShiftForDay->jam_to,
+                                'ex_libur' => $nonShiftForDay->ex_libur,
                                 'status' => 2 // non-shift
                             ];
                         }
@@ -488,7 +502,7 @@ class DataJadwalController extends Controller
 
                     // Validasi kesamaan unit kerja antara admin dan karyawan
                     if ($admin->nama !== 'Super Admin') {
-                        if (!Gate::allows('bypass jadwalKaryawan')) {
+                        if (!Gate::allows('bypass filterData')) {
                             $karyawanUnitKerja = $user->data_karyawans->unit_kerjas->id ?? null;
                             if ($adminUnitKerja !== $karyawanUnitKerja) {
                                 DB::rollBack();
@@ -593,6 +607,47 @@ class DataJadwalController extends Controller
                             return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Jadwal karyawan '{$user->nama}' sudah tersedia pada tanggal '{$currentTanggalMulai->toDateString()}'."), Response::HTTP_BAD_REQUEST);
                         }
 
+                        // Validasi shift kemarin: pastikan tidak bentrok waktu dengan shift hari ini
+                        $yesterday = $currentTanggalMulai->copy()->subDay();
+                        $yesterdaySchedule = Jadwal::where('user_id', $userId)
+                            ->whereDate('tgl_mulai', $yesterday)
+                            ->first();
+
+                        $shiftHariIni = $shift ? $shift : null;
+                        $shiftKemarin = $yesterdaySchedule && $yesterdaySchedule->shift_id
+                            ? Shift::withTrashed()->find($yesterdaySchedule->shift_id)
+                            : null;
+
+                        if ($shiftHariIni && $shiftKemarin) {
+                            $jamFromKemarin = Carbon::createFromFormat('H:i:s', RandomHelper::convertToTimeString($shiftKemarin->jam_from));
+                            $jamToKemarin = Carbon::createFromFormat('H:i:s', RandomHelper::convertToTimeString($shiftKemarin->jam_to));
+
+                            $mulaiKemarin = Carbon::parse($yesterday)->setTimeFrom($jamFromKemarin);
+                            $selesaiKemarin = $jamToKemarin->lessThan($jamFromKemarin)
+                                ? Carbon::parse($yesterday)->addDay()->setTimeFrom($jamToKemarin)
+                                : Carbon::parse($yesterday)->setTimeFrom($jamToKemarin);
+
+                            $jamFromHariIni = Carbon::createFromFormat('H:i:s', RandomHelper::convertToTimeString($shiftHariIni->jam_from));
+                            $jamToHariIni = Carbon::createFromFormat('H:i:s', RandomHelper::convertToTimeString($shiftHariIni->jam_to));
+
+                            $mulaiHariIni = Carbon::parse($currentTanggalMulai)->setTimeFrom($jamFromHariIni);
+                            $selesaiHariIni = $jamToHariIni->lessThan($jamFromHariIni)
+                                ? Carbon::parse($currentTanggalMulai)->addDay()->setTimeFrom($jamToHariIni)
+                                : Carbon::parse($currentTanggalMulai)->setTimeFrom($jamToHariIni);
+
+                            // Cek overlap waktu absolut
+                            if (
+                                $mulaiHariIni->lt($selesaiKemarin) &&
+                                $selesaiHariIni->gt($mulaiKemarin)
+                            ) {
+                                DB::rollBack();
+                                return response()->json(new WithoutDataResource(
+                                    Response::HTTP_BAD_REQUEST,
+                                    "Shift karyawan '{$user->nama}' tanggal {$yesterday->toDateString()} masih berlangsung dan bertabrakan secara waktu dengan shift tanggal {$currentTanggalMulai->toDateString()}."
+                                ), Response::HTTP_BAD_REQUEST);
+                            }
+                        }
+
                         // Create the new schedule
                         $jadwalArray = [
                             'user_id' => $userId,
@@ -600,6 +655,10 @@ class DataJadwalController extends Controller
                             'tgl_selesai' => $tglSelesai->format('Y-m-d'),
                             'shift_id' => $data['shift_id'],
                         ];
+
+                        if ($request->has('ex_libur')) {
+                            $jadwalArray['ex_libur'] = $data['ex_libur'];
+                        }
 
                         $jadwal = Jadwal::create($jadwalArray);
                         $jadwal->load(['users', 'shifts']);
@@ -634,6 +693,7 @@ class DataJadwalController extends Controller
 
             $data = $request->validated();
             $shiftId = $data['shift_id'] ?? null;
+            $exLibur = $data['ex_libur'] ?? null;
             $tanggalMulai = Carbon::createFromFormat('d-m-Y', $data['tgl_mulai']);
 
             // Get admin yang sedang login
@@ -646,7 +706,7 @@ class DataJadwalController extends Controller
             $karyawanUnitKerja = $dataKaryawan->unit_kerjas->id ?? null;
 
             if ($admin->nama !== 'Super Admin') {
-                if (!Gate::allows('bypass jadwalKaryawan') && $adminUnitKerja !== $karyawanUnitKerja) {
+                if (!Gate::allows('bypass filterData') && $adminUnitKerja !== $karyawanUnitKerja) {
                     return response()->json(new WithoutDataResource(
                         Response::HTTP_FORBIDDEN,
                         'Anda hanya dapat mengatur jadwal untuk karyawan dalam unit kerja yang sama dengan anda.'
@@ -709,24 +769,104 @@ class DataJadwalController extends Controller
                 }
 
                 // Validasi jika karyawan sudah memiliki shift pada tanggal ini
-                $existingShift = Jadwal::where('user_id', $userId)
-                    ->whereDate('tgl_mulai', $tanggalMulai)
-                    ->first();
-                if ($existingShift) {
-                    DB::rollBack();
-                    return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Karyawan sudah memiliki shift pada tanggal ini.'), Response::HTTP_BAD_REQUEST);
-                }
+                // $existingShift = Jadwal::where('user_id', $userId)
+                //     ->whereDate('tgl_mulai', $tanggalMulai)
+                //     ->first();
+                // if ($existingShift) {
+                //     DB::rollBack();
+                //     return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Karyawan sudah memiliki shift pada tanggal ini.'), Response::HTTP_BAD_REQUEST);
+                // }
 
-                if ($shiftId == 3) {
-                    $nextDay = $tanggalMulai->copy()->addDay();
+                // Validasi shift malam: pastikan shift ini tidak bentrok di hari besok jika shift-nya melewati tengah malam
+                $shiftHariIni = $shiftId ? Shift::withTrashed()->find($shiftId) : null;
+
+                if ($shiftHariIni) {
+                    $jamFrom = Carbon::createFromFormat('H:i:s', RandomHelper::convertToTimeString($shiftHariIni->jam_from));
+                    $jamTo = Carbon::createFromFormat('H:i:s', RandomHelper::convertToTimeString($shiftHariIni->jam_to));
+
+                    $mulaiAbsolut = Carbon::parse($tanggalMulai)->setTimeFrom($jamFrom);
+                    $selesaiAbsolut = $jamTo->lessThan($jamFrom)
+                        ? Carbon::parse($tanggalMulai)->addDay()->setTimeFrom($jamTo)
+                        : Carbon::parse($tanggalMulai)->setTimeFrom($jamTo);
+
+                    // Ambil jadwal besok (jika ada)
+                    $besok = $tanggalMulai->copy()->addDay();
                     $nextDayShift = Jadwal::where('user_id', $userId)
-                        ->whereDate('tgl_mulai', $nextDay)
+                        ->whereDate('tgl_mulai', $besok)
                         ->first();
-                    if ($nextDayShift) {
-                        // Hapus jadwal hari berikutnya jika ada
-                        $nextDayShift->delete();
+
+                    if ($nextDayShift && $nextDayShift->shift_id) {
+                        $shiftBesok = Shift::withTrashed()->find($nextDayShift->shift_id);
+
+                        if ($shiftBesok) {
+                            $jamFromBesok = Carbon::createFromFormat('H:i:s', RandomHelper::convertToTimeString($shiftBesok->jam_from));
+                            $jamToBesok = Carbon::createFromFormat('H:i:s', RandomHelper::convertToTimeString($shiftBesok->jam_to));
+
+                            $mulaiBesok = Carbon::parse($besok)->setTimeFrom($jamFromBesok);
+                            $selesaiBesok = $jamToBesok->lessThan($jamFromBesok)
+                                ? Carbon::parse($besok)->addDay()->setTimeFrom($jamToBesok)
+                                : Carbon::parse($besok)->setTimeFrom($jamToBesok);
+
+                            // Cek overlap waktu absolut
+                            if (
+                                $mulaiAbsolut->lt($selesaiBesok) &&
+                                $selesaiAbsolut->gt($mulaiBesok)
+                            ) {
+                                DB::rollBack();
+                                return response()->json(new WithoutDataResource(
+                                    Response::HTTP_BAD_REQUEST,
+                                    "Shift karyawan '{$user->nama}' pada tanggal {$tanggalMulai->toDateString()} bertabrakan secara waktu dengan shift tanggal {$besok->toDateString()}."
+                                ), Response::HTTP_BAD_REQUEST);
+                            }
+                        }
+                    }
+
+                    // Validasi shift hari sebelumnya: pastikan tidak overlap waktu dengan shift hari ini
+                    $kemarin = $tanggalMulai->copy()->subDay();
+                    $jadwalKemarin = Jadwal::where('user_id', $userId)
+                        ->whereDate('tgl_mulai', $kemarin)
+                        ->first();
+
+                    if ($jadwalKemarin && $jadwalKemarin->shift_id && $shiftId) {
+                        $shiftKemarin = Shift::withTrashed()->find($jadwalKemarin->shift_id);
+
+                        if ($shiftKemarin) {
+                            $jamFromKemarin = Carbon::createFromFormat('H:i:s', RandomHelper::convertToTimeString($shiftKemarin->jam_from));
+                            $jamToKemarin = Carbon::createFromFormat('H:i:s', RandomHelper::convertToTimeString($shiftKemarin->jam_to));
+
+                            $mulaiKemarin = Carbon::parse($kemarin)->setTimeFrom($jamFromKemarin);
+                            $selesaiKemarin = $jamToKemarin->lessThan($jamFromKemarin)
+                                ? Carbon::parse($kemarin)->addDay()->setTimeFrom($jamToKemarin)
+                                : Carbon::parse($kemarin)->setTimeFrom($jamToKemarin);
+
+                            // Jadwal hari ini
+                            $mulaiHariIni = $mulaiAbsolut;   // sudah dihitung sebelumnya
+                            $selesaiHariIni = $selesaiAbsolut;
+
+                            if (
+                                $mulaiHariIni->lt($selesaiKemarin) &&
+                                $selesaiHariIni->gt($mulaiKemarin)
+                            ) {
+                                DB::rollBack();
+                                return response()->json(new WithoutDataResource(
+                                    Response::HTTP_BAD_REQUEST,
+                                    "Shift karyawan '{$user->nama}' pada tanggal {$kemarin->toDateString()} masih berlangsung dan bertabrakan secara waktu dengan shift tanggal {$tanggalMulai->toDateString()}."
+                                ), Response::HTTP_BAD_REQUEST);
+                            }
+                        }
                     }
                 }
+
+                // if ($shiftId == 3) {
+                //     $nextDay = $tanggalMulai->copy()->addDay();
+                //     $nextDayShift = Jadwal::where('user_id', $userId)
+                //         ->whereDate('tgl_mulai', $nextDay)
+                //         ->first();
+                //     if ($nextDayShift) {
+                //         // Hapus jadwal hari berikutnya jika ada
+                //         $nextDayShift->delete();
+                //     }
+                // }
 
                 // Calculate tgl_selesai based on shift times if shift_id is provided and not 0
                 $tglSelesai = $tanggalMulai->copy(); // Start with the same date
@@ -750,6 +890,9 @@ class DataJadwalController extends Controller
                 $newJadwal->shift_id = $shiftId;
                 $newJadwal->tgl_mulai = $tanggalMulai->format('Y-m-d');
                 $newJadwal->tgl_selesai = $tglSelesai->format('Y-m-d');
+                if ($request->has('ex_libur')) {
+                    $newJadwal->ex_libur = $exLibur;
+                }
                 $newJadwal->save();
 
                 DB::commit();
@@ -792,6 +935,7 @@ class DataJadwalController extends Controller
                         'tgl_mulai' => $tglMulai,
                         'tgl_selesai' => $tglSelesai,
                         'shift' => $schedule->shifts,
+                        'ex_libur' => $schedule->ex_libur,
                         'updated_at' => $schedule->updated_at
                     ];
                     $current_date->addDay();
@@ -838,12 +982,8 @@ class DataJadwalController extends Controller
 
             $data = $request->validated();
             $shiftId = $data['shift_id'] ?? null;
+            $exLibur = $data['ex_libur'] ?? null;
             $tanggalMulai = Carbon::createFromFormat('d-m-Y', $data['tgl_mulai'])->format('Y-m-d');
-            // $today = Carbon::today()->format('Y-m-d');
-
-            // if ($tanggalMulai == $today) {
-            //     return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Anda tidak dapat memperbarui jadwal pada tanggal hari ini.'), Response::HTTP_BAD_REQUEST);
-            // }
 
             // Get admin yang sedang login
             $admin = Auth::user();
@@ -883,7 +1023,7 @@ class DataJadwalController extends Controller
 
             // Validasi kesamaan unit kerja antara admin dan karyawan kecuali jika admin adalah Super Admin
             if ($admin->nama !== 'Super Admin') {
-                if (!Gate::allows('bypass jadwalKaryawan') && $adminUnitKerja !== $karyawanUnitKerja) {
+                if (!Gate::allows('bypass filterData') && $adminUnitKerja !== $karyawanUnitKerja) {
                     return response()->json(new WithoutDataResource(
                         Response::HTTP_FORBIDDEN,
                         'Anda hanya dapat mengatur jadwal untuk karyawan dalam unit kerja yang sama dengan anda.'
@@ -955,13 +1095,13 @@ class DataJadwalController extends Controller
                     return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Tidak dapat memperbarui jadwal untuk karyawan '{$user->nama}', karena memiliki cuti pada rentang tanggal {$cutiFrom} hingga {$cutiTo}."), Response::HTTP_BAD_REQUEST);
                 }
 
-                $nextDay = Carbon::parse($tanggalMulai)->addDay();
-                $nextDayShift = Jadwal::where('user_id', $userId)
-                    ->whereDate('tgl_mulai', $nextDay)
-                    ->first();
-                if ($nextDayShift) {
-                    $nextDayShift->delete();
-                }
+                // $nextDay = Carbon::parse($tanggalMulai)->addDay();
+                // $nextDayShift = Jadwal::where('user_id', $userId)
+                //     ->whereDate('tgl_mulai', $nextDay)
+                //     ->first();
+                // if ($nextDayShift) {
+                //     $nextDayShift->delete();
+                // }
             }
 
             DB::beginTransaction();
@@ -1013,9 +1153,88 @@ class DataJadwalController extends Controller
                         }
                     }
 
+                    // Validasi shift malam: pastikan shift ini tidak bentrok di hari besok jika shift-nya melewati tengah malam
+                    $shiftHariIni = $shiftId ? Shift::withTrashed()->find($shiftId) : null;
+
+                    if ($shiftHariIni) {
+                        $jamFrom = Carbon::createFromFormat('H:i:s', RandomHelper::convertToTimeString($shiftHariIni->jam_from));
+                        $jamTo = Carbon::createFromFormat('H:i:s', RandomHelper::convertToTimeString($shiftHariIni->jam_to));
+
+                        $mulaiAbsolut = Carbon::parse($tanggalMulai)->setTimeFrom($jamFrom);
+                        $selesaiAbsolut = $jamTo->lessThan($jamFrom)
+                            ? Carbon::parse($tanggalMulai)->addDay()->setTimeFrom($jamTo)
+                            : Carbon::parse($tanggalMulai)->setTimeFrom($jamTo);
+
+                        // Ambil jadwal besok (jika ada)
+                        $besok = Carbon::parse($tanggalMulai)->addDay();
+                        $nextDayShift = Jadwal::where('user_id', $userId)
+                            ->whereDate('tgl_mulai', $besok)
+                            ->first();
+
+                        if ($nextDayShift && $nextDayShift->shift_id) {
+                            $shiftBesok = Shift::withTrashed()->find($nextDayShift->shift_id);
+
+                            if ($shiftBesok) {
+                                $jamFromBesok = Carbon::createFromFormat('H:i:s', RandomHelper::convertToTimeString($shiftBesok->jam_from));
+                                $jamToBesok = Carbon::createFromFormat('H:i:s', RandomHelper::convertToTimeString($shiftBesok->jam_to));
+
+                                $mulaiBesok = Carbon::parse($besok)->setTimeFrom($jamFromBesok);
+                                $selesaiBesok = $jamToBesok->lessThan($jamFromBesok)
+                                    ? Carbon::parse($besok)->addDay()->setTimeFrom($jamToBesok)
+                                    : Carbon::parse($besok)->setTimeFrom($jamToBesok);
+
+                                // Cek overlap waktu absolut
+                                if (
+                                    $mulaiAbsolut->lt($selesaiBesok) &&
+                                    $selesaiAbsolut->gt($mulaiBesok)
+                                ) {
+                                    DB::rollBack();
+                                    return response()->json(new WithoutDataResource(
+                                        Response::HTTP_BAD_REQUEST,
+                                        "Shift karyawan '{$user->nama}' pada tanggal {$tanggalMulai} bertabrakan secara waktu dengan shift tanggal {$besok->toDateString()}."
+                                    ), Response::HTTP_BAD_REQUEST);
+                                }
+                            }
+                        }
+
+                        // Validasi shift hari sebelumnya
+                        $kemarin = Carbon::parse($tanggalMulai)->subDay();
+                        $jadwalKemarin = Jadwal::where('user_id', $userId)
+                            ->whereDate('tgl_mulai', $kemarin)
+                            ->first();
+
+                        if ($jadwalKemarin && $jadwalKemarin->shift_id && $shiftId) {
+                            $shiftKemarin = Shift::withTrashed()->find($jadwalKemarin->shift_id);
+
+                            if ($shiftKemarin) {
+                                $jamFromKemarin = Carbon::createFromFormat('H:i:s', RandomHelper::convertToTimeString($shiftKemarin->jam_from));
+                                $jamToKemarin = Carbon::createFromFormat('H:i:s', RandomHelper::convertToTimeString($shiftKemarin->jam_to));
+
+                                $mulaiKemarin = Carbon::parse($kemarin)->setTimeFrom($jamFromKemarin);
+                                $selesaiKemarin = $jamToKemarin->lessThan($jamFromKemarin)
+                                    ? Carbon::parse($kemarin)->addDay()->setTimeFrom($jamToKemarin)
+                                    : Carbon::parse($kemarin)->setTimeFrom($jamToKemarin);
+
+                                if (
+                                    $mulaiAbsolut->lt($selesaiKemarin) &&
+                                    $selesaiAbsolut->gt($mulaiKemarin)
+                                ) {
+                                    DB::rollBack();
+                                    return response()->json(new WithoutDataResource(
+                                        Response::HTTP_BAD_REQUEST,
+                                        "Shift karyawan '{$user->nama}' pada tanggal {$kemarin->toDateString()} masih berlangsung dan bertabrakan secara waktu dengan shift tanggal {$tanggalMulai}."
+                                    ), Response::HTTP_BAD_REQUEST);
+                                }
+                            }
+                        }
+                    }
+
                     // Format tglSelesai to 'Y-m-d' before saving it to the database
                     $existingShift->shift_id = $shiftId;
                     $existingShift->tgl_selesai = $tglSelesai->format('Y-m-d');
+                    if ($request->has('ex_libur')) {
+                        $existingShift->ex_libur = $exLibur;
+                    }
                     $existingShift->save();
 
                     DB::commit();

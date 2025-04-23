@@ -265,10 +265,19 @@ class KaryawanImport implements ToModel, WithHeadingRow, WithValidation
       $tahun_lulus = $row['tahun_lulus'];
     }
 
-    // itung bmi
+    // Ambil data berat dan tinggi badan
     $weight = $row['berat_badan'];
     $height = $row['tinggi_badan'];
-    $bmi_calculate = CalculateBMIHelper::calculateBMI($weight, $height);
+
+    // Cek apakah berat dan tinggi badan tidak null dan lebih dari nol sebelum perhitungan BMI
+    if (!is_null($weight) && !is_null($height) && $weight > 0 && $height > 0) {
+      $bmi_calculate = CalculateBMIHelper::calculateBMI($weight, $height);
+    } else {
+      $bmi_calculate = [
+        'bmi_value' => null,
+        'bmi_ket' => null
+      ];
+    }
 
     $dataKaryawan = DataKaryawan::create([
       'user_id' => $user_id,

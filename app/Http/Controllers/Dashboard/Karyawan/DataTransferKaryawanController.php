@@ -18,6 +18,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Gate;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\Karyawan\TransferExport;
+use App\Helpers\LogHelper;
 use App\Models\KategoriTransferKaryawan;
 use App\Jobs\EmailNotification\TransferEmailJob;
 use App\Http\Requests\StoreTransferKaryawanRequest;
@@ -408,6 +409,8 @@ class DataTransferKaryawanController extends Controller
 
             DB::commit();
 
+            LogHelper::logAction('Transfer Karyawan', 'create', $users->data_karyawan_id);
+
             return response()->json(new TransferKaryawanResource(Response::HTTP_OK, "Berhasil melakukan transfer karyawan '{$users->nama}'.", $transfer), Response::HTTP_OK);
         } catch (Exception $e) {
             DB::rollBack();
@@ -545,6 +548,8 @@ class DataTransferKaryawanController extends Controller
             }
 
             DB::commit();
+
+            LogHelper::logAction('Transfer Karyawan', 'update', $users->data_karyawan_id);
 
             return response()->json(new TransferKaryawanResource(Response::HTTP_OK, "Berhasil memperbarui transfer karyawan '{$users->nama}'.", $transfer), Response::HTTP_OK);
         } catch (Exception $e) {

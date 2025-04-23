@@ -13,11 +13,13 @@ class PresensiExport implements WithMultipleSheets
 
     private $startDate;
     private $endDate;
+    private $filters;
 
-    public function __construct($startDate, $endDate)
+    public function __construct($startDate, $endDate, $filters = [])
     {
         $this->startDate = $startDate;
         $this->endDate = $endDate;
+        $this->filters = $filters;
     }
 
     public function sheets(): array
@@ -27,7 +29,7 @@ class PresensiExport implements WithMultipleSheets
         // Menambahkan sheet untuk setiap kategori presensi
         $categories = ['Terlambat', 'Tepat Waktu', 'Alpha'];
         foreach ($categories as $category) {
-            $sheets[] = new PresensiSheet($category, 'Laporan ' . str_replace(' ', '', $category), $this->startDate, $this->endDate);
+            $sheets[] = new PresensiSheet($category, 'Laporan ' . str_replace(' ', '', $category), $this->startDate, $this->endDate, $this->filters);
         }
 
         return $sheets;

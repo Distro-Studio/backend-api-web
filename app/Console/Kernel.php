@@ -81,8 +81,12 @@ class Kernel extends ConsoleKernel
             ->dailyAt('00:00');
 
         // Backup DB
-        $schedule->command('backup:clean')->monthly()->at('01:00');
-        $schedule->command('backup:run')->monthly()->at('01:30');
+        $schedule->command('backup:clean')
+            ->timezone('Asia/Jakarta')
+            ->dailyAt('01:00');
+        $schedule->command('backup:run')
+            ->timezone('Asia/Jakarta')
+            ->dailyAt('01:30');
     }
 
     /**

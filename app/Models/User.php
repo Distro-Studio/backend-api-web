@@ -49,6 +49,16 @@ class User extends Authenticatable
     ];
 
     /**
+     * Get all of the deviceTokens for the User
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function deviceTokens(): HasMany
+    {
+        return $this->hasMany(UserDeviceToken::class, 'user_id', 'id');
+    }
+
+    /**
      * Get the data_karyawan associated with the User
      *
      * @return \Illuminate\Database\Eloquent\Relations\HasOne
@@ -199,11 +209,11 @@ class User extends Authenticatable
     }
 
     /**
-     * Get the status_aktif that owns the User
+     * Get the user_status_aktif that owns the User
      *
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function status_aktif(): BelongsTo
+    public function user_status_aktif(): BelongsTo
     {
         return $this->belongsTo(StatusAktif::class, 'status_aktif', 'id');
     }

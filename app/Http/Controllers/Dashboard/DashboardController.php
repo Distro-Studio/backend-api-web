@@ -15,17 +15,26 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
+use Illuminate\Support\Facades\Gate;
 
 class DashboardController extends Controller
 {
     public function calculatedHeader()
     {
+        if (!Gate::allows('view dashboardKaryawan')) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
+
         $today = Carbon::today('Asia/Jakarta')->format('d-m-Y');
 
-        $kategoriAbsenId = DB::table('kategori_presensis')->where('label', 'Alpha')->value('id');
-
         // Calculate total number of employees excluding the super admin
-        $calculatedKaryawan = DataKaryawan::where('id', '!=', 1)->count();
+        $calculatedKaryawanAktif = DataKaryawan::whereHas('users', function ($query) {
+            $query->where('status_aktif', 2);
+        })->where('id', '!=', 1)->count();
+
+        $calculatedKaryawanNonAktif = DataKaryawan::whereHas('users', function ($query) {
+            $query->where('status_aktif', 3);
+        })->where('id', '!=', 1)->count();
 
         // Hitung karyawan shift yang libur berdasarkan user_id
         $countLiburShift = Jadwal::where('shift_id', 0)
@@ -52,27 +61,28 @@ class DashboardController extends Controller
             ->whereDate(DB::raw("STR_TO_DATE(tgl_to, '%d-%m-%Y')"), '>=', Carbon::createFromFormat('d-m-Y', $today)->format('Y-m-d'))
             ->count('user_id');
 
-        // $countAbsen = Presensi::where('kategori_presensi_id', $kategoriAbsenId)
-        //     ->whereDate('jam_masuk', Carbon::createFromFormat('d-m-Y', $today)->format('Y-m-d'))
-        //     ->count('user_id');
-        $countAbsen = $countCuti + $countLibur;
-
         return response()->json([
             'status' => Response::HTTP_OK,
             'message' => "Header calculation successful.",
             'data' => [
-                'total_karyawan' => $calculatedKaryawan,
+                'total_karyawan' => $calculatedKaryawanAktif,
+                'karyawan_nonaktif' => $calculatedKaryawanNonAktif,
                 'jumlah_libur' => $countLibur,
                 'jumlah_cuti' => $countCuti,
-                'jumlah_absen' => $countAbsen,
             ]
         ], Response::HTTP_OK);
     }
 
     public function calculatedKelamin()
     {
+        if (!Gate::allows('view dashboardKaryawan')) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
+
         // Retrieve all employees excluding the super admin
-        $totalEmployees = DataKaryawan::where('id', '!=', 1)->count();
+        $totalEmployees = DataKaryawan::whereHas('users', function ($query) {
+            $query->where('status_aktif', 2);
+        })->where('id', '!=', 1)->count();;
 
         if ($totalEmployees == 0) {
             return response()->json([
@@ -86,8 +96,12 @@ class DashboardController extends Controller
         }
 
         // Retrieve the count of male and female employees
-        $countMale = DataKaryawan::where('jenis_kelamin', true)->count();
-        $countFemale = DataKaryawan::where('jenis_kelamin', false)->count();
+        $countMale = DataKaryawan::whereHas('users', function ($query) {
+            $query->where('status_aktif', 2);
+        })->where('jenis_kelamin', true)->count();
+        $countFemale = DataKaryawan::whereHas('users', function ($query) {
+            $query->where('status_aktif', 2);
+        })->where('jenis_kelamin', false)->count();
 
         // Calculate the percentage
         $percentMale = ($countMale / $totalEmployees) * 100;
@@ -114,6 +128,10 @@ class DashboardController extends Controller
 
     public function calculatedJabatan()
     {
+        if (!Gate::allows('view dashboardKaryawan')) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
+
         // Retrieve all positions
         $jabatans = Jabatan::all();
 
@@ -129,7 +147,9 @@ class DashboardController extends Controller
 
         // Iterate over each position and count the number of employees holding that position
         foreach ($jabatans as $jabatan) {
-            $countKaryawan = DataKaryawan::where('jabatan_id', $jabatan->id)->count();
+            $countKaryawan = DataKaryawan::whereHas('users', function ($query) {
+                $query->where('status_aktif', 2);
+            })->where('jabatan_id', $jabatan->id)->count();
             $result[] = [
                 'nama_jabatan' => $jabatan->nama_jabatan,
                 'jumlah_karyawan' => $countKaryawan,
@@ -145,6 +165,10 @@ class DashboardController extends Controller
 
     public function calculatedKompetensi()
     {
+        if (!Gate::allows('view dashboardKaryawan')) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
+
         // Retrieve all positions
         $kompetensis = Kompetensi::all();
 
@@ -160,7 +184,9 @@ class DashboardController extends Controller
 
         // Iterate over each position and count the number of employees holding that position
         foreach ($kompetensis as $kompetensi) {
-            $countKaryawan = DataKaryawan::where('kompetensi_id', $kompetensi->id)->count();
+            $countKaryawan = DataKaryawan::whereHas('users', function ($query) {
+                $query->where('status_aktif', 2);
+            })->where('kompetensi_id', $kompetensi->id)->count();
             $result[] = [
                 'nama_kompetensi' => $kompetensi->nama_kompetensi,
                 'jumlah_karyawan' => $countKaryawan,
@@ -176,6 +202,10 @@ class DashboardController extends Controller
 
     public function calculatedKepegawaian()
     {
+        if (!Gate::allows('view dashboardKaryawan')) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
+
         // Retrieve all statuses
         $statuses = DB::table('status_karyawans')->get();
 
@@ -191,7 +221,9 @@ class DashboardController extends Controller
 
         // Iterate over each status and count the number of employees with that status
         foreach ($statuses as $status) {
-            $countKaryawan = DataKaryawan::where('status_karyawan_id', $status->id)->count();
+            $countKaryawan = DataKaryawan::whereHas('users', function ($query) {
+                $query->where('status_aktif', 2);
+            })->where('status_karyawan_id', $status->id)->count();
             $result[] = [
                 'status_karyawan' => $status->label,
                 'jumlah_karyawan' => $countKaryawan,
@@ -207,6 +239,10 @@ class DashboardController extends Controller
 
     public function getLemburToday()
     {
+        if (!Gate::allows('view dashboardKaryawan')) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
+
         $today = Carbon::today('Asia/Jakarta')->format('d-m-Y');
         // dd($today);
 

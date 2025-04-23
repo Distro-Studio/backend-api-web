@@ -4,20 +4,13 @@ namespace App\Http\Controllers\Dashboard\Karyawan;
 
 use Exception;
 use Carbon\Carbon;
-use App\Models\Cuti;
 use App\Models\Ptkp;
 use App\Models\User;
 use App\Models\Premi;
 use App\Models\Berkas;
-use App\Models\Lembur;
 use App\Models\Jabatan;
-use App\Models\Presensi;
-use App\Models\Penilaian;
 use App\Models\UnitKerja;
 use App\Models\Kompetensi;
-use App\Models\Notifikasi;
-use App\Models\TrackRecord;
-use App\Models\TukarJadwal;
 use App\Models\DataKaryawan;
 use App\Models\DataKeluarga;
 use App\Models\KelompokGaji;
@@ -26,25 +19,20 @@ use App\Helpers\RandomHelper;
 use App\Models\PesertaDiklat;
 use Illuminate\Http\Response;
 use App\Models\StatusKaryawan;
-use App\Models\RiwayatPerubahan;
-use App\Models\TransferKaryawan;
-use App\Mail\SendAccoundUsersMail;
 use App\Models\KategoriPendidikan;
 use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Models\Role;
 use App\Helpers\CalculateBMIHelper;
 use Illuminate\Support\Facades\Log;
-use App\Helpers\StorageServerHelper;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Mail;
 use Maatwebsite\Excel\Facades\Excel;
-use App\Exports\TemplateKaryawanExport;
 use App\Models\KategoriTagihanPotongan;
 use Illuminate\Support\Facades\Storage;
 use App\Exports\Karyawan\KaryawanExport;
+use App\Helpers\LogHelper;
 use App\Imports\Karyawan\KaryawanImport;
 use App\Http\Requests\StoreDataKaryawanRequest;
 use App\Jobs\EmailNotification\AccountEmailJob;
@@ -52,6 +40,8 @@ use App\Http\Requests\UpdateDataKaryawanRequest;
 use App\Http\Requests\Excel_Import\ImportKaryawanRequest;
 use App\Http\Resources\Dashboard\Karyawan\KaryawanResource;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
+use App\Mail\SendUpdateAccoundUsersMail;
+use Illuminate\Support\Facades\Mail;
 
 class DataKaryawanController extends Controller
 {
@@ -81,6 +71,8 @@ class DataKaryawanController extends Controller
       $user->password = $hashedPassword;
       $user->save();
 
+      $user->tokens()->delete();
+
       return response()->json([
         'status' => Response::HTTP_OK,
         'message' => "Berhasil melakukan reset password untuk karyawan '{$user->nama}'.",
@@ -97,10 +89,6 @@ class DataKaryawanController extends Controller
   public function getAllDataUserNonShift()
   {
     try {
-      if (!Gate::allows('view dataKaryawan')) {
-        return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
-      }
-
       $userNonShift = User::whereHas('data_karyawans.unit_kerjas', function ($query) {
         $query->where('jenis_karyawan', 0); // 0 = non shift
       })->where('nama', '!=', 'Super Admin')->where('status_aktif', 2)->get();
@@ -154,10 +142,6 @@ class DataKaryawanController extends Controller
   public function getAllDataUserShift()
   {
     try {
-      if (!Gate::allows('view dataKaryawan')) {
-        return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
-      }
-
       $userShift = User::whereHas('data_karyawans.unit_kerjas', function ($query) {
         $query->where('jenis_karyawan', 1); // 1 = shift
       })->where('nama', '!=', 'Super Admin')->where('status_aktif', 2)->get();
@@ -211,10 +195,6 @@ class DataKaryawanController extends Controller
   public function getAllDataUser()
   {
     try {
-      if (!Gate::allows('view dataKaryawan')) {
-        return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
-      }
-
       $users = User::where('nama', '!=', 'Super Admin')->where('status_aktif', 2)->get();
       if ($users->isEmpty()) {
         return response()->json([
@@ -225,6 +205,7 @@ class DataKaryawanController extends Controller
 
       $formattedData = $users->map(function ($user) {
         $unitKerja = $user->data_karyawans->unit_kerjas ?? null;
+        $statusKaryawan = $user->data_karyawans->status_karyawans ?? null;
 
         return [
           'id' => $user->id,
@@ -245,6 +226,10 @@ class DataKaryawanController extends Controller
             'nama_unit' => $unitKerja->nama_unit,
             'jenis_karyawan' => $unitKerja->jenis_karyawan
           ] : null,
+          'status_karyawan' => $statusKaryawan ? [
+            'id' => $statusKaryawan->id,
+            'label' => $statusKaryawan->label,
+          ] : null
         ];
       });
 
@@ -265,10 +250,6 @@ class DataKaryawanController extends Controller
   public function getAllDataUnitKerja()
   {
     try {
-      if (!Gate::allows('view dataKaryawan')) {
-        return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
-      }
-
       $unit_kerja = UnitKerja::all();
       if ($unit_kerja->isEmpty()) {
         return response()->json([
@@ -294,10 +275,6 @@ class DataKaryawanController extends Controller
   public function getAllDataJabatan()
   {
     try {
-      if (!Gate::allows('view dataKaryawan')) {
-        return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
-      }
-
       $jabatan = Jabatan::all();
       if ($jabatan->isEmpty()) {
         return response()->json([
@@ -323,10 +300,6 @@ class DataKaryawanController extends Controller
   public function getAllDataStatusKaryawan()
   {
     try {
-      if (!Gate::allows('view dataKaryawan')) {
-        return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
-      }
-
       $status_karyawan = StatusKaryawan::all();
       if ($status_karyawan->isEmpty()) {
         return response()->json([
@@ -352,10 +325,6 @@ class DataKaryawanController extends Controller
   public function getAllDataKompetensi()
   {
     try {
-      if (!Gate::allows('view dataKaryawan')) {
-        return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
-      }
-
       $kompetensi = Kompetensi::all();
       if ($kompetensi->isEmpty()) {
         return response()->json([
@@ -381,10 +350,6 @@ class DataKaryawanController extends Controller
   public function getAllDataRole()
   {
     try {
-      if (!Gate::allows('view dataKaryawan')) {
-        return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
-      }
-
       $user = Auth::user();
       $roles = Role::all();
       if ($roles->isEmpty()) {
@@ -417,10 +382,6 @@ class DataKaryawanController extends Controller
   public function getAllDataKelompokGaji()
   {
     try {
-      if (!Gate::allows('view dataKaryawan')) {
-        return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
-      }
-
       $kelompok_gaji = KelompokGaji::all();
       if ($kelompok_gaji->isEmpty()) {
         return response()->json([
@@ -446,10 +407,6 @@ class DataKaryawanController extends Controller
   public function getAllDataPTKP()
   {
     try {
-      if (!Gate::allows('view dataKaryawan')) {
-        return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
-      }
-
       $ptkp = Ptkp::all();
       if ($ptkp->isEmpty()) {
         return response()->json([
@@ -475,10 +432,6 @@ class DataKaryawanController extends Controller
   public function getAllDataPremi()
   {
     try {
-      if (!Gate::allows('view dataKaryawan')) {
-        return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
-      }
-
       $premi = Premi::withoutTrashed()->get();
       if ($premi->isEmpty()) {
         return response()->json([
@@ -504,10 +457,6 @@ class DataKaryawanController extends Controller
   public function getAllDataKaryawan()
   {
     try {
-      if (!Gate::allows('view dataKaryawan')) {
-        return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
-      }
-
       $dataKaryawan = DataKaryawan::where('id', '!=', 1)->get();
       if ($dataKaryawan->isEmpty()) {
         return response()->json([
@@ -533,10 +482,6 @@ class DataKaryawanController extends Controller
   public function getAllPendidikan()
   {
     try {
-      if (!Gate::allows('view dataKaryawan')) {
-        return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
-      }
-
       $kategori_pendidikan = KategoriPendidikan::all();
       if ($kategori_pendidikan->isEmpty()) {
         return response()->json([
@@ -562,10 +507,6 @@ class DataKaryawanController extends Controller
   public function getAllDataTagihanPotongan()
   {
     try {
-      if (!Gate::allows('view dataKaryawan')) {
-        return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
-      }
-
       $kategori_tagihan = KategoriTagihanPotongan::all();
       if ($kategori_tagihan->isEmpty()) {
         return response()->json([
@@ -601,7 +542,7 @@ class DataKaryawanController extends Controller
       // Per page
       $limit = $request->input('limit', 10);
 
-      $karyawan = DataKaryawan::query()->where('id', '!=', 1)->orderBy('created_at', 'desc');
+      $karyawan = DataKaryawan::query()->where('id', '!=', 1)->orderBy('nik', 'asc');
 
       // Ambil semua filter dari request body
       $filters = $request->all();
@@ -807,6 +748,8 @@ class DataKaryawanController extends Controller
             'foto_profil' => $karyawan->users->foto_profil,
             'data_completion_step' => $karyawan->users->data_completion_step,
             'status_aktif' => $karyawan->users->status_aktif,
+            'tgl_dinonaktifkan' => $karyawan->users->tgl_dinonaktifkan,
+            'alasan' => $karyawan->users->alasan,
             'created_at' => $karyawan->users->created_at,
             'updated_at' => $karyawan->users->updated_at
           ],
@@ -859,7 +802,10 @@ class DataKaryawanController extends Controller
           'no_ijazah' => $karyawan->no_ijazah,
           'tahun_lulus' => $karyawan->tahun_lulus,
           'no_str' => $karyawan->no_str,
+          'created_str' => $karyawan->created_str,
           'masa_berlaku_str' => $karyawan->masa_berlaku_str,
+          'no_sip' => $karyawan->no_sip,
+          'created_sip' => $karyawan->created_sip,
           'masa_berlaku_sip' => $karyawan->masa_berlaku_sip,
           'tgl_berakhir_pks' => $karyawan->tgl_berakhir_pks,
           'masa_diklat' => $karyawan->masa_diklat,
@@ -897,6 +843,7 @@ class DataKaryawanController extends Controller
       $requestedRoleId = $request->input('role_id');
       $premis = $request->input('premi_id', []); // Mengambil daftar premi yang dipilih
 
+      DB::beginTransaction();
       $generatedUsername = RandomHelper::generateUsername($data['nama']);
       if (!empty($data['email'])) {
         $generatedPassword = RandomHelper::generatePassword();
@@ -905,7 +852,6 @@ class DataKaryawanController extends Controller
         $passwordHash = Hash::make('1234');
       }
 
-      DB::beginTransaction();
       try {
         $userData = [
           'nama' => $data['nama'],
@@ -965,11 +911,12 @@ class DataKaryawanController extends Controller
 
         DB::commit();
 
+        LogHelper::logAction('Karyawan', 'create', $createDataKaryawan->id);
+
         if (!empty($data['email'])) {
           AccountEmailJob::dispatch($data['email'], $generatedPassword, $data['nama']);
         }
 
-        // Mail::to($data['email'])->send(new SendAccoundUsersMail($data['email'], $generatedPassword, $data['nama']));
         return response()->json(new KaryawanResource(Response::HTTP_OK, "Data karyawan '{$createDataKaryawan->users->nama}' berhasil dibuat.", $createDataKaryawan), Response::HTTP_OK);
       } catch (\Throwable $th) {
         DB::rollBack();
@@ -1055,25 +1002,24 @@ class DataKaryawanController extends Controller
       $isSuperAdmin = $loggedInUser->id == 1 || $loggedInUser->nama == 'Super Admin';
 
       // diklat calculated
-      $total_durasi_internal = PesertaDiklat::whereHas('diklats', function ($query) {
-        $query->where('kategori_diklat_id', 1); // 1 = Internal
-      })
-        ->where('peserta', $karyawan->users->id)
+      $currentYear = now('Asia/Jakarta')->year;
+      $total_durasi_internal = PesertaDiklat::where('peserta', $karyawan->users->id)
+        ->whereHas('diklats', function ($query) use ($currentYear) {
+          $query->where('kategori_diklat_id', 1) // Internal
+            ->whereRaw("YEAR(STR_TO_DATE(tgl_mulai, '%d-%m-%Y')) = ?", [$currentYear]);
+        })
         ->with('diklats')
         ->get()
-        ->sum(function ($pesertaDiklat) {
-          return $pesertaDiklat->diklats->durasi;
-        });
+        ->sum(fn($pd) => $pd->diklats?->durasi ?? 0);
 
-      $total_durasi_eksternal = PesertaDiklat::whereHas('diklats', function ($query) {
-        $query->where('kategori_diklat_id', 2); // 2 = Eksternal
-      })
-        ->where('peserta', $karyawan->users->id)
+      $total_durasi_eksternal = PesertaDiklat::where('peserta', $karyawan->users->id)
+        ->whereHas('diklats', function ($query) use ($currentYear) {
+          $query->where('kategori_diklat_id', 2) // Eksternal
+            ->whereRaw("YEAR(STR_TO_DATE(tgl_mulai, '%d-%m-%Y')) = ?", [$currentYear]);
+        })
         ->with('diklats')
         ->get()
-        ->sum(function ($pesertaDiklat) {
-          return $pesertaDiklat->diklats->durasi;
-        });
+        ->sum(fn($pd) => $pd->diklats?->durasi ?? 0);
 
       // Format the karyawan data
       $formattedData = [
@@ -1087,16 +1033,11 @@ class DataKaryawanController extends Controller
           'foto_profil' => $karyawan->users->foto_profil,
           'data_completion_step' => $karyawan->users->data_completion_step,
           'status_aktif' => $karyawan->users->status_aktif,
+          'tgl_dinonaktifkan' => $karyawan->users->tgl_dinonaktifkan,
+          'alasan' => $karyawan->users->alasan,
           'created_at' => $karyawan->users->created_at,
           'updated_at' => $karyawan->users->updated_at
         ],
-        // 'role' => $isSuperAdmin ? [
-        //   'id' => $role->id,
-        //   'name' => $role->name,
-        //   'deskripsi' => $role->deskripsi,
-        //   'created_at' => $role->created_at,
-        //   'updated_at' => $role->updated_at
-        // ] : null,
         'role' => $role ? [
           'id' => $role->id,
           'name' => $role->name,
@@ -1104,26 +1045,9 @@ class DataKaryawanController extends Controller
           'created_at' => $role->created_at,
           'updated_at' => $role->updated_at
         ] : null,
-        'potongan_gaji' => DB::table('pengurang_gajis')
-          ->join('premis', 'pengurang_gajis.premi_id', '=', 'premis.id')
-          ->where('pengurang_gajis.data_karyawan_id', $karyawan->id)
-          ->whereNull('pengurang_gajis.deleted_at')
-          ->select(
-            'premis.id',
-            'premis.nama_premi',
-            'premis.kategori_potongan_id',
-            'premis.jenis_premi',
-            'premis.besaran_premi',
-            'premis.minimal_rate',
-            'premis.maksimal_rate',
-            'premis.created_at',
-            'premis.updated_at'
-          )
-          ->get(),
         'nik' => $karyawan->nik,
         'email' => $karyawan->email,
         'no_rm' => $karyawan->no_rm,
-        'no_sip' => $karyawan->no_sip,
         'no_manulife' => $karyawan->no_manulife,
         'tgl_masuk' => $karyawan->tgl_masuk,
         'unit_kerja' => $karyawan->unit_kerjas,
@@ -1135,12 +1059,6 @@ class DataKaryawanController extends Controller
         'tgl_lahir' => $karyawan->tgl_lahir,
         'kelompok_gaji' => $karyawan->kelompok_gajis,
         'no_rekening' => $karyawan->no_rekening,
-        'tunjangan_jabatan' => $karyawan->tunjangan_jabatan,
-        'tunjangan_fungsional' => $karyawan->tunjangan_fungsional,
-        'tunjangan_khusus' => $karyawan->tunjangan_khusus,
-        'tunjangan_lainnya' => $karyawan->tunjangan_lainnya,
-        'uang_lembur' => $karyawan->uang_lembur,
-        'uang_makan' => $karyawan->uang_makan,
         'ptkp' => $karyawan->ptkps,
         'tgl_keluar' => $karyawan->tgl_keluar,
         'no_kk' => $karyawan->no_kk,
@@ -1163,7 +1081,10 @@ class DataKaryawanController extends Controller
         'no_ijazah' => $karyawan->no_ijazah,
         'tahun_lulus' => $karyawan->tahun_lulus,
         'no_str' => $karyawan->no_str,
+        'created_str' => $karyawan->created_str,
         'masa_berlaku_str' => $karyawan->masa_berlaku_str,
+        'no_sip' => $karyawan->no_sip,
+        'created_sip' => $karyawan->created_sip,
         'masa_berlaku_sip' => $karyawan->masa_berlaku_sip,
         'tgl_berakhir_pks' => $karyawan->tgl_berakhir_pks,
         'masa_diklat' => $karyawan->masa_diklat,
@@ -1179,6 +1100,41 @@ class DataKaryawanController extends Controller
         'updated_at' => $karyawan->updated_at
       ];
 
+      // Data sensitif hanya ditampilkan jika Super Admin
+      if ($isSuperAdmin) {
+        $formattedData['potongan_gaji'] = DB::table('pengurang_gajis')
+          ->join('premis', 'pengurang_gajis.premi_id', '=', 'premis.id')
+          ->where('pengurang_gajis.data_karyawan_id', $karyawan->id)
+          ->whereNull('pengurang_gajis.deleted_at')
+          ->select(
+            'premis.id',
+            'premis.nama_premi',
+            'premis.kategori_potongan_id',
+            'premis.jenis_premi',
+            'premis.besaran_premi',
+            'premis.minimal_rate',
+            'premis.maksimal_rate',
+            'premis.created_at',
+            'premis.updated_at'
+          )
+          ->get();
+
+        $formattedData['tunjangan_jabatan'] = $karyawan->tunjangan_jabatan;
+        $formattedData['tunjangan_fungsional'] = $karyawan->tunjangan_fungsional;
+        $formattedData['tunjangan_khusus'] = $karyawan->tunjangan_khusus;
+        $formattedData['tunjangan_lainnya'] = $karyawan->tunjangan_lainnya;
+        $formattedData['uang_lembur'] = $karyawan->uang_lembur;
+        $formattedData['uang_makan'] = $karyawan->uang_makan;
+      }
+
+      if (!$isSuperAdmin && isset($formattedData['kompetensi'])) {
+        if (is_array($formattedData['kompetensi'])) {
+          unset($formattedData['kompetensi']['nilai_bor']);
+        } elseif (is_object($formattedData['kompetensi'])) {
+          unset($formattedData['kompetensi']->nilai_bor);
+        }
+      }
+
       return response()->json([
         'status' => Response::HTTP_OK,
         'message' => "Detail karyawan '{$karyawan->users->nama}' berhasil ditampilkan.",
@@ -1188,7 +1144,7 @@ class DataKaryawanController extends Controller
       Log::error('| Karyawan | - Error function showByUserId: ' . $e->getMessage());
       return response()->json([
         'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
-        'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
+        'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.' . $e->getMessage(),
       ], Response::HTTP_INTERNAL_SERVER_ERROR);
     }
   }
@@ -1254,25 +1210,24 @@ class DataKaryawanController extends Controller
       $isSuperAdmin = $loggedInUser->id == 1 || $loggedInUser->nama == 'Super Admin';
 
       // diklat calculated
-      $total_durasi_internal = PesertaDiklat::whereHas('diklats', function ($query) {
-        $query->where('kategori_diklat_id', 1); // 1 = Internal
-      })
-        ->where('peserta', $data_karyawan_id)
+      $currentYear = now('Asia/Jakarta')->year;
+      $total_durasi_internal = PesertaDiklat::where('peserta', $karyawan->users->id)
+        ->whereHas('diklats', function ($query) use ($currentYear) {
+          $query->where('kategori_diklat_id', 1) // Internal
+            ->whereRaw("EXTRACT(YEAR FROM TO_DATE(tgl_mulai, 'DD-MM-YYYY')) = ?", [$currentYear]);
+        })
         ->with('diklats')
         ->get()
-        ->sum(function ($pesertaDiklat) {
-          return $pesertaDiklat->diklats->durasi;
-        });
+        ->sum(fn($pd) => $pd->diklats?->durasi ?? 0);
 
-      $total_durasi_eksternal = PesertaDiklat::whereHas('diklats', function ($query) {
-        $query->where('kategori_diklat_id', 2); // 2 = Eksternal
-      })
-        ->where('peserta', $data_karyawan_id)
+      $total_durasi_eksternal = PesertaDiklat::where('peserta', $karyawan->users->id)
+        ->whereHas('diklats', function ($query) use ($currentYear) {
+          $query->where('kategori_diklat_id', 2) // Eksternal
+            ->whereRaw("EXTRACT(YEAR FROM TO_DATE(tgl_mulai, 'DD-MM-YYYY')) = ?", [$currentYear]);
+        })
         ->with('diklats')
         ->get()
-        ->sum(function ($pesertaDiklat) {
-          return $pesertaDiklat->diklats->durasi;
-        });
+        ->sum(fn($pd) => $pd->diklats?->durasi ?? 0);
 
       // $berkasFields = [
       //   'file_ktp' => $karyawan->file_ktp ?? null,
@@ -1309,6 +1264,8 @@ class DataKaryawanController extends Controller
           'foto_profil' => $karyawan->users->foto_profil,
           'data_completion_step' => $karyawan->users->data_completion_step,
           'status_aktif' => $karyawan->users->status_aktif,
+          'tgl_dinonaktifkan' => $karyawan->users->tgl_dinonaktifkan,
+          'alasan' => $karyawan->users->alasan,
           'created_at' => $karyawan->users->created_at,
           'updated_at' => $karyawan->users->updated_at
         ],
@@ -1338,8 +1295,6 @@ class DataKaryawanController extends Controller
         'email' => $karyawan->email,
         'nik' => $karyawan->nik,
         'no_rm' => $karyawan->no_rm,
-        'no_sip' => $karyawan->no_sip,
-        'masa_berlaku_sip' => $karyawan->masa_berlaku_sip,
         'no_manulife' => $karyawan->no_manulife,
         'tgl_masuk' => $karyawan->tgl_masuk,
         'unit_kerja' => $karyawan->unit_kerjas, // unit_kerja_id
@@ -1379,8 +1334,12 @@ class DataKaryawanController extends Controller
         'no_ijazah' => $karyawan->no_ijazah,
         'tahun_lulus' => $karyawan->tahun_lulus,
         'no_str' => $karyawan->no_str,
+        'created_str' => $karyawan->created_str,
         'masa_berlaku_str' => $karyawan->masa_berlaku_str,
         'tgl_berakhir_pks' => $karyawan->tgl_berakhir_pks,
+        'no_sip' => $karyawan->no_sip,
+        'created_sip' => $karyawan->created_sip,
+        'masa_berlaku_sip' => $karyawan->masa_berlaku_sip,
         'masa_diklat' => $karyawan->masa_diklat,
         'total_durasi_internal' => $total_durasi_internal,
         'total_durasi_eksternal' => $total_durasi_eksternal,
@@ -1403,7 +1362,7 @@ class DataKaryawanController extends Controller
       Log::error('| Karyawan | - Error function showByDataKaryawanId: ' . $e->getMessage());
       return response()->json([
         'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
-        'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
+        'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.' . $e->getMessage(),
       ], Response::HTTP_INTERNAL_SERVER_ERROR);
     }
   }
@@ -1422,16 +1381,13 @@ class DataKaryawanController extends Controller
         return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data karyawan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
       }
 
+      DB::beginTransaction();
       $user = $karyawan->users;
       $oldEmail = $karyawan->email;
       $newEmail = $data['email'];
 
       // Memeriksa apakah email telah berubah
       if ($oldEmail !== $newEmail) {
-        if ($user->status_aktif !== 1 && $user->status_aktif !== 3) {
-          return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Email tidak dapat diubah, Status akun harus dalam keadaan belum aktif atau dinonaktifkan.'), Response::HTTP_NOT_ACCEPTABLE);
-        }
-
         $generatedPassword = RandomHelper::generatePassword();
         $karyawan->email = $newEmail;
         $user->password = Hash::make($generatedPassword);
@@ -1439,11 +1395,13 @@ class DataKaryawanController extends Controller
         $karyawan->save();
         $user->save();
 
+        // Hapus semua token user terkait, supaya otomatis logout
+        $user->tokens()->delete();
+
         // Kirim email dengan password baru
-        AccountEmailJob::dispatch($newEmail, $generatedPassword, $data['nama']);
+        Mail::to($newEmail)->send(new SendUpdateAccoundUsersMail($newEmail, $generatedPassword, $data['nama']));
       }
 
-      DB::beginTransaction();
       try {
         // Update nama di tabel users
         $user->nama = $data['nama'];
@@ -1485,6 +1443,8 @@ class DataKaryawanController extends Controller
         }
 
         DB::commit();
+
+        LogHelper::logAction('Karyawan', 'update', $karyawan->id);
 
         return response()->json([
           'status' => Response::HTTP_OK,
@@ -1544,6 +1504,8 @@ class DataKaryawanController extends Controller
         return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya terjadi kesalahan. Pesan: ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
       }
 
+      LogHelper::logAction('Karyawan', 'import', 0);
+
       return response()->json(new WithoutDataResource(Response::HTTP_OK, 'Data karyawan berhasil di import kedalam table.'), Response::HTTP_OK);
     } catch (\Exception $e) {
       Log::error('| Karyawan | - Error function importKaryawan: ' . $e->getMessage());
@@ -1554,7 +1516,7 @@ class DataKaryawanController extends Controller
     }
   }
 
-  public function toggleStatusUser($data_karyawan_id)
+  public function toggleStatusUser(Request $request, $data_karyawan_id)
   {
     try {
       if (!Gate::allows('edit dataKaryawan')) {
@@ -1569,8 +1531,10 @@ class DataKaryawanController extends Controller
 
       $user = $karyawan->users;
 
-      // Validasi pertama kali untuk memastikan data_completion_step = 0
-      if ($user->data_completion_step !== 0) {
+      $authUser = Auth::user();
+
+      // Validasi hanya jika yang login bukan Super Admin
+      if ($authUser->role_id !== 1 && $user->data_completion_step !== 0) {
         return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, "Proses ini tidak bisa dilanjutkan karena langkah pengisian data belum mencapai tahap akhir."), Response::HTTP_NOT_ACCEPTABLE);
       }
 
@@ -1587,15 +1551,27 @@ class DataKaryawanController extends Controller
       if ($user->status_aktif === 1) {
         $user->status_aktif = 2;
         $karyawan->verifikator_1 = Auth::id();
-        // $user->data_completion_step = 0;
+        if ($user->data_completion_step !== 0) {
+          $user->data_completion_step = 0;
+        }
         $karyawan->save();
         $message = "Karyawan '{$karyawan->users->nama}' berhasil diaktifkan.";
+
+        LogHelper::logAction('Karyawan', 'update', $karyawan->id);
       } elseif ($user->status_aktif === 2) {
         $user->status_aktif = 3;
+        $user->tgl_dinonaktifkan = Carbon::now('Asia/Jakarta');
+        $user->alasan = $request->input('alasan');
         $message = "Karyawan '{$karyawan->users->nama}' berhasil dinonaktifkan.";
+
+        LogHelper::logAction('Karyawan', 'update', $karyawan->id);
       } elseif ($user->status_aktif === 3) {
         $user->status_aktif = 2;
+        $user->tgl_dinonaktifkan = null;
+        $user->alasan = null;
         $message = "Karyawan '{$karyawan->users->nama}' berhasil diaktifkan kembali.";
+
+        LogHelper::logAction('Karyawan', 'update', $karyawan->id);
       } else {
         return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, "Karyawan '{$karyawan->users->nama}' belum melengkapi data karyawan."), Response::HTTP_NOT_ACCEPTABLE);
       }

@@ -6,6 +6,14 @@ class CalculateBMIHelper
 {
 	public static function calculateBMI($weight, $height)
 	{
+		// Pastikan berat dan tinggi badan tidak null, tidak nol, dan tidak negatif untuk mencegah error
+		if (is_null($weight) || is_null($height) || $weight <= 0 || $height <= 0) {
+			return [
+				'bmi_value' => null,
+				'bmi_ket' => 'Data belum lengkap'
+			];
+		}
+
 		// Konversi tinggi badan dari cm ke meter
 		$heightInMeters = $height / 100;
 
@@ -25,7 +33,7 @@ class CalculateBMIHelper
 
 		// Return hasil perhitungan BMI dan kategori
 		return [
-			'bmi_value' => $bmi,
+			'bmi_value' => round($bmi, 2),
 			'bmi_ket' => $category
 		];
 	}
