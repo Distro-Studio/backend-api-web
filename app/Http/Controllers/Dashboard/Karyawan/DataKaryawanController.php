@@ -32,6 +32,7 @@ use Maatwebsite\Excel\Facades\Excel;
 use App\Models\KategoriTagihanPotongan;
 use Illuminate\Support\Facades\Storage;
 use App\Exports\Karyawan\KaryawanExport;
+use App\Helpers\LogHelper;
 use App\Imports\Karyawan\KaryawanImport;
 use App\Http\Requests\StoreDataKaryawanRequest;
 use App\Jobs\EmailNotification\AccountEmailJob;
@@ -840,6 +841,7 @@ class DataKaryawanController extends Controller
       $requestedRoleId = $request->input('role_id');
       $premis = $request->input('premi_id', []); // Mengambil daftar premi yang dipilih
 
+      DB::beginTransaction();
       $generatedUsername = RandomHelper::generateUsername($data['nama']);
       if (!empty($data['email'])) {
         $generatedPassword = RandomHelper::generatePassword();
@@ -848,7 +850,6 @@ class DataKaryawanController extends Controller
         $passwordHash = Hash::make('1234');
       }
 
-      DB::beginTransaction();
       try {
         $userData = [
           'nama' => $data['nama'],
@@ -908,11 +909,12 @@ class DataKaryawanController extends Controller
 
         DB::commit();
 
-        // if (!empty($data['email'])) {
-        //   AccountEmailJob::dispatch($data['email'], $generatedPassword, $data['nama']);
-        // }
+        LogHelper::logAction('Karyawan', 'create', $createDataKaryawan->id);
 
-        // Mail::to($data['email'])->send(new SendAccoundUsersMail($data['email'], $generatedPassword, $data['nama']));
+        if (!empty($data['email'])) {
+          AccountEmailJob::dispatch($data['email'], $generatedPassword, $data['nama']);
+        }
+
         return response()->json(new KaryawanResource(Response::HTTP_OK, "Data karyawan '{$createDataKaryawan->users->nama}' berhasil dibuat.", $createDataKaryawan), Response::HTTP_OK);
       } catch (\Throwable $th) {
         DB::rollBack();
@@ -1386,17 +1388,16 @@ class DataKaryawanController extends Controller
       if ($oldEmail !== $newEmail) {
         $generatedPassword = RandomHelper::generatePassword();
         $karyawan->email = $newEmail;
-        // TODO: Kembalikan jika smtp sudah online
-        // $user->password = Hash::make($generatedPassword);
+        $user->password = Hash::make($generatedPassword);
 
         $karyawan->save();
-        // $user->save();
+        $user->save();
 
         // Hapus semua token user terkait, supaya otomatis logout
         $user->tokens()->delete();
 
         // Kirim email dengan password baru
-        // AccountEmailJob::dispatch($newEmail, $generatedPassword, $data['nama']);
+        AccountEmailJob::dispatch($newEmail, $generatedPassword, $data['nama']);
       }
 
       try {
@@ -1440,6 +1441,8 @@ class DataKaryawanController extends Controller
         }
 
         DB::commit();
+
+        LogHelper::logAction('Karyawan', 'update', $karyawan->id);
 
         return response()->json([
           'status' => Response::HTTP_OK,
@@ -1499,6 +1502,8 @@ class DataKaryawanController extends Controller
         return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya terjadi kesalahan. Pesan: ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
       }
 
+      LogHelper::logAction('Karyawan', 'import', 0);
+
       return response()->json(new WithoutDataResource(Response::HTTP_OK, 'Data karyawan berhasil di import kedalam table.'), Response::HTTP_OK);
     } catch (\Exception $e) {
       Log::error('| Karyawan | - Error function importKaryawan: ' . $e->getMessage());
@@ -1549,16 +1554,22 @@ class DataKaryawanController extends Controller
         }
         $karyawan->save();
         $message = "Karyawan '{$karyawan->users->nama}' berhasil diaktifkan.";
+
+        LogHelper::logAction('Karyawan', 'update', $karyawan->id);
       } elseif ($user->status_aktif === 2) {
         $user->status_aktif = 3;
         $user->tgl_dinonaktifkan = Carbon::now('Asia/Jakarta');
         $user->alasan = $request->input('alasan');
         $message = "Karyawan '{$karyawan->users->nama}' berhasil dinonaktifkan.";
+
+        LogHelper::logAction('Karyawan', 'update', $karyawan->id);
       } elseif ($user->status_aktif === 3) {
         $user->status_aktif = 2;
         $user->tgl_dinonaktifkan = null;
         $user->alasan = null;
         $message = "Karyawan '{$karyawan->users->nama}' berhasil diaktifkan kembali.";
+
+        LogHelper::logAction('Karyawan', 'update', $karyawan->id);
       } else {
         return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, "Karyawan '{$karyawan->users->nama}' belum melengkapi data karyawan."), Response::HTTP_NOT_ACCEPTABLE);
       }

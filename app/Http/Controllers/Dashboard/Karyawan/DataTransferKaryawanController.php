@@ -18,6 +18,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Gate;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\Karyawan\TransferExport;
+use App\Helpers\LogHelper;
 use App\Models\KategoriTransferKaryawan;
 use App\Jobs\EmailNotification\TransferEmailJob;
 use App\Http\Requests\StoreTransferKaryawanRequest;
@@ -402,11 +403,13 @@ class DataTransferKaryawanController extends Controller
             // if ($request->has('beri_tahu_manajer_direktur') && $request->beri_tahu_manajer_direktur == 1) {
             //     TransferEmailJob::dispatch('manager@example.com', ['direktur@example.com'], $details);
             // }
-            // if ($request->has('beri_tahu_karyawan') && $request->beri_tahu_karyawan == 1) {
-            //     TransferEmailJob::dispatch($users->data_karyawans->email, [], $details);
-            // }
+            if ($request->has('beri_tahu_karyawan') && $request->beri_tahu_karyawan == 1) {
+                TransferEmailJob::dispatch($users->data_karyawans->email, [], $details);
+            }
 
             DB::commit();
+
+            LogHelper::logAction('Transfer Karyawan', 'create', $users->data_karyawan_id);
 
             return response()->json(new TransferKaryawanResource(Response::HTTP_OK, "Berhasil melakukan transfer karyawan '{$users->nama}'.", $transfer), Response::HTTP_OK);
         } catch (Exception $e) {
@@ -534,17 +537,19 @@ class DataTransferKaryawanController extends Controller
             // if ($request->has('beri_tahu_manajer_direktur') && $request->beri_tahu_manajer_direktur == 1) {
             //     TransferEmailJob::dispatch('manager@example.com', ['direktur@example.com'], $details);
             // }
-            // if ($request->has('beri_tahu_karyawan') && $request->beri_tahu_karyawan == 1) {
-            //     $karyawanEmail = $users->data_karyawans->email;
-            //     if (!is_null($karyawanEmail)) {
-            //         TransferEmailJob::dispatch($karyawanEmail, [], $details);
-            //         Log::info("Email pemberitahuan dikirim ke karyawan dengan email: {$karyawanEmail}");
-            //     } else {
-            //         Log::warning("Email pemberitahuan tidak dikirim karena email karyawan null untuk user_id: {$users->id}");
-            //     }
-            // }
+            if ($request->has('beri_tahu_karyawan') && $request->beri_tahu_karyawan == 1) {
+                $karyawanEmail = $users->data_karyawans->email;
+                if (!is_null($karyawanEmail)) {
+                    TransferEmailJob::dispatch($karyawanEmail, [], $details);
+                    Log::info("Email pemberitahuan dikirim ke karyawan dengan email: {$karyawanEmail}");
+                } else {
+                    Log::warning("Email pemberitahuan tidak dikirim karena email karyawan null untuk user_id: {$users->id}");
+                }
+            }
 
             DB::commit();
+
+            LogHelper::logAction('Transfer Karyawan', 'update', $users->data_karyawan_id);
 
             return response()->json(new TransferKaryawanResource(Response::HTTP_OK, "Berhasil memperbarui transfer karyawan '{$users->nama}'.", $transfer), Response::HTTP_OK);
         } catch (Exception $e) {
