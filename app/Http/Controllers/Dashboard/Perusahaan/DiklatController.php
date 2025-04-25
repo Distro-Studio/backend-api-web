@@ -860,36 +860,36 @@ class DiklatController extends Controller
                 $diklat->save();
 
                 // Update masa diklat karyawan
-                $pesertaDiklat = PesertaDiklat::where('diklat_id', $diklatId)->pluck('peserta');
-                if ($pesertaDiklat->isNotEmpty()) {
-                    foreach ($pesertaDiklat as $userId) {
-                        $dataKaryawan = DataKaryawan::where('user_id', $userId)->first();
-                        if ($dataKaryawan) {
-                            // Ambil daftar diklat ID untuk user
-                            $diklatIds = PesertaDiklat::where('peserta', $userId)->pluck('diklat_id');
-                            if ($diklatIds->isNotEmpty()) { // Pastikan diklatIds tidak kosong
-                                Log::info("| Diklat | - User ID {$userId} memiliki {$diklatIds->count()} diklat.");
+                // $pesertaDiklat = PesertaDiklat::where('diklat_id', $diklatId)->pluck('peserta');
+                // if ($pesertaDiklat->isNotEmpty()) {
+                //     foreach ($pesertaDiklat as $userId) {
+                //         $dataKaryawan = DataKaryawan::where('user_id', $userId)->first();
+                //         if ($dataKaryawan) {
+                //             // Ambil daftar diklat ID untuk user
+                //             $diklatIds = PesertaDiklat::where('peserta', $userId)->pluck('diklat_id');
+                //             if ($diklatIds->isNotEmpty()) { // Pastikan diklatIds tidak kosong
+                //                 Log::info("| Diklat | - User ID {$userId} memiliki {$diklatIds->count()} diklat.");
 
-                                // Hitung total durasi
-                                $totalDurasi = Diklat::whereIn('id', $diklatIds)
-                                    ->where('status_diklat_id', 4) // Hanya diklat dengan status 'Disetujui'
-                                    ->sum('durasi');
-                                Log::info("| Diklat | - Total masa diklat untuk user ID {$userId} adalah {$totalDurasi} jam.");
+                //                 // Hitung total durasi
+                //                 $totalDurasi = Diklat::whereIn('id', $diklatIds)
+                //                     ->where('status_diklat_id', 4) // Hanya diklat dengan status 'Disetujui'
+                //                     ->sum('durasi');
+                //                 Log::info("| Diklat | - Total masa diklat untuk user ID {$userId} adalah {$totalDurasi} jam.");
 
-                                // Update masa_diklat
-                                $dataKaryawan->masa_diklat = $totalDurasi;
-                                $dataKaryawan->save();
-                            } else {
-                                Log::info("| Diklat | - User ID {$userId} tidak memiliki diklat terkait.");
-                            }
-                        } else {
-                            Log::error("Data karyawan dengan user_id {$userId} tidak ditemukan saat mencoba update masa diklat untuk diklat ID {$diklat->id}.");
-                        }
-                    }
-                    Log::info("Proses update masa diklat selesai untuk diklat ID {$diklat->id} dengan jumlah peserta {$pesertaDiklat->count()}.");
-                } else {
-                    Log::info("Tidak ada peserta untuk diklat ID {$diklat->id} saat melakukan update masa diklat.");
-                }
+                //                 // Update masa_diklat
+                //                 $dataKaryawan->masa_diklat = $totalDurasi;
+                //                 $dataKaryawan->save();
+                //             } else {
+                //                 Log::info("| Diklat | - User ID {$userId} tidak memiliki diklat terkait.");
+                //             }
+                //         } else {
+                //             Log::error("Data karyawan dengan user_id {$userId} tidak ditemukan saat mencoba update masa diklat untuk diklat ID {$diklat->id}.");
+                //         }
+                //     }
+                //     Log::info("Proses update masa diklat selesai untuk diklat ID {$diklat->id} dengan jumlah peserta {$pesertaDiklat->count()}.");
+                // } else {
+                //     Log::info("Tidak ada peserta untuk diklat ID {$diklat->id} saat melakukan update masa diklat.");
+                // }
 
                 $totalPeserta = PesertaDiklat::where('diklat_id', $diklat->id)->pluck('peserta');
                 $users = User::whereIn('id', $totalPeserta)->get();
@@ -987,7 +987,6 @@ class DiklatController extends Controller
             // Pembuatan sertifikat untuk diklat internal
             if ($diklat->kategori_diklat_id == 1) {
                 $pesertaDiklat = PesertaDiklat::where('diklat_id', $diklatId)->pluck('peserta');
-
                 if ($pesertaDiklat->isNotEmpty()) {
                     foreach ($pesertaDiklat as $userId) {
                         $dataKaryawan = DataKaryawan::where('user_id', $userId)->first();
@@ -995,6 +994,19 @@ class DiklatController extends Controller
                             $user = $dataKaryawan->users;
                             GenerateCertificateHelper::generateCertificate($diklat, $user);
                             Log::info("Sertifikat untuk Peserta Diklat Internal '{$diklat->nama}' dengan user_id {$userId} telah dibuat.");
+
+                            // Refactored: update masa_diklat saat generate sertifikat
+                            $diklatIds = PesertaDiklat::where('peserta', $userId)->pluck('diklat_id');
+                            if ($diklatIds->isNotEmpty()) {
+                                $totalDurasi = Diklat::whereIn('id', $diklatIds)
+                                    ->where('status_diklat_id', 4)
+                                    ->sum('durasi');
+
+                                $dataKaryawan->masa_diklat = $totalDurasi;
+                                $dataKaryawan->save();
+
+                                Log::info("Masa diklat user_id {$userId} diupdate menjadi {$totalDurasi} jam.");
+                            }
                         }
                     }
                     $diklat->certificate_published = 1;
@@ -1300,9 +1312,9 @@ class DiklatController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Tidak dapat menghapus peserta dari diklat eksternal. Silakan lakukan penolakan verifikasi untuk memungkinkan pengajuan ulang.'), Response::HTTP_BAD_REQUEST);
         }
 
-        if ($diklat->status_diklat_id == 4) {
-            return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Tidak dapat menghapus peserta dari diklat yang sudah disetujui.'), Response::HTTP_BAD_REQUEST);
-        }
+        // if ($diklat->status_diklat_id == 4) {
+        //     return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Tidak dapat menghapus peserta dari diklat yang sudah disetujui.'), Response::HTTP_BAD_REQUEST);
+        // }
 
         $peserta_diklat = PesertaDiklat::where('diklat_id', $diklatId)->where('peserta', $userId)->first();
         if (!$peserta_diklat) {
@@ -1320,7 +1332,7 @@ class DiklatController extends Controller
 
         return response()->json([
             'status' => Response::HTTP_OK,
-            'message' => "Peserta diklat '{$userName}' berhasil dihapus dari diklat '{$diklat->nama}'."
+            'message' => "Peserta diklat '{$userName}' berhasil dihapus dari diklat internal '{$diklat->nama}'."
         ], Response::HTTP_OK);
     }
 
