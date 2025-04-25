@@ -737,6 +737,11 @@ class Karyawan_DetailController extends Controller
             // Ambil peserta_diklat yang berelasi dengan user tersebut
             $pesertaDiklats = PesertaDiklat::where('peserta', $user->id)
                 ->with('diklats', 'diklats.berkas_dokumen_eksternals', 'users')
+                ->whereHas('diklats', function ($query) {
+                    $query->where('kategori_diklat_id', 1) // Internal
+                        ->where('status_diklat_id', 4)
+                        ->where('certificate_published', 1);
+                })
                 ->get();
             if ($pesertaDiklats->isEmpty()) {
                 return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Tidak ada data diklat yang ditemukan untuk karyawan ini.'), Response::HTTP_NOT_FOUND);
