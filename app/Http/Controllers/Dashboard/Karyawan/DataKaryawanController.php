@@ -1006,6 +1006,8 @@ class DataKaryawanController extends Controller
       $total_durasi_internal = PesertaDiklat::where('peserta', $karyawan->users->id)
         ->whereHas('diklats', function ($query) use ($currentYear) {
           $query->where('kategori_diklat_id', 1) // Internal
+            ->where('status_diklat_id', 4)
+            ->where('certificate_published', 1)
             ->whereRaw("YEAR(STR_TO_DATE(tgl_mulai, '%d-%m-%Y')) = ?", [$currentYear]);
         })
         ->with('diklats')
@@ -1015,6 +1017,7 @@ class DataKaryawanController extends Controller
       $total_durasi_eksternal = PesertaDiklat::where('peserta', $karyawan->users->id)
         ->whereHas('diklats', function ($query) use ($currentYear) {
           $query->where('kategori_diklat_id', 2) // Eksternal
+            ->where('status_diklat_id', 4)
             ->whereRaw("YEAR(STR_TO_DATE(tgl_mulai, '%d-%m-%Y')) = ?", [$currentYear]);
         })
         ->with('diklats')

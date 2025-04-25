@@ -29,7 +29,7 @@ class PresensiExport implements WithMultipleSheets
         // Menambahkan sheet untuk setiap kategori presensi
         $categories = ['Terlambat', 'Tepat Waktu', 'Alpha'];
         foreach ($categories as $category) {
-            $sheets[] = new PresensiSheet($category, 'Laporan ' . str_replace(' ', '', $category), $this->startDate, $this->endDate, $this->filters);
+            $sheets[] = new PresensiSheet($this->filters, 'Laporan ' . str_replace(' ', '', $category), $this->startDate, $this->endDate, $category);
         }
 
         return $sheets;

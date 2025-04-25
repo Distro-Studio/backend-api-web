@@ -14,12 +14,25 @@ class JadwalShiftExport implements FromCollection, WithHeadings
 {
     use Exportable;
 
+    private $startDate;
+    private $endDate;
+
+    public function __construct($startDate, $endDate)
+    {
+        $this->startDate = $startDate;
+        $this->endDate = $endDate;
+    }
+
     public function collection()
     {
         $jadwals = Jadwal::with(['users', 'shifts', 'users.data_karyawans.unit_kerjas'])
             ->whereHas('users.data_karyawans.unit_kerjas', function ($query) {
                 $query->where('jenis_karyawan', 1);
             })
+            ->whereBetween('tgl_mulai', [$this->startDate, $this->endDate])
+            ->orWhereBetween('tgl_selesai', [$this->startDate, $this->endDate])
+            ->join('data_karyawans', 'jadwals.user_id', '=', 'data_karyawans.user_id') // Join dengan data_karyawans
+            ->orderBy('data_karyawans.nik', 'asc') // Mengurutkan berdasarkan nik
             ->get();
 
         $schedules = $jadwals->map(function ($schedule, $index) {
@@ -52,6 +65,7 @@ class JadwalShiftExport implements FromCollection, WithHeadings
             return [
                 'no' => $index + 1,
                 'user' => $schedule->users->nama,
+                'nik' => $schedule->users->data_karyawans->nik,
                 'jenis_karyawan' => $jenisKaryawan,
                 'nama_unit' => $namaUnit,
                 'nama_shift' => $namaShift,
@@ -73,6 +87,7 @@ class JadwalShiftExport implements FromCollection, WithHeadings
         return [
             'no',
             'nama',
+            'nik',
             'jenis_karyawan',
             'unit_kerja',
             'shift',

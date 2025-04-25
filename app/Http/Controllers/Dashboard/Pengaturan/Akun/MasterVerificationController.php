@@ -302,7 +302,7 @@ class MasterVerificationController extends Controller
             ->where('order', $data['order'])
             ->where('modul_verifikasi', $data['modul_verifikasi'])
             ->whereNull('deleted_at')
-            // ->where('id', '!=', $verification->id) // kecuali data saat ini
+            ->where('id', '!=', $verification->id) // kecuali data saat ini
             ->first();
         if ($existingVerification) {
             $existingVerifikator = User::find($data['verifikator']);

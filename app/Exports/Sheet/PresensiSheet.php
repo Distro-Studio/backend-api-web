@@ -19,16 +19,18 @@ class PresensiSheet implements FromCollection, WithHeadings, WithMapping, WithTi
 
     private $number;
     private $filters;
+    private $category;
     private $title;
     private $startDate;
     private $endDate;
 
-    public function __construct($filters = [], $title, $startDate, $endDate)
+    public function __construct($filters = [], $title, $startDate, $endDate, $category = null)
     {
         $this->filters = $filters;
         $this->title = $title;
         $this->startDate = $startDate;
         $this->endDate = $endDate;
+        $this->category = $category;
         $this->number = 0; // Reset numbering for each sheet
     }
 
@@ -40,7 +42,7 @@ class PresensiSheet implements FromCollection, WithHeadings, WithMapping, WithTi
             'data_karyawans.unit_kerjas',
             'kategori_presensis'
         ])->whereHas('kategori_presensis', function ($query) {
-            $query->where('label', $this->filters);
+            $query->where('label', $this->category);
         });
 
         if (!empty($this->startDate) && !empty($this->endDate)) {
@@ -182,6 +184,11 @@ class PresensiSheet implements FromCollection, WithHeadings, WithMapping, WithTi
                 }
             });
         }
+
+        // JOIN untuk bisa sort by nik
+        $query->join('data_karyawans', 'presensis.data_karyawan_id', '=', 'data_karyawans.id')
+            ->orderBy('data_karyawans.nik', 'asc')
+            ->select('presensis.*');
 
         return $query->get();
     }
