@@ -183,8 +183,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
             // ! Jadwal ===========>
             Route::post('/get-data-jadwal', [DataJadwalController::class, 'index']);
             Route::post('/create-shift/{userId}', [DataJadwalController::class, 'createShiftByDate']);
-            Route::get('/export-shift', [DataJadwalController::class, 'exportJadwalKaryawanShift']);
-            Route::get('/export-non-shift', [DataJadwalController::class, 'exportJadwalKaryawanNonShift']);
+            Route::post('/export-shift', [DataJadwalController::class, 'exportJadwalKaryawanShift']);
+            Route::post('/export-non-shift', [DataJadwalController::class, 'exportJadwalKaryawanNonShift']);
             Route::post('/import', [DataJadwalController::class, 'importJadwalKaryawan']);
             Route::apiResource('/data-jadwal', DataJadwalController::class);
 
