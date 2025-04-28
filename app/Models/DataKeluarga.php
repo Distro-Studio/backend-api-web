@@ -19,7 +19,10 @@ class DataKeluarga extends Model
         'status_keluarga_id' => 'integer',
         'is_bpjs' => 'integer',
         'verifikator_1' => 'integer',
-        'pendidikan_terakhir' => 'integer'
+        // 'pendidikan_terakhir' => 'integer',
+        // 'jenis_kelamin' => 'integer',
+        // 'kategori_agama_id' => 'integer',
+        // 'kategori_darah_id' => 'integer',
     ];
 
     /**
@@ -71,4 +74,24 @@ class DataKeluarga extends Model
     {
         return $this->belongsTo(KategoriPendidikan::class, 'pendidikan_terakhir', 'id');
     }
+
+    // /**
+    //  * Get the kategori_agamas that owns the DataKaryawan
+    //  *
+    //  * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+    //  */
+    // public function kategori_agamas(): BelongsTo
+    // {
+    //     return $this->belongsTo(KategoriAgama::class, 'kategori_agama_id', 'id');
+    // }
+
+    // /**
+    //  * Get the kategori_darahs that owns the DataKaryawan
+    //  *
+    //  * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+    //  */
+    // public function kategori_darahs(): BelongsTo
+    // {
+    //     return $this->belongsTo(KategoriDarah::class, 'kategori_darah_id', 'id');
+    // }
 }
