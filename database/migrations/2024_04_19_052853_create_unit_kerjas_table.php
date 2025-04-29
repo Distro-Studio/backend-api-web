@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('nama_unit');
             $table->boolean('jenis_karyawan'); // 1 = shift, 0 = non shift
+            $table->integer('kategori_unit')->nullable(); // 1 = direksi, 2 = karyawan
             $table->softDeletes();
             $table->timestamps();
         });
