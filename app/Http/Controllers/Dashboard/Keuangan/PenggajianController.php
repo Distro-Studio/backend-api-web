@@ -218,7 +218,9 @@ class PenggajianController extends Controller
             ->whereHas('users', function ($query) {
                 $query->where('status_aktif', 2);
             })
-            ->whereIn('status_karyawan_id', [1, 2, 3])
+            ->whereHas('status_karyawans', function ($query) {
+                $query->where('kategori_status', 1);
+            })
             ->pluck('id')
             ->toArray();
         // dd($data_karyawan_ids);

@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('status_karyawans', function (Blueprint $table) {
             $table->id();
             $table->string('label');
+            $table->integer('kategori_status')->nullable(); // 1 = fulltime, 2 = parttime, 3 = outsourcing
             $table->softDeletes();
             $table->timestamps();
         });

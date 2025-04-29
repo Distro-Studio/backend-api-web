@@ -14,7 +14,8 @@ class StatusKaryawan extends Model
 
     protected $casts = [
         'id' => 'integer',
-        'label' => 'string'
+        'label' => 'string',
+        'kategori_status' => 'integer',
     ];
 
     /**

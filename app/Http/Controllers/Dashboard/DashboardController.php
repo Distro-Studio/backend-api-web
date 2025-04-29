@@ -7,7 +7,6 @@ use App\Models\Cuti;
 use App\Models\Jadwal;
 use App\Models\Lembur;
 use App\Models\Jabatan;
-use App\Models\Presensi;
 use App\Models\HariLibur;
 use App\Models\Kompetensi;
 use App\Models\DataKaryawan;
@@ -32,8 +31,15 @@ class DashboardController extends Controller
             $query->where('status_aktif', 2);
         })->where('id', '!=', 1)->count();
 
-        $calculatedKaryawanNonAktif = DataKaryawan::whereHas('users', function ($query) {
-            $query->where('status_aktif', 3);
+        // Calculate the number of fulltime, parttime, and outsourcing employees
+        $calculatedKaryawanFulltime = DataKaryawan::whereHas('status_karyawans', function ($query) {
+            $query->where('kategori_status', 1);
+        })->where('id', '!=', 1)->count();
+        $calculatedKaryawanParttime = DataKaryawan::whereHas('status_karyawans', function ($query) {
+            $query->where('kategori_status', 2);
+        })->where('id', '!=', 1)->count();
+        $calculatedKaryawanOutsourcing = DataKaryawan::whereHas('status_karyawans', function ($query) {
+            $query->where('kategori_status', 3);
         })->where('id', '!=', 1)->count();
 
         // Hitung karyawan shift yang libur berdasarkan user_id
@@ -66,7 +72,9 @@ class DashboardController extends Controller
             'message' => "Header calculation successful.",
             'data' => [
                 'total_karyawan' => $calculatedKaryawanAktif,
-                'karyawan_nonaktif' => $calculatedKaryawanNonAktif,
+                'karyawan_fulltime' => $calculatedKaryawanFulltime,
+                'karyawan_parttime' => $calculatedKaryawanParttime,
+                'karyawan_outsourcing' => $calculatedKaryawanOutsourcing,
                 'jumlah_libur' => $countLibur,
                 'jumlah_cuti' => $countCuti,
             ]
