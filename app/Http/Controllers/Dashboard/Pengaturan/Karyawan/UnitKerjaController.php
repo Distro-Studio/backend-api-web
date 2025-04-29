@@ -140,6 +140,7 @@ class UnitKerjaController extends Controller
                 'id' => $unit_kerja->id,
                 'nama_unit' => $unit_kerja->nama_unit,
                 'jenis_karyawan' => $unit_kerja->jenis_karyawan,
+                'kategori_unit' => $unit_kerja->kategori_unit,
                 'deleted_at' => $unit_kerja->deleted_at,
                 'created_at' => $unit_kerja->created_at,
                 'updated_at' => $unit_kerja->updated_at

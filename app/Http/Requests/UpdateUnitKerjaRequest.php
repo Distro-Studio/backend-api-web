@@ -27,6 +27,7 @@ class UpdateUnitKerjaRequest extends FormRequest
         return [
             'nama_unit' => 'required|string|max:225',
             'jenis_karyawan' => 'required|boolean',
+            'kategori_unit_id' => 'required|exists:kategori_unit_kerjas,id'
         ];
     }
 
@@ -37,6 +38,8 @@ class UpdateUnitKerjaRequest extends FormRequest
             'nama_unit.max' => 'Nama unit kerja melebihi batas maksimum panjang karakter.',
             'jenis_karyawan.required' => 'Jenis karyawan tidak diperbolehkan kosong.',
             'jenis_karyawan.boolean' => 'Jenis karyawan hanya dapat diisi Shift atau Non-Shift.',
+            'kategori_unit_id.required' => 'Kategori unit kerja tidak diperbolehkan kosong.',
+            'kategori_unit_id.exists' => 'Kategori unit kerja tidak ditemukan.',
         ];
     }
 

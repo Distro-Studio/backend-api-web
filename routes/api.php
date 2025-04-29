@@ -83,7 +83,9 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/get-list-user-shift', [DataKaryawanController::class, 'getAllDataUserShift']);
     Route::get('/get-list-user-non-shift', [DataKaryawanController::class, 'getAllDataUserNonShift']);
     Route::get('/get-list-unit-kerja', [DataKaryawanController::class, 'getAllDataUnitKerja']);
+    Route::get('/get-list-kategori-unit-kerja', [DataKaryawanController::class, 'getAllDataKategoriUnitKerja']);
     Route::get('/get-list-jabatan', [DataKaryawanController::class, 'getAllDataJabatan']);
+    Route::get('/get-list-kategori-status-karyawan', [DataKaryawanController::class, 'getAllDataKategoriStatusKaryawan']);
     Route::get('/get-list-status-karyawan', [DataKaryawanController::class, 'getAllDataStatusKaryawan']);
     Route::get('/get-list-kompetensi', [DataKaryawanController::class, 'getAllDataKompetensi']);
     Route::get('/get-list-role', [DataKaryawanController::class, 'getAllDataRole']);

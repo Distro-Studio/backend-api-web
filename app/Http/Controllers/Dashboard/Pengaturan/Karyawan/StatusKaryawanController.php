@@ -141,6 +141,7 @@ class StatusKaryawanController extends Controller
             return [
                 'id' => $statusKaryawan->id,
                 'label' => $statusKaryawan->label,
+                'kategori_status' => $statusKaryawan->kategori_status,
                 'deleted_at' => $statusKaryawan->deleted_at,
                 'created_at' => $statusKaryawan->created_at,
                 'updated_at' => $statusKaryawan->updated_at

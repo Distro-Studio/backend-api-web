@@ -41,6 +41,8 @@ use App\Http\Requests\Excel_Import\ImportKaryawanRequest;
 use App\Http\Resources\Dashboard\Karyawan\KaryawanResource;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
 use App\Mail\SendUpdateAccoundUsersMail;
+use App\Models\KategoriStatusKaryawan;
+use App\Models\KategoriUnitKerja;
 use Illuminate\Support\Facades\Mail;
 
 class DataKaryawanController extends Controller
@@ -247,6 +249,31 @@ class DataKaryawanController extends Controller
     }
   }
 
+  public function getAllDataKategoriUnitKerja()
+  {
+    try {
+      $kategori_unit_kerja = KategoriUnitKerja::all();
+      if ($kategori_unit_kerja->isEmpty()) {
+        return response()->json([
+          'status' => Response::HTTP_NOT_FOUND,
+          'message' => 'Data kategori unit kerja tidak ditemukan.',
+        ], Response::HTTP_NOT_FOUND);
+      }
+
+      return response()->json([
+        'status' => Response::HTTP_OK,
+        'message' => 'Retrieving all kategori unit kerja for dropdown',
+        'data' => $kategori_unit_kerja
+      ], Response::HTTP_OK);
+    } catch (\Exception $e) {
+      Log::error('| Karyawan | - Error function getAllDataKategoriUnitKerja: ' . $e->getMessage());
+      return response()->json([
+        'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
+        'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
+      ], Response::HTTP_INTERNAL_SERVER_ERROR);
+    }
+  }
+
   public function getAllDataUnitKerja()
   {
     try {
@@ -290,6 +317,31 @@ class DataKaryawanController extends Controller
       ], Response::HTTP_OK);
     } catch (\Exception $e) {
       Log::error('| Karyawan | - Error function getAllDataJabatan: ' . $e->getMessage());
+      return response()->json([
+        'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
+        'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
+      ], Response::HTTP_INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  public function getAllDataKategoriStatusKaryawan()
+  {
+    try {
+      $kategori_status_karyawan = KategoriStatusKaryawan::all();
+      if ($kategori_status_karyawan->isEmpty()) {
+        return response()->json([
+          'status' => Response::HTTP_NOT_FOUND,
+          'message' => 'Data kategori status karyawan tidak ditemukan.',
+        ], Response::HTTP_NOT_FOUND);
+      }
+
+      return response()->json([
+        'status' => Response::HTTP_OK,
+        'message' => 'Retrieving all kategori status karyawan for dropdown',
+        'data' => $kategori_status_karyawan
+      ], Response::HTTP_OK);
+    } catch (\Exception $e) {
+      Log::error('| Karyawan | - Error function getAllDataKategoriStatusKaryawan: ' . $e->getMessage());
       return response()->json([
         'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
         'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
