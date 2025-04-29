@@ -219,7 +219,7 @@ class PenggajianController extends Controller
                 $query->where('status_aktif', 2);
             })
             ->whereHas('status_karyawans', function ($query) {
-                $query->where('kategori_status', 1);
+                $query->where('kategori_status_id', 1); // Kategori status "Fulltime"
             })
             ->pluck('id')
             ->toArray();
