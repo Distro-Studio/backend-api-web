@@ -29,6 +29,7 @@ use App\Exports\Keuangan\LaporanPenggajian\LaporanGajiBankExport;
 use App\Exports\Keuangan\LaporanPenggajian\RekapGajiPotonganExport;
 use App\Exports\Keuangan\LaporanPenggajian\RekapGajiKompetensiExport;
 use App\Exports\Keuangan\LaporanPenggajian\RekapGajiPenerimaanExport;
+use App\Models\RiwayatThr;
 
 class PenggajianController extends Controller
 {
@@ -89,7 +90,7 @@ class PenggajianController extends Controller
 
                         $riwayatPenggajian->update([
                             'status_gaji_id' => 2,
-                            'submitted_by' => Auth::id(),
+                            'submitted_by' => auth()->id(),
                             'periode_gaji_karyawan' => $totalTakeHomePay
                         ]);
 
@@ -285,10 +286,23 @@ class PenggajianController extends Controller
                 'karyawan_verifikasi' => $verifikasiKaryawan,
                 'status_gaji_id' => $status_riwayat_gaji,
                 'jenis_riwayat' => $jenisRiwayat,
-                'created_by' => Auth::id(),
+                'created_by' => auth()->id(),
                 'submitted_by' => null,
                 'created_at' => Carbon::now('Asia/Jakarta'),
             ]);
+
+            // Jika jenisRiwayat == 0, berarti ada THR, buat riwayat THR
+            if ($jenisRiwayat == 0) {
+                $riwayatThr = RiwayatThr::where('periode', $periode)->first();
+
+                if ($riwayatThr) {
+                    $riwayatThr->update([
+                        'riwayat_penggajian_id' => $riwayatPenggajian->id,
+                        'updated_by' => auth()->id(),
+                        'updated_at' => Carbon::now('Asia/Jakarta'),
+                    ]);
+                }
+            }
 
             // Dispatch the job to handle the calculation in the background
             CreateGajiJob::dispatch($data_karyawan_ids, $sertakan_bor, $riwayatPenggajian->id);

@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             // $table->foreignId('thr_id')->constrained('thrs');
             // $table->foreignId('user_id')->constrained('users');
+            $table->foreignId('riwayat_thr_id')->nullable()->constrained('riwayat_thrs');
             $table->foreignId('data_karyawan_id')->constrained('data_karyawans');
             $table->string('tgl_run_thr');
             $table->timestamps();
