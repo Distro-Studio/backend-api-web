@@ -17,7 +17,10 @@ class PerubahanKeluarga extends Model
         'jenis_perubahan' => 'integer',
         'data_keluarga_id' => 'integer',
         'status_hidup' => 'integer',
-        'pendidikan_terakhir' => 'integer'
+        'pendidikan_terakhir' => 'integer',
+        'jenis_kelamin' => 'integer',
+        'kategori_agama_id' => 'integer',
+        'kategori_darah_id' => 'integer',
     ];
 
     /**
@@ -48,5 +51,25 @@ class PerubahanKeluarga extends Model
     public function kategori_pendidikans(): BelongsTo
     {
         return $this->belongsTo(KategoriPendidikan::class, 'pendidikan_terakhir', 'id');
+    }
+
+    /**
+     * Get the kategori_agama that owns the PerubahanKeluarga
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function kategori_agama(): BelongsTo
+    {
+        return $this->belongsTo(KategoriAgama::class, 'kategori_agama_id', 'id');
+    }
+
+    /**
+     * Get the kategori_darah that owns the PerubahanKeluarga
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function kategori_darah(): BelongsTo
+    {
+        return $this->belongsTo(KategoriDarah::class, 'kategori_darah_id', 'id');
     }
 }

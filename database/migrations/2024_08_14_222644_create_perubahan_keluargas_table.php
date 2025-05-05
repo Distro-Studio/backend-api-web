@@ -17,12 +17,24 @@ return new class extends Migration
             $table->foreignId('data_keluarga_id')->nullable()->constrained('data_keluargas');
             $table->string('nama_keluarga');
             $table->enum('hubungan', ['Suami', 'Istri', 'Anak Ke-1', 'Anak Ke-2', 'Anak Ke-3', 'Anak Ke-4', 'Anak Ke-5', 'Bapak', 'Ibu', 'Bapak Mertua', 'Ibu Mertua']);
-            $table->foreignId('pendidikan_terakhir')->constrained('kategori_pendidikans');
-            $table->boolean('status_hidup'); // 1 = hidup, 0 = meninggal
+            $table->string('tgl_lahir');
+
+            // Tambahan baru
+            $table->string('tempat_lahir')->nullable();
+            $table->boolean('jenis_kelamin')->nullable();
+            $table->foreignId('kategori_agama_id')->nullable()->constrained('kategori_agamas');
+            $table->foreignId('kategori_darah_id')->nullable()->constrained('kategori_darahs');
+            $table->string('no_rm')->nullable();
+            // Tambahan baru
+
+            $table->foreignId('pendidikan_terakhir')->nullable()->constrained('kategori_pendidikans');
+            $table->boolean('status_hidup');
             $table->string('pekerjaan')->nullable();
             $table->string('no_hp')->nullable();
             $table->string('email')->nullable();
-            $table->boolean('is_bpjs')->default(1);
+            $table->foreignId('status_keluarga_id')->constrained('status_keluargas');
+            $table->boolean('is_menikah')->default(0); // 1 = Sudah menikah 0 = Belum menikah
+            $table->boolean('is_bpjs')->default(1); // 1 = Dapet BPJS 0 = Gak dapet BPJS
             $table->timestamps();
         });
     }

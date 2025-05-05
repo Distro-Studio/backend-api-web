@@ -19,14 +19,14 @@ return new class extends Migration
             $table->string('tgl_lahir');
 
             // Tambahan baru
-            // $table->string('tempat_lahir')->nullable();
-            // $table->boolean('jenis_kelamin')->nullable();
-            // $table->foreignId('kategori_agama_id')->nullable()->constrained('kategori_agamas');
-            // $table->foreignId('kategori_darah_id')->nullable()->constrained('kategori_darahs');
-            // $table->string('no_rm')->nullable();
+            $table->string('tempat_lahir')->nullable();
+            $table->boolean('jenis_kelamin')->nullable();
+            $table->foreignId('kategori_agama_id')->nullable()->constrained('kategori_agamas');
+            $table->foreignId('kategori_darah_id')->nullable()->constrained('kategori_darahs');
+            $table->string('no_rm')->nullable();
             // Tambahan baru
 
-            $table->foreignId('pendidikan_terakhir')->constrained('kategori_pendidikans');
+            $table->foreignId('pendidikan_terakhir')->nullable()->constrained('kategori_pendidikans');
             $table->boolean('status_hidup');
             $table->string('pekerjaan')->nullable();
             $table->string('no_hp')->nullable();

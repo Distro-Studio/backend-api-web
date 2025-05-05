@@ -14,6 +14,7 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
+use App\Models\StatusKaryawan;
 use Illuminate\Support\Facades\Gate;
 
 class DashboardController extends Controller
@@ -33,13 +34,16 @@ class DashboardController extends Controller
 
         // Calculate the number of fulltime, parttime, and outsourcing employees
         $calculatedKaryawanFulltime = DataKaryawan::whereHas('status_karyawans', function ($query) {
-            $query->where('kategori_status_id', 1);
+            $query->where('kategori_status_id', 1)
+                ->whereNotNull('kategori_status_id');
         })->where('id', '!=', 1)->count();
         $calculatedKaryawanParttime = DataKaryawan::whereHas('status_karyawans', function ($query) {
-            $query->where('kategori_status_id', 2);
+            $query->where('kategori_status_id', 2)
+                ->whereNotNull('kategori_status_id');
         })->where('id', '!=', 1)->count();
         $calculatedKaryawanOutsourcing = DataKaryawan::whereHas('status_karyawans', function ($query) {
-            $query->where('kategori_status_id', 3);
+            $query->where('kategori_status_id', 3)
+                ->whereNotNull('kategori_status_id');
         })->where('id', '!=', 1)->count();
 
         // Hitung karyawan shift yang libur berdasarkan user_id
@@ -106,10 +110,16 @@ class DashboardController extends Controller
         // Retrieve the count of male and female employees
         $countMale = DataKaryawan::whereHas('users', function ($query) {
             $query->where('status_aktif', 2);
-        })->where('jenis_kelamin', true)->count();
+        })
+            ->where('jenis_kelamin', true)
+            ->where('id', '!=', 1)
+            ->count();
         $countFemale = DataKaryawan::whereHas('users', function ($query) {
             $query->where('status_aktif', 2);
-        })->where('jenis_kelamin', false)->count();
+        })
+            ->where('jenis_kelamin', false)
+            ->where('id', '!=', 1)
+            ->count();
 
         // Calculate the percentage
         $percentMale = ($countMale / $totalEmployees) * 100;
@@ -215,8 +225,7 @@ class DashboardController extends Controller
         }
 
         // Retrieve all statuses
-        $statuses = DB::table('status_karyawans')->get();
-
+        $statuses = StatusKaryawan::whereNotNull('kategori_status_id')->get();
         if ($statuses->isEmpty()) {
             return response()->json([
                 'status' => Response::HTTP_NOT_FOUND,
@@ -229,9 +238,12 @@ class DashboardController extends Controller
 
         // Iterate over each status and count the number of employees with that status
         foreach ($statuses as $status) {
-            $countKaryawan = DataKaryawan::whereHas('users', function ($query) {
-                $query->where('status_aktif', 2);
-            })->where('status_karyawan_id', $status->id)->count();
+            $countKaryawan = DataKaryawan::where('id', '!=', 1)
+                ->whereHas('users', function ($query) {
+                    $query->where('status_aktif', 2);
+                })
+                ->where('status_karyawan_id', $status->id)
+                ->count();
             $result[] = [
                 'status_karyawan' => $status->label,
                 'jumlah_karyawan' => $countKaryawan,
