@@ -24,6 +24,10 @@ class StoreDiklatRequest extends FormRequest
             'nama' => 'required|string|max:255',
             // 'kategori_diklat_id' => 'required|integer|exists:kategori_diklats,id',
             'deskripsi' => 'required|string|max:225',
+            'user_id' => 'nullable|array', // Penerima notifikasi
+            'user_id.*' => 'integer|exists:users,id',
+            'dokumen_diklat' => 'nullable|array|max:5',
+            'dokumen_diklat.*' => 'file|max:10240|mimes:pdf,ppt,pptx,doc,docx',
             'kuota' => 'required|integer|min:1',
             'tgl_mulai' => 'required|string',
             'tgl_selesai' => 'required|string',
@@ -48,6 +52,14 @@ class StoreDiklatRequest extends FormRequest
             'kategori_diklat_id.required' => 'Silahkan pilih kategori diklat terlebih dahulu.',
             'kategori_diklat_id.exists' => 'Kategori diklat yang dipilih tidak valid.',
             'deskripsi.required' => 'Deskripsi diklat tidak diperbolehkan kosong.',
+            'user_id.array' => 'Format data user_id harus berupa array.',
+            'user_id.*.integer' => 'Setiap user_id harus berupa angka.',
+            'user_id.*.exists' => 'Salah satu user_id tidak ditemukan dalam sistem.',
+            'dokumen_diklat.array' => 'Dokumen diklat harus dalam format array.',
+            'dokumen_diklat.max' => 'Maksimal hanya dapat mengunggah 5 dokumen diklat.',
+            'dokumen_diklat.*.file' => 'Setiap dokumen harus berupa file.',
+            'dokumen_diklat.*.max' => 'Setiap file dokumen tidak boleh lebih dari 10MB.',
+            'dokumen_diklat.*.mimes' => 'Format dokumen hanya diperbolehkan: pdf, ppt, pptx, doc docx.',
             'kuota.required' => 'Kuota peserta diklat tidak diperbolehkan kosong.',
             'kuota.integer' => 'Kuota peserta diklat harus berupa angka.',
             'tgl_mulai.required' => 'Tanggal mulai diklat tidak diperbolehkan kosong.',
@@ -65,16 +77,11 @@ class StoreDiklatRequest extends FormRequest
 
     public function failedValidation(Validator $validator)
     {
+        $messages = implode(' ', $validator->errors()->all());
         $response = [
             'status' => Response::HTTP_BAD_REQUEST,
-            'message' => $validator->errors()
+            'message' => $messages,
         ];
-
-        // $messages = implode(' ', $validator->errors()->all());
-        // $response = [
-        //     'status' => Response::HTTP_BAD_REQUEST,
-        //     'message' => $messages,
-        // ];
 
         throw new HttpResponseException(response()->json($response, Response::HTTP_BAD_REQUEST));
     }

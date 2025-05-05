@@ -45,6 +45,7 @@ use App\Http\Controllers\Dashboard\PengumumanController;
 use App\Http\Controllers\Dashboard\Perusahaan\AboutHospitalController;
 use App\Http\Controllers\Dashboard\Perusahaan\DiklatController;
 use App\Http\Controllers\Dashboard\Perusahaan\JenisPenilaianController;
+use App\Http\Controllers\Dashboard\Perusahaan\MasaDiklatController;
 use App\Http\Controllers\Dashboard\Perusahaan\PenilaianController;
 use App\Http\Controllers\Dashboard\Presensi\DataPresensiController;
 use App\Http\Controllers\Publik\Auth\ForgotPasswordController;
@@ -285,6 +286,10 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::post('/diklat/{diklatId}/certificates', [DiklatController::class, 'generateCertificate']);
             Route::post('/diklat/{diklatId}/verifikasi-diklat-eksternal-step-1', [DiklatController::class, 'verifikasiDiklatExternal_t1']);
             Route::post('/diklat/{diklatId}/verifikasi-diklat-eksternal-step-2', [DiklatController::class, 'verifikasiDiklatExternal_t2']);
+
+            // ! Masa Diklat ===========>
+            Route::post('/get-masa-diklat', [MasaDiklatController::class, 'index']);
+            Route::post('/export-masa-diklat', [MasaDiklatController::class, 'exportMasaDiklat']);
 
             // ! Pelaporan ===========>
             // Route::post('/get-data-pelaporan', [PelaporanController::class, 'index']);

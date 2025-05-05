@@ -15,6 +15,11 @@ return new class extends Migration
             $table->id();
             $table->foreignId('gambar')->nullable()->constrained('berkas')->onDelete('cascade');
             $table->foreignId('dokumen_eksternal')->nullable()->constrained('berkas')->onDelete('cascade');
+            $table->foreignId('dokumen_diklat_1')->nullable()->constrained('berkas')->onDelete('cascade')->onUpdate('cascade');
+            $table->foreignId('dokumen_diklat_2')->nullable()->constrained('berkas')->onDelete('cascade')->onUpdate('cascade');
+            $table->foreignId('dokumen_diklat_3')->nullable()->constrained('berkas')->onDelete('cascade')->onUpdate('cascade');
+            $table->foreignId('dokumen_diklat_4')->nullable()->constrained('berkas')->onDelete('cascade')->onUpdate('cascade');
+            $table->foreignId('dokumen_diklat_5')->nullable()->constrained('berkas')->onDelete('cascade')->onUpdate('cascade');
             $table->string('nama');
             $table->foreignId('kategori_diklat_id')->constrained('kategori_diklats'); // 1 = Internal 2 = Eksternal
             $table->foreignId('status_diklat_id')->constrained('status_diklats');

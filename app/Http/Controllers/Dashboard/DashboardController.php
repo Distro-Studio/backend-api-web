@@ -245,7 +245,13 @@ class DashboardController extends Controller
                 ->where('status_karyawan_id', $status->id)
                 ->count();
             $result[] = [
-                'status_karyawan' => $status->label,
+                'status_karyawan' => [
+                    'id' => $status->id,
+                    'label' => $status->label,
+                    'kategori_status' => $status->kategori_status ?? null,
+                    'created_at' => $status->created_at,
+                    'updated_at' => $status->updated_at
+                ],
                 'jumlah_karyawan' => $countKaryawan,
             ];
         }

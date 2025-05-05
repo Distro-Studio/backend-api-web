@@ -17,6 +17,11 @@ class Diklat extends Model
         'id' => 'integer',
         'gambar' => 'integer',
         'dokumen_eksternal' => 'integer',
+        'dokumen_diklat_1' => 'integer',
+        'dokumen_diklat_2' => 'integer',
+        'dokumen_diklat_3' => 'integer',
+        'dokumen_diklat_4' => 'integer',
+        'dokumen_diklat_5' => 'integer',
         'kategori_diklat_id' => 'integer',
         'status_diklat_id' => 'integer',
         'total_peserta' => 'integer',
@@ -76,6 +81,56 @@ class Diklat extends Model
     public function berkas_gambars(): BelongsTo
     {
         return $this->belongsTo(Berkas::class, 'gambar', 'id');
+    }
+
+    /**
+     * Get the berkas_internal_1 that owns the Diklat
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function berkas_internal_1(): BelongsTo
+    {
+        return $this->belongsTo(Berkas::class, 'dokumen_diklat_1', 'id');
+    }
+
+        /**
+     * Get the berkas_internal_2 that owns the Diklat
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function berkas_internal_2(): BelongsTo
+    {
+        return $this->belongsTo(Berkas::class, 'dokumen_diklat_2', 'id');
+    }
+
+        /**
+     * Get the berkas_internal_3 that owns the Diklat
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function berkas_internal_3(): BelongsTo
+    {
+        return $this->belongsTo(Berkas::class, 'dokumen_diklat_3', 'id');
+    }
+
+        /**
+     * Get the berkas_internal_4 that owns the Diklat
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function berkas_internal_4(): BelongsTo
+    {
+        return $this->belongsTo(Berkas::class, 'dokumen_diklat_4', 'id');
+    }
+
+        /**
+     * Get the berkas_internal_5 that owns the Diklat
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function berkas_internal_5(): BelongsTo
+    {
+        return $this->belongsTo(Berkas::class, 'dokumen_diklat_5', 'id');
     }
 
     /**

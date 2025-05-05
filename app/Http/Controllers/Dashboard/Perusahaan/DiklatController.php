@@ -174,6 +174,11 @@ class DiklatController extends Controller
                 'list_peserta' => $pesertaList,
                 'alasan' => $diklat->alasan ?? null,
                 'skp' => $diklat->skp ?? null,
+                'dokumen_diklat_1' => $diklat->berkas_internal_1 ?? null,
+                'dokumen_diklat_2' => $diklat->berkas_internal_2 ?? null,
+                'dokumen_diklat_3' => $diklat->berkas_internal_3 ?? null,
+                'dokumen_diklat_4' => $diklat->berkas_internal_4 ?? null,
+                'dokumen_diklat_5' => $diklat->berkas_internal_5 ?? null,
                 'certificate_published' => $diklat->certificate_published,
                 'certificate_verified_by' => $diklat->certificate_diklats,
                 'relasi_verifikasi' => $formattedRelasiVerifikasi,
@@ -409,6 +414,44 @@ class DiklatController extends Controller
                 StorageServerHelper::logout();
             }
 
+            $dokumenDiklatIds = [
+                'dokumen_diklat_1' => null,
+                'dokumen_diklat_2' => null,
+                'dokumen_diklat_3' => null,
+                'dokumen_diklat_4' => null,
+                'dokumen_diklat_5' => null,
+            ];
+
+            if ($request->hasFile('dokumen_diklat')) {
+                StorageServerHelper::login();
+                $authUser = Auth::user();
+                $files = $request->file('dokumen_diklat');
+
+                foreach ($files as $index => $file) {
+                    if ($index > 4) break; // hanya simpan maksimal 5 dokumen
+
+                    $random_filename = Str::random(20);
+                    $dataupload = StorageServerHelper::multipleUploadToServer($file, $random_filename);
+
+                    $berkas = Berkas::create([
+                        'user_id' => $authUser->id,
+                        'file_id' => $dataupload['id_file']['id'],
+                        'nama' => $random_filename,
+                        'kategori_berkas_id' => 2, // umum
+                        'status_berkas_id' => 2,
+                        'path' => $dataupload['path'],
+                        'tgl_upload' => now(),
+                        'nama_file' => $dataupload['nama_file'],
+                        'ext' => $dataupload['ext'],
+                        'size' => $dataupload['size'],
+                    ]);
+
+                    $dokumenDiklatIds['dokumen_diklat_' . ($index + 1)] = $berkas->id;
+                }
+
+                StorageServerHelper::logout();
+            }
+
             $jamMulai = Carbon::createFromFormat('H:i:s', $data['jam_mulai'], 'Asia/Jakarta');
             $jamSelesai = Carbon::createFromFormat('H:i:s', $data['jam_selesai'], 'Asia/Jakarta');
 
@@ -427,7 +470,7 @@ class DiklatController extends Controller
 
             $durasi = $selisihJam * $totalHari;
 
-            $diklat = Diklat::create([
+            $diklat = Diklat::create(array_merge([
                 'gambar' => $gambarId,
                 'nama' => $data['nama'],
                 'kategori_diklat_id' => 1,
@@ -440,8 +483,9 @@ class DiklatController extends Controller
                 'jam_selesai' => $data['jam_selesai'],
                 'durasi' => $durasi,
                 'lokasi' => $data['lokasi'],
-            ]);
-            $this->createNotifikasiDiklat($diklat);
+            ], $dokumenDiklatIds));
+            $userIds = $data['user_id'] ?? null;
+            $this->createNotifikasiDiklat($diklat, $userIds);
 
             DB::commit();
 
@@ -1336,10 +1380,12 @@ class DiklatController extends Controller
         ], Response::HTTP_OK);
     }
 
-    private function createNotifikasiDiklat($diklat)
+    private function createNotifikasiDiklat($diklat, $userIds = null)
     {
         try {
-            $users = User::all();
+            $users = is_array($userIds) && count($userIds) > 0
+                ? User::whereIn('id', $userIds)->get()
+                : User::all();
 
             foreach ($users as $user) {
                 $message = "Diklat Internal baru '{$diklat->nama}' telah ditambahkan pada tanggal mulai {$diklat->tgl_mulai}.";
