@@ -70,6 +70,7 @@ class CreateGajiJob implements ShouldQueue
             ->leftJoin('kompetensis', DB::raw('COALESCE(data_karyawans.kompetensi_id, 0)'), '=', 'kompetensis.id')
             ->select(
                 'data_karyawans.id as data_karyawan_id',
+                'data_karyawans.status_karyawan_id',
                 DB::raw('COALESCE(kelompok_gajis.besaran_gaji, 0) as gaji_pokok'),
 
                 // TUNJANGAN JABATAN DIAMBIL DARI TABEL JABATAN
