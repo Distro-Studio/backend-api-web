@@ -1387,10 +1387,10 @@ class DataKaryawanController extends Controller
       DB::beginTransaction();
       $user = $karyawan->users;
       $oldEmail = $karyawan->email;
-      $newEmail = $data['email'];
+      $newEmail = $data['email'] ?? null;
 
-      // Memeriksa apakah email telah berubah
-      if ($oldEmail !== $newEmail) {
+      // Cek apakah email baru valid dan berbeda dari yang lama
+      if (!empty($newEmail) && $oldEmail !== $newEmail) {
         $generatedPassword = RandomHelper::generatePassword();
         $karyawan->email = $newEmail;
         $user->password = Hash::make($generatedPassword);
