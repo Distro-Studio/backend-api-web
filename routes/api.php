@@ -8,6 +8,7 @@ use App\Http\Controllers\Dashboard\Jadwal\DataLemburController;
 use App\Http\Controllers\Dashboard\Jadwal\DataRiwayatPerizinanController;
 use App\Http\Controllers\Dashboard\Jadwal\DataTukarJadwalController;
 use App\Http\Controllers\Dashboard\Karyawan\DataKaryawanController;
+use App\Http\Controllers\Dashboard\Karyawan\DataKaryawanMedisController;
 use App\Http\Controllers\Dashboard\Karyawan\DataRiwayatPerubahanController;
 use App\Http\Controllers\Dashboard\Karyawan\DataTransferKaryawanController;
 use App\Http\Controllers\Dashboard\Karyawan\DetailKaryawan\Berkas\Karyawan_BerkasController;
@@ -146,6 +147,10 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::post('/detail-karyawan-presensi/{data_karyawan_id}/export', [Karyawan_DetailController::class, 'exportDataPresensi']);
             Route::get('/detail-karyawan-jadwal/{data_karyawan_id}', [Karyawan_DetailController::class, 'getDataJadwal']);
             Route::get('/detail-karyawan-rekam-jejak/{data_karyawan_id}', [Karyawan_DetailController::class, 'getDataRekamJejak']);
+
+            // ! Data Karyawan Medis Section ===========>
+            Route::post('/get-karyawan-medis', [DataKaryawanMedisController::class, 'index']);
+            Route::post('/export-karyawan-medis', [DataKaryawanMedisController::class, 'exportKaryawanMedis']);
 
             // ! Data Keluarga Section ===========>
             Route::get('/detail-karyawan-keluarga/{data_karyawan_id}', [Karyawan_KeluargaController::class, 'getDataKeluarga']);
