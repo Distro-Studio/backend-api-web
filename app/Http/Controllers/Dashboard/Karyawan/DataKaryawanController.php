@@ -10,7 +10,9 @@ use App\Models\Premi;
 use App\Models\Berkas;
 use App\Models\Jabatan;
 use App\Models\UnitKerja;
+use App\Helpers\LogHelper;
 use App\Models\Kompetensi;
+use Illuminate\Support\Str;
 use App\Models\DataKaryawan;
 use App\Models\DataKeluarga;
 use App\Models\KelompokGaji;
@@ -19,31 +21,31 @@ use App\Helpers\RandomHelper;
 use App\Models\PesertaDiklat;
 use Illuminate\Http\Response;
 use App\Models\StatusKaryawan;
+use App\Models\KategoriUnitKerja;
 use App\Models\KategoriPendidikan;
 use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Models\Role;
 use App\Helpers\CalculateBMIHelper;
 use Illuminate\Support\Facades\Log;
+use App\Helpers\StorageServerHelper;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use Maatwebsite\Excel\Facades\Excel;
+use App\Models\KategoriStatusKaryawan;
 use App\Models\KategoriTagihanPotongan;
 use Illuminate\Support\Facades\Storage;
 use App\Exports\Karyawan\KaryawanExport;
-use App\Helpers\LogHelper;
 use App\Imports\Karyawan\KaryawanImport;
+use App\Mail\SendUpdateAccoundUsersMail;
 use App\Http\Requests\StoreDataKaryawanRequest;
 use App\Jobs\EmailNotification\AccountEmailJob;
 use App\Http\Requests\UpdateDataKaryawanRequest;
 use App\Http\Requests\Excel_Import\ImportKaryawanRequest;
 use App\Http\Resources\Dashboard\Karyawan\KaryawanResource;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
-use App\Mail\SendUpdateAccoundUsersMail;
-use App\Models\KategoriStatusKaryawan;
-use App\Models\KategoriUnitKerja;
-use Illuminate\Support\Facades\Mail;
 
 class DataKaryawanController extends Controller
 {
@@ -574,6 +576,82 @@ class DataKaryawanController extends Controller
       ], Response::HTTP_OK);
     } catch (\Exception $e) {
       Log::error('| Karyawan | - Error function getAllDataTagihanPotongan: ' . $e->getMessage());
+      return response()->json([
+        'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
+        'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
+      ], Response::HTTP_INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  public function uploadPhotoProfile(Request $request, $data_karyawan_id)
+  {
+    try {
+      if (!Gate::allows('edit dataKaryawan')) {
+        return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+      }
+
+      $request->validate([
+        'foto_profil' => 'required|file|mimes:jpg,jpeg,png|max:5120',
+      ], [
+        'foto_profil.required' => 'File foto wajib diunggah.',
+        'foto_profil.file' => 'File yang diunggah tidak valid.',
+        'foto_profil.mimes' => 'Format file harus berupa JPG, JPEG, atau PNG.',
+        'foto_profil.max' => 'Ukuran file maksimal 5MB.',
+      ]);
+
+      DB::beginTransaction();
+      $user = User::where('data_karyawan_id', $data_karyawan_id)->first();
+      if (!$user) {
+        return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data akun karyawan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+      }
+
+      if ($request->hasFile('foto_profil')) {
+        $authUser = Auth::user();
+        StorageServerHelper::login();
+        $file = $request->file('foto_profil');
+        $random_filename = Str::random(20);
+        $dataupload = StorageServerHelper::uploadToServer($request, $random_filename);
+        // $gambarUrl = $dataupload['path'];
+
+        $berkas = Berkas::create([
+          'user_id' => $authUser->id,
+          'file_id' => $dataupload['id_file']['id'],
+          'nama' => $random_filename,
+          'kategori_berkas_id' => 1, // pribadi
+          'status_berkas_id' => 2,
+          'path' => $dataupload['path'],
+          'tgl_upload' => now('Asia/Jakarta'),
+          'nama_file' => $dataupload['nama_file'],
+          'ext' => $dataupload['ext'],
+          'size' => $dataupload['size'],
+        ]);
+
+        if (!$berkas) {
+          throw new Exception('Foto profil gagal di upload.');
+        }
+
+        $user->foto_profil = $berkas->id;
+        $user->save();
+
+        StorageServerHelper::logout();
+      } else {
+        return response()->json([
+          'status' => Response::HTTP_BAD_REQUEST,
+          'message' => 'Tidak ada file yang diunggah.',
+        ], Response::HTTP_BAD_REQUEST);
+      }
+
+      DB::commit();
+
+      LogHelper::logAction('Karyawan', 'create', $data_karyawan_id);
+
+      return response()->json([
+        'status' => Response::HTTP_OK,
+        'message' => 'Foto profil berhasil diunggah.',
+      ], Response::HTTP_OK);
+    } catch (\Exception $e) {
+      DB::rollBack();
+      Log::error('| Karyawan | - Error function uploadPhoto: ' . $e->getMessage());
       return response()->json([
         'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
         'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
