@@ -83,12 +83,6 @@ class UnitKerjaController extends Controller
         }
 
         $data = $request->validated();
-        
-        // Validasi unique untuk nama_unit
-        $existingDataValidation = UnitKerja::where('nama_unit', $data['nama_unit'])->where('id', '!=', $id)->first();
-        if ($existingDataValidation) {
-            return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Nama unit kerja tersebut sudah pernah dibuat.'), Response::HTTP_BAD_REQUEST);
-        }
 
         $unit_kerja->update($data);
         $updatedUnitKerja = $unit_kerja->fresh();

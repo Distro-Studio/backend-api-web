@@ -6,6 +6,7 @@ use Illuminate\Http\Response;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Http\Exceptions\HttpResponseException;
+use Illuminate\Validation\Rule;
 
 class UpdatePremiRequest extends FormRequest
 {
@@ -24,8 +25,13 @@ class UpdatePremiRequest extends FormRequest
      */
     public function rules(): array
     {
+        $id = $this->route('id');
         return [
-            'nama_premi' => 'required|string',
+            'nama_premi' => [
+                'required',
+                'string',
+                Rule::unique('premis')->ignore($id),
+            ],
             'kategori_potongan_id' => 'required|integer|exists:kategori_potongans,id',
             'jenis_premi' => 'required',
             'besaran_premi' => 'required|numeric',
@@ -39,6 +45,7 @@ class UpdatePremiRequest extends FormRequest
         return [
             'nama_premi.required' => 'Nama premi tidak diperbolehkan kosong.',
             'nama_premi.string' => 'Nama premi tidak diperbolehkan mengandung angka.',
+            'nama_premi.unique' => 'Nama premi tersebut sudah pernah dibuat.',
             'kategori_potongan_id.required' => 'Sumber potongan premi tidak diperbolehkan kosong.',
             'kategori_potongan_id.integer' => 'Sumber potongan premi tidak diperbolehkan mengandung huruf.',
             'kategori_potongan_id.exists' => 'Sumber potongan premi tersebut tidak valid.',

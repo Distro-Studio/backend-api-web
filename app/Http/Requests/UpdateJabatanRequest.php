@@ -6,6 +6,7 @@ use Illuminate\Http\Response;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Http\Exceptions\HttpResponseException;
+use Illuminate\Validation\Rule;
 
 class UpdateJabatanRequest extends FormRequest
 {
@@ -24,8 +25,14 @@ class UpdateJabatanRequest extends FormRequest
      */
     public function rules(): array
     {
+        $id = $this->route('id');
         return [
-            'nama_jabatan' => 'required|string|max:255',
+            'nama_jabatan' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('jabatans')->ignore($id),
+            ],
             'is_struktural' => 'required|boolean',
             'tunjangan_jabatan' => 'required|numeric'
         ];
@@ -37,6 +44,7 @@ class UpdateJabatanRequest extends FormRequest
             'nama_jabatan.required' => 'Nama jabatan tidak diperbolehkan kosong.',
             'nama_jabatan.string' => 'Nama jabatan tidak diperbolehkan mengandung angka.',
             'nama_jabatan.max' => 'Nama jabatan melebihi batas maksimum panjang karakter.',
+            'nama_jabatan.unique' => 'Nama jabatan tersebut sudah pernah dibuat.',
             'is_struktural.required' => 'Jenis jabatan tidak diperbolehkan kosong.',
             'tunjangan_jabatan.required' => 'Jumlah tunjangan jabatan tidak diperbolehkan kosong.',
             'tunjangan_jabatan.numeric' => 'Tunjangan jabatan hanya diperbolehkan berisi angka.',

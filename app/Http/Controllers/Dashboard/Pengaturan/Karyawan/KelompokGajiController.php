@@ -89,12 +89,6 @@ class KelompokGajiController extends Controller
 
         $data = $request->validated();
 
-        // Validasi unique
-        $existingDataValidation = KelompokGaji::where('nama_kelompok', $data['nama_kelompok'])->where('id', '!=', $id)->first();
-        if ($existingDataValidation) {
-            return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Nama kelompok gaji tersebut sudah pernah dibuat.'), Response::HTTP_BAD_REQUEST);
-        }
-
         $kelompok_gaji->update($data);
         $updatedKelompokGaji = $kelompok_gaji->fresh();
 

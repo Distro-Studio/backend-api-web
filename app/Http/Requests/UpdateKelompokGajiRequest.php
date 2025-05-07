@@ -6,6 +6,7 @@ use Illuminate\Http\Response;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Http\Exceptions\HttpResponseException;
+use Illuminate\Validation\Rule;
 
 class UpdateKelompokGajiRequest extends FormRequest
 {
@@ -24,8 +25,14 @@ class UpdateKelompokGajiRequest extends FormRequest
      */
     public function rules(): array
     {
+        $id = $this->route('id');
         return [
-            'nama_kelompok' => 'required|string|max:225',
+            'nama_kelompok' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('kelompok_gajis')->ignore($id),
+            ],
             'besaran_gaji' => 'required|numeric',
         ];
     }

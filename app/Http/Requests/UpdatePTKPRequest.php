@@ -6,6 +6,7 @@ use Illuminate\Http\Response;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Http\Exceptions\HttpResponseException;
+use Illuminate\Validation\Rule;
 
 class UpdatePTKPRequest extends FormRequest
 {
@@ -24,8 +25,14 @@ class UpdatePTKPRequest extends FormRequest
      */
     public function rules(): array
     {
+        $id = $this->route('id');
         return [
-            'kode_ptkp' => 'required|string|max:225',
+            'kode_ptkp' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('ptkps')->ignore($id),
+            ],
             'kategori_ter_id' => 'required|integer|exists:kategori_ters,id',
             'nilai' => 'nullable|numeric',
         ];

@@ -6,6 +6,7 @@ use Illuminate\Http\Response;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Http\Exceptions\HttpResponseException;
+use Illuminate\Validation\Rule;
 
 class UpdatePertanyaanRequest extends FormRequest
 {
@@ -24,9 +25,14 @@ class UpdatePertanyaanRequest extends FormRequest
      */
     public function rules(): array
     {
+        $id = $this->route('id');
         return [
             'jenis_penilaian_id' => 'required|integer|exists:jenis_penilaians,id',
-            'pertanyaan' => 'required|string',
+            'pertanyaan' => [
+                'required',
+                'string',
+                Rule::unique('pertanyaans')->ignore($id),
+            ],
         ];
     }
 
@@ -38,6 +44,7 @@ class UpdatePertanyaanRequest extends FormRequest
             'jenis_penilaian_id.exists' => 'Data jenis penilaian yang terdipilih tidak tersedia.',
             'pertanyaan.required' => 'Pertanyaan kuesioner tidak diperbolehkan kosong.',
             'pertanyaan.string' => 'Pertanyaan kuesioner tidak diperbolehkan mengandung angka atau karakter lainnya.',
+            'pertanyaan.unique' => 'Pertanyaan kuesioner tersebut sudah pernah dibuat.',
         ];
     }
 

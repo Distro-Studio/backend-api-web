@@ -6,6 +6,7 @@ use Illuminate\Http\Response;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Http\Exceptions\HttpResponseException;
+use Illuminate\Validation\Rule;
 
 class UpdateKompetensiRequest extends FormRequest
 {
@@ -24,8 +25,14 @@ class UpdateKompetensiRequest extends FormRequest
      */
     public function rules(): array
     {
+        $id = $this->route('id');
         return [
-            'nama_kompetensi' => 'required|string|max:225',
+            'nama_kompetensi' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('kompetensis')->ignore($id),
+            ],
             'jenis_kompetensi' => 'required|boolean',
             // 'tunjangan_kompetensi' => 'required|numeric',
             'nilai_bor' => 'required|numeric',

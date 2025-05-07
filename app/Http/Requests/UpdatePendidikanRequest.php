@@ -6,6 +6,7 @@ use Illuminate\Http\Response;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Http\Exceptions\HttpResponseException;
+use Illuminate\Validation\Rule;
 
 class UpdatePendidikanRequest extends FormRequest
 {
@@ -24,8 +25,13 @@ class UpdatePendidikanRequest extends FormRequest
      */
     public function rules(): array
     {
+        $id = $this->route('id');
         return [
-            'label' => 'required|string'
+            'label' => [
+                'required',
+                'string',
+                Rule::unique('kategori_pendidikans')->ignore($id),
+            ]
         ];
     }
 
@@ -33,7 +39,8 @@ class UpdatePendidikanRequest extends FormRequest
     {
         return [
             'label.required' => 'Nama pendidikan tidak diperbolehkan kosong.',
-            'label.max' => 'Nama pendidikan melebihi batas maksimum panjang karakter.'
+            'label.max' => 'Nama pendidikan melebihi batas maksimum panjang karakter.',
+            'label.unique' => 'Nama pendidikan tersebut sudah pernah dibuat.',
         ];
     }
 
