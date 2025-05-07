@@ -5,9 +5,7 @@ namespace App\Jobs\Penggajian;
 use Carbon\Carbon;
 use App\Models\Lembur;
 use App\Models\DetailGaji;
-use App\Models\Notifikasi;
 use App\Models\Penggajian;
-use App\Helpers\RandomHelper;
 use Illuminate\Bus\Queueable;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -718,9 +716,11 @@ class CreateGajiJob implements ShouldQueue
     // ini yg pake scheduller
     private function calculatedRewardPresensi($data_karyawan_id)
     {
-        $statusRewardPresensi = DB::table('data_karyawans')
-            ->where('id', $data_karyawan_id)
-            ->value('status_reward_presensi');
+        // $statusRewardPresensi = DB::table('data_karyawans')
+        //     ->where('id', $data_karyawan_id)
+        //     ->value('status_reward_presensi');
+        $statusRewardPresensi = DB::table('reward_bulan_lalus')->where('data_karyawan_id', $data_karyawan_id)
+            ->value('status_reward');
 
         $bonusPresensi = 0;
 

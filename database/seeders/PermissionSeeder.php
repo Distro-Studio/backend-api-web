@@ -33,6 +33,7 @@ class PermissionSeeder extends Seeder
 
             // Presensi
             'Presensi Karyawan' => ['view presensiKaryawan', 'import presensiKaryawan', 'export presensiKaryawan'],
+            'Anulir Presensi Karyawan' => ['view anulirPresensi', 'create anulirPresensi', 'delete anulirPresensi'],
 
             // Karyawan
             'Karyawan Data' => ['create dataKaryawan', 'edit dataKaryawan', 'view dataKaryawan', 'import dataKaryawan', 'export dataKaryawan'],
