@@ -6,6 +6,7 @@ use Illuminate\Http\Response;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Http\Exceptions\HttpResponseException;
+use Illuminate\Validation\Rule;
 
 class UpdatePertanyaanRequest extends FormRequest
 {
@@ -38,6 +39,7 @@ class UpdatePertanyaanRequest extends FormRequest
             'jenis_penilaian_id.exists' => 'Data jenis penilaian yang terdipilih tidak tersedia.',
             'pertanyaan.required' => 'Pertanyaan kuesioner tidak diperbolehkan kosong.',
             'pertanyaan.string' => 'Pertanyaan kuesioner tidak diperbolehkan mengandung angka atau karakter lainnya.',
+            'pertanyaan.unique' => 'Pertanyaan kuesioner tersebut sudah pernah dibuat.',
         ];
     }
 

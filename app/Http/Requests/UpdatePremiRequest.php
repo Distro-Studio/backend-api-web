@@ -6,6 +6,7 @@ use Illuminate\Http\Response;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Http\Exceptions\HttpResponseException;
+use Illuminate\Validation\Rule;
 
 class UpdatePremiRequest extends FormRequest
 {
@@ -39,6 +40,7 @@ class UpdatePremiRequest extends FormRequest
         return [
             'nama_premi.required' => 'Nama premi tidak diperbolehkan kosong.',
             'nama_premi.string' => 'Nama premi tidak diperbolehkan mengandung angka.',
+            'nama_premi.unique' => 'Nama premi tersebut sudah pernah dibuat.',
             'kategori_potongan_id.required' => 'Sumber potongan premi tidak diperbolehkan kosong.',
             'kategori_potongan_id.integer' => 'Sumber potongan premi tidak diperbolehkan mengandung huruf.',
             'kategori_potongan_id.exists' => 'Sumber potongan premi tersebut tidak valid.',

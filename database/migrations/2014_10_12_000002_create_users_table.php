@@ -18,7 +18,7 @@ return new class extends Migration
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password')->nullable();
             $table->foreignId('role_id')->nullable();
-            $table->string('foto_profil')->nullable();
+            $table->foreignId('foto_profil')->nullable()->constrained('berkas')->onDelete('cascade')->onUpdate('cascade');
             $table->integer('data_completion_step')->default(1); // 1 = not complete, 0 = complete
             $table->foreignId('status_aktif')->constrained('status_aktifs'); // 1 = tidak aktif, 2 = aktif, 3 = dinonaktifkan
 

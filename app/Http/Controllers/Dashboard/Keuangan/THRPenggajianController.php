@@ -15,6 +15,7 @@ use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\Keuangan\THRGajiExport;
 use App\Http\Requests\StoreRunTHRRequest;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
+use App\Models\RiwayatThr;
 use App\Models\Thr;
 
 class THRPenggajianController extends Controller
@@ -35,53 +36,55 @@ class THRPenggajianController extends Controller
         //             ->whereNotNull('besaran');
         //     })->orderBy('created_at', 'desc');
 
-        $riwayatPenggajian = RiwayatPenggajian::query()->where('jenis_riwayat', 0)->orderBy('created_at', 'desc');
+        // $riwayatPenggajian = RiwayatPenggajian::query()->where('jenis_riwayat', 0)->orderBy('created_at', 'desc');
+        $riwayatTHR = RiwayatThr::query()->orderBy('created_at', 'desc');
 
         // Filter periode tahun jika ada
         if ($request->has('periode_tahun')) {
             $periode_tahun = $request->input('periode_tahun');
             if (is_array($periode_tahun)) {
-                $riwayatPenggajian->whereIn(DB::raw('YEAR(periode)'), $periode_tahun);
+                $riwayatTHR->whereIn(DB::raw('YEAR(periode)'), $periode_tahun);
             } else {
-                $riwayatPenggajian->whereYear('periode', $periode_tahun);
+                $riwayatTHR->whereYear('periode', $periode_tahun);
             }
         }
 
         if ($limit == 0) {
-            $datariwayatPenggajian = $riwayatPenggajian->get();
+            $datariwayatTHR = $riwayatTHR->get();
             $paginationData = null;
         } else {
             $limit = is_numeric($limit) ? (int)$limit : 10;
-            $datariwayatPenggajian = $riwayatPenggajian->paginate($limit);
+            $datariwayatTHR = $riwayatTHR->paginate($limit);
 
             $paginationData = [
                 'links' => [
-                    'first' => $datariwayatPenggajian->url(1),
-                    'last' => $datariwayatPenggajian->url($datariwayatPenggajian->lastPage()),
-                    'prev' => $datariwayatPenggajian->previousPageUrl(),
-                    'next' => $datariwayatPenggajian->nextPageUrl(),
+                    'first' => $datariwayatTHR->url(1),
+                    'last' => $datariwayatTHR->url($datariwayatTHR->lastPage()),
+                    'prev' => $datariwayatTHR->previousPageUrl(),
+                    'next' => $datariwayatTHR->nextPageUrl(),
                 ],
                 'meta' => [
-                    'current_page' => $datariwayatPenggajian->currentPage(),
-                    'last_page' => $datariwayatPenggajian->lastPage(),
-                    'per_page' => $datariwayatPenggajian->perPage(),
-                    'total' => $datariwayatPenggajian->total(),
+                    'current_page' => $datariwayatTHR->currentPage(),
+                    'last_page' => $datariwayatTHR->lastPage(),
+                    'per_page' => $datariwayatTHR->perPage(),
+                    'total' => $datariwayatTHR->total(),
                 ]
             ];
         }
-        if ($datariwayatPenggajian->isEmpty()) {
+        if ($datariwayatTHR->isEmpty()) {
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Tidak ada data riwayat penggajian karyawan yang tersedia.'), Response::HTTP_NOT_FOUND);
         }
 
-        $formattedData = $datariwayatPenggajian->map(function ($riwayatPenggajian) {
+        $formattedData = $datariwayatTHR->map(function ($riwayatTHR) {
             return [
-                'id' => $riwayatPenggajian->id,
-                'periode' => $riwayatPenggajian->periode,
-                'pembaruan_terakhir' => $riwayatPenggajian->updated_at,
-                'karyawan_digaji' => $riwayatPenggajian->karyawan_verifikasi,
-                'status_riwayat_gaji' => $riwayatPenggajian->status_gajis,
-                'created_at' => $riwayatPenggajian->created_at,
-                'updated_at' => $riwayatPenggajian->updated_at
+                'id' => $riwayatTHR->id,
+                'periode' => $riwayatTHR->periode,
+                'riwayat_penggajian' => $riwayatTHR->riwayat_penggajians,
+                'karyawan_thr' => $riwayatTHR->karyawan_thr,
+                'created_by' => $riwayatTHR->created_users,
+                'updated_by' => $riwayatTHR->updated_users,
+                'created_at' => $riwayatTHR->created_at,
+                'updated_at' => $riwayatTHR->updated_at
             ];
         });
 
@@ -99,13 +102,21 @@ class THRPenggajianController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
-        $data_karyawan_ids = DataKaryawan::where('id', '!=', 1)->pluck('id')->toArray();
+        $data_karyawan_ids = DataKaryawan::where('id', '!=', 1)
+            ->whereHas('users', function ($query) {
+                $query->where('status_aktif', 2);
+            })
+            ->whereHas('status_karyawans', function ($query) {
+                $query->where('kategori_status_id', 1); // Kategori status "Fulltime"
+            })
+            ->pluck('id')
+            ->toArray();
         // $tglRunTHR = Carbon::parse($request->input('tgl_run_thr'));
         $tglRunTHR = Carbon::parse(RandomHelper::convertToDateString($request->input('tgl_run_thr')));
         // $tglRunTHR = Carbon::createFromFormat('d-m-Y',($request->input('tgl_run_thr')))->format('Y-m-d');
-        $currentYear = Carbon::now()->year;
-        $currentMonth = Carbon::now()->month;
-        $currentDate = Carbon::now()->timezone('Asia/Jakarta');
+        $currentYear = Carbon::now('Asia/Jakarta')->year;
+        $currentMonth = Carbon::now('Asia/Jakarta')->month;
+        $currentDate = Carbon::now('Asia/Jakarta');
 
         // Validasi tgl_run_thr tidak boleh melewati hari ini
         if ($tglRunTHR->lessThan($currentDate->startOfDay())) {
@@ -159,15 +170,27 @@ class THRPenggajianController extends Controller
             }
         }
 
-        // Simpan data THR
+        // Simpan riwayat THR terlebih dahulu
+        $riwayatThrId = DB::table('riwayat_thrs')->insertGetId([
+            'periode' => $tglRunTHR->toDateString(),
+            'karyawan_thr' => count($data_karyawan_ids),
+            'created_by' => auth()->id(),
+            'created_at' => Carbon::now('Asia/Jakarta'),
+            'updated_at' => Carbon::now('Asia/Jakarta'),
+        ]);
+
+        // Simpan detail run THR untuk tiap karyawan
+        $runThrData = [];
         foreach ($data_karyawan_ids as $karyawanId) {
-            DB::table('run_thrs')->insert([
+            $runThrData[] = [
+                'riwayat_thr_id' => $riwayatThrId,
                 'data_karyawan_id' => $karyawanId,
                 'tgl_run_thr' => $tglRunTHR->toDateString(),
-                'created_at' => Carbon::now(),
-                'updated_at' => Carbon::now(),
-            ]);
+                'created_at' => Carbon::now('Asia/Jakarta'),
+                'updated_at' => Carbon::now('Asia/Jakarta'),
+            ];
         }
+        DB::table('run_thrs')->insert($runThrData);
 
         return response()->json(new WithoutDataResource(Response::HTTP_OK, $message), Response::HTTP_OK);
     }
@@ -189,7 +212,7 @@ class THRPenggajianController extends Controller
             ->first();
 
         if (!$riwayatPenggajian) {
-            return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data riwayat penggajian tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+            return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data riwayat penggajian tidak ditemukan, atau penggajian dengan THR belum dilakukan.'), Response::HTTP_NOT_FOUND);
         }
 
         $riwayatPenggajianData = [

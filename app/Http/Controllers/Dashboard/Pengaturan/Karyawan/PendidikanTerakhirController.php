@@ -85,12 +85,6 @@ class PendidikanTerakhirController extends Controller
 
         $data = $request->validated();
 
-        // Validasi unique untuk label
-        $existingDataValidation = KategoriPendidikan::where('label', $data['label'])->where('id', '!=', $id)->first();
-        if ($existingDataValidation) {
-            return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Nama pendidikan tersebut sudah pernah dibuat.'), Response::HTTP_BAD_REQUEST);
-        }
-
         $pendidikan->update($data);
         $updated_pendidikan = $pendidikan->fresh();
         $successMessage = "Data pendidikan '{$updated_pendidikan->label}' berhasil diubah.";

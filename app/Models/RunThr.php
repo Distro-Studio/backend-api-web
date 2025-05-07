@@ -13,6 +13,7 @@ class RunThr extends Model
 
     protected $casts = [
         'id' => 'integer',
+        'riwayat_thr_id' => 'integer',
         'data_karyawan_id' => 'integer'
     ];
 
@@ -24,6 +25,16 @@ class RunThr extends Model
     public function thr(): BelongsTo
     {
         return $this->belongsTo(Thr::class, 'thr_id', 'id');
+    }
+
+    /**
+     * Get the riwayat_thrs that owns the RunThr
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function riwayat_thrs(): BelongsTo
+    {
+        return $this->belongsTo(RiwayatThr::class, 'riwayat_thr_id', 'id');
     }
 
     /**

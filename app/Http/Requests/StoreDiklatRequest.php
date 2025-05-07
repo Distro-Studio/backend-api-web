@@ -20,11 +20,18 @@ class StoreDiklatRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'dokumen' => 'nullable|image|mimes:jpeg,png,jpg,svg|max:10240',
+            'dokumen' => 'nullable|image|max:10240|mimes:jpeg,png,jpg,svg',
             'nama' => 'required|string|max:255',
             // 'kategori_diklat_id' => 'required|integer|exists:kategori_diklats,id',
             'deskripsi' => 'required|string|max:225',
-            'kuota' => 'required|integer|min:1',
+            'user_id' => 'nullable|array', // Penerima notifikasi
+            'user_id.*' => 'integer|exists:users,id',
+            'dokumen_diklat_1' => 'nullable|file|max:10240|mimes:pdf,pptx,docx',
+            'dokumen_diklat_2' => 'nullable|file|max:10240|mimes:pdf,pptx,docx',
+            'dokumen_diklat_3' => 'nullable|file|max:10240|mimes:pdf,pptx,docx',
+            'dokumen_diklat_4' => 'nullable|file|max:10240|mimes:pdf,pptx,docx',
+            'dokumen_diklat_5' => 'nullable|file|max:10240|mimes:pdf,pptx,docx',
+            'kuota' => 'nullable|integer|min:1',
             'tgl_mulai' => 'required|string',
             'tgl_selesai' => 'required|string',
             'jam_mulai' => 'required|string',
@@ -48,6 +55,26 @@ class StoreDiklatRequest extends FormRequest
             'kategori_diklat_id.required' => 'Silahkan pilih kategori diklat terlebih dahulu.',
             'kategori_diklat_id.exists' => 'Kategori diklat yang dipilih tidak valid.',
             'deskripsi.required' => 'Deskripsi diklat tidak diperbolehkan kosong.',
+            'user_id.array' => 'Format data user_id harus berupa array.',
+            'user_id.*.integer' => 'Setiap user_id harus berupa angka.',
+            'user_id.*.exists' => 'Salah satu user_id tidak ditemukan dalam sistem.',
+
+            'dokumen_diklat_1.file' => 'Dokumen diklat 1 harus berupa file.',
+            'dokumen_diklat_1.max' => 'Dokumen diklat 1 tidak boleh lebih dari 10 MB.',
+            'dokumen_diklat_1.mimes' => 'Dokumen diklat 1 harus berupa file PDF, PPTX, atau DOCX.',
+            'dokumen_diklat_2.file' => 'Dokumen diklat 2 harus berupa file.',
+            'dokumen_diklat_2.max' => 'Dokumen diklat 2 tidak boleh lebih dari 10 MB.',
+            'dokumen_diklat_2.mimes' => 'Dokumen diklat 2 harus berupa file PDF, PPTX, atau DOCX.',
+            'dokumen_diklat_3.file' => 'Dokumen diklat 3 harus berupa file.',
+            'dokumen_diklat_3.max' => 'Dokumen diklat 3 tidak boleh lebih dari 10 MB.',
+            'dokumen_diklat_3.mimes' => 'Dokumen diklat 3 harus berupa file PDF, PPTX, atau DOCX.',
+            'dokumen_diklat_4.file' => 'Dokumen diklat 4 harus berupa file.',
+            'dokumen_diklat_4.max' => 'Dokumen diklat 4 tidak boleh lebih dari 10 MB.',
+            'dokumen_diklat_4.mimes' => 'Dokumen diklat 4 harus berupa file PDF, PPTX, atau DOCX.',
+            'dokumen_diklat_5.file' => 'Dokumen diklat 5 harus berupa file.',
+            'dokumen_diklat_5.max' => 'Dokumen diklat 5 tidak boleh lebih dari 10 MB.',
+            'dokumen_diklat_5.mimes' => 'Dokumen diklat 5 harus berupa file PDF, PPTX, atau DOCX.',
+
             'kuota.required' => 'Kuota peserta diklat tidak diperbolehkan kosong.',
             'kuota.integer' => 'Kuota peserta diklat harus berupa angka.',
             'tgl_mulai.required' => 'Tanggal mulai diklat tidak diperbolehkan kosong.',
@@ -65,16 +92,11 @@ class StoreDiklatRequest extends FormRequest
 
     public function failedValidation(Validator $validator)
     {
+        $messages = implode(' ', $validator->errors()->all());
         $response = [
             'status' => Response::HTTP_BAD_REQUEST,
-            'message' => $validator->errors()
+            'message' => $messages,
         ];
-
-        // $messages = implode(' ', $validator->errors()->all());
-        // $response = [
-        //     'status' => Response::HTTP_BAD_REQUEST,
-        //     'message' => $messages,
-        // ];
 
         throw new HttpResponseException(response()->json($response, Response::HTTP_BAD_REQUEST));
     }

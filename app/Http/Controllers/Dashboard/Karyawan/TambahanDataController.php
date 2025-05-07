@@ -5,6 +5,10 @@ namespace App\Http\Controllers\Dashboard\Karyawan;
 use App\Helpers\CalculateBMIHelper;
 use App\Http\Controllers\Controller;
 use App\Models\DataKaryawan;
+use App\Models\DataKeluarga;
+use App\Models\KategoriAgama;
+use App\Models\KategoriDarah;
+use App\Models\KategoriPendidikan;
 use App\Models\Shift;
 use App\Models\UnitKerja;
 use PhpOffice\PhpSpreadsheet\Shared\Date;
@@ -31,19 +35,27 @@ class TambahanDataController extends Controller
             $spreadsheet = IOFactory::load($file->getRealPath());
             $sheet = $spreadsheet->getActiveSheet();
 
+            $niksFromExcel = [];
+
             foreach ($sheet->getRowIterator(2) as $row) {
-                $cell = $row->getCellIterator('A');
-                $cell->setIterateOnlyExistingCells(true);
-                foreach ($cell as $c) {
-                    $nikValue = trim($c->getValue());
+                $cellIterator = $row->getCellIterator('A', 'A'); // Fokus hanya kolom A
+                $cellIterator->setIterateOnlyExistingCells(true);
+
+                foreach ($cellIterator as $cell) {
+                    $nikValue = trim($cell->getValue());
                     if (!empty($nikValue)) {
                         $niksFromExcel[] = $nikValue;
                     }
                 }
             }
 
-            $niksFromDB = DataKaryawan::where('nik', '!=', null)->pluck('nik')->toArray();
+            // Hilangkan NIK yang duplikat
+            $niksFromExcel = array_unique($niksFromExcel);
 
+            // Ambil NIK dari database
+            $niksFromDB = DataKaryawan::whereNotNull('nik')->pluck('nik')->toArray();
+
+            // Bandingkan
             $notFoundInExcel = array_diff($niksFromDB, $niksFromExcel);
             $notFoundInDB = array_diff($niksFromExcel, $niksFromDB);
 
@@ -109,6 +121,224 @@ class TambahanDataController extends Controller
                 'total_unit_db' => count($dbKeys),
                 'unit_not_found_in_excel' => $notFoundInExcel,
                 'unit_not_found_in_db' => $notFoundInDB
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['errors' => $e->getMessage()]);
+        }
+    }
+
+    public function cekAgama(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'karyawan_file' => 'required|mimes:xlsx,xls',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()->first()]);
+        }
+
+        try {
+            $file = $request->file('karyawan_file');
+            $spreadsheet = IOFactory::load($file->getRealPath());
+            $sheet = $spreadsheet->getActiveSheet();
+
+            $agamasFromExcel = [];
+
+            foreach ($sheet->getRowIterator(2) as $row) {
+                $cellIterator = $row->getCellIterator('K', 'K'); // Fokus kolom K
+                $cellIterator->setIterateOnlyExistingCells(true);
+
+                foreach ($cellIterator as $cell) {
+                    $agamaValue = trim($cell->getValue());
+                    if (!empty($agamaValue)) {
+                        $agamasFromExcel[] = ucwords(strtolower($agamaValue)); // Rapihkan kapitalisasi
+                    }
+                }
+            }
+
+            // Hilangkan duplikat
+            $agamasFromExcel = array_unique($agamasFromExcel);
+
+            // Ambil semua label agama dari database
+            $agamasFromDB = KategoriAgama::pluck('label')->map(function ($label) {
+                return ucwords(strtolower(trim($label))); // Rapihkan juga
+            })->toArray();
+
+            // Bandingkan
+            $notFoundInExcel = array_diff($agamasFromDB, $agamasFromExcel);
+            $notFoundInDB = array_diff($agamasFromExcel, $agamasFromDB);
+
+            return response()->json([
+                'total_agama_excel' => count($agamasFromExcel),
+                'total_agama_db' => count($agamasFromDB),
+                'agama_not_found_in_excel' => array_values($notFoundInExcel),
+                'agama_not_found_in_db' => array_values($notFoundInDB),
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['errors' => $e->getMessage()]);
+        }
+    }
+
+    public function cekGolonganDarah(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'karyawan_file' => 'required|mimes:xlsx,xls',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()->first()]);
+        }
+
+        try {
+            $file = $request->file('karyawan_file');
+            $spreadsheet = IOFactory::load($file->getRealPath());
+            $sheet = $spreadsheet->getActiveSheet();
+
+            $golonganDarahFromExcel = [];
+
+            foreach ($sheet->getRowIterator(2) as $row) {
+                $cellIterator = $row->getCellIterator('L', 'L'); // Fokus ke kolom L
+                $cellIterator->setIterateOnlyExistingCells(true);
+
+                foreach ($cellIterator as $cell) {
+                    $golDarahValue = strtoupper(trim($cell->getValue())); // Biasanya golongan darah huruf kapital (A, B, AB, O)
+                    if (!empty($golDarahValue)) {
+                        $golonganDarahFromExcel[] = $golDarahValue;
+                    }
+                }
+            }
+
+            // Hilangkan duplikat
+            $golonganDarahFromExcel = array_unique($golonganDarahFromExcel);
+
+            // Ambil semua label golongan darah dari database
+            $golonganDarahFromDB = KategoriDarah::pluck('label')->map(function ($label) {
+                return strtoupper(trim($label)); // Samakan kapitalisasinya
+            })->toArray();
+
+            // Bandingkan
+            $notFoundInExcel = array_diff($golonganDarahFromDB, $golonganDarahFromExcel);
+            $notFoundInDB = array_diff($golonganDarahFromExcel, $golonganDarahFromDB);
+
+            return response()->json([
+                'total_golongan_darah_excel' => count($golonganDarahFromExcel),
+                'total_golongan_darah_db' => count($golonganDarahFromDB),
+                'golongan_darah_not_found_in_excel' => array_values($notFoundInExcel),
+                'golongan_darah_not_found_in_db' => array_values($notFoundInDB),
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['errors' => $e->getMessage()]);
+        }
+    }
+
+    public function cekHubunganKeluarga(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'karyawan_file' => 'required|mimes:xlsx,xls',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()->first()]);
+        }
+
+        try {
+            $file = $request->file('karyawan_file');
+            $spreadsheet = IOFactory::load($file->getRealPath());
+            $sheet = $spreadsheet->getActiveSheet();
+
+            $hubunganFromExcel = [];
+
+            foreach ($sheet->getRowIterator(2) as $row) {
+                $cellIterator = $row->getCellIterator('D', 'D'); // Fokus kolom D
+                $cellIterator->setIterateOnlyExistingCells(true);
+
+                foreach ($cellIterator as $cell) {
+                    $hubunganValue = ucwords(strtolower(trim($cell->getValue())));
+                    if (!empty($hubunganValue)) {
+                        $hubunganFromExcel[] = $hubunganValue;
+                    }
+                }
+            }
+
+            // Hilangkan duplikat
+            $hubunganFromExcel = array_unique($hubunganFromExcel);
+
+            // Ini daftar enum hubungan yang valid dari database
+            $validHubungan = [
+                'Suami',
+                'Istri',
+                'Anak Ke-1',
+                'Anak Ke-2',
+                'Anak Ke-3',
+                'Anak Ke-4',
+                'Anak Ke-5',
+                'Bapak',
+                'Ibu',
+                'Bapak Mertua',
+                'Ibu Mertua'
+            ];
+
+            // Bandingkan
+            $notFoundInEnum = array_diff($hubunganFromExcel, $validHubungan);
+            $notExistInExcel = array_diff($validHubungan, $hubunganFromExcel);
+
+            return response()->json([
+                'total_hubungan_excel' => count($hubunganFromExcel),
+                'total_hubungan_enum' => count($validHubungan),
+                'hubungan_not_valid' => array_values($notFoundInEnum),
+                'hubungan_not_in_excel' => array_values($notExistInExcel),
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['errors' => $e->getMessage()]);
+        }
+    }
+
+    public function cekDataPendidikanFromDataKeluarga(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'karyawan_file' => 'required|mimes:xlsx,xls',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()->first()]);
+        }
+
+        try {
+            // Ambil file Excel
+            $file = $request->file('karyawan_file');
+            $spreadsheet = IOFactory::load($file->getRealPath());
+            $sheet = $spreadsheet->getActiveSheet();
+
+            $pendidikanFromExcel = [];
+
+            // Ambil data dari kolom E (kolom pendidikan terakhir)
+            foreach ($sheet->getRowIterator(2) as $row) {
+                $cellIterator = $row->getCellIterator('E', 'E'); // Fokus kolom E
+                $cellIterator->setIterateOnlyExistingCells(true);
+
+                foreach ($cellIterator as $cell) {
+                    $pendidikanValue = ucwords(strtolower(trim($cell->getValue()))); // Proses untuk format yang konsisten
+                    if (!empty($pendidikanValue)) {
+                        $pendidikanFromExcel[] = $pendidikanValue; // Simpan ke array
+                    }
+                }
+            }
+
+            // Hilangkan duplikat
+            $pendidikanFromExcel = array_unique($pendidikanFromExcel);
+
+            // Proses data pendidikan terakhir dan masukkan ke tabel kategori_pendidikans
+            // foreach ($pendidikanFromExcel as $pendidikan) {
+            //     // Periksa apakah pendidikan sudah ada, jika belum insert
+            //     if (!KategoriPendidikan::where('label', $pendidikan)->exists()) {
+            //         KategoriPendidikan::create([
+            //             'label' => $pendidikan
+            //         ]);
+            //     }
+            // }
+
+            return response()->json([
+                'total_pendidikan_excel' => $pendidikanFromExcel,
             ]);
         } catch (\Exception $e) {
             return response()->json(['errors' => $e->getMessage()]);
@@ -344,6 +574,150 @@ class TambahanDataController extends Controller
         } catch (\Exception $e) {
             return response()->json(['errors' => $e->getMessage()]);
         }
+    }
+
+    public function insertDataKeluarga(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'karyawan_file' => 'required|mimes:xlsx,xls',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()->first()]);
+        }
+
+        DB::beginTransaction();
+
+        try {
+            $file = $request->file('karyawan_file');
+            $spreadsheet = IOFactory::load($file->getRealPath());
+            $sheet = $spreadsheet->getActiveSheet();
+
+            $updatedRecords = 0;
+            $skippedRows = [];  // Array to store skipped rows
+
+            foreach ($sheet->getRowIterator(2) as $rowIndex => $row) {
+                $cellIterator = $row->getCellIterator();
+                $cellIterator->setIterateOnlyExistingCells(true);
+
+                // Variabel untuk menyimpan data
+                $nik = null;
+                $namaKeluarga = null;
+                $hubungan = null;
+                $pendidikan = null;
+                $pekerjaan = null;
+                $tempatLahir = null;
+                $tglLahir = null;
+                $jenisKelamin = null;
+                $agama = null;
+                $kategoriDarah = null;
+                $noRm = null;
+
+                // Ambil data dari kolom Excel
+                foreach ($cellIterator as $cell) {
+                    $column = $cell->getColumn();
+                    $value = trim($cell->getValue());
+
+                    if ($column === 'A') {
+                        $nik = $value;
+                    } elseif ($column === 'C') {
+                        $namaKeluarga = $value;
+                    } elseif ($column === 'D') {
+                        $hubungan = ucwords(strtolower($value)); // Mengubah format hubungan
+                    } elseif ($column === 'E') {
+                        // Cari pendidikan di kategori_pendidikans
+                        $pendidikan = $this->findPendidikanId($value);
+                    } elseif ($column === 'F') {
+                        $pekerjaan = $value;
+                    } elseif ($column === 'H') {
+                        $tempatLahir = $value;
+                    } elseif ($column === 'I') {
+                        $tglLahir = $this->convertDateFormat($value);
+                    } elseif ($column === 'J') {
+                        // P = 0, L = 1
+                        $jenisKelamin = ($value === 'P') ? 0 : 1;
+                    } elseif ($column === 'K') {
+                        // Cari agama di kategori_agamas
+                        $agama = $this->findAgamaId($value);
+                    } elseif ($column === 'L') {
+                        // Cari kategori darah di kategori_darahs
+                        $kategoriDarah = $this->findDarahId($value);
+                    } elseif ($column === 'M') {
+                        $noRm = $value;
+                    }
+                }
+
+                // Cek jika 'nama_keluarga' (kolom C) kosong, skip data ini
+                if (empty($namaKeluarga)) {
+                    // Menyimpan baris yang di-skip
+                    $skippedRows[] = $rowIndex + 1;  // Menggunakan $rowIndex + 1 karena iterasi dimulai dari 2
+                    continue; // Skip data ini jika nama keluarga kosong
+                }
+
+                // Pastikan nik ada dan cari data karyawan
+                if (!empty($nik)) {
+                    $karyawan = DataKaryawan::where('nik', $nik)->first();
+
+                    if ($karyawan) {
+                        // Cek duplikat dan tambahkan data keluarga
+                        $existingFamily = DataKeluarga::where('data_karyawan_id', $karyawan->id)
+                            ->where('nama_keluarga', $namaKeluarga)
+                            ->first();
+
+                        if (!$existingFamily) {
+                            DataKeluarga::create([
+                                'data_karyawan_id' => $karyawan->id,
+                                'nama_keluarga' => $namaKeluarga,
+                                'hubungan' => $hubungan,
+                                'pendidikan_terakhir' => $pendidikan,
+                                'pekerjaan' => $pekerjaan,
+                                'tempat_lahir' => $tempatLahir,
+                                'tgl_lahir' => $tglLahir,
+                                'jenis_kelamin' => $jenisKelamin,
+                                'kategori_agama_id' => $agama,
+                                'kategori_darah_id' => $kategoriDarah,
+                                'no_rm' => $noRm,
+                                'status_hidup' => true,
+                                'status_keluarga_id' => 2,
+                                'is_menikah' => true,
+                                'is_bpjs' => false,
+                                'verifikator_1' => 1,
+                            ]);
+
+                            $updatedRecords++;
+                        }
+                    }
+                }
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'message' => "$updatedRecords data keluarga berhasil ditambahkan.",
+                'skipped_rows' => $skippedRows,
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['errors' => $e->getMessage()]);
+        }
+    }
+
+    private function findPendidikanId($pendidikanLabel)
+    {
+        $pendidikan = KategoriPendidikan::where('label', $pendidikanLabel)->first();
+        return $pendidikan ? $pendidikan->id : null;
+    }
+
+    private function findAgamaId($agamaLabel)
+    {
+        $agama = KategoriAgama::where('label', $agamaLabel)->first();
+        return $agama ? $agama->id : null;
+    }
+
+    private function findDarahId($darahLabel)
+    {
+        $darah = KategoriDarah::where('label', $darahLabel)->first();
+        return $darah ? $darah->id : null;
     }
 
     private function convertDateFormat($date)

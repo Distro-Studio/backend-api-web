@@ -29,6 +29,7 @@ use App\Exports\Keuangan\LaporanPenggajian\LaporanGajiBankExport;
 use App\Exports\Keuangan\LaporanPenggajian\RekapGajiPotonganExport;
 use App\Exports\Keuangan\LaporanPenggajian\RekapGajiKompetensiExport;
 use App\Exports\Keuangan\LaporanPenggajian\RekapGajiPenerimaanExport;
+use App\Models\RiwayatThr;
 
 class PenggajianController extends Controller
 {
@@ -89,7 +90,7 @@ class PenggajianController extends Controller
 
                         $riwayatPenggajian->update([
                             'status_gaji_id' => 2,
-                            'submitted_by' => Auth::id(),
+                            'submitted_by' => auth()->id(),
                             'periode_gaji_karyawan' => $totalTakeHomePay
                         ]);
 
@@ -165,7 +166,8 @@ class PenggajianController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Tidak ada data riwayat penggajian karyawan yang tersedia.'), Response::HTTP_NOT_FOUND);
         }
 
-        $formattedData = $datariwayatPenggajian->map(function ($riwayatPenggajian) {
+        $baseUrl = env('STORAGE_SERVER_DOMAIN');
+        $formattedData = $datariwayatPenggajian->map(function ($riwayatPenggajian) use ($baseUrl) {
             return [
                 'id' => $riwayatPenggajian->id,
                 'periode' => $riwayatPenggajian->periode,
@@ -177,7 +179,16 @@ class PenggajianController extends Controller
                     'nama' => $riwayatPenggajian->created_users->nama,
                     'email_verified_at' => $riwayatPenggajian->created_users->email_verified_at,
                     'data_karyawan_id' => $riwayatPenggajian->created_users->data_karyawan_id,
-                    'foto_profil' => $riwayatPenggajian->created_users->foto_profil,
+                    'foto_profil' => $riwayatPenggajian->created_users->foto_profiles ? [
+                        'id' => $riwayatPenggajian->created_users->foto_profiles->id,
+                        'user_id' => $riwayatPenggajian->created_users->foto_profiles->user_id,
+                        'file_id' => $riwayatPenggajian->created_users->foto_profiles->file_id,
+                        'nama' => $riwayatPenggajian->created_users->foto_profiles->nama,
+                        'nama_file' => $riwayatPenggajian->created_users->foto_profiles->nama_file,
+                        'path' => $baseUrl . $riwayatPenggajian->created_users->foto_profiles->path,
+                        'ext' => $riwayatPenggajian->created_users->foto_profiles->ext,
+                        'size' => $riwayatPenggajian->created_users->foto_profiles->size,
+                    ] : null,
                     'data_completion_step' => $riwayatPenggajian->created_users->data_completion_step,
                     'status_aktif' => $riwayatPenggajian->created_users->status_aktif,
                     'created_at' => $riwayatPenggajian->created_users->created_at,
@@ -188,7 +199,16 @@ class PenggajianController extends Controller
                     'nama' => $riwayatPenggajian->submitted_users->nama,
                     'email_verified_at' => $riwayatPenggajian->submitted_users->email_verified_at,
                     'data_karyawan_id' => $riwayatPenggajian->submitted_users->data_karyawan_id,
-                    'foto_profil' => $riwayatPenggajian->submitted_users->foto_profil,
+                    'foto_profil' => $riwayatPenggajian->submitted_users->foto_profiles ? [
+                        'id' => $riwayatPenggajian->submitted_users->foto_profiles->id,
+                        'user_id' => $riwayatPenggajian->submitted_users->foto_profiles->user_id,
+                        'file_id' => $riwayatPenggajian->submitted_users->foto_profiles->file_id,
+                        'nama' => $riwayatPenggajian->submitted_users->foto_profiles->nama,
+                        'nama_file' => $riwayatPenggajian->submitted_users->foto_profiles->nama_file,
+                        'path' => $baseUrl . $riwayatPenggajian->submitted_users->foto_profiles->path,
+                        'ext' => $riwayatPenggajian->submitted_users->foto_profiles->ext,
+                        'size' => $riwayatPenggajian->submitted_users->foto_profiles->size,
+                    ] : null,
                     'data_completion_step' => $riwayatPenggajian->submitted_users->data_completion_step,
                     'status_aktif' => $riwayatPenggajian->submitted_users->status_aktif,
                     'created_at' => $riwayatPenggajian->submitted_users->created_at,
@@ -218,7 +238,9 @@ class PenggajianController extends Controller
             ->whereHas('users', function ($query) {
                 $query->where('status_aktif', 2);
             })
-            ->whereIn('status_karyawan_id', [1, 2, 3])
+            ->whereHas('status_karyawans', function ($query) {
+                $query->where('kategori_status_id', 1); // Kategori status "Fulltime"
+            })
             ->pluck('id')
             ->toArray();
         // dd($data_karyawan_ids);
@@ -283,10 +305,23 @@ class PenggajianController extends Controller
                 'karyawan_verifikasi' => $verifikasiKaryawan,
                 'status_gaji_id' => $status_riwayat_gaji,
                 'jenis_riwayat' => $jenisRiwayat,
-                'created_by' => Auth::id(),
+                'created_by' => auth()->id(),
                 'submitted_by' => null,
                 'created_at' => Carbon::now('Asia/Jakarta'),
             ]);
+
+            // Jika jenisRiwayat == 0, berarti ada THR, buat riwayat THR
+            if ($jenisRiwayat == 0) {
+                $riwayatThr = RiwayatThr::where('periode', $periode)->first();
+
+                if ($riwayatThr) {
+                    $riwayatThr->update([
+                        'riwayat_penggajian_id' => $riwayatPenggajian->id,
+                        'updated_by' => auth()->id(),
+                        'updated_at' => Carbon::now('Asia/Jakarta'),
+                    ]);
+                }
+            }
 
             // Dispatch the job to handle the calculation in the background
             CreateGajiJob::dispatch($data_karyawan_ids, $sertakan_bor, $riwayatPenggajian->id);
@@ -325,6 +360,7 @@ class PenggajianController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data riwayat penggajian tidak ditemukan.'), Response::HTTP_NOT_FOUND);
         }
 
+        $baseUrl = env('STORAGE_SERVER_DOMAIN');
         $riwayatPenggajianData = [
             'id' => $riwayatPenggajian->id,
             'periode' => $riwayatPenggajian->periode,
@@ -336,7 +372,16 @@ class PenggajianController extends Controller
                 'nama' => $riwayatPenggajian->created_users->nama,
                 'email_verified_at' => $riwayatPenggajian->created_users->email_verified_at,
                 'data_karyawan_id' => $riwayatPenggajian->created_users->data_karyawan_id,
-                'foto_profil' => $riwayatPenggajian->created_users->foto_profil,
+                'foto_profil' => $riwayatPenggajian->created_users->foto_profiles ? [
+                    'id' => $riwayatPenggajian->created_users->foto_profiles->id,
+                    'user_id' => $riwayatPenggajian->created_users->foto_profiles->user_id,
+                    'file_id' => $riwayatPenggajian->created_users->foto_profiles->file_id,
+                    'nama' => $riwayatPenggajian->created_users->foto_profiles->nama,
+                    'nama_file' => $riwayatPenggajian->created_users->foto_profiles->nama_file,
+                    'path' => $baseUrl . $riwayatPenggajian->created_users->foto_profiles->path,
+                    'ext' => $riwayatPenggajian->created_users->foto_profiles->ext,
+                    'size' => $riwayatPenggajian->created_users->foto_profiles->size,
+                ] : null,
                 'data_completion_step' => $riwayatPenggajian->created_users->data_completion_step,
                 'status_aktif' => $riwayatPenggajian->created_users->status_aktif,
                 'created_at' => $riwayatPenggajian->created_users->created_at,
@@ -347,7 +392,16 @@ class PenggajianController extends Controller
                 'nama' => $riwayatPenggajian->submitted_users->nama,
                 'email_verified_at' => $riwayatPenggajian->submitted_users->email_verified_at,
                 'data_karyawan_id' => $riwayatPenggajian->submitted_users->data_karyawan_id,
-                'foto_profil' => $riwayatPenggajian->submitted_users->foto_profil,
+                'foto_profil' => $riwayatPenggajian->submitted_users->foto_profiles ? [
+                    'id' => $riwayatPenggajian->submitted_users->foto_profiles->id,
+                    'user_id' => $riwayatPenggajian->submitted_users->foto_profiles->user_id,
+                    'file_id' => $riwayatPenggajian->submitted_users->foto_profiles->file_id,
+                    'nama' => $riwayatPenggajian->submitted_users->foto_profiles->nama,
+                    'nama_file' => $riwayatPenggajian->submitted_users->foto_profiles->nama_file,
+                    'path' => $baseUrl . $riwayatPenggajian->submitted_users->foto_profiles->path,
+                    'ext' => $riwayatPenggajian->submitted_users->foto_profiles->ext,
+                    'size' => $riwayatPenggajian->submitted_users->foto_profiles->size,
+                ] : null,
                 'data_completion_step' => $riwayatPenggajian->submitted_users->data_completion_step,
                 'status_aktif' => $riwayatPenggajian->submitted_users->status_aktif,
                 'created_at' => $riwayatPenggajian->submitted_users->created_at,
@@ -356,7 +410,8 @@ class PenggajianController extends Controller
         ];
 
         $penggajians = $riwayatPenggajian->penggajians;
-        $formattedData = $penggajians->map(function ($penggajian) {
+        $baseUrl = env('STORAGE_SERVER_DOMAIN');
+        $formattedData = $penggajians->map(function ($penggajian) use ($baseUrl) {
             $dataKaryawan = $penggajian->data_karyawans;
             $user = $dataKaryawan->users;
             $unitKerja = $dataKaryawan->unit_kerjas;
@@ -370,7 +425,16 @@ class PenggajianController extends Controller
                     'username' => $user->username,
                     'email_verified_at' => $user->email_verified_at,
                     'data_karyawan_id' => $user->data_karyawan_id,
-                    'foto_profil' => $user->foto_profil,
+                    'foto_profil' => $user->foto_profiles ? [
+                        'id' => $user->foto_profiles->id,
+                        'user_id' => $user->foto_profiles->user_id,
+                        'file_id' => $user->foto_profiles->file_id,
+                        'nama' => $user->foto_profiles->nama,
+                        'nama_file' => $user->foto_profiles->nama_file,
+                        'path' => $baseUrl . $user->foto_profiles->path,
+                        'ext' => $user->foto_profiles->ext,
+                        'size' => $user->foto_profiles->size,
+                    ] : null,
                     'data_completion_step' => $user->data_completion_step,
                     'status_aktif' => $user->status_aktif,
                     'created_at' => $user->created_at,
@@ -558,6 +622,7 @@ class PenggajianController extends Controller
         $totalPotonganTambahan = $potonganTambahan->sum('besaran');
         $totalPotongan = $totalPotonganTetap + $totalPotonganTambahan;
 
+        $baseUrl = env('STORAGE_SERVER_DOMAIN');
         $formattedData = [
             'user' => [
                 'id' => $user->id,
@@ -565,7 +630,16 @@ class PenggajianController extends Controller
                 'username' => $user->username,
                 'email_verified_at' => $user->email_verified_at,
                 'data_karyawan_id' => $user->data_karyawan_id,
-                'foto_profil' => $user->foto_profil,
+                'foto_profil' => $user->foto_profiles ? [
+                    'id' => $user->foto_profiles->id,
+                    'user_id' => $user->foto_profiles->user_id,
+                    'file_id' => $user->foto_profiles->file_id,
+                    'nama' => $user->foto_profiles->nama,
+                    'nama_file' => $user->foto_profiles->nama_file,
+                    'path' => $baseUrl . $user->foto_profiles->path,
+                    'ext' => $user->foto_profiles->ext,
+                    'size' => $user->foto_profiles->size,
+                ] : null,
                 'data_completion_step' => $user->data_completion_step,
                 'status_aktif' => $user->status_aktif,
                 'created_at' => $user->created_at,

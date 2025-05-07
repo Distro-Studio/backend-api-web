@@ -7,7 +7,6 @@ use App\Models\Cuti;
 use App\Models\Jadwal;
 use App\Models\Lembur;
 use App\Models\Jabatan;
-use App\Models\Presensi;
 use App\Models\HariLibur;
 use App\Models\Kompetensi;
 use App\Models\DataKaryawan;
@@ -15,6 +14,7 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
+use App\Models\StatusKaryawan;
 use Illuminate\Support\Facades\Gate;
 
 class DashboardController extends Controller
@@ -32,8 +32,18 @@ class DashboardController extends Controller
             $query->where('status_aktif', 2);
         })->where('id', '!=', 1)->count();
 
-        $calculatedKaryawanNonAktif = DataKaryawan::whereHas('users', function ($query) {
-            $query->where('status_aktif', 3);
+        // Calculate the number of fulltime, parttime, and outsourcing employees
+        $calculatedKaryawanFulltime = DataKaryawan::whereHas('status_karyawans', function ($query) {
+            $query->where('kategori_status_id', 1)
+                ->whereNotNull('kategori_status_id');
+        })->where('id', '!=', 1)->count();
+        $calculatedKaryawanParttime = DataKaryawan::whereHas('status_karyawans', function ($query) {
+            $query->where('kategori_status_id', 2)
+                ->whereNotNull('kategori_status_id');
+        })->where('id', '!=', 1)->count();
+        $calculatedKaryawanOutsourcing = DataKaryawan::whereHas('status_karyawans', function ($query) {
+            $query->where('kategori_status_id', 3)
+                ->whereNotNull('kategori_status_id');
         })->where('id', '!=', 1)->count();
 
         // Hitung karyawan shift yang libur berdasarkan user_id
@@ -66,7 +76,9 @@ class DashboardController extends Controller
             'message' => "Header calculation successful.",
             'data' => [
                 'total_karyawan' => $calculatedKaryawanAktif,
-                'karyawan_nonaktif' => $calculatedKaryawanNonAktif,
+                'karyawan_fulltime' => $calculatedKaryawanFulltime,
+                'karyawan_parttime' => $calculatedKaryawanParttime,
+                'karyawan_outsourcing' => $calculatedKaryawanOutsourcing,
                 'jumlah_libur' => $countLibur,
                 'jumlah_cuti' => $countCuti,
             ]
@@ -98,10 +110,16 @@ class DashboardController extends Controller
         // Retrieve the count of male and female employees
         $countMale = DataKaryawan::whereHas('users', function ($query) {
             $query->where('status_aktif', 2);
-        })->where('jenis_kelamin', true)->count();
+        })
+            ->where('jenis_kelamin', true)
+            ->where('id', '!=', 1)
+            ->count();
         $countFemale = DataKaryawan::whereHas('users', function ($query) {
             $query->where('status_aktif', 2);
-        })->where('jenis_kelamin', false)->count();
+        })
+            ->where('jenis_kelamin', false)
+            ->where('id', '!=', 1)
+            ->count();
 
         // Calculate the percentage
         $percentMale = ($countMale / $totalEmployees) * 100;
@@ -207,8 +225,7 @@ class DashboardController extends Controller
         }
 
         // Retrieve all statuses
-        $statuses = DB::table('status_karyawans')->get();
-
+        $statuses = StatusKaryawan::whereNotNull('kategori_status_id')->get();
         if ($statuses->isEmpty()) {
             return response()->json([
                 'status' => Response::HTTP_NOT_FOUND,
@@ -221,11 +238,20 @@ class DashboardController extends Controller
 
         // Iterate over each status and count the number of employees with that status
         foreach ($statuses as $status) {
-            $countKaryawan = DataKaryawan::whereHas('users', function ($query) {
-                $query->where('status_aktif', 2);
-            })->where('status_karyawan_id', $status->id)->count();
+            $countKaryawan = DataKaryawan::where('id', '!=', 1)
+                ->whereHas('users', function ($query) {
+                    $query->where('status_aktif', 2);
+                })
+                ->where('status_karyawan_id', $status->id)
+                ->count();
             $result[] = [
-                'status_karyawan' => $status->label,
+                'status_karyawan' => [
+                    'id' => $status->id,
+                    'label' => $status->label,
+                    'kategori_status' => $status->kategori_status ?? null,
+                    'created_at' => $status->created_at,
+                    'updated_at' => $status->updated_at
+                ],
                 'jumlah_karyawan' => $countKaryawan,
             ];
         }
@@ -253,7 +279,8 @@ class DashboardController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Tidak ada data lembur untuk hari ini.'), Response::HTTP_NOT_FOUND);
         }
 
-        $formattedData = $dataLembur->map(function ($lembur) {
+        $baseUrl = env('STORAGE_SERVER_DOMAIN');
+        $formattedData = $dataLembur->map(function ($lembur) use ($baseUrl) {
             return [
                 'id' => $lembur->users->data_karyawan_id,
                 'user' => [
@@ -262,7 +289,16 @@ class DashboardController extends Controller
                     'username' => $lembur->users->username,
                     'email_verified_at' => $lembur->users->email_verified_at,
                     'data_karyawan_id' => $lembur->users->data_karyawan_id,
-                    'foto_profil' => $lembur->users->foto_profil,
+                    'foto_profil' => $lembur->users->foto_profiles ? [
+                        'id' => $lembur->users->foto_profiles->id,
+                        'user_id' => $lembur->users->foto_profiles->user_id,
+                        'file_id' => $lembur->users->foto_profiles->file_id,
+                        'nama' => $lembur->users->foto_profiles->nama,
+                        'nama_file' => $lembur->users->foto_profiles->nama_file,
+                        'path' => $baseUrl . $lembur->users->foto_profiles->path,
+                        'ext' => $lembur->users->foto_profiles->ext,
+                        'size' => $lembur->users->foto_profiles->size,
+                    ] : null,
                     'data_completion_step' => $lembur->users->data_completion_step,
                     'status_aktif' => $lembur->users->status_aktif,
                     'created_at' => $lembur->users->created_at,

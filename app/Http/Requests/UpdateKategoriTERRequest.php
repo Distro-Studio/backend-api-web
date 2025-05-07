@@ -6,6 +6,7 @@ use Illuminate\Http\Response;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Http\Exceptions\HttpResponseException;
+use Illuminate\Validation\Rule;
 
 class UpdateKategoriTERRequest extends FormRequest
 {
@@ -25,7 +26,7 @@ class UpdateKategoriTERRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'nama_kategori_ter' => 'required|string|max:225',
+            'nama_kategori_ter' => 'required|string|max:225'
         ];
     }
 
@@ -35,6 +36,7 @@ class UpdateKategoriTERRequest extends FormRequest
             'nama_kategori_ter.required' => 'Nama kategori TER tidak diperbolehkan kosong.',
             'nama_kategori_ter.string' => 'Nama kategori TER tidak diperbolehkan mengandung angka.',
             'nama_kategori_ter.max' => 'Nama kategori TER melebihi batas maksimum panjang karakter.',
+            'nama_kategori_ter.unique' => 'Nama kategori TER tersebut sudah pernah dibuat.',
         ];
     }
 

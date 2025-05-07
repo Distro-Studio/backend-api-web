@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class StatusKaryawan extends Model
@@ -14,7 +15,8 @@ class StatusKaryawan extends Model
 
     protected $casts = [
         'id' => 'integer',
-        'label' => 'string'
+        'label' => 'string',
+        'kategori_status_id' => 'integer',
     ];
 
     /**
@@ -35,5 +37,15 @@ class StatusKaryawan extends Model
     public function jenis_penilaians(): HasMany
     {
         return $this->hasMany(Penilaian::class, 'status_karyawan_id', 'id');
+    }
+
+    /**
+     * Get the kategori_status that owns the StatusKaryawan
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function kategori_status(): BelongsTo
+    {
+        return $this->belongsTo(KategoriStatusKaryawan::class, 'kategori_status_id', 'id');
     }
 }

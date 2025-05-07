@@ -20,15 +20,10 @@ class UpdateDataKaryawanRequest extends FormRequest
 
     public function rules(): array
     {
-        $id = $this->route('id'); // ambil ID dari parameter route
 
         return [
             'nama' => 'required|string|max:225',
-            'email' => [
-                'nullable',
-                'email',
-                Rule::unique('data_karyawans')->ignore($id),
-            ],
+            'email' => 'nullable|email',
             'role_id' => 'required|integer|exists:roles,id',
             'no_rm' => 'required|string',
             'no_manulife' => 'nullable|string',

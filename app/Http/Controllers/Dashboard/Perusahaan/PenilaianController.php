@@ -427,7 +427,8 @@ class PenilaianController extends Controller
             ], Response::HTTP_NOT_FOUND);
         }
 
-        $formattedData = $karyawanBelumDinilai->map(function ($user) {
+        $baseUrl = env('STORAGE_SERVER_DOMAIN');
+        $formattedData = $karyawanBelumDinilai->map(function ($user) use ($baseUrl) {
             return [
                 'user' => [
                     'id' => $user->id,
@@ -435,7 +436,16 @@ class PenilaianController extends Controller
                     'username' => $user->username,
                     'email_verified_at' => $user->email_verified_at,
                     'data_karyawan_id' => $user->data_karyawan_id,
-                    'foto_profil' => $user->foto_profil,
+                    'foto_profil' => $user->foto_profiles ? [
+                        'id' => $user->foto_profiles->id,
+                        'user_id' => $user->foto_profiles->user_id,
+                        'file_id' => $user->foto_profiles->file_id,
+                        'nama' => $user->foto_profiles->nama,
+                        'nama_file' => $user->foto_profiles->nama_file,
+                        'path' => $baseUrl . $user->foto_profiles->path,
+                        'ext' => $user->foto_profiles->ext,
+                        'size' => $user->foto_profiles->size,
+                    ] : null,
                     'data_completion_step' => $user->data_completion_step,
                     'status_aktif' => $user->status_aktif,
                     'created_at' => $user->created_at,

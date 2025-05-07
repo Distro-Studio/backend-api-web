@@ -6,6 +6,7 @@ use Illuminate\Http\Response;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Http\Exceptions\HttpResponseException;
+use Illuminate\Validation\Rule;
 
 class UpdateShiftRequest extends FormRequest
 {
@@ -38,6 +39,7 @@ class UpdateShiftRequest extends FormRequest
             'nama.required' => 'Nama shift tidak diperbolehkan kosong.',
             'nama.string' => 'Nama shift tidak diperbolehkan mengandung angka.',
             'nama.max' => 'Nama shift melebihi batas maksimum panjang karakter.',
+            'nama.unique' => 'Nama shift tersebut sudah pernah dibuat.',
             'unit_kerja_id.required' => 'Unit kerja tidak diperbolehkan kosong.',
             'unit_kerja_id.integer' => 'Unit kerja tidak diperbolehkan mengandung selain angka.',
             'unit_kerja_id.exists' => 'Unit kerja tersebut tidak valid.',
