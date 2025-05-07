@@ -22,6 +22,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
+use Illuminate\Support\Facades\DB;
 
 class DataRiwayatPerubahanController extends Controller
 {
@@ -299,8 +300,8 @@ class DataRiwayatPerubahanController extends Controller
             if ($data_perubahan->jenis_perubahan === 'Keluarga') {
                 // Array yang berisi kolom-kolom yang perlu diproses
                 $columnsToUpdate = [
-                    'agama' => KategoriAgama::class,
-                    'golongan_darah' => KategoriDarah::class,
+                    'kategori_agama_id' => KategoriAgama::class,
+                    'kategori_darah_id' => KategoriDarah::class,
                     'pendidikan_terakhir' => KategoriPendidikan::class,
                 ];
 
@@ -515,6 +516,7 @@ class DataRiwayatPerubahanController extends Controller
 
         $status_perubahan_id = $riwayat->status_perubahan_id;
 
+        DB::beginTransaction();
         // Logika verifikasi disetujui
         if ($request->has('verifikasi_disetujui') && $request->verifikasi_disetujui == 1) {
             if ($status_perubahan_id == 1) {
@@ -546,7 +548,9 @@ class DataRiwayatPerubahanController extends Controller
             } else {
                 return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Riwayat perubahan '{$riwayat->kolom}' tidak dalam status untuk ditolak."), Response::HTTP_BAD_REQUEST);
             }
+            DB::commit();
         } else {
+            DB::rollBack();
             return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Aksi tidak valid.'), Response::HTTP_BAD_REQUEST);
         }
     }
@@ -613,8 +617,8 @@ class DataRiwayatPerubahanController extends Controller
                             'tgl_lahir' => $update['tgl_lahir'],
                             'tempat_lahir' => $update['tempat_lahir'],
                             'jenis_kelamin' => $update['jenis_kelamin'],
-                            'kategori_agama_id' => $update['agama'],
-                            'kategori_darah_id' => $update['golongan_darah'],
+                            'kategori_agama_id' => $update['kategori_agama_id'],
+                            'kategori_darah_id' => $update['kategori_darah_id'],
                             'no_rm' => $update['no_rm'],
                             'pendidikan_terakhir' => $update['pendidikan_terakhir'],
                             'status_hidup' => $update['status_hidup'],
