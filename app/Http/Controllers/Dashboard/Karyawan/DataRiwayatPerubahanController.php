@@ -237,7 +237,8 @@ class DataRiwayatPerubahanController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data perubahan karyawan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
         }
 
-        $formattedData = $dataPerubahan->map(function ($data_perubahan) {
+        $baseUrl = env('STORAGE_SERVER_DOMAIN');
+        $formattedData = $dataPerubahan->map(function ($data_perubahan) use ($baseUrl) {
             $relasiUser = $data_perubahan->data_karyawans->users ?? null;
             $relasiVerifikator = $data_perubahan->verifikator_1_users ?? null;
 
@@ -371,7 +372,16 @@ class DataRiwayatPerubahanController extends Controller
                         'username' => $verifikasiForOrder->users->username,
                         'email_verified_at' => $verifikasiForOrder->users->email_verified_at,
                         'data_karyawan_id' => $verifikasiForOrder->users->data_karyawan_id,
-                        'foto_profil' => $verifikasiForOrder->users->foto_profil,
+                        'foto_profil' => $verifikasiForOrder->users->foto_profiles ? [
+                            'id' => $verifikasiForOrder->users->foto_profiles->id,
+                            'user_id' => $verifikasiForOrder->users->foto_profiles->user_id,
+                            'file_id' => $verifikasiForOrder->users->foto_profiles->file_id,
+                            'nama' => $verifikasiForOrder->users->foto_profiles->nama,
+                            'nama_file' => $verifikasiForOrder->users->foto_profiles->nama_file,
+                            'path' => $baseUrl . $verifikasiForOrder->users->foto_profiles->path,
+                            'ext' => $verifikasiForOrder->users->foto_profiles->ext,
+                            'size' => $verifikasiForOrder->users->foto_profiles->size,
+                        ] : null,
                         'data_completion_step' => $verifikasiForOrder->users->data_completion_step,
                         'status_aktif' => $verifikasiForOrder->users->status_aktif,
                         'created_at' => $verifikasiForOrder->users->created_at,
@@ -402,7 +412,16 @@ class DataRiwayatPerubahanController extends Controller
                     'username' => $relasiUser->username,
                     'email_verified_at' => $relasiUser->email_verified_at,
                     'data_karyawan_id' => $relasiUser->data_karyawan_id,
-                    'foto_profil' => $relasiUser->foto_profil,
+                    'foto_profil' => $relasiUser->foto_profiles ? [
+                        'id' => $relasiUser->foto_profiles->id,
+                        'user_id' => $relasiUser->foto_profiles->user_id,
+                        'file_id' => $relasiUser->foto_profiles->file_id,
+                        'nama' => $relasiUser->foto_profiles->nama,
+                        'nama_file' => $relasiUser->foto_profiles->nama_file,
+                        'path' => $baseUrl . $relasiUser->foto_profiles->path,
+                        'ext' => $relasiUser->foto_profiles->ext,
+                        'size' => $relasiUser->foto_profiles->size,
+                    ] : null,
                     'data_completion_step' => $relasiUser->data_completion_step,
                     'status_aktif' => $relasiUser->status_aktif,
                     'created_at' => $relasiUser->created_at,
@@ -418,7 +437,16 @@ class DataRiwayatPerubahanController extends Controller
                     'nama' => $relasiVerifikator->nama,
                     'email_verified_at' => $relasiVerifikator->email_verified_at,
                     'data_karyawan_id' => $relasiVerifikator->data_karyawan_id,
-                    'foto_profil' => $relasiVerifikator->foto_profil,
+                    'foto_profil' => $relasiVerifikator->foto_profiles ? [
+                        'id' => $relasiVerifikator->foto_profiles->id,
+                        'user_id' => $relasiVerifikator->foto_profiles->user_id,
+                        'file_id' => $relasiVerifikator->foto_profiles->file_id,
+                        'nama' => $relasiVerifikator->foto_profiles->nama,
+                        'nama_file' => $relasiVerifikator->foto_profiles->nama_file,
+                        'path' => $baseUrl . $relasiVerifikator->foto_profiles->path,
+                        'ext' => $relasiVerifikator->foto_profiles->ext,
+                        'size' => $relasiVerifikator->foto_profiles->size,
+                    ] : null,
                     'data_completion_step' => $relasiVerifikator->data_completion_step,
                     'status_aktif' => $relasiVerifikator->status_aktif,
                     'created_at' => $relasiVerifikator->created_at,

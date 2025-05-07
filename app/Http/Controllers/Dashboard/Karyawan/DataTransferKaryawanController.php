@@ -256,7 +256,8 @@ class DataTransferKaryawanController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data transfer karyawan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
         }
 
-        $formattedData = $dataTransfer->map(function ($transfer) {
+        $baseUrl = env('STORAGE_SERVER_DOMAIN');
+        $formattedData = $dataTransfer->map(function ($transfer) use ($baseUrl) {
             $user = $transfer->users;
             $data_karyawan = $user->data_karyawans;
             // $role = $user->roles->first();
@@ -268,7 +269,16 @@ class DataTransferKaryawanController extends Controller
                     'username' => $user->username,
                     'email_verified_at' => $user->email_verified_at,
                     'data_karyawan_id' => $user->data_karyawan_id,
-                    'foto_profil' => $user->foto_profil,
+                    'foto_profil' => $user->foto_profiles ? [
+                        'id' => $user->foto_profiles->id,
+                        'user_id' => $user->foto_profiles->user_id,
+                        'file_id' => $user->foto_profiles->file_id,
+                        'nama' => $user->foto_profiles->nama,
+                        'nama_file' => $user->foto_profiles->nama_file,
+                        'path' => $baseUrl . $user->foto_profiles->path,
+                        'ext' => $user->foto_profiles->ext,
+                        'size' => $user->foto_profiles->size,
+                    ] : null,
                     'data_completion_step' => $user->data_completion_step,
                     'status_aktif' => $user->status_aktif,
                     'created_at' => $user->created_at,

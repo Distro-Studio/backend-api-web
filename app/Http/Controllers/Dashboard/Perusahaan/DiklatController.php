@@ -105,7 +105,8 @@ class DiklatController extends Controller
         }
 
         // Format data untuk output
-        $formattedData = $dataDiklat->map(function ($diklat) {
+        $baseUrl = env('STORAGE_SERVER_DOMAIN');
+        $formattedData = $dataDiklat->map(function ($diklat) use ($baseUrl) {
             $pesertaList = $diklat->peserta_diklat->map(function ($peserta) {
                 return [
                     'user' => $peserta->users,
@@ -134,7 +135,16 @@ class DiklatController extends Controller
                         'username' => $verifikasiForOrder->users->username,
                         'email_verified_at' => $verifikasiForOrder->users->email_verified_at,
                         'data_karyawan_id' => $verifikasiForOrder->users->data_karyawan_id,
-                        'foto_profil' => $verifikasiForOrder->users->foto_profil,
+                        'foto_profil' => $verifikasiForOrder->users->foto_profiles ? [
+                            'id' => $verifikasiForOrder->users->foto_profiles->id,
+                            'user_id' => $verifikasiForOrder->users->foto_profiles->user_id,
+                            'file_id' => $verifikasiForOrder->users->foto_profiles->file_id,
+                            'nama' => $verifikasiForOrder->users->foto_profiles->nama,
+                            'nama_file' => $verifikasiForOrder->users->foto_profiles->nama_file,
+                            'path' => $baseUrl . $verifikasiForOrder->users->foto_profiles->path,
+                            'ext' => $verifikasiForOrder->users->foto_profiles->ext,
+                            'size' => $verifikasiForOrder->users->foto_profiles->size,
+                        ] : null,
                         'data_completion_step' => $verifikasiForOrder->users->data_completion_step,
                         'status_aktif' => $verifikasiForOrder->users->status_aktif,
                         'created_at' => $verifikasiForOrder->users->created_at,
@@ -269,7 +279,8 @@ class DiklatController extends Controller
         }
 
         // Format data untuk output
-        $formattedData = $dataDiklat->map(function ($diklat) {
+        $baseUrl = env('STORAGE_SERVER_DOMAIN');
+        $formattedData = $dataDiklat->map(function ($diklat) use ($baseUrl) {
             $pesertaList = $diklat->peserta_diklat->map(function ($peserta) {
                 return [
                     'user' => $peserta->users,
@@ -300,7 +311,16 @@ class DiklatController extends Controller
                         'username' => $verifikasiForOrder->users->username,
                         'email_verified_at' => $verifikasiForOrder->users->email_verified_at,
                         'data_karyawan_id' => $verifikasiForOrder->users->data_karyawan_id,
-                        'foto_profil' => $verifikasiForOrder->users->foto_profil,
+                        'foto_profil' => $verifikasiForOrder->users->foto_profiles ? [
+                            'id' => $verifikasiForOrder->users->foto_profiles->id,
+                            'user_id' => $verifikasiForOrder->users->foto_profiles->user_id,
+                            'file_id' => $verifikasiForOrder->users->foto_profiles->file_id,
+                            'nama' => $verifikasiForOrder->users->foto_profiles->nama,
+                            'nama_file' => $verifikasiForOrder->users->foto_profiles->nama_file,
+                            'path' => $baseUrl . $verifikasiForOrder->users->foto_profiles->path,
+                            'ext' => $verifikasiForOrder->users->foto_profiles->ext,
+                            'size' => $verifikasiForOrder->users->foto_profiles->size,
+                        ] : null,
                         'data_completion_step' => $verifikasiForOrder->users->data_completion_step,
                         'status_aktif' => $verifikasiForOrder->users->status_aktif,
                         'created_at' => $verifikasiForOrder->users->created_at,
@@ -647,6 +667,7 @@ class DiklatController extends Controller
         }
 
         // Format the data for the response
+        $baseUrl = env('STORAGE_SERVER_DOMAIN');
         $detailDiklat = [
             'id' => $diklat->id,
             'nama' => $diklat->nama,
@@ -670,7 +691,16 @@ class DiklatController extends Controller
                 'nama' => $diklat->verifikator_1_diklats->nama,
                 'email_verified_at' => $diklat->verifikator_1_diklats->email_verified_at,
                 'data_karyawan_id' => $diklat->verifikator_1_diklats->data_karyawan_id,
-                'foto_profil' => $diklat->verifikator_1_diklats->foto_profil,
+                'foto_profil' => $diklat->verifikator_1_diklats->foto_profiles ? [
+                    'id' => $diklat->verifikator_1_diklats->foto_profiles->id,
+                    'user_id' => $diklat->verifikator_1_diklats->foto_profiles->user_id,
+                    'file_id' => $diklat->verifikator_1_diklats->foto_profiles->file_id,
+                    'nama' => $diklat->verifikator_1_diklats->foto_profiles->nama,
+                    'nama_file' => $diklat->verifikator_1_diklats->foto_profiles->nama_file,
+                    'path' => $baseUrl . $diklat->verifikator_1_diklats->foto_profiles->path,
+                    'ext' => $diklat->verifikator_1_diklats->foto_profiles->ext,
+                    'size' => $diklat->verifikator_1_diklats->foto_profiles->size,
+                ] : null,
                 'data_completion_step' => $diklat->verifikator_1_diklats->data_completion_step,
                 'status_aktif' => $diklat->verifikator_1_diklats->status_aktif,
                 'created_at' => $diklat->verifikator_1_diklats->created_at,
@@ -681,7 +711,16 @@ class DiklatController extends Controller
                 'nama' => $diklat->verifikator_2_diklats->nama,
                 'email_verified_at' => $diklat->verifikator_2_diklats->email_verified_at,
                 'data_karyawan_id' => $diklat->verifikator_2_diklats->data_karyawan_id,
-                'foto_profil' => $diklat->verifikator_2_diklats->foto_profil,
+                'foto_profil' => $diklat->verifikator_2_diklats->foto_profiles ? [
+                    'id' => $diklat->verifikator_2_diklats->foto_profiles->id,
+                    'user_id' => $diklat->verifikator_2_diklats->foto_profiles->user_id,
+                    'file_id' => $diklat->verifikator_2_diklats->foto_profiles->file_id,
+                    'nama' => $diklat->verifikator_2_diklats->foto_profiles->nama,
+                    'nama_file' => $diklat->verifikator_2_diklats->foto_profiles->nama_file,
+                    'path' => $baseUrl . $diklat->verifikator_2_diklats->foto_profiles->path,
+                    'ext' => $diklat->verifikator_2_diklats->foto_profiles->ext,
+                    'size' => $diklat->verifikator_2_diklats->foto_profiles->size,
+                ] : null,
                 'data_completion_step' => $diklat->verifikator_2_diklats->data_completion_step,
                 'status_aktif' => $diklat->verifikator_2_diklats->status_aktif,
                 'created_at' => $diklat->verifikator_2_diklats->created_at,

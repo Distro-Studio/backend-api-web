@@ -54,7 +54,7 @@ class User extends Authenticatable
      *
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function foto_profil(): BelongsTo
+    public function foto_profiles(): BelongsTo
     {
         return $this->belongsTo(Berkas::class, 'foto_profil', 'id');
     }

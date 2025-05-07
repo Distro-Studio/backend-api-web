@@ -224,7 +224,8 @@ class AnulirPresensiController extends Controller
                 ], Response::HTTP_NOT_FOUND);
             }
 
-            $formattedData = $dataKaryawanAnulir->map(function ($karyawanAnulir) use ($isSuperAdmin) {
+            $baseUrl = env('STORAGE_SERVER_DOMAIN');
+            $formattedData = $dataKaryawanAnulir->map(function ($karyawanAnulir) use ($isSuperAdmin, $baseUrl) {
                 $baseUrl = env('STORAGE_SERVER_DOMAIN');
                 $cariBerkasAnulir = Berkas::where('id', $karyawanAnulir->dokumen_anulir_id)->first();
                 $berkasAnulir = $cariBerkasAnulir ? $baseUrl . $cariBerkasAnulir->path : null;
@@ -240,7 +241,16 @@ class AnulirPresensiController extends Controller
                             'username' => $karyawanAnulir->data_karyawans->users->username,
                             'email_verified_at' => $karyawanAnulir->data_karyawans->users->email_verified_at,
                             'data_karyawan_id' => $karyawanAnulir->data_karyawans->users->data_karyawan_id,
-                            'foto_profil' => $karyawanAnulir->data_karyawans->users->foto_profil,
+                            'foto_profil' => $karyawanAnulir->data_karyawans->users->foto_profiles ? [
+                                'id' => $karyawanAnulir->data_karyawans->users->foto_profiles->id,
+                                'user_id' => $karyawanAnulir->data_karyawans->users->foto_profiles->user_id,
+                                'file_id' => $karyawanAnulir->data_karyawans->users->foto_profiles->file_id,
+                                'nama' => $karyawanAnulir->data_karyawans->users->foto_profiles->nama,
+                                'nama_file' => $karyawanAnulir->data_karyawans->users->foto_profiles->nama_file,
+                                'path' => $baseUrl . $karyawanAnulir->data_karyawans->users->foto_profiles->path,
+                                'ext' => $karyawanAnulir->data_karyawans->users->foto_profiles->ext,
+                                'size' => $karyawanAnulir->data_karyawans->users->foto_profiles->size,
+                            ] : null,
                             'data_completion_step' => $karyawanAnulir->data_karyawans->users->data_completion_step,
                             'status_aktif' => $karyawanAnulir->data_karyawans->users->status_aktif,
                             'tgl_dinonaktifkan' => $karyawanAnulir->data_karyawans->users->tgl_dinonaktifkan,

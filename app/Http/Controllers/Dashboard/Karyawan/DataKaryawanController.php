@@ -104,7 +104,8 @@ class DataKaryawanController extends Controller
         ], Response::HTTP_NOT_FOUND);
       }
 
-      $formattedData = $userNonShift->map(function ($user) {
+      $baseUrl = env('STORAGE_SERVER_DOMAIN');
+      $formattedData = $userNonShift->map(function ($user) use ($baseUrl) {
         $unitKerja = $user->data_karyawans->unit_kerjas ?? null;
 
         return [
@@ -115,7 +116,16 @@ class DataKaryawanController extends Controller
             'username' => $user->username,
             'email_verified_at' => $user->email_verified_at,
             'data_karyawan_id' => $user->data_karyawan_id,
-            'foto_profil' => $user->foto_profil,
+            'foto_profil' => $user->foto_profiles ? [
+              'id' => $user->foto_profiles->id,
+              'user_id' => $user->foto_profiles->user_id,
+              'file_id' => $user->foto_profiles->file_id,
+              'nama' => $user->foto_profiles->nama,
+              'nama_file' => $user->foto_profiles->nama_file,
+              'path' => $baseUrl . $user->foto_profiles->path,
+              'ext' => $user->foto_profiles->ext,
+              'size' => $user->foto_profiles->size,
+            ] : null,
             'data_completion_step' => $user->data_completion_step,
             'status_aktif' => $user->status_aktif,
             'created_at' => $user->created_at,
@@ -157,7 +167,8 @@ class DataKaryawanController extends Controller
         ], Response::HTTP_NOT_FOUND);
       }
 
-      $formattedData = $userShift->map(function ($user) {
+      $baseUrl = env('STORAGE_SERVER_DOMAIN');
+      $formattedData = $userShift->map(function ($user) use ($baseUrl) {
         $unitKerja = $user->data_karyawans->unit_kerjas ?? null;
 
         return [
@@ -168,7 +179,16 @@ class DataKaryawanController extends Controller
             'username' => $user->username,
             'email_verified_at' => $user->email_verified_at,
             'data_karyawan_id' => $user->data_karyawan_id,
-            'foto_profil' => $user->foto_profil,
+            'foto_profil' => $user->foto_profiles ? [
+              'id' => $user->foto_profiles->id,
+              'user_id' => $user->foto_profiles->user_id,
+              'file_id' => $user->foto_profiles->file_id,
+              'nama' => $user->foto_profiles->nama,
+              'nama_file' => $user->foto_profiles->nama_file,
+              'path' => $baseUrl . $user->foto_profiles->path,
+              'ext' => $user->foto_profiles->ext,
+              'size' => $user->foto_profiles->size,
+            ] : null,
             'data_completion_step' => $user->data_completion_step,
             'status_aktif' => $user->status_aktif,
             'created_at' => $user->created_at,
@@ -207,7 +227,8 @@ class DataKaryawanController extends Controller
         ], Response::HTTP_NOT_FOUND);
       }
 
-      $formattedData = $users->map(function ($user) {
+      $baseUrl = env('STORAGE_SERVER_DOMAIN');
+      $formattedData = $users->map(function ($user) use ($baseUrl) {
         $unitKerja = $user->data_karyawans->unit_kerjas ?? null;
         $statusKaryawan = $user->data_karyawans->status_karyawans ?? null;
 
@@ -219,7 +240,16 @@ class DataKaryawanController extends Controller
             'username' => $user->username,
             'email_verified_at' => $user->email_verified_at,
             'data_karyawan_id' => $user->data_karyawan_id,
-            'foto_profil' => $user->foto_profil,
+            'foto_profil' => $user->foto_profiles ? [
+              'id' => $user->foto_profiles->id,
+              'user_id' => $user->foto_profiles->user_id,
+              'file_id' => $user->foto_profiles->file_id,
+              'nama' => $user->foto_profiles->nama,
+              'nama_file' => $user->foto_profiles->nama_file,
+              'path' => $baseUrl . $user->foto_profiles->path,
+              'ext' => $user->foto_profiles->ext,
+              'size' => $user->foto_profiles->size,
+            ] : null,
             'data_completion_step' => $user->data_completion_step,
             'status_aktif' => $user->status_aktif,
             'created_at' => $user->created_at,
@@ -591,12 +621,12 @@ class DataKaryawanController extends Controller
       }
 
       $request->validate([
-        'foto_profil' => 'required|file|mimes:jpg,jpeg,png|max:5120',
+        'dokumen' => 'required|file|mimes:jpg,jpeg,png|max:5120',
       ], [
-        'foto_profil.required' => 'File foto wajib diunggah.',
-        'foto_profil.file' => 'File yang diunggah tidak valid.',
-        'foto_profil.mimes' => 'Format file harus berupa JPG, JPEG, atau PNG.',
-        'foto_profil.max' => 'Ukuran file maksimal 5MB.',
+        'dokumen.required' => 'File foto wajib diunggah.',
+        'dokumen.file' => 'File yang diunggah tidak valid.',
+        'dokumen.mimes' => 'Format file harus berupa JPG, JPEG, atau PNG.',
+        'dokumen.max' => 'Ukuran file maksimal 5MB.',
       ]);
 
       DB::beginTransaction();
@@ -605,10 +635,10 @@ class DataKaryawanController extends Controller
         return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data akun karyawan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
       }
 
-      if ($request->hasFile('foto_profil')) {
+      if ($request->hasFile('dokumen')) {
         $authUser = Auth::user();
         StorageServerHelper::login();
-        $file = $request->file('foto_profil');
+        $file = $request->file('dokumen');
         $random_filename = Str::random(20);
         $dataupload = StorageServerHelper::uploadToServer($request, $random_filename);
         // $gambarUrl = $dataupload['path'];
@@ -859,7 +889,8 @@ class DataKaryawanController extends Controller
         ], Response::HTTP_NOT_FOUND);
       }
 
-      $formattedData = $dataKaryawan->map(function ($karyawan) use ($isSuperAdmin) {
+      $baseUrl = env('STORAGE_SERVER_DOMAIN');
+      $formattedData = $dataKaryawan->map(function ($karyawan) use ($isSuperAdmin, $baseUrl) {
         $dataKeluargas = $karyawan->data_keluargas;
         $ayah = $dataKeluargas->where('hubungan', 'Ayah')->first();
         $ibu = $dataKeluargas->where('hubungan', 'Ibu')->first();
@@ -875,7 +906,16 @@ class DataKaryawanController extends Controller
             'username' => $karyawan->users->username,
             'email_verified_at' => $karyawan->users->email_verified_at,
             'data_karyawan_id' => $karyawan->users->data_karyawan_id,
-            'foto_profil' => $karyawan->users->foto_profil,
+            'foto_profil' => $karyawan->users->foto_profiles ? [
+              'id' => $karyawan->users->foto_profiles->id,
+              'user_id' => $karyawan->users->foto_profiles->user_id,
+              'file_id' => $karyawan->users->foto_profiles->file_id,
+              'nama' => $karyawan->users->foto_profiles->nama,
+              'nama_file' => $karyawan->users->foto_profiles->nama_file,
+              'path' => $baseUrl . $karyawan->users->foto_profiles->path,
+              'ext' => $karyawan->users->foto_profiles->ext,
+              'size' => $karyawan->users->foto_profiles->size,
+            ] : null,
             'data_completion_step' => $karyawan->users->data_completion_step,
             'status_aktif' => $karyawan->users->status_aktif,
             'tgl_dinonaktifkan' => $karyawan->users->tgl_dinonaktifkan,
@@ -1155,6 +1195,7 @@ class DataKaryawanController extends Controller
         ->sum(fn($pd) => $pd->diklats?->durasi ?? 0);
 
       // Format the karyawan data
+      $baseUrl = env('STORAGE_SERVER_DOMAIN');
       $formattedData = [
         'id' => $karyawan->id,
         'user' => [
@@ -1163,7 +1204,16 @@ class DataKaryawanController extends Controller
           'username' => $karyawan->users->username,
           'email_verified_at' => $karyawan->users->email_verified_at,
           'data_karyawan_id' => $karyawan->users->data_karyawan_id,
-          'foto_profil' => $karyawan->users->foto_profil,
+          'foto_profil' => $karyawan->users->foto_profiles ? [
+            'id' => $karyawan->users->foto_profiles->id,
+            'user_id' => $karyawan->users->foto_profiles->user_id,
+            'file_id' => $karyawan->users->foto_profiles->file_id,
+            'nama' => $karyawan->users->foto_profiles->nama,
+            'nama_file' => $karyawan->users->foto_profiles->nama_file,
+            'path' => $baseUrl . $karyawan->users->foto_profiles->path,
+            'ext' => $karyawan->users->foto_profiles->ext,
+            'size' => $karyawan->users->foto_profiles->size,
+          ] : null,
           'data_completion_step' => $karyawan->users->data_completion_step,
           'status_aktif' => $karyawan->users->status_aktif,
           'tgl_dinonaktifkan' => $karyawan->users->tgl_dinonaktifkan,
@@ -1386,6 +1436,7 @@ class DataKaryawanController extends Controller
       // }
 
       // Format the karyawan data
+      $baseUrl = env('STORAGE_SERVER_DOMAIN');
       $formattedData = [
         'id' => $karyawan->id,
         'user' => [
@@ -1394,7 +1445,16 @@ class DataKaryawanController extends Controller
           'username' => $karyawan->users->username,
           'email_verified_at' => $karyawan->users->email_verified_at,
           'data_karyawan_id' => $karyawan->users->data_karyawan_id,
-          'foto_profil' => $karyawan->users->foto_profil,
+          'foto_profil' => $karyawan->users->foto_profiles ? [
+            'id' => $karyawan->users->foto_profiles->id,
+            'user_id' => $karyawan->users->foto_profiles->user_id,
+            'file_id' => $karyawan->users->foto_profiles->file_id,
+            'nama' => $karyawan->users->foto_profiles->nama,
+            'nama_file' => $karyawan->users->foto_profiles->nama_file,
+            'path' => $baseUrl . $karyawan->users->foto_profiles->path,
+            'ext' => $karyawan->users->foto_profiles->ext,
+            'size' => $karyawan->users->foto_profiles->size,
+          ] : null,
           'data_completion_step' => $karyawan->users->data_completion_step,
           'status_aktif' => $karyawan->users->status_aktif,
           'tgl_dinonaktifkan' => $karyawan->users->tgl_dinonaktifkan,

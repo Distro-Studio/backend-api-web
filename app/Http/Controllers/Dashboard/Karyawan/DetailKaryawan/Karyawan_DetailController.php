@@ -490,7 +490,8 @@ class Karyawan_DetailController extends Controller
             }
 
             // Format data tukar jadwal
-            $formattedData = $tukarJadwal->map(function ($item) {
+            $baseUrl = env('STORAGE_SERVER_DOMAIN');
+            $formattedData = $tukarJadwal->map(function ($item) use ($baseUrl) {
                 return [
                     'id' => $item->id,
                     'tanggal_pengajuan' => $item->created_at,
@@ -512,7 +513,16 @@ class Karyawan_DetailController extends Controller
                         'nama' => $item->user_pengajuans->nama,
                         'email_verified_at' => $item->user_pengajuans->email_verified_at,
                         'data_karyawan_id' => $item->user_pengajuans->data_karyawans->id,
-                        'foto_profil' => $item->user_pengajuans->foto_profil,
+                        'foto_profil' => $item->user_pengajuans->foto_profiles ? [
+                            'id' => $item->user_pengajuans->foto_profiles->id,
+                            'user_id' => $item->user_pengajuans->foto_profiles->user_id,
+                            'file_id' => $item->user_pengajuans->foto_profiles->file_id,
+                            'nama' => $item->user_pengajuans->foto_profiles->nama,
+                            'nama_file' => $item->user_pengajuans->foto_profiles->nama_file,
+                            'path' => $baseUrl . $item->user_pengajuans->foto_profiles->path,
+                            'ext' => $item->user_pengajuans->foto_profiles->ext,
+                            'size' => $item->user_pengajuans->foto_profiles->size,
+                        ] : null,
                         'data_completion_step' => $item->user_pengajuans->data_completion_step,
                         'status_aktif' => $item->user_pengajuans->status_aktif,
                         'created_at' => $item->user_pengajuans->created_at,
@@ -523,7 +533,16 @@ class Karyawan_DetailController extends Controller
                         'nama' => $item->user_ditukars->nama,
                         'email_verified_at' => $item->user_ditukars->email_verified_at,
                         'data_karyawan_id' => $item->user_ditukars->data_karyawans->id,
-                        'foto_profil' => $item->user_ditukars->foto_profil,
+                        'foto_profil' => $item->user_ditukars->foto_profiles ? [
+                            'id' => $item->user_ditukars->foto_profiles->id,
+                            'user_id' => $item->user_ditukars->foto_profiles->user_id,
+                            'file_id' => $item->user_ditukars->foto_profiles->file_id,
+                            'nama' => $item->user_ditukars->foto_profiles->nama,
+                            'nama_file' => $item->user_ditukars->foto_profiles->nama_file,
+                            'path' => $baseUrl . $item->user_ditukars->foto_profiles->path,
+                            'ext' => $item->user_ditukars->foto_profiles->ext,
+                            'size' => $item->user_ditukars->foto_profiles->size,
+                        ] : null,
                         'data_completion_step' => $item->user_ditukars->data_completion_step,
                         'status_aktif' => $item->user_ditukars->status_aktif,
                         'created_at' => $item->user_ditukars->created_at,
@@ -814,7 +833,16 @@ class Karyawan_DetailController extends Controller
             'username' => $user->username,
             'email_verified_at' => $user->email_verified_at,
             'data_karyawan_id' => $user->data_karyawan_id,
-            'foto_profil' => $user->foto_profil,
+            'foto_profil' => $user->foto_profiles ? [
+                'id' => $user->foto_profiles->id,
+                'user_id' => $user->foto_profiles->user_id,
+                'file_id' => $user->foto_profiles->file_id,
+                'nama' => $user->foto_profiles->nama,
+                'nama_file' => $user->foto_profiles->nama_file,
+                'path' => env('STORAGE_SERVER_DOMAIN') . $user->foto_profiles->path,
+                'ext' => $user->foto_profiles->ext,
+                'size' => $user->foto_profiles->size,
+            ] : null,
             'data_completion_step' => $user->data_completion_step,
             'status_aktif' => $user->status_aktif,
             'created_at' => $user->created_at,

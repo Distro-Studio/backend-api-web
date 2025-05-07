@@ -238,7 +238,8 @@ class DataRiwayatPerizinanController extends Controller
                 ], Response::HTTP_NOT_FOUND);
             }
 
-            $formattedData = $dataPerizinan->map(function ($dataPerizinan) {
+            $baseUrl = env('STORAGE_SERVER_DOMAIN');
+            $formattedData = $dataPerizinan->map(function ($dataPerizinan) use ($baseUrl) {
                 $userId = $dataPerizinan->users->id ?? null;
 
                 // Ambil max_order dari modul_verifikasis
@@ -266,7 +267,16 @@ class DataRiwayatPerizinanController extends Controller
                                 'username' => $verifikasiForOrder->users->username,
                                 'email_verified_at' => $verifikasiForOrder->users->email_verified_at,
                                 'data_karyawan_id' => $verifikasiForOrder->users->data_karyawan_id,
-                                'foto_profil' => $verifikasiForOrder->users->foto_profil,
+                                'foto_profil' => $verifikasiForOrder->users->foto_profiles ? [
+                                    'id' => $verifikasiForOrder->users->foto_profiles->id,
+                                    'user_id' => $verifikasiForOrder->users->foto_profiles->user_id,
+                                    'file_id' => $verifikasiForOrder->users->foto_profiles->file_id,
+                                    'nama' => $verifikasiForOrder->users->foto_profiles->nama,
+                                    'nama_file' => $verifikasiForOrder->users->foto_profiles->nama_file,
+                                    'path' => $baseUrl . $verifikasiForOrder->users->foto_profiles->path,
+                                    'ext' => $verifikasiForOrder->users->foto_profiles->ext,
+                                    'size' => $verifikasiForOrder->users->foto_profiles->size,
+                                ] : null,
                                 'data_completion_step' => $verifikasiForOrder->users->data_completion_step,
                                 'status_aktif' => $verifikasiForOrder->users->status_aktif,
                                 'created_at' => $verifikasiForOrder->users->created_at,
@@ -313,7 +323,16 @@ class DataRiwayatPerizinanController extends Controller
                         'username' => $dataPerizinan->users->username,
                         'email_verified_at' => $dataPerizinan->users->email_verified_at,
                         'data_karyawan_id' => $dataPerizinan->users->data_karyawan_id,
-                        'foto_profil' => $dataPerizinan->users->foto_profil,
+                        'foto_profil' => $dataPerizinan->users->foto_profiles ? [
+                            'id' => $dataPerizinan->users->foto_profiles->id,
+                            'user_id' => $dataPerizinan->users->foto_profiles->user_id,
+                            'file_id' => $dataPerizinan->users->foto_profiles->file_id,
+                            'nama' => $dataPerizinan->users->foto_profiles->nama,
+                            'nama_file' => $dataPerizinan->users->foto_profiles->nama_file,
+                            'path' => $baseUrl . $dataPerizinan->users->foto_profiles->path,
+                            'ext' => $dataPerizinan->users->foto_profiles->ext,
+                            'size' => $dataPerizinan->users->foto_profiles->size,
+                        ] : null,
                         'data_completion_step' => $dataPerizinan->users->data_completion_step,
                         'status_aktif' => $dataPerizinan->users->status_aktif,
                         'created_at' => $dataPerizinan->users->created_at,
@@ -357,6 +376,7 @@ class DataRiwayatPerizinanController extends Controller
                 return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data izin karyawan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
             }
 
+            $baseUrl = env('STORAGE_SERVER_DOMAIN');
             $formattedData = [
                 'id' => $dataIzin->id,
                 'user' => [
@@ -364,7 +384,16 @@ class DataRiwayatPerizinanController extends Controller
                     'nama' => $dataIzin->users->nama,
                     'email_verified_at' => $dataIzin->users->email_verified_at,
                     'data_karyawan_id' => $dataIzin->users->data_karyawan_id,
-                    'foto_profil' => $dataIzin->users->foto_profil,
+                    'foto_profil' => $dataIzin->users->foto_profiles ? [
+                        'id' => $dataIzin->users->foto_profiles->id,
+                        'user_id' => $dataIzin->users->foto_profiles->user_id,
+                        'file_id' => $dataIzin->users->foto_profiles->file_id,
+                        'nama' => $dataIzin->users->foto_profiles->nama,
+                        'nama_file' => $dataIzin->users->foto_profiles->nama_file,
+                        'path' => $baseUrl . $dataIzin->users->foto_profiles->path,
+                        'ext' => $dataIzin->users->foto_profiles->ext,
+                        'size' => $dataIzin->users->foto_profiles->size,
+                    ] : null,
                     'data_completion_step' => $dataIzin->users->data_completion_step,
                     'status_aktif' => $dataIzin->users->status_aktif,
                     'created_at' => $dataIzin->users->created_at,

@@ -187,7 +187,8 @@ class DataJadwalController extends Controller
             $nonShift = NonShift::first();
 
             $groupedSchedules = $jadwal->groupBy('user_id');
-            $result = $users->map(function ($user) use ($groupedSchedules, $date_range, $nonShift, $hariLibur, $request) {
+            $baseUrl = env('STORAGE_SERVER_DOMAIN');
+            $result = $users->map(function ($user) use ($groupedSchedules, $date_range, $nonShift, $hariLibur, $request, $baseUrl) {
                 $user_schedule_array = array_fill_keys($date_range, null);
 
                 // Mengisi user_schedule_array dengan jadwal yang sebenarnya
@@ -217,7 +218,16 @@ class DataJadwalController extends Controller
                                     'username' => $cutiForDate->users->username,
                                     'email_verified_at' => $cutiForDate->users->email_verified_at,
                                     'data_karyawan_id' => $cutiForDate->users->data_karyawan_id,
-                                    'foto_profil' => $cutiForDate->users->foto_profil,
+                                    'foto_profil' => $cutiForDate->users->foto_profiles ? [
+                                        'id' => $cutiForDate->users->foto_profiles->id,
+                                        'user_id' => $cutiForDate->users->foto_profiles->user_id,
+                                        'file_id' => $cutiForDate->users->foto_profiles->file_id,
+                                        'nama' => $cutiForDate->users->foto_profiles->nama,
+                                        'nama_file' => $cutiForDate->users->foto_profiles->nama_file,
+                                        'path' => $baseUrl . $cutiForDate->users->foto_profiles->path,
+                                        'ext' => $cutiForDate->users->foto_profiles->ext,
+                                        'size' => $cutiForDate->users->foto_profiles->size,
+                                    ] : null,
                                     'data_completion_step' => $cutiForDate->users->data_completion_step,
                                     'status_aktif' => $cutiForDate->users->status_aktif,
                                     'created_at' => $cutiForDate->users->created_at,
@@ -298,7 +308,16 @@ class DataJadwalController extends Controller
                                     'username' => $cutiForDate->users->username,
                                     'email_verified_at' => $cutiForDate->users->email_verified_at,
                                     'data_karyawan_id' => $cutiForDate->users->data_karyawan_id,
-                                    'foto_profil' => $cutiForDate->users->foto_profil,
+                                    'foto_profil' => $cutiForDate->users->foto_profiles ? [
+                                        'id' => $cutiForDate->users->foto_profiles->id,
+                                        'user_id' => $cutiForDate->users->foto_profiles->user_id,
+                                        'file_id' => $cutiForDate->users->foto_profiles->file_id,
+                                        'nama' => $cutiForDate->users->foto_profiles->nama,
+                                        'nama_file' => $cutiForDate->users->foto_profiles->nama_file,
+                                        'path' => $baseUrl . $cutiForDate->users->foto_profiles->path,
+                                        'ext' => $cutiForDate->users->foto_profiles->ext,
+                                        'size' => $cutiForDate->users->foto_profiles->size,
+                                    ] : null,
                                     'data_completion_step' => $cutiForDate->users->data_completion_step,
                                     'status_aktif' => $cutiForDate->users->status_aktif,
                                     'created_at' => $cutiForDate->users->created_at,
@@ -439,7 +458,16 @@ class DataJadwalController extends Controller
                         'username' => $user->username,
                         'email_verified_at' => $user->email_verified_at,
                         'data_karyawan_id' => $user->data_karyawan_id,
-                        'foto_profil' => $user->foto_profil,
+                        'foto_profil' => $user->foto_profiles ? [
+                            'id' => $user->foto_profiles->id,
+                            'user_id' => $user->foto_profiles->user_id,
+                            'file_id' => $user->foto_profiles->file_id,
+                            'nama' => $user->foto_profiles->nama,
+                            'nama_file' => $user->foto_profiles->nama_file,
+                            'path' => $baseUrl . $user->foto_profiles->path,
+                            'ext' => $user->foto_profiles->ext,
+                            'size' => $user->foto_profiles->size,
+                        ] : null,
                         'data_completion_step' => $user->data_completion_step,
                         'status_aktif' => $user->status_aktif,
                         'created_at' => $user->created_at,
@@ -942,6 +970,7 @@ class DataJadwalController extends Controller
                 }
             }
 
+            $baseUrl = env('STORAGE_SERVER_DOMAIN');
             return response()->json([
                 'status' => Response::HTTP_OK,
                 'message' => "Detail jadwal karyawan '{$user->nama}' berhasil ditampilkan.",
@@ -953,7 +982,16 @@ class DataJadwalController extends Controller
                         'username' => $user->username,
                         'email_verified_at' => $user->email_verified_at,
                         'data_karyawan_id' => $user->data_karyawan_id,
-                        'foto_profil' => $user->foto_profil,
+                        'foto_profil' => $user->foto_profiles ? [
+                            'id' => $user->foto_profiles->id,
+                            'user_id' => $user->foto_profiles->user_id,
+                            'file_id' => $user->foto_profiles->file_id,
+                            'nama' => $user->foto_profiles->nama,
+                            'nama_file' => $user->foto_profiles->nama_file,
+                            'path' => $baseUrl . $user->foto_profiles->path,
+                            'ext' => $user->foto_profiles->ext,
+                            'size' => $user->foto_profiles->size,
+                        ] : null,
                         'data_completion_step' => $user->data_completion_step,
                         'status_aktif' => $user->status_aktif,
                         'created_at' => $user->created_at,

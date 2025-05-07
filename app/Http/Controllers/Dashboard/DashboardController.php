@@ -279,7 +279,8 @@ class DashboardController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Tidak ada data lembur untuk hari ini.'), Response::HTTP_NOT_FOUND);
         }
 
-        $formattedData = $dataLembur->map(function ($lembur) {
+        $baseUrl = env('STORAGE_SERVER_DOMAIN');
+        $formattedData = $dataLembur->map(function ($lembur) use ($baseUrl) {
             return [
                 'id' => $lembur->users->data_karyawan_id,
                 'user' => [
@@ -288,7 +289,16 @@ class DashboardController extends Controller
                     'username' => $lembur->users->username,
                     'email_verified_at' => $lembur->users->email_verified_at,
                     'data_karyawan_id' => $lembur->users->data_karyawan_id,
-                    'foto_profil' => $lembur->users->foto_profil,
+                    'foto_profil' => $lembur->users->foto_profiles ? [
+                        'id' => $lembur->users->foto_profiles->id,
+                        'user_id' => $lembur->users->foto_profiles->user_id,
+                        'file_id' => $lembur->users->foto_profiles->file_id,
+                        'nama' => $lembur->users->foto_profiles->nama,
+                        'nama_file' => $lembur->users->foto_profiles->nama_file,
+                        'path' => $baseUrl . $lembur->users->foto_profiles->path,
+                        'ext' => $lembur->users->foto_profiles->ext,
+                        'size' => $lembur->users->foto_profiles->size,
+                    ] : null,
                     'data_completion_step' => $lembur->users->data_completion_step,
                     'status_aktif' => $lembur->users->status_aktif,
                     'created_at' => $lembur->users->created_at,

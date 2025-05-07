@@ -76,7 +76,8 @@ class MasaDiklatController extends Controller
                 ], Response::HTTP_NOT_FOUND);
             }
 
-            $formattedData = $dataKaryawan->map(function ($karyawan) use ($isSuperAdmin) {
+            $baseUrl = env('STORAGE_SERVER_DOMAIN');
+            $formattedData = $dataKaryawan->map(function ($karyawan) use ($isSuperAdmin, $baseUrl) {
                 $role = $karyawan->users->roles->first();
                 $joinedDiklat = PesertaDiklat::with('diklats')
                     ->where('peserta', $karyawan->user_id)
@@ -107,7 +108,16 @@ class MasaDiklatController extends Controller
                         'username' => $karyawan->users->username,
                         'email_verified_at' => $karyawan->users->email_verified_at,
                         'data_karyawan_id' => $karyawan->users->data_karyawan_id,
-                        'foto_profil' => $karyawan->users->foto_profil,
+                        'foto_profil' => $karyawan->users->foto_profiles ? [
+                            'id' => $karyawan->users->foto_profiles->id,
+                            'user_id' => $karyawan->users->foto_profiles->user_id,
+                            'file_id' => $karyawan->users->foto_profiles->file_id,
+                            'nama' => $karyawan->users->foto_profiles->nama,
+                            'nama_file' => $karyawan->users->foto_profiles->nama_file,
+                            'path' => $baseUrl . $karyawan->users->foto_profiles->path,
+                            'ext' => $karyawan->users->foto_profiles->ext,
+                            'size' => $karyawan->users->foto_profiles->size,
+                        ] : null,
                         'data_completion_step' => $karyawan->users->data_completion_step,
                         'status_aktif' => $karyawan->users->status_aktif,
                         'tgl_dinonaktifkan' => $karyawan->users->tgl_dinonaktifkan,

@@ -74,7 +74,8 @@ class TagihanPotonganController extends Controller
         }
 
         // Format data untuk output
-        $formattedData = $dataTagihan->map(function ($tagihanPotongan) {
+        $baseUrl = env('STORAGE_SERVER_DOMAIN');
+        $formattedData = $dataTagihan->map(function ($tagihanPotongan) use ($baseUrl) {
             return [
                 'id' => $tagihanPotongan->id,
                 'user' => $tagihanPotongan->tagihan_karyawans->users ? [
@@ -83,7 +84,16 @@ class TagihanPotonganController extends Controller
                     'username' => $tagihanPotongan->tagihan_karyawans->users->username,
                     'email_verified_at' => $tagihanPotongan->tagihan_karyawans->users->email_verified_at,
                     'data_karyawan_id' => $tagihanPotongan->tagihan_karyawans->users->data_karyawan_id,
-                    'foto_profil' => $tagihanPotongan->tagihan_karyawans->users->foto_profil,
+                    'foto_profil' => $tagihanPotongan->tagihan_karyawans->users->foto_profiles ? [
+                        'id' => $tagihanPotongan->tagihan_karyawans->users->foto_profiles->id,
+                        'user_id' => $tagihanPotongan->tagihan_karyawans->users->foto_profiles->user_id,
+                        'file_id' => $tagihanPotongan->tagihan_karyawans->users->foto_profiles->file_id,
+                        'nama' => $tagihanPotongan->tagihan_karyawans->users->foto_profiles->nama,
+                        'nama_file' => $tagihanPotongan->tagihan_karyawans->users->foto_profiles->nama_file,
+                        'path' => $baseUrl . $tagihanPotongan->tagihan_karyawans->users->foto_profiles->path,
+                        'ext' => $tagihanPotongan->tagihan_karyawans->users->foto_profiles->ext,
+                        'size' => $tagihanPotongan->tagihan_karyawans->users->foto_profiles->size,
+                    ] : null,
                     'data_completion_step' => $tagihanPotongan->tagihan_karyawans->users->data_completion_step,
                     'status_aktif' => $tagihanPotongan->tagihan_karyawans->users->status_aktif,
                     'created_at' => $tagihanPotongan->tagihan_karyawans->users->created_at,
@@ -188,6 +198,7 @@ class TagihanPotonganController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Tagihan potongan terkait tidak ditemukan.'), Response::HTTP_NOT_FOUND);
         }
 
+        $baseUrl = env('STORAGE_SERVER_DOMAIN');
         $formattedData = [
             'id' => $tagihanPotongan->id,
             'user' => $tagihanPotongan->tagihan_karyawans->users ? [
@@ -196,7 +207,16 @@ class TagihanPotonganController extends Controller
                 'username' => $tagihanPotongan->tagihan_karyawans->users->username,
                 'email_verified_at' => $tagihanPotongan->tagihan_karyawans->users->email_verified_at,
                 'data_karyawan_id' => $tagihanPotongan->tagihan_karyawans->users->data_karyawan_id,
-                'foto_profil' => $tagihanPotongan->tagihan_karyawans->users->foto_profil,
+                'foto_profil' => $tagihanPotongan->tagihan_karyawans->users->foto_profiles ? [
+                    'id' => $tagihanPotongan->tagihan_karyawans->users->foto_profiles->id,
+                    'user_id' => $tagihanPotongan->tagihan_karyawans->users->foto_profiles->user_id,
+                    'file_id' => $tagihanPotongan->tagihan_karyawans->users->foto_profiles->file_id,
+                    'nama' => $tagihanPotongan->tagihan_karyawans->users->foto_profiles->nama,
+                    'nama_file' => $tagihanPotongan->tagihan_karyawans->users->foto_profiles->nama_file,
+                    'path' => $baseUrl . $tagihanPotongan->tagihan_karyawans->users->foto_profiles->path,
+                    'ext' => $tagihanPotongan->tagihan_karyawans->users->foto_profiles->ext,
+                    'size' => $tagihanPotongan->tagihan_karyawans->users->foto_profiles->size,
+                ] : null,
                 'data_completion_step' => $tagihanPotongan->tagihan_karyawans->users->data_completion_step,
                 'status_aktif' => $tagihanPotongan->tagihan_karyawans->users->status_aktif,
                 'created_at' => $tagihanPotongan->tagihan_karyawans->users->created_at,
