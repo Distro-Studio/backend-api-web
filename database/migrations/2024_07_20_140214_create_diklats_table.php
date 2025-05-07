@@ -38,6 +38,7 @@ return new class extends Migration
             $table->foreignId('verifikator_1')->nullable()->constrained('users');
             $table->foreignId('verifikator_2')->nullable()->constrained('users');
             $table->text('alasan')->nullable();
+            $table->boolean('is_whitelist')->default(0); // 1 = Pasti ikut diklat
             $table->timestamps();
         });
     }
