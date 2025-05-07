@@ -364,97 +364,47 @@ class DiklatController extends Controller
 
         $data = $request->validated();
 
-        // $now = Carbon::now('Asia/Jakarta');
-        // $hPlusOne = $now->addDay()->startOfDay();
-
-        // $tglMulai = Carbon::createFromFormat('d-m-Y', $data['tgl_mulai'], 'Asia/Jakarta')->startOfDay();
-        // if ($tglMulai->lessThan($hPlusOne)) {
-        //     return response()->json([
-        //         'status' => Response::HTTP_BAD_REQUEST,
-        //         'message' => 'Tanggal mulai harus diisi mulai H+1 dari hari ini.'
-        //     ], Response::HTTP_BAD_REQUEST);
-        // }
-
         DB::beginTransaction();
         try {
-            $gambarUrl = null;
-            $berkas = null;
+            StorageServerHelper::login();
+            $berkasIds = [
+                'dokumen' => null,
+                'dokumen_diklat_1' => null,
+                'dokumen_diklat_2' => null,
+                'dokumen_diklat_3' => null,
+                'dokumen_diklat_4' => null,
+                'dokumen_diklat_5' => null,
+            ];
 
-            if ($request->hasFile('dokumen')) {
-                $authUser = Auth::user();
+            // Upload dokumen_diklat_1 s.d. dokumen_diklat_5 (sebagian boleh kosong)
+            $authUser = Auth::user();
+            foreach ($berkasIds as $field => $value) {
+                if ($request->hasFile($field)) {
+                    $file = $request->file($field);
+                    $random_filename = Str::random(20);
+                    $dataupload = StorageServerHelper::multipleUploadToServer($file, $random_filename);
 
-                // Login to the storage server
-                StorageServerHelper::login();
+                    // Simpan data berkas ke tabel berkas
+                    $berkas = Berkas::create([
+                        'user_id' => $authUser->id,
+                        'file_id' => $dataupload['id_file']['id'],
+                        'nama' => $random_filename,
+                        'kategori_berkas_id' => 2,
+                        'status_berkas_id' => 2,
+                        'path' => $dataupload['path'],
+                        'tgl_upload' => now('Asia/Jakarta'),
+                        'nama_file' => $dataupload['nama_file'],
+                        'ext' => $dataupload['ext'],
+                        'size' => $dataupload['size'],
+                    ]);
 
-                $file = $request->file('dokumen');
-
-                // Upload file using helper
-                $random_filename = Str::random(20);
-                $dataupload = StorageServerHelper::uploadToServer($request, $random_filename);
-                // $gambarUrl = $dataupload['path'];
-
-                $berkas = Berkas::create([
-                    'user_id' => $authUser->id,
-                    'file_id' => $dataupload['id_file']['id'],
-                    'nama' => $random_filename,
-                    'kategori_berkas_id' => 2, // umum
-                    'status_berkas_id' => 2,
-                    'path' => $dataupload['path'],
-                    'tgl_upload' => now(),
-                    'nama_file' => $dataupload['nama_file'],
-                    'ext' => $dataupload['ext'],
-                    'size' => $dataupload['size'],
-                ]);
-                if (!$berkas) {
-                    throw new Exception('Berkas gagal di upload.');
+                    // Simpan ID berkas ke urutan yang sesuai
+                    $berkasIds[$field] = $berkas->id;
+                    Log::info("Berkas dokumen pada kolom {$field} berhasil diupload.");
                 }
-
-                $gambarId = $berkas->id;
-
-                StorageServerHelper::logout();
             }
 
-            if ($request->hasFile(['dokumen_diklat_1', 'dokumen_diklat_2', 'dokumen_diklat_3', 'dokumen_diklat_4', 'dokumen_diklat_5'])) {
-                $authUser = Auth::user();
-                StorageServerHelper::login();
-
-                $berkasIds = [
-                    'dokumen_diklat_1' => null,
-                    'dokumen_diklat_2' => null,
-                    'dokumen_diklat_3' => null,
-                    'dokumen_diklat_4' => null,
-                    'dokumen_diklat_5' => null,
-                ];
-
-                // Proses penyimpanan berkas satu per satu, sesuai dengan field yang diterima (dokumen_diklat_1, dokumen_diklat_2, dokumen_diklat_3, dokumen_diklat_4, dokumen_diklat_5)
-                foreach ($berkasIds as $field => $value) {
-                    if ($request->hasFile($field)) {
-                        $file = $request->file($field);
-                        $random_filename = Str::random(20);
-                        $dataupload = StorageServerHelper::multipleUploadToServer($file, $random_filename);
-
-                        // Simpan data berkas ke tabel berkas
-                        $berkas = Berkas::create([
-                            'user_id' => $authUser->id,
-                            'file_id' => $dataupload['id_file']['id'],
-                            'nama' => $random_filename,
-                            'kategori_berkas_id' => 2,
-                            'status_berkas_id' => 2,
-                            'path' => $dataupload['path'],
-                            'tgl_upload' => now('Asia/Jakarta'),
-                            'nama_file' => $dataupload['nama_file'],
-                            'ext' => $dataupload['ext'],
-                            'size' => $dataupload['size'],
-                        ]);
-
-                        // Simpan ID berkas ke urutan yang sesuai
-                        $berkasIds[$field] = $berkas->id;
-                        Log::info("Berkas dokumen pada kolom {$field} berhasil diupload.");
-                    }
-                }
-
-                StorageServerHelper::logout();
-            }
+            StorageServerHelper::logout();
 
             $jamMulai = Carbon::createFromFormat('H:i:s', $data['jam_mulai'], 'Asia/Jakarta');
             $jamSelesai = Carbon::createFromFormat('H:i:s', $data['jam_selesai'], 'Asia/Jakarta');
@@ -475,7 +425,12 @@ class DiklatController extends Controller
             $durasi = $selisihJam * $totalHari;
 
             $diklat = Diklat::create([
-                'gambar' => $gambarId,
+                'gambar' => $berkasIds['dokumen'],
+                'dokumen_diklat_1' => $berkasIds['dokumen_diklat_1'],
+                'dokumen_diklat_2' => $berkasIds['dokumen_diklat_2'],
+                'dokumen_diklat_3' => $berkasIds['dokumen_diklat_3'],
+                'dokumen_diklat_4' => $berkasIds['dokumen_diklat_4'],
+                'dokumen_diklat_5' => $berkasIds['dokumen_diklat_5'],
                 'nama' => $data['nama'],
                 'kategori_diklat_id' => 1,
                 'status_diklat_id' => 1,
@@ -486,12 +441,7 @@ class DiklatController extends Controller
                 'jam_mulai' => $data['jam_mulai'],
                 'jam_selesai' => $data['jam_selesai'],
                 'durasi' => $durasi,
-                'lokasi' => $data['lokasi'],
-                'dokumen_diklat_1' => $berkasIds['dokumen_diklat_1'],
-                'dokumen_diklat_2' => $berkasIds['dokumen_diklat_2'],
-                'dokumen_diklat_3' => $berkasIds['dokumen_diklat_3'],
-                'dokumen_diklat_4' => $berkasIds['dokumen_diklat_4'],
-                'dokumen_diklat_5' => $berkasIds['dokumen_diklat_5'],
+                'lokasi' => $data['lokasi']
             ]);
 
             $userIds = $data['user_id'] ?? null;
