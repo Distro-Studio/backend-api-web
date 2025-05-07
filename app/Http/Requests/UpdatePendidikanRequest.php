@@ -25,13 +25,8 @@ class UpdatePendidikanRequest extends FormRequest
      */
     public function rules(): array
     {
-        $id = $this->route('id');
         return [
-            'label' => [
-                'required',
-                'string',
-                Rule::unique('kategori_pendidikans')->ignore($id),
-            ]
+            'label' => 'required|string'
         ];
     }
 

@@ -25,14 +25,8 @@ class UpdateUnitKerjaRequest extends FormRequest
      */
     public function rules(): array
     {
-        $id = $this->route('id');
         return [
-            'nama_unit' => [
-                'required',
-                'string',
-                'max:255',
-                Rule::unique('unit_kerjas')->ignore($id),
-            ],
+            'nama_unit' => 'required|string|max:225',
             'jenis_karyawan' => 'required|boolean',
             'kategori_unit_id' => 'required|exists:kategori_unit_kerjas,id'
         ];

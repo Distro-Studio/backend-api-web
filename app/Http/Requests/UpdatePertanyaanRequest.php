@@ -25,14 +25,9 @@ class UpdatePertanyaanRequest extends FormRequest
      */
     public function rules(): array
     {
-        $id = $this->route('id');
         return [
             'jenis_penilaian_id' => 'required|integer|exists:jenis_penilaians,id',
-            'pertanyaan' => [
-                'required',
-                'string',
-                Rule::unique('pertanyaans')->ignore($id),
-            ],
+            'pertanyaan' => 'required|string',
         ];
     }
 

@@ -25,14 +25,8 @@ class UpdateKelompokGajiRequest extends FormRequest
      */
     public function rules(): array
     {
-        $id = $this->route('id');
         return [
-            'nama_kelompok' => [
-                'required',
-                'string',
-                'max:255',
-                Rule::unique('kelompok_gajis')->ignore($id),
-            ],
+            'nama_kelompok' => 'required|string|max:225',
             'besaran_gaji' => 'required|numeric',
         ];
     }

@@ -25,14 +25,8 @@ class UpdatePTKPRequest extends FormRequest
      */
     public function rules(): array
     {
-        $id = $this->route('id');
         return [
-            'kode_ptkp' => [
-                'required',
-                'string',
-                'max:255',
-                Rule::unique('ptkps')->ignore($id),
-            ],
+            'kode_ptkp' => 'required|string|max:225',
             'kategori_ter_id' => 'required|integer|exists:kategori_ters,id',
             'nilai' => 'nullable|numeric',
         ];

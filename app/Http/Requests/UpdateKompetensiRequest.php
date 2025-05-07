@@ -25,14 +25,8 @@ class UpdateKompetensiRequest extends FormRequest
      */
     public function rules(): array
     {
-        $id = $this->route('id');
         return [
-            'nama_kompetensi' => [
-                'required',
-                'string',
-                'max:255',
-                Rule::unique('kompetensis')->ignore($id),
-            ],
+            'nama_kompetensi' => 'required|string|max:225',
             'jenis_kompetensi' => 'required|boolean',
             // 'tunjangan_kompetensi' => 'required|numeric',
             'nilai_bor' => 'required|numeric',

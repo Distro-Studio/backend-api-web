@@ -25,14 +25,8 @@ class UpdateShiftRequest extends FormRequest
      */
     public function rules(): array
     {
-        $id = $this->route('id');
         return [
-            'nama' => [
-                'required',
-                'string',
-                'max:255',
-                Rule::unique('shifts')->ignore($id),
-            ],
+            'nama' => 'required|string|max:225',
             'unit_kerja_id' => 'required|integer|exists:unit_kerjas,id',
             'jam_from' => 'required|string',
             'jam_to' => 'required|string',

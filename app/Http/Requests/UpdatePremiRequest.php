@@ -25,13 +25,8 @@ class UpdatePremiRequest extends FormRequest
      */
     public function rules(): array
     {
-        $id = $this->route('id');
         return [
-            'nama_premi' => [
-                'required',
-                'string',
-                Rule::unique('premis')->ignore($id),
-            ],
+            'nama_premi' => 'required|string',
             'kategori_potongan_id' => 'required|integer|exists:kategori_potongans,id',
             'jenis_premi' => 'required',
             'besaran_premi' => 'required|numeric',

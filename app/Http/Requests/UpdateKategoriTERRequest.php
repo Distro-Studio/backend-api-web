@@ -25,14 +25,8 @@ class UpdateKategoriTERRequest extends FormRequest
      */
     public function rules(): array
     {
-        $id = $this->route('id');
         return [
-            'nama_kategori_ter' => [
-                'required',
-                'string',
-                'max:255',
-                Rule::unique('kategori_ters')->ignore($id),
-            ],
+            'nama_kategori_ter' => 'required|string|max:225'
         ];
     }
 

@@ -25,14 +25,8 @@ class UpdateCutiRequest extends FormRequest
      */
     public function rules(): array
     {
-        $id = $this->route('id');
         return [
-            'nama' => [
-                'required',
-                'string',
-                'max:255',
-                Rule::unique('tipe_cutis')->ignore($id),
-            ],
+            'nama' => 'required|string|max:225',
             'kuota' => 'required|integer',
             'is_need_requirement' => 'required|boolean',
             'keterangan' => 'required|string|max:255',

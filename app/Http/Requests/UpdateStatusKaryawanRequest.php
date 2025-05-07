@@ -25,15 +25,8 @@ class UpdateStatusKaryawanRequest extends FormRequest
      */
     public function rules(): array
     {
-        $id = $this->route('id');
-
         return [
-            'label' => [
-                'required',
-                'string',
-                'max:255',
-                Rule::unique('status_karyawans')->ignore($id),
-            ],
+            'label' => 'required|string|max:225',
             'kategori_status_id' => 'required|exists:kategori_status_karyawans,id'
         ];
     }
