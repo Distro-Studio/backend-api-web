@@ -26,6 +26,9 @@ class DataKaryawanMedisController extends Controller
 
             $limit = $request->input('limit', 10);
             $karyawan = DataKaryawan::where('id', '!=', 1)
+                ->whereHas('users', function ($query) {
+                    $query->where('status_aktif', 2);
+                })
                 ->whereHas('kompetensis', function ($query) {
                     $query->where('jenis_kompetensi', 1); // Khusus karyawan medis
                 })
