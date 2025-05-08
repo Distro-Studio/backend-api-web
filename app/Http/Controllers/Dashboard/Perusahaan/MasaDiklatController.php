@@ -26,7 +26,11 @@ class MasaDiklatController extends Controller
             $isSuperAdmin = $loggedInUser->id == 1 || $loggedInUser->nama == 'Super Admin';
 
             $limit = $request->input('limit', 10);
-            $karyawan = DataKaryawan::where('id', '!=', 1)->orderBy('nik', 'asc');
+            $karyawan = DataKaryawan::where('id', '!=', 1)
+                ->whereHas('users', function ($query) {
+                    $query->where('status_aktif', 2);
+                })
+                ->orderBy('nik', 'asc');
             $filters = $request->all();
 
             if (isset($filters['less_than'])) {
