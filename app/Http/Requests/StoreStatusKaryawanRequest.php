@@ -26,6 +26,7 @@ class StoreStatusKaryawanRequest extends FormRequest
     {
         return [
             'label' => 'required|string|max:255|unique:status_karyawans,label',
+            'kategori_status_id' => 'required|exists:kategori_status_karyawans,id'
         ];
     }
 
@@ -35,7 +36,9 @@ class StoreStatusKaryawanRequest extends FormRequest
             'label.required' => 'Nama status karyawan tidak diperbolehkan kosong.',
             'label.string' => 'Nama status karyawan tidak diperbolehkan mengandung angka.',
             'label.unique' => 'Nama status karyawan tersebut sudah pernah dibuat.',
-            'label.max' => 'Nama status karyawan melebihi batas maksimum panjang karakter.'
+            'label.max' => 'Nama status karyawan melebihi batas maksimum panjang karakter.',
+            'kategori_status_id.required' => 'Kategori status karyawan tidak diperbolehkan kosong.',
+            'kategori_status_id.exists' => 'Kategori status karyawan tidak ditemukan.',
         ];
     }
 

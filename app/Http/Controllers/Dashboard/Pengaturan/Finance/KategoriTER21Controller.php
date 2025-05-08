@@ -93,12 +93,6 @@ class KategoriTER21Controller extends Controller
 
         $data = $request->validated();
 
-        // Validasi unique
-        $existingDataValidation = KategoriTer::where('nama_kategori_ter', $data['nama_kategori_ter'])->where('id', '!=', $id)->first();
-        if ($existingDataValidation) {
-            return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Nama kategori TER tersebut sudah pernah dibuat.'), Response::HTTP_BAD_REQUEST);
-        }
-
         $kategori_ter->update($data);
         $updatedKategori = $kategori_ter->fresh();
         $successMessage = "Data kategori TER '{$updatedKategori->nama_kategori_ter}' berhasil diubah.";

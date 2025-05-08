@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Dashboard\Karyawan\DetailKaryawan\Keluarga;
 
+use App\Helpers\LogHelper;
 use Carbon\Carbon;
 use App\Models\User;
 use App\Models\Notifikasi;
@@ -57,8 +58,13 @@ class Karyawan_KeluargaController extends Controller
                     'id' => $item->id,
                     'nama_keluarga' => $item->nama_keluarga,
                     'hubungan' => $item->hubungan,
-                    'pendidikan_terakhir' => $item->kategori_pendidikans,
                     'tgl_lahir' => $item->tgl_lahir,
+                    'tempat_lahir' => $item->tempat_lahir,
+                    'jenis_kelamin' => $item->jenis_kelamin,
+                    'kategori_agama_id' => $item->kategori_agamas,
+                    'kategori_darah_id' => $item->kategori_darahs,
+                    'no_rm' => $item->no_rm,
+                    'pendidikan_terakhir' => $item->kategori_pendidikans,
                     'status_hidup' => $item->status_hidup,
                     'pekerjaan' => $item->pekerjaan,
                     'no_hp' => $item->no_hp,
@@ -71,6 +77,7 @@ class Karyawan_KeluargaController extends Controller
                 ];
             });
 
+            $baseUrl = env('STORAGE_SERVER_DOMAIN');
             return response()->json([
                 'status' => Response::HTTP_OK,
                 'message' => "Detail keluarga karyawan '{$user->nama}' berhasil ditampilkan.",
@@ -82,7 +89,16 @@ class Karyawan_KeluargaController extends Controller
                         'username' => $user->username,
                         'email_verified_at' => $user->email_verified_at,
                         'data_karyawan_id' => $user->data_karyawan_id,
-                        'foto_profil' => $user->foto_profil,
+                        'foto_profil' => $user->foto_profiles ? [
+                            'id' => $user->foto_profiles->id,
+                            'user_id' => $user->foto_profiles->user_id,
+                            'file_id' => $user->foto_profiles->file_id,
+                            'nama' => $user->foto_profiles->nama,
+                            'nama_file' => $user->foto_profiles->nama_file,
+                            'path' => $baseUrl . $user->foto_profiles->path,
+                            'ext' => $user->foto_profiles->ext,
+                            'size' => $user->foto_profiles->size,
+                        ] : null,
                         'data_completion_step' => $user->data_completion_step,
                         'status_aktif' => $user->status_aktif,
                         'created_at' => $user->created_at,
@@ -167,6 +183,11 @@ class Karyawan_KeluargaController extends Controller
                 'pendidikan_terakhir' => $data['pendidikan_terakhir'],
                 'status_hidup' => $data['status_hidup'],
                 'tgl_lahir' => $data['tgl_lahir'],
+                'tempat_lahir' => $data['tempat_lahir'],
+                'jenis_kelamin' => $data['jenis_kelamin'],
+                'kategori_agama_id' => $data['kategori_agama_id'],
+                'kategori_darah_id' => $data['kategori_darah_id'],
+                'no_rm' => $data['no_rm'] ?? null,
                 'pekerjaan' => $data['pekerjaan'] ?? null,
                 'no_hp' => $data['no_hp'] ?? null,
                 'email' => $data['email'] ?? null,
@@ -177,11 +198,14 @@ class Karyawan_KeluargaController extends Controller
             ]);
             DB::commit();
 
+            LogHelper::logAction('Keluarga', 'create', $data_karyawan_id);
+
             return response()->json([
                 'status' => Response::HTTP_CREATED,
                 'message' => "Data keluarga '{$dataKeluarga->nama_keluarga}' dari karyawan '{$user->nama}' berhasil ditambahkan."
             ], Response::HTTP_CREATED);
         } catch (\Exception $e) {
+            DB::rollBack();
             Log::error('| Karyawan | - Error function storeDataKeluarga: ' . $e->getMessage());
             return response()->json([
                 'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
@@ -240,6 +264,7 @@ class Karyawan_KeluargaController extends Controller
                 }
             }
 
+            DB::beginTransaction();
             $dataKeluarga->update([
                 'nama_keluarga' => $validatedData['nama_keluarga'],
                 'hubungan' => $validatedData['hubungan'],
@@ -247,14 +272,24 @@ class Karyawan_KeluargaController extends Controller
                 'status_hidup' => $validatedData['status_hidup'],
                 'pekerjaan' => $validatedData['pekerjaan'] ?? $dataKeluarga->pekerjaan,
                 'tgl_lahir' => $validatedData['tgl_lahir'] ?? $dataKeluarga->tgl_lahir,
+                'tempat_lahir' => $validatedData['tempat_lahir'] ?? $dataKeluarga->tempat_lahir,
+                'jenis_kelamin' => $validatedData['jenis_kelamin'] ?? $dataKeluarga->jenis_kelamin,
+                'kategori_agama_id' => $validatedData['kategori_agama_id'] ?? $dataKeluarga->kategori_agama_id,
+                'kategori_darah_id' => $validatedData['kategori_darah_id'] ?? $dataKeluarga->kategori_darah_id,
+                'no_rm' => $validatedData['no_rm'] ?? $dataKeluarga->no_rm,
                 'no_hp' => $validatedData['no_hp'] ?? $dataKeluarga->no_hp,
                 'email' => $validatedData['email'] ?? $dataKeluarga->email,
                 'is_bpjs' => $validatedData['is_bpjs'],
                 'is_menikah' => $validatedData['is_menikah'],
             ]);
 
+            DB::commit();
+
+            LogHelper::logAction('Keluarga', 'update', $data_karyawan_id);
+
             return response()->json(new WithoutDataResource(Response::HTTP_OK, "Data keluarga '{$dataKeluarga->nama_keluarga}' dari karyawan '{$dataKeluarga->data_karyawans->users->nama}' berhasil diperbarui."), Response::HTTP_OK);
         } catch (\Exception $e) {
+            DB::rollBack();
             Log::error('| Karyawan | - Error function updateDataKeluarga: ' . $e->getMessage());
             return response()->json([
                 'status' => Response::HTTP_INTERNAL_SERVER_ERROR,

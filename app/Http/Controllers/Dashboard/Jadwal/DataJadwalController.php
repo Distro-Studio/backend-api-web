@@ -187,7 +187,8 @@ class DataJadwalController extends Controller
             $nonShift = NonShift::first();
 
             $groupedSchedules = $jadwal->groupBy('user_id');
-            $result = $users->map(function ($user) use ($groupedSchedules, $date_range, $nonShift, $hariLibur, $request) {
+            $baseUrl = env('STORAGE_SERVER_DOMAIN');
+            $result = $users->map(function ($user) use ($groupedSchedules, $date_range, $nonShift, $hariLibur, $request, $baseUrl) {
                 $user_schedule_array = array_fill_keys($date_range, null);
 
                 // Mengisi user_schedule_array dengan jadwal yang sebenarnya
@@ -217,7 +218,16 @@ class DataJadwalController extends Controller
                                     'username' => $cutiForDate->users->username,
                                     'email_verified_at' => $cutiForDate->users->email_verified_at,
                                     'data_karyawan_id' => $cutiForDate->users->data_karyawan_id,
-                                    'foto_profil' => $cutiForDate->users->foto_profil,
+                                    'foto_profil' => $cutiForDate->users->foto_profiles ? [
+                                        'id' => $cutiForDate->users->foto_profiles->id,
+                                        'user_id' => $cutiForDate->users->foto_profiles->user_id,
+                                        'file_id' => $cutiForDate->users->foto_profiles->file_id,
+                                        'nama' => $cutiForDate->users->foto_profiles->nama,
+                                        'nama_file' => $cutiForDate->users->foto_profiles->nama_file,
+                                        'path' => $baseUrl . $cutiForDate->users->foto_profiles->path,
+                                        'ext' => $cutiForDate->users->foto_profiles->ext,
+                                        'size' => $cutiForDate->users->foto_profiles->size,
+                                    ] : null,
                                     'data_completion_step' => $cutiForDate->users->data_completion_step,
                                     'status_aktif' => $cutiForDate->users->status_aktif,
                                     'created_at' => $cutiForDate->users->created_at,
@@ -298,7 +308,16 @@ class DataJadwalController extends Controller
                                     'username' => $cutiForDate->users->username,
                                     'email_verified_at' => $cutiForDate->users->email_verified_at,
                                     'data_karyawan_id' => $cutiForDate->users->data_karyawan_id,
-                                    'foto_profil' => $cutiForDate->users->foto_profil,
+                                    'foto_profil' => $cutiForDate->users->foto_profiles ? [
+                                        'id' => $cutiForDate->users->foto_profiles->id,
+                                        'user_id' => $cutiForDate->users->foto_profiles->user_id,
+                                        'file_id' => $cutiForDate->users->foto_profiles->file_id,
+                                        'nama' => $cutiForDate->users->foto_profiles->nama,
+                                        'nama_file' => $cutiForDate->users->foto_profiles->nama_file,
+                                        'path' => $baseUrl . $cutiForDate->users->foto_profiles->path,
+                                        'ext' => $cutiForDate->users->foto_profiles->ext,
+                                        'size' => $cutiForDate->users->foto_profiles->size,
+                                    ] : null,
                                     'data_completion_step' => $cutiForDate->users->data_completion_step,
                                     'status_aktif' => $cutiForDate->users->status_aktif,
                                     'created_at' => $cutiForDate->users->created_at,
@@ -439,7 +458,16 @@ class DataJadwalController extends Controller
                         'username' => $user->username,
                         'email_verified_at' => $user->email_verified_at,
                         'data_karyawan_id' => $user->data_karyawan_id,
-                        'foto_profil' => $user->foto_profil,
+                        'foto_profil' => $user->foto_profiles ? [
+                            'id' => $user->foto_profiles->id,
+                            'user_id' => $user->foto_profiles->user_id,
+                            'file_id' => $user->foto_profiles->file_id,
+                            'nama' => $user->foto_profiles->nama,
+                            'nama_file' => $user->foto_profiles->nama_file,
+                            'path' => $baseUrl . $user->foto_profiles->path,
+                            'ext' => $user->foto_profiles->ext,
+                            'size' => $user->foto_profiles->size,
+                        ] : null,
                         'data_completion_step' => $user->data_completion_step,
                         'status_aktif' => $user->status_aktif,
                         'created_at' => $user->created_at,
@@ -942,6 +970,7 @@ class DataJadwalController extends Controller
                 }
             }
 
+            $baseUrl = env('STORAGE_SERVER_DOMAIN');
             return response()->json([
                 'status' => Response::HTTP_OK,
                 'message' => "Detail jadwal karyawan '{$user->nama}' berhasil ditampilkan.",
@@ -953,7 +982,16 @@ class DataJadwalController extends Controller
                         'username' => $user->username,
                         'email_verified_at' => $user->email_verified_at,
                         'data_karyawan_id' => $user->data_karyawan_id,
-                        'foto_profil' => $user->foto_profil,
+                        'foto_profil' => $user->foto_profiles ? [
+                            'id' => $user->foto_profiles->id,
+                            'user_id' => $user->foto_profiles->user_id,
+                            'file_id' => $user->foto_profiles->file_id,
+                            'nama' => $user->foto_profiles->nama,
+                            'nama_file' => $user->foto_profiles->nama_file,
+                            'path' => $baseUrl . $user->foto_profiles->path,
+                            'ext' => $user->foto_profiles->ext,
+                            'size' => $user->foto_profiles->size,
+                        ] : null,
                         'data_completion_step' => $user->data_completion_step,
                         'status_aktif' => $user->status_aktif,
                         'created_at' => $user->created_at,
@@ -1257,20 +1295,37 @@ class DataJadwalController extends Controller
         }
     }
 
-    public function exportJadwalKaryawanShift()
+    public function exportJadwalKaryawanShift(Request $request)
     {
         try {
             if (!Gate::allows('export jadwalKaryawan')) {
                 return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
             }
 
-            $dataJadwal = Jadwal::all();
+            // Mendapatkan filter rentang tanggal
+            $tgl_mulai = $request->input('tgl_mulai');
+            $tgl_selesai = $request->input('tgl_selesai');
+            if (empty($tgl_mulai) || empty($tgl_selesai)) {
+                return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Periode tanggal mulai dan tanggal selesai tidak boleh kosong.'), Response::HTTP_BAD_REQUEST);
+            }
+
+            try {
+                $startDate = Carbon::createFromFormat('d-m-Y', $tgl_mulai)->startOfDay();
+                $endDate = Carbon::createFromFormat('d-m-Y', $tgl_selesai)->endOfDay();
+            } catch (\Exception $e) {
+                return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Tanggal yang dimasukkan tidak valid.'), Response::HTTP_BAD_REQUEST);
+            }
+
+            // Ambil data jadwal berdasarkan rentang tanggal
+            $dataJadwal = Jadwal::whereBetween('tgl_mulai', [$startDate, $endDate])
+                ->orWhereBetween('tgl_selesai', [$startDate, $endDate])
+                ->get();
             if ($dataJadwal->isEmpty()) {
                 return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Tidak ada data jadwal karyawan shift yang tersedia untuk diekspor.'), Response::HTTP_NOT_FOUND);
             }
 
             try {
-                return Excel::download(new JadwalShiftExport(), 'jadwal-shift-karyawan.xls');
+                return Excel::download(new JadwalShiftExport($startDate, $endDate), 'jadwal-shift-karyawan.xls');
             } catch (\Throwable $e) {
                 return response()->json(new WithoutDataResource(Response::HTTP_INTERNAL_SERVER_ERROR, 'Maaf sepertinya terjadi error. Pesan: ' . $e->getMessage()), Response::HTTP_INTERNAL_SERVER_ERROR);
             }
@@ -1283,22 +1338,37 @@ class DataJadwalController extends Controller
         }
     }
 
-    public function exportJadwalKaryawanNonShift()
+    public function exportJadwalKaryawanNonShift(Request $request)
     {
         try {
             if (!Gate::allows('export jadwalKaryawan')) {
                 return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
             }
 
-            $jadwalNonShift = NonShift::all();
-            if ($jadwalNonShift->isEmpty()) {
-                return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Tidak ada data jadwal non shift karyawan yang tersedia untuk diekspor.'), Response::HTTP_NOT_FOUND);
+            // Mendapatkan filter rentang tanggal
+            $tgl_mulai = $request->input('tgl_mulai');
+            $tgl_selesai = $request->input('tgl_selesai');
+            if (empty($tgl_mulai) || empty($tgl_selesai)) {
+                return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Periode tanggal mulai dan tanggal selesai tidak boleh kosong.'), Response::HTTP_BAD_REQUEST);
             }
 
             try {
-                return Excel::download(new JadwalNonShiftExport(), 'jadwal-non-shift-karyawan.xls');
+                $startDate = Carbon::createFromFormat('d-m-Y', $tgl_mulai)->startOfDay();
+                $endDate = Carbon::createFromFormat('d-m-Y', $tgl_selesai)->endOfDay();
+            } catch (\Exception $e) {
+                return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Tanggal yang dimasukkan tidak valid.'), Response::HTTP_BAD_REQUEST);
+            }
+
+            // Ambil data jadwal non-shift berdasarkan rentang tanggal
+            // $jadwalNonShift = NonShift::whereBetween('created_at', [$startDate, $endDate])->get();
+            // if ($jadwalNonShift->isEmpty()) {
+            //     return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Tidak ada data jadwal non shift karyawan yang tersedia untuk diekspor.'), Response::HTTP_NOT_FOUND);
+            // }
+
+            try {
+                return Excel::download(new JadwalNonShiftExport($startDate, $endDate), 'jadwal-non-shift-karyawan.xls');
             } catch (\Throwable $e) {
-                return response()->json(new WithoutDataResource(Response::HTTP_INTERNAL_SERVER_ERROR, 'Maaf sepertinya terjadi error. Pesan: ' . $e->getMessage()), Response::HTTP_INTERNAL_SERVER_ERROR);
+                return response()->json(new WithoutDataResource(Response::HTTP_INTERNAL_SERVER_ERROR, 'Maaf sepertinya terjadi error. Pesan: ' . $e->getMessage() . ' Line: ' . $e->getLine()), Response::HTTP_INTERNAL_SERVER_ERROR);
             }
         } catch (\Exception $e) {
             Log::error('| Jadwal | - Error saat export data jadwal karyawan non shift: ' . $e->getMessage());

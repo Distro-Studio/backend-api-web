@@ -417,7 +417,8 @@ class DataTukarJadwalController extends Controller
                 return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data penukaran jadwal karyawan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
             }
 
-            $formattedData = $dataTukarJadwal->map(function ($tukar_jadwal) {
+            $baseUrl = env('STORAGE_SERVER_DOMAIN');
+            $formattedData = $dataTukarJadwal->map(function ($tukar_jadwal) use ($baseUrl) {
                 $userId_karyawan_pengajuan = $tukar_jadwal->user_pengajuans->id ?? null;
                 $userId_karyawan_ditukar = $tukar_jadwal->user_ditukars->id ?? null;
 
@@ -443,7 +444,16 @@ class DataTukarJadwalController extends Controller
                             'username' => $verifikasiForOrder->users->username,
                             'email_verified_at' => $verifikasiForOrder->users->email_verified_at,
                             'data_karyawan_id' => $verifikasiForOrder->users->data_karyawan_id,
-                            'foto_profil' => $verifikasiForOrder->users->foto_profil,
+                            'foto_profil' => $verifikasiForOrder->users->foto_profiles ? [
+                                'id' => $verifikasiForOrder->users->foto_profiles->id,
+                                'user_id' => $verifikasiForOrder->users->foto_profiles->user_id,
+                                'file_id' => $verifikasiForOrder->users->foto_profiles->file_id,
+                                'nama' => $verifikasiForOrder->users->foto_profiles->nama,
+                                'nama_file' => $verifikasiForOrder->users->foto_profiles->nama_file,
+                                'path' => $baseUrl . $verifikasiForOrder->users->foto_profiles->path,
+                                'ext' => $verifikasiForOrder->users->foto_profiles->ext,
+                                'size' => $verifikasiForOrder->users->foto_profiles->size,
+                            ] : null,
                             'data_completion_step' => $verifikasiForOrder->users->data_completion_step,
                             'status_aktif' => $verifikasiForOrder->users->status_aktif,
                             'created_at' => $verifikasiForOrder->users->created_at,
@@ -484,7 +494,16 @@ class DataTukarJadwalController extends Controller
                             'username' => $verifikasiForOrder->users->username,
                             'email_verified_at' => $verifikasiForOrder->users->email_verified_at,
                             'data_karyawan_id' => $verifikasiForOrder->users->data_karyawan_id,
-                            'foto_profil' => $verifikasiForOrder->users->foto_profil,
+                            'foto_profil' => $verifikasiForOrder->users->foto_profiles ? [
+                                'id' => $verifikasiForOrder->users->foto_profiles->id,
+                                'user_id' => $verifikasiForOrder->users->foto_profiles->user_id,
+                                'file_id' => $verifikasiForOrder->users->foto_profiles->file_id,
+                                'nama' => $verifikasiForOrder->users->foto_profiles->nama,
+                                'nama_file' => $verifikasiForOrder->users->foto_profiles->nama_file,
+                                'path' => $baseUrl . $verifikasiForOrder->users->foto_profiles->path,
+                                'ext' => $verifikasiForOrder->users->foto_profiles->ext,
+                                'size' => $verifikasiForOrder->users->foto_profiles->size,
+                            ] : null,
                             'data_completion_step' => $verifikasiForOrder->users->data_completion_step,
                             'status_aktif' => $verifikasiForOrder->users->status_aktif,
                             'created_at' => $verifikasiForOrder->users->created_at,
@@ -518,7 +537,16 @@ class DataTukarJadwalController extends Controller
                         'nama' => $tukar_jadwal->user_pengajuans->nama,
                         'email_verified_at' => $tukar_jadwal->user_pengajuans->email_verified_at,
                         'data_karyawan_id' => $tukar_jadwal->user_pengajuans->data_karyawan_id,
-                        'foto_profil' => $tukar_jadwal->user_pengajuans->foto_profil,
+                        'foto_profil' => $tukar_jadwal->user_pengajuans->foto_profiles ? [
+                            'id' => $tukar_jadwal->user_pengajuans->foto_profiles->id,
+                            'user_id' => $tukar_jadwal->user_pengajuans->foto_profiles->user_id,
+                            'file_id' => $tukar_jadwal->user_pengajuans->foto_profiles->file_id,
+                            'nama' => $tukar_jadwal->user_pengajuans->foto_profiles->nama,
+                            'nama_file' => $tukar_jadwal->user_pengajuans->foto_profiles->nama_file,
+                            'path' => $baseUrl . $tukar_jadwal->user_pengajuans->foto_profiles->path,
+                            'ext' => $tukar_jadwal->user_pengajuans->foto_profiles->ext,
+                            'size' => $tukar_jadwal->user_pengajuans->foto_profiles->size,
+                        ] : null,
                         'data_completion_step' => $tukar_jadwal->user_pengajuans->data_completion_step,
                         'status_aktif' => $tukar_jadwal->user_pengajuans->status_aktif,
                         'created_at' => $tukar_jadwal->user_pengajuans->created_at,
@@ -530,7 +558,16 @@ class DataTukarJadwalController extends Controller
                         'nama' => $tukar_jadwal->user_ditukars->nama,
                         'email_verified_at' => $tukar_jadwal->user_ditukars->email_verified_at,
                         'data_karyawan_id' => $tukar_jadwal->user_ditukars->data_karyawan_id,
-                        'foto_profil' => $tukar_jadwal->user_ditukars->foto_profil,
+                        'foto_profil' => $tukar_jadwal->user_ditukars->foto_profiles ? [
+                            'id' => $tukar_jadwal->user_ditukars->foto_profiles->id,
+                            'user_id' => $tukar_jadwal->user_ditukars->foto_profiles->user_id,
+                            'file_id' => $tukar_jadwal->user_ditukars->foto_profiles->file_id,
+                            'nama' => $tukar_jadwal->user_ditukars->foto_profiles->nama,
+                            'nama_file' => $tukar_jadwal->user_ditukars->foto_profiles->nama_file,
+                            'path' => $baseUrl . $tukar_jadwal->user_ditukars->foto_profiles->path,
+                            'ext' => $tukar_jadwal->user_ditukars->foto_profiles->ext,
+                            'size' => $tukar_jadwal->user_ditukars->foto_profiles->size,
+                        ] : null,
                         'data_completion_step' => $tukar_jadwal->user_ditukars->data_completion_step,
                         'status_aktif' => $tukar_jadwal->user_ditukars->status_aktif,
                         'created_at' => $tukar_jadwal->user_ditukars->created_at,
@@ -785,6 +822,7 @@ class DataTukarJadwalController extends Controller
             $verifikator_1 = $tukarJadwal->verifikator_1_users;
             $verifikator_2 = $tukarJadwal->verifikator_2_admins;
 
+            $baseUrl = env('STORAGE_SERVER_DOMAIN');
             $formattedData = [
                 'id' => $tukarJadwal->id,
                 'tanggal_pengajuan' => $tukarJadwal->created_at,
@@ -796,7 +834,16 @@ class DataTukarJadwalController extends Controller
                     'nama' => $userPengajuan->nama,
                     'email_verified_at' => $userPengajuan->email_verified_at,
                     'data_karyawan_id' => $userPengajuan->data_karyawan_id,
-                    'foto_profil' => $userPengajuan->foto_profil,
+                    'foto_profil' => $userPengajuan->foto_profiles ? [
+                        'id' => $userPengajuan->foto_profiles->id,
+                        'user_id' => $userPengajuan->foto_profiles->user_id,
+                        'file_id' => $userPengajuan->foto_profiles->file_id,
+                        'nama' => $userPengajuan->foto_profiles->nama,
+                        'nama_file' => $userPengajuan->foto_profiles->nama_file,
+                        'path' => $baseUrl . $userPengajuan->foto_profiles->path,
+                        'ext' => $userPengajuan->foto_profiles->ext,
+                        'size' => $userPengajuan->foto_profiles->size,
+                    ] : null,
                     'data_completion_step' => $userPengajuan->data_completion_step,
                     'status_aktif' => $userPengajuan->status_aktif,
                     'created_at' => $userPengajuan->created_at,
@@ -807,7 +854,16 @@ class DataTukarJadwalController extends Controller
                     'nama' => $userDitukar->nama,
                     'email_verified_at' => $userDitukar->email_verified_at,
                     'data_karyawan_id' => $userDitukar->data_karyawan_id,
-                    'foto_profil' => $userDitukar->foto_profil,
+                    'foto_profil' => $userDitukar->foto_profiles ? [
+                        'id' => $userDitukar->foto_profiles->id,
+                        'user_id' => $userDitukar->foto_profiles->user_id,
+                        'file_id' => $userDitukar->foto_profiles->file_id,
+                        'nama' => $userDitukar->foto_profiles->nama,
+                        'nama_file' => $userDitukar->foto_profiles->nama_file,
+                        'path' => $baseUrl . $userDitukar->foto_profiles->path,
+                        'ext' => $userDitukar->foto_profiles->ext,
+                        'size' => $userDitukar->foto_profiles->size,
+                    ] : null,
                     'data_completion_step' => $userDitukar->data_completion_step,
                     'status_aktif' => $userDitukar->status_aktif,
                     'created_at' => $userDitukar->created_at,
@@ -838,7 +894,16 @@ class DataTukarJadwalController extends Controller
                     'nama' => $verifikator_1->nama,
                     'email_verified_at' => $verifikator_1->email_verified_at,
                     'data_karyawan_id' => $verifikator_1->data_karyawan_id,
-                    'foto_profil' => $verifikator_1->foto_profil,
+                    'foto_profil' => $verifikator_1->foto_profiles ? [
+                        'id' => $verifikator_1->foto_profiles->id,
+                        'user_id' => $verifikator_1->foto_profiles->user_id,
+                        'file_id' => $verifikator_1->foto_profiles->file_id,
+                        'nama' => $verifikator_1->foto_profiles->nama,
+                        'nama_file' => $verifikator_1->foto_profiles->nama_file,
+                        'path' => $baseUrl . $verifikator_1->foto_profiles->path,
+                        'ext' => $verifikator_1->foto_profiles->ext,
+                        'size' => $verifikator_1->foto_profiles->size,
+                    ] : null,
                     'data_completion_step' => $verifikator_1->data_completion_step,
                     'status_aktif' => $verifikator_1->status_aktif,
                     'created_at' => $verifikator_1->created_at,
@@ -849,7 +914,16 @@ class DataTukarJadwalController extends Controller
                     'nama' => $verifikator_2->nama,
                     'email_verified_at' => $verifikator_2->email_verified_at,
                     'data_karyawan_id' => $verifikator_2->data_karyawan_id,
-                    'foto_profil' => $verifikator_2->foto_profil,
+                    'foto_profil' => $verifikator_2->foto_profiles ? [
+                        'id' => $verifikator_2->foto_profiles->id,
+                        'user_id' => $verifikator_2->foto_profiles->user_id,
+                        'file_id' => $verifikator_2->foto_profiles->file_id,
+                        'nama' => $verifikator_2->foto_profiles->nama,
+                        'nama_file' => $verifikator_2->foto_profiles->nama_file,
+                        'path' => $baseUrl . $verifikator_2->foto_profiles->path,
+                        'ext' => $verifikator_2->foto_profiles->ext,
+                        'size' => $verifikator_2->foto_profiles->size,
+                    ] : null,
                     'data_completion_step' => $verifikator_2->data_completion_step,
                     'status_aktif' => $verifikator_2->status_aktif,
                     'created_at' => $verifikator_2->created_at,

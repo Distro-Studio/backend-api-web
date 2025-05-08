@@ -87,6 +87,7 @@ class UpdateAndResetReward extends Command
         $endOfMonth = Carbon::createFromDate($currentYear, $currentMonth, Carbon::now()->daysInMonth)->format('Y-m-d');
 
         $karyawanDenganCutiUserIds = Cuti::where('status_cuti_id', 4)
+            ->where('cuti_administratif', 0)
             ->where(function ($query) use ($startOfMonth, $endOfMonth) {
                 $query->whereRaw('STR_TO_DATE(tgl_from, "%d-%m-%Y") <= ?', [$endOfMonth])
                     ->whereRaw('STR_TO_DATE(tgl_to, "%d-%m-%Y") >= ?', [$startOfMonth]);

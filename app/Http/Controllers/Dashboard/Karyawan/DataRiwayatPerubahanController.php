@@ -22,6 +22,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
+use Illuminate\Support\Facades\DB;
 
 class DataRiwayatPerubahanController extends Controller
 {
@@ -237,42 +238,115 @@ class DataRiwayatPerubahanController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data perubahan karyawan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
         }
 
-        $formattedData = $dataPerubahan->map(function ($data_perubahan) {
+        $baseUrl = env('STORAGE_SERVER_DOMAIN');
+        $formattedData = $dataPerubahan->map(function ($data_perubahan) use ($baseUrl) {
             $relasiUser = $data_perubahan->data_karyawans->users ?? null;
             $relasiVerifikator = $data_perubahan->verifikator_1_users ?? null;
 
             $originalData = $data_perubahan->original_data ?? null;
             $updatedData = $data_perubahan->updated_data;
 
-            if ($data_perubahan->jenis_perubahan === 'Keluarga') {
-                if (is_array($originalData)) {
-                    foreach ($originalData as &$item) {
-                        if (isset($item['pendidikan_terakhir'])) {
-                            $item['pendidikan_terakhir'] = KategoriPendidikan::find($item['pendidikan_terakhir']) ?? null;
-                        }
-                    }
-                }
+            // if ($data_perubahan->jenis_perubahan === 'Keluarga') {
+            //     if (is_array($originalData)) {
+            //         foreach ($originalData as &$item) {
+            //             if (isset($item['pendidikan_terakhir'])) {
+            //                 $item['pendidikan_terakhir'] = KategoriPendidikan::find($item['pendidikan_terakhir']) ?? null;
+            //             }
+            //         }
+            //     }
 
-                if (is_array($updatedData)) {
-                    foreach ($updatedData as &$item) {
-                        if (isset($item['pendidikan_terakhir'])) {
-                            $item['pendidikan_terakhir'] = KategoriPendidikan::find($item['pendidikan_terakhir']) ?? null;
+            //     if (is_array($updatedData)) {
+            //         foreach ($updatedData as &$item) {
+            //             if (isset($item['pendidikan_terakhir'])) {
+            //                 $item['pendidikan_terakhir'] = KategoriPendidikan::find($item['pendidikan_terakhir']) ?? null;
+            //             }
+            //         }
+            //     }
+
+
+            //     if (is_array($originalData)) {
+            //         foreach ($originalData as &$item) {
+            //             if (isset($item['kategori_agama_id'])) {
+            //                 $item['kategori_agama_id'] = KategoriAgama::find($item['kategori_agama_id']) ?? null;
+            //             }
+            //         }
+            //     }
+
+            //     if (is_array($updatedData)) {
+            //         foreach ($updatedData as &$item) {
+            //             if (isset($item['kategori_agama_id'])) {
+            //                 $item['kategori_agama_id'] = KategoriAgama::find($item['kategori_agama_id']) ?? null;
+            //             }
+            //         }
+            //     }
+
+            //     if (is_array($originalData)) {
+            //         foreach ($originalData as &$item) {
+            //             if (isset($item['kategori_darah_id'])) {
+            //                 $item['kategori_darah_id'] = KategoriDarah::find($item['kategori_darah_id']) ?? null;
+            //             }
+            //         }
+            //     }
+
+            //     if (is_array($updatedData)) {
+            //         foreach ($updatedData as &$item) {
+            //             if (isset($item['kategori_darah_id'])) {
+            //                 $item['kategori_darah_id'] = KategoriDarah::find($item['kategori_darah_id']) ?? null;
+            //             }
+            //         }
+            //     }
+            // }
+
+            if ($data_perubahan->jenis_perubahan === 'Keluarga') {
+                // Array yang berisi kolom-kolom yang perlu diproses
+                $columnsToUpdate = [
+                    'kategori_agama_id' => KategoriAgama::class,
+                    'kategori_darah_id' => KategoriDarah::class,
+                    'pendidikan_terakhir' => KategoriPendidikan::class,
+                ];
+
+                // Fungsi untuk memproses setiap kolom dalam $columnsToUpdate
+                foreach (['originalData', 'updatedData'] as $dataType) {
+                    if (is_array($data_perubahan->{$dataType})) {
+                        foreach ($data_perubahan->{$dataType} as &$item) {
+                            foreach ($columnsToUpdate as $column => $modelClass) {
+                                if (isset($item[$column])) {
+                                    $item[$column] = $modelClass::find($item[$column]) ?? null;
+                                }
+                            }
                         }
                     }
                 }
             }
 
+            // if ($data_perubahan->jenis_perubahan === 'Personal') {
+            //     if (in_array($data_perubahan->kolom, ['agama', 'golongan_darah', 'pendidikan_terakhir'])) {
+            //         if ($data_perubahan->kolom === 'agama') {
+            //             $originalData = KategoriAgama::find($originalData) ?? $originalData;
+            //             $updatedData = KategoriAgama::find($updatedData) ?? $updatedData;
+            //         } elseif ($data_perubahan->kolom === 'golongan_darah') {
+            //             $originalData = KategoriDarah::find($originalData) ?? $originalData;
+            //             $updatedData = KategoriDarah::find($updatedData) ?? $updatedData;
+            //         } elseif ($data_perubahan->kolom === 'pendidikan_terakhir') {
+            //             $originalData = KategoriPendidikan::find($originalData) ?? $originalData;
+            //             $updatedData = KategoriPendidikan::find($updatedData) ?? $updatedData;
+            //         }
+            //     }
+            // }
+
             if ($data_perubahan->jenis_perubahan === 'Personal') {
-                if (in_array($data_perubahan->kolom, ['agama', 'golongan_darah', 'pendidikan_terakhir'])) {
-                    if ($data_perubahan->kolom === 'agama') {
-                        $originalData = KategoriAgama::find($originalData) ?? $originalData;
-                        $updatedData = KategoriAgama::find($updatedData) ?? $updatedData;
-                    } elseif ($data_perubahan->kolom === 'golongan_darah') {
-                        $originalData = KategoriDarah::find($originalData) ?? $originalData;
-                        $updatedData = KategoriDarah::find($updatedData) ?? $updatedData;
-                    } elseif ($data_perubahan->kolom === 'pendidikan_terakhir') {
-                        $originalData = KategoriPendidikan::find($originalData) ?? $originalData;
-                        $updatedData = KategoriPendidikan::find($updatedData) ?? $updatedData;
+                // Array yang berisi kolom-kolom yang perlu diproses
+                $columnsToUpdate = [
+                    'agama' => KategoriAgama::class,
+                    'golongan_darah' => KategoriDarah::class,
+                    'pendidikan_terakhir' => KategoriPendidikan::class,
+                ];
+
+                // Memproses originalData dan updatedData dalam loop untuk setiap kolom
+                foreach (['originalData', 'updatedData'] as $dataType) {
+                    if (in_array($data_perubahan->kolom, array_keys($columnsToUpdate))) {
+                        $modelClass = $columnsToUpdate[$data_perubahan->kolom];
+                        $$dataType = $modelClass::find($$dataType) ?? $$dataType;
                     }
                 }
             }
@@ -299,7 +373,16 @@ class DataRiwayatPerubahanController extends Controller
                         'username' => $verifikasiForOrder->users->username,
                         'email_verified_at' => $verifikasiForOrder->users->email_verified_at,
                         'data_karyawan_id' => $verifikasiForOrder->users->data_karyawan_id,
-                        'foto_profil' => $verifikasiForOrder->users->foto_profil,
+                        'foto_profil' => $verifikasiForOrder->users->foto_profiles ? [
+                            'id' => $verifikasiForOrder->users->foto_profiles->id,
+                            'user_id' => $verifikasiForOrder->users->foto_profiles->user_id,
+                            'file_id' => $verifikasiForOrder->users->foto_profiles->file_id,
+                            'nama' => $verifikasiForOrder->users->foto_profiles->nama,
+                            'nama_file' => $verifikasiForOrder->users->foto_profiles->nama_file,
+                            'path' => $baseUrl . $verifikasiForOrder->users->foto_profiles->path,
+                            'ext' => $verifikasiForOrder->users->foto_profiles->ext,
+                            'size' => $verifikasiForOrder->users->foto_profiles->size,
+                        ] : null,
                         'data_completion_step' => $verifikasiForOrder->users->data_completion_step,
                         'status_aktif' => $verifikasiForOrder->users->status_aktif,
                         'created_at' => $verifikasiForOrder->users->created_at,
@@ -330,7 +413,16 @@ class DataRiwayatPerubahanController extends Controller
                     'username' => $relasiUser->username,
                     'email_verified_at' => $relasiUser->email_verified_at,
                     'data_karyawan_id' => $relasiUser->data_karyawan_id,
-                    'foto_profil' => $relasiUser->foto_profil,
+                    'foto_profil' => $relasiUser->foto_profiles ? [
+                        'id' => $relasiUser->foto_profiles->id,
+                        'user_id' => $relasiUser->foto_profiles->user_id,
+                        'file_id' => $relasiUser->foto_profiles->file_id,
+                        'nama' => $relasiUser->foto_profiles->nama,
+                        'nama_file' => $relasiUser->foto_profiles->nama_file,
+                        'path' => $baseUrl . $relasiUser->foto_profiles->path,
+                        'ext' => $relasiUser->foto_profiles->ext,
+                        'size' => $relasiUser->foto_profiles->size,
+                    ] : null,
                     'data_completion_step' => $relasiUser->data_completion_step,
                     'status_aktif' => $relasiUser->status_aktif,
                     'created_at' => $relasiUser->created_at,
@@ -346,7 +438,16 @@ class DataRiwayatPerubahanController extends Controller
                     'nama' => $relasiVerifikator->nama,
                     'email_verified_at' => $relasiVerifikator->email_verified_at,
                     'data_karyawan_id' => $relasiVerifikator->data_karyawan_id,
-                    'foto_profil' => $relasiVerifikator->foto_profil,
+                    'foto_profil' => $relasiVerifikator->foto_profiles ? [
+                        'id' => $relasiVerifikator->foto_profiles->id,
+                        'user_id' => $relasiVerifikator->foto_profiles->user_id,
+                        'file_id' => $relasiVerifikator->foto_profiles->file_id,
+                        'nama' => $relasiVerifikator->foto_profiles->nama,
+                        'nama_file' => $relasiVerifikator->foto_profiles->nama_file,
+                        'path' => $baseUrl . $relasiVerifikator->foto_profiles->path,
+                        'ext' => $relasiVerifikator->foto_profiles->ext,
+                        'size' => $relasiVerifikator->foto_profiles->size,
+                    ] : null,
                     'data_completion_step' => $relasiVerifikator->data_completion_step,
                     'status_aktif' => $relasiVerifikator->status_aktif,
                     'created_at' => $relasiVerifikator->created_at,
@@ -415,6 +516,7 @@ class DataRiwayatPerubahanController extends Controller
 
         $status_perubahan_id = $riwayat->status_perubahan_id;
 
+        DB::beginTransaction();
         // Logika verifikasi disetujui
         if ($request->has('verifikasi_disetujui') && $request->verifikasi_disetujui == 1) {
             if ($status_perubahan_id == 1) {
@@ -446,7 +548,9 @@ class DataRiwayatPerubahanController extends Controller
             } else {
                 return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Riwayat perubahan '{$riwayat->kolom}' tidak dalam status untuk ditolak."), Response::HTTP_BAD_REQUEST);
             }
+            DB::commit();
         } else {
+            DB::rollBack();
             return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Aksi tidak valid.'), Response::HTTP_BAD_REQUEST);
         }
     }
@@ -510,8 +614,13 @@ class DataRiwayatPerubahanController extends Controller
                             'data_karyawan_id' => $riwayat->data_karyawan_id,
                             'nama_keluarga' => $update['nama_keluarga'],
                             'hubungan' => $update['hubungan'],
-                            'pendidikan_terakhir' => $update['pendidikan_terakhir'],
                             'tgl_lahir' => $update['tgl_lahir'],
+                            'tempat_lahir' => $update['tempat_lahir'],
+                            'jenis_kelamin' => $update['jenis_kelamin'],
+                            'kategori_agama_id' => $update['kategori_agama_id'],
+                            'kategori_darah_id' => $update['kategori_darah_id'],
+                            'no_rm' => $update['no_rm'],
+                            'pendidikan_terakhir' => $update['pendidikan_terakhir'],
                             'status_hidup' => $update['status_hidup'],
                             'pekerjaan' => $update['pekerjaan'],
                             'no_hp' => $update['no_hp'],

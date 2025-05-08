@@ -43,7 +43,8 @@ class MasterVerificationController extends Controller
             $modulVerifikasiList = ModulVerifikasi::all();
 
             // Iterasi setiap modul dan ordernya
-            $result = $modulVerifikasiList->flatMap(function ($modul) use ($karyawan_diverifikasi) {
+            $baseUrl = env('STORAGE_SERVER_DOMAIN');
+            $result = $modulVerifikasiList->flatMap(function ($modul) use ($karyawan_diverifikasi, $baseUrl) {
                 $data = [];
                 for ($order = 1; $order <= $modul->max_order; $order++) {
                     $relasiVerifikasi = RelasiVerifikasi::whereJsonContains('user_diverifikasi', (int) $karyawan_diverifikasi)
@@ -71,7 +72,16 @@ class MasterVerificationController extends Controller
                                 'username' => $relasiVerifikasi->users->username,
                                 'email_verified_at' => $relasiVerifikasi->users->email_verified_at,
                                 'data_karyawan_id' => $relasiVerifikasi->users->data_karyawan_id,
-                                'foto_profil' => $relasiVerifikasi->users->foto_profil,
+                                'foto_profil' => $relasiVerifikasi->users->foto_profiles ? [
+                                    'id' => $relasiVerifikasi->users->foto_profiles->id,
+                                    'user_id' => $relasiVerifikasi->users->foto_profiles->user_id,
+                                    'file_id' => $relasiVerifikasi->users->foto_profiles->file_id,
+                                    'nama' => $relasiVerifikasi->users->foto_profiles->nama,
+                                    'nama_file' => $relasiVerifikasi->users->foto_profiles->nama_file,
+                                    'path' => $baseUrl . $relasiVerifikasi->users->foto_profiles->path,
+                                    'ext' => $relasiVerifikasi->users->foto_profiles->ext,
+                                    'size' => $relasiVerifikasi->users->foto_profiles->size,
+                                ] : null,
                                 'data_completion_step' => $relasiVerifikasi->users->data_completion_step,
                                 'status_aktif' => $relasiVerifikasi->users->status_aktif,
                                 'created_at' => $relasiVerifikasi->users->created_at,
@@ -121,7 +131,8 @@ class MasterVerificationController extends Controller
                 return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Tidak ada data verifikator yang ditemukan.'), Response::HTTP_NOT_FOUND);
             }
 
-            $formattedUsers = $verifications->map(function ($verification) {
+            $baseUrl = env('STORAGE_SERVER_DOMAIN');
+            $formattedUsers = $verifications->map(function ($verification) use ($baseUrl) {
                 $user = $verification->users;
                 return [
                     'id' => $user->id,
@@ -129,7 +140,16 @@ class MasterVerificationController extends Controller
                     'username' => $user->username,
                     'email_verified_at' => $user->email_verified_at,
                     'data_karyawan_id' => $user->data_karyawan_id,
-                    'foto_profil' => $user->foto_profil,
+                    'foto_profil' => $user->foto_profiles ? [
+                        'id' => $user->foto_profiles->id,
+                        'user_id' => $user->foto_profiles->user_id,
+                        'file_id' => $user->foto_profiles->file_id,
+                        'nama' => $user->foto_profiles->nama,
+                        'nama_file' => $user->foto_profiles->nama_file,
+                        'path' => $baseUrl . $user->foto_profiles->path,
+                        'ext' => $user->foto_profiles->ext,
+                        'size' => $user->foto_profiles->size,
+                    ] : null,
                     'data_completion_step' => $user->data_completion_step,
                     'status_aktif' => $user->status_aktif,
                     'created_at' => $user->created_at,
@@ -302,7 +322,7 @@ class MasterVerificationController extends Controller
             ->where('order', $data['order'])
             ->where('modul_verifikasi', $data['modul_verifikasi'])
             ->whereNull('deleted_at')
-            // ->where('id', '!=', $verification->id) // kecuali data saat ini
+            ->where('id', '!=', $verification->id) // kecuali data saat ini
             ->first();
         if ($existingVerification) {
             $existingVerifikator = User::find($data['verifikator']);
@@ -382,20 +402,33 @@ class MasterVerificationController extends Controller
         return $collection->transform(function ($verification) {
             $userIds = $verification->user_diverifikasi;
             $diverifiedUsers = User::whereIn('id', $userIds)->get();
-            $formattedDiverifiedUsers = $diverifiedUsers->map(function ($user) {
+            $baseUrl = env('STORAGE_SERVER_DOMAIN');
+            $formattedDiverifiedUsers = $diverifiedUsers->map(function ($user) use ($baseUrl) {
                 return [
                     'id' => $user->id,
                     'nama' => $user->nama,
                     'username' => $user->username,
                     'email_verified_at' => $user->email_verified_at,
                     'data_karyawan_id' => $user->data_karyawan_id,
-                    'foto_profil' => $user->foto_profil,
+                    'foto_profil' => $user->foto_profiles ? [
+                        'id' => $user->foto_profiles->id,
+                        'user_id' => $user->foto_profiles->user_id,
+                        'file_id' => $user->foto_profiles->file_id,
+                        'nama' => $user->foto_profiles->nama,
+                        'nama_file' => $user->foto_profiles->nama_file,
+                        'path' => $baseUrl . $user->foto_profiles->path,
+                        'ext' => $user->foto_profiles->ext,
+                        'size' => $user->foto_profiles->size,
+                    ] : null,
                     'data_completion_step' => $user->data_completion_step,
                     'status_aktif' => $user->status_aktif,
                     'created_at' => $user->created_at,
                     'updated_at' => $user->updated_at
                 ];
             });
+
+            $baseUrl = env('STORAGE_SERVER_DOMAIN');
+
             return [
                 'id' => $verification->id,
                 'name' => $verification->nama,
@@ -405,7 +438,16 @@ class MasterVerificationController extends Controller
                     'username' => $verification->users->username,
                     'email_verified_at' => $verification->users->email_verified_at,
                     'data_karyawan_id' => $verification->users->data_karyawan_id,
-                    'foto_profil' => $verification->users->foto_profil,
+                    'foto_profil' => $verification->users->foto_profiles ? [
+                        'id' => $verification->users->foto_profiles->id,
+                        'user_id' => $verification->users->foto_profiles->user_id,
+                        'file_id' => $verification->users->foto_profiles->file_id,
+                        'nama' => $verification->users->foto_profiles->nama,
+                        'nama_file' => $verification->users->foto_profiles->nama_file,
+                        'path' => $baseUrl . $verification->users->foto_profiles->path,
+                        'ext' => $verification->users->foto_profiles->ext,
+                        'size' => $verification->users->foto_profiles->size,
+                    ] : null,
                     'data_completion_step' => $verification->users->data_completion_step,
                     'status_aktif' => $verification->users->status_aktif,
                     'created_at' => $verification->users->created_at,

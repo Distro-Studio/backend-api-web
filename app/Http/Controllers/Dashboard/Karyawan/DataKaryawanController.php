@@ -4,20 +4,15 @@ namespace App\Http\Controllers\Dashboard\Karyawan;
 
 use Exception;
 use Carbon\Carbon;
-use App\Models\Cuti;
 use App\Models\Ptkp;
 use App\Models\User;
 use App\Models\Premi;
 use App\Models\Berkas;
-use App\Models\Lembur;
 use App\Models\Jabatan;
-use App\Models\Presensi;
-use App\Models\Penilaian;
 use App\Models\UnitKerja;
+use App\Helpers\LogHelper;
 use App\Models\Kompetensi;
-use App\Models\Notifikasi;
-use App\Models\TrackRecord;
-use App\Models\TukarJadwal;
+use Illuminate\Support\Str;
 use App\Models\DataKaryawan;
 use App\Models\DataKeluarga;
 use App\Models\KelompokGaji;
@@ -26,9 +21,7 @@ use App\Helpers\RandomHelper;
 use App\Models\PesertaDiklat;
 use Illuminate\Http\Response;
 use App\Models\StatusKaryawan;
-use App\Models\RiwayatPerubahan;
-use App\Models\TransferKaryawan;
-use App\Mail\SendAccoundUsersMail;
+use App\Models\KategoriUnitKerja;
 use App\Models\KategoriPendidikan;
 use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Models\Role;
@@ -41,11 +34,12 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Maatwebsite\Excel\Facades\Excel;
-use App\Exports\TemplateKaryawanExport;
+use App\Models\KategoriStatusKaryawan;
 use App\Models\KategoriTagihanPotongan;
 use Illuminate\Support\Facades\Storage;
 use App\Exports\Karyawan\KaryawanExport;
 use App\Imports\Karyawan\KaryawanImport;
+use App\Mail\SendUpdateAccoundUsersMail;
 use App\Http\Requests\StoreDataKaryawanRequest;
 use App\Jobs\EmailNotification\AccountEmailJob;
 use App\Http\Requests\UpdateDataKaryawanRequest;
@@ -110,7 +104,8 @@ class DataKaryawanController extends Controller
         ], Response::HTTP_NOT_FOUND);
       }
 
-      $formattedData = $userNonShift->map(function ($user) {
+      $baseUrl = env('STORAGE_SERVER_DOMAIN');
+      $formattedData = $userNonShift->map(function ($user) use ($baseUrl) {
         $unitKerja = $user->data_karyawans->unit_kerjas ?? null;
 
         return [
@@ -121,7 +116,16 @@ class DataKaryawanController extends Controller
             'username' => $user->username,
             'email_verified_at' => $user->email_verified_at,
             'data_karyawan_id' => $user->data_karyawan_id,
-            'foto_profil' => $user->foto_profil,
+            'foto_profil' => $user->foto_profiles ? [
+              'id' => $user->foto_profiles->id,
+              'user_id' => $user->foto_profiles->user_id,
+              'file_id' => $user->foto_profiles->file_id,
+              'nama' => $user->foto_profiles->nama,
+              'nama_file' => $user->foto_profiles->nama_file,
+              'path' => $baseUrl . $user->foto_profiles->path,
+              'ext' => $user->foto_profiles->ext,
+              'size' => $user->foto_profiles->size,
+            ] : null,
             'data_completion_step' => $user->data_completion_step,
             'status_aktif' => $user->status_aktif,
             'created_at' => $user->created_at,
@@ -163,7 +167,8 @@ class DataKaryawanController extends Controller
         ], Response::HTTP_NOT_FOUND);
       }
 
-      $formattedData = $userShift->map(function ($user) {
+      $baseUrl = env('STORAGE_SERVER_DOMAIN');
+      $formattedData = $userShift->map(function ($user) use ($baseUrl) {
         $unitKerja = $user->data_karyawans->unit_kerjas ?? null;
 
         return [
@@ -174,7 +179,16 @@ class DataKaryawanController extends Controller
             'username' => $user->username,
             'email_verified_at' => $user->email_verified_at,
             'data_karyawan_id' => $user->data_karyawan_id,
-            'foto_profil' => $user->foto_profil,
+            'foto_profil' => $user->foto_profiles ? [
+              'id' => $user->foto_profiles->id,
+              'user_id' => $user->foto_profiles->user_id,
+              'file_id' => $user->foto_profiles->file_id,
+              'nama' => $user->foto_profiles->nama,
+              'nama_file' => $user->foto_profiles->nama_file,
+              'path' => $baseUrl . $user->foto_profiles->path,
+              'ext' => $user->foto_profiles->ext,
+              'size' => $user->foto_profiles->size,
+            ] : null,
             'data_completion_step' => $user->data_completion_step,
             'status_aktif' => $user->status_aktif,
             'created_at' => $user->created_at,
@@ -213,7 +227,8 @@ class DataKaryawanController extends Controller
         ], Response::HTTP_NOT_FOUND);
       }
 
-      $formattedData = $users->map(function ($user) {
+      $baseUrl = env('STORAGE_SERVER_DOMAIN');
+      $formattedData = $users->map(function ($user) use ($baseUrl) {
         $unitKerja = $user->data_karyawans->unit_kerjas ?? null;
         $statusKaryawan = $user->data_karyawans->status_karyawans ?? null;
 
@@ -225,7 +240,16 @@ class DataKaryawanController extends Controller
             'username' => $user->username,
             'email_verified_at' => $user->email_verified_at,
             'data_karyawan_id' => $user->data_karyawan_id,
-            'foto_profil' => $user->foto_profil,
+            'foto_profil' => $user->foto_profiles ? [
+              'id' => $user->foto_profiles->id,
+              'user_id' => $user->foto_profiles->user_id,
+              'file_id' => $user->foto_profiles->file_id,
+              'nama' => $user->foto_profiles->nama,
+              'nama_file' => $user->foto_profiles->nama_file,
+              'path' => $baseUrl . $user->foto_profiles->path,
+              'ext' => $user->foto_profiles->ext,
+              'size' => $user->foto_profiles->size,
+            ] : null,
             'data_completion_step' => $user->data_completion_step,
             'status_aktif' => $user->status_aktif,
             'created_at' => $user->created_at,
@@ -250,6 +274,31 @@ class DataKaryawanController extends Controller
       ], Response::HTTP_OK);
     } catch (\Exception $e) {
       Log::error('| Karyawan | - Error function getAllDataUser: ' . $e->getMessage());
+      return response()->json([
+        'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
+        'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
+      ], Response::HTTP_INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  public function getAllDataKategoriUnitKerja()
+  {
+    try {
+      $kategori_unit_kerja = KategoriUnitKerja::all();
+      if ($kategori_unit_kerja->isEmpty()) {
+        return response()->json([
+          'status' => Response::HTTP_NOT_FOUND,
+          'message' => 'Data kategori unit kerja tidak ditemukan.',
+        ], Response::HTTP_NOT_FOUND);
+      }
+
+      return response()->json([
+        'status' => Response::HTTP_OK,
+        'message' => 'Retrieving all kategori unit kerja for dropdown',
+        'data' => $kategori_unit_kerja
+      ], Response::HTTP_OK);
+    } catch (\Exception $e) {
+      Log::error('| Karyawan | - Error function getAllDataKategoriUnitKerja: ' . $e->getMessage());
       return response()->json([
         'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
         'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
@@ -300,6 +349,31 @@ class DataKaryawanController extends Controller
       ], Response::HTTP_OK);
     } catch (\Exception $e) {
       Log::error('| Karyawan | - Error function getAllDataJabatan: ' . $e->getMessage());
+      return response()->json([
+        'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
+        'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
+      ], Response::HTTP_INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  public function getAllDataKategoriStatusKaryawan()
+  {
+    try {
+      $kategori_status_karyawan = KategoriStatusKaryawan::all();
+      if ($kategori_status_karyawan->isEmpty()) {
+        return response()->json([
+          'status' => Response::HTTP_NOT_FOUND,
+          'message' => 'Data kategori status karyawan tidak ditemukan.',
+        ], Response::HTTP_NOT_FOUND);
+      }
+
+      return response()->json([
+        'status' => Response::HTTP_OK,
+        'message' => 'Retrieving all kategori status karyawan for dropdown',
+        'data' => $kategori_status_karyawan
+      ], Response::HTTP_OK);
+    } catch (\Exception $e) {
+      Log::error('| Karyawan | - Error function getAllDataKategoriStatusKaryawan: ' . $e->getMessage());
       return response()->json([
         'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
         'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
@@ -539,6 +613,82 @@ class DataKaryawanController extends Controller
     }
   }
 
+  public function uploadPhotoProfile(Request $request, $data_karyawan_id)
+  {
+    try {
+      if (!Gate::allows('edit dataKaryawan')) {
+        return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+      }
+
+      $request->validate([
+        'dokumen' => 'required|file|mimes:jpg,jpeg,png|max:5120',
+      ], [
+        'dokumen.required' => 'File foto wajib diunggah.',
+        'dokumen.file' => 'File yang diunggah tidak valid.',
+        'dokumen.mimes' => 'Format file harus berupa JPG, JPEG, atau PNG.',
+        'dokumen.max' => 'Ukuran file maksimal 5MB.',
+      ]);
+
+      DB::beginTransaction();
+      $user = User::where('data_karyawan_id', $data_karyawan_id)->first();
+      if (!$user) {
+        return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data akun karyawan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+      }
+
+      if ($request->hasFile('dokumen')) {
+        $authUser = Auth::user();
+        StorageServerHelper::login();
+        $file = $request->file('dokumen');
+        $random_filename = Str::random(20);
+        $dataupload = StorageServerHelper::uploadToServer($request, $random_filename);
+        // $gambarUrl = $dataupload['path'];
+
+        $berkas = Berkas::create([
+          'user_id' => $authUser->id,
+          'file_id' => $dataupload['id_file']['id'],
+          'nama' => $random_filename,
+          'kategori_berkas_id' => 1, // pribadi
+          'status_berkas_id' => 2,
+          'path' => $dataupload['path'],
+          'tgl_upload' => now('Asia/Jakarta'),
+          'nama_file' => $dataupload['nama_file'],
+          'ext' => $dataupload['ext'],
+          'size' => $dataupload['size'],
+        ]);
+
+        if (!$berkas) {
+          throw new Exception('Foto profil gagal di upload.');
+        }
+
+        $user->foto_profil = $berkas->id;
+        $user->save();
+
+        StorageServerHelper::logout();
+      } else {
+        return response()->json([
+          'status' => Response::HTTP_BAD_REQUEST,
+          'message' => 'Tidak ada file yang diunggah.',
+        ], Response::HTTP_BAD_REQUEST);
+      }
+
+      DB::commit();
+
+      LogHelper::logAction('Karyawan', 'create', $data_karyawan_id);
+
+      return response()->json([
+        'status' => Response::HTTP_OK,
+        'message' => 'Foto profil berhasil diunggah.',
+      ], Response::HTTP_OK);
+    } catch (\Exception $e) {
+      DB::rollBack();
+      Log::error('| Karyawan | - Error function uploadPhoto: ' . $e->getMessage());
+      return response()->json([
+        'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
+        'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
+      ], Response::HTTP_INTERNAL_SERVER_ERROR);
+    }
+  }
+
   public function index(Request $request)
   {
     try {
@@ -739,7 +889,8 @@ class DataKaryawanController extends Controller
         ], Response::HTTP_NOT_FOUND);
       }
 
-      $formattedData = $dataKaryawan->map(function ($karyawan) use ($isSuperAdmin) {
+      $baseUrl = env('STORAGE_SERVER_DOMAIN');
+      $formattedData = $dataKaryawan->map(function ($karyawan) use ($isSuperAdmin, $baseUrl) {
         $dataKeluargas = $karyawan->data_keluargas;
         $ayah = $dataKeluargas->where('hubungan', 'Ayah')->first();
         $ibu = $dataKeluargas->where('hubungan', 'Ibu')->first();
@@ -755,7 +906,16 @@ class DataKaryawanController extends Controller
             'username' => $karyawan->users->username,
             'email_verified_at' => $karyawan->users->email_verified_at,
             'data_karyawan_id' => $karyawan->users->data_karyawan_id,
-            'foto_profil' => $karyawan->users->foto_profil,
+            'foto_profil' => $karyawan->users->foto_profiles ? [
+              'id' => $karyawan->users->foto_profiles->id,
+              'user_id' => $karyawan->users->foto_profiles->user_id,
+              'file_id' => $karyawan->users->foto_profiles->file_id,
+              'nama' => $karyawan->users->foto_profiles->nama,
+              'nama_file' => $karyawan->users->foto_profiles->nama_file,
+              'path' => $baseUrl . $karyawan->users->foto_profiles->path,
+              'ext' => $karyawan->users->foto_profiles->ext,
+              'size' => $karyawan->users->foto_profiles->size,
+            ] : null,
             'data_completion_step' => $karyawan->users->data_completion_step,
             'status_aktif' => $karyawan->users->status_aktif,
             'tgl_dinonaktifkan' => $karyawan->users->tgl_dinonaktifkan,
@@ -853,6 +1013,7 @@ class DataKaryawanController extends Controller
       $requestedRoleId = $request->input('role_id');
       $premis = $request->input('premi_id', []); // Mengambil daftar premi yang dipilih
 
+      DB::beginTransaction();
       $generatedUsername = RandomHelper::generateUsername($data['nama']);
       if (!empty($data['email'])) {
         $generatedPassword = RandomHelper::generatePassword();
@@ -861,7 +1022,6 @@ class DataKaryawanController extends Controller
         $passwordHash = Hash::make('1234');
       }
 
-      DB::beginTransaction();
       try {
         $userData = [
           'nama' => $data['nama'],
@@ -921,11 +1081,12 @@ class DataKaryawanController extends Controller
 
         DB::commit();
 
+        LogHelper::logAction('Karyawan', 'create', $createDataKaryawan->id);
+
         if (!empty($data['email'])) {
           AccountEmailJob::dispatch($data['email'], $generatedPassword, $data['nama']);
         }
 
-        // Mail::to($data['email'])->send(new SendAccoundUsersMail($data['email'], $generatedPassword, $data['nama']));
         return response()->json(new KaryawanResource(Response::HTTP_OK, "Data karyawan '{$createDataKaryawan->users->nama}' berhasil dibuat.", $createDataKaryawan), Response::HTTP_OK);
       } catch (\Throwable $th) {
         DB::rollBack();
@@ -1031,6 +1192,7 @@ class DataKaryawanController extends Controller
         ->sum(fn($pd) => $pd->diklats?->durasi ?? 0);
 
       // Format the karyawan data
+      $baseUrl = env('STORAGE_SERVER_DOMAIN');
       $formattedData = [
         'id' => $karyawan->id,
         'user' => [
@@ -1039,7 +1201,16 @@ class DataKaryawanController extends Controller
           'username' => $karyawan->users->username,
           'email_verified_at' => $karyawan->users->email_verified_at,
           'data_karyawan_id' => $karyawan->users->data_karyawan_id,
-          'foto_profil' => $karyawan->users->foto_profil,
+          'foto_profil' => $karyawan->users->foto_profiles ? [
+            'id' => $karyawan->users->foto_profiles->id,
+            'user_id' => $karyawan->users->foto_profiles->user_id,
+            'file_id' => $karyawan->users->foto_profiles->file_id,
+            'nama' => $karyawan->users->foto_profiles->nama,
+            'nama_file' => $karyawan->users->foto_profiles->nama_file,
+            'path' => $baseUrl . $karyawan->users->foto_profiles->path,
+            'ext' => $karyawan->users->foto_profiles->ext,
+            'size' => $karyawan->users->foto_profiles->size,
+          ] : null,
           'data_completion_step' => $karyawan->users->data_completion_step,
           'status_aktif' => $karyawan->users->status_aktif,
           'tgl_dinonaktifkan' => $karyawan->users->tgl_dinonaktifkan,
@@ -1262,6 +1433,7 @@ class DataKaryawanController extends Controller
       // }
 
       // Format the karyawan data
+      $baseUrl = env('STORAGE_SERVER_DOMAIN');
       $formattedData = [
         'id' => $karyawan->id,
         'user' => [
@@ -1270,7 +1442,16 @@ class DataKaryawanController extends Controller
           'username' => $karyawan->users->username,
           'email_verified_at' => $karyawan->users->email_verified_at,
           'data_karyawan_id' => $karyawan->users->data_karyawan_id,
-          'foto_profil' => $karyawan->users->foto_profil,
+          'foto_profil' => $karyawan->users->foto_profiles ? [
+            'id' => $karyawan->users->foto_profiles->id,
+            'user_id' => $karyawan->users->foto_profiles->user_id,
+            'file_id' => $karyawan->users->foto_profiles->file_id,
+            'nama' => $karyawan->users->foto_profiles->nama,
+            'nama_file' => $karyawan->users->foto_profiles->nama_file,
+            'path' => $baseUrl . $karyawan->users->foto_profiles->path,
+            'ext' => $karyawan->users->foto_profiles->ext,
+            'size' => $karyawan->users->foto_profiles->size,
+          ] : null,
           'data_completion_step' => $karyawan->users->data_completion_step,
           'status_aktif' => $karyawan->users->status_aktif,
           'tgl_dinonaktifkan' => $karyawan->users->tgl_dinonaktifkan,
@@ -1393,23 +1574,25 @@ class DataKaryawanController extends Controller
       DB::beginTransaction();
       $user = $karyawan->users;
       $oldEmail = $karyawan->email;
-      $newEmail = $data['email'];
+      $newEmail = $data['email'] ?? null;
 
       // Memeriksa apakah email telah berubah
       if ($oldEmail !== $newEmail) {
+      // Cek apakah email baru valid dan berbeda dari yang lama
+      if (!empty($newEmail) && $oldEmail !== $newEmail) {
         $generatedPassword = RandomHelper::generatePassword();
         $karyawan->email = $newEmail;
         // TODO: Kembalikan jika smtp sudah online
         // $user->password = Hash::make($generatedPassword);
 
         $karyawan->save();
-        // $user->save();
+        $user->save();
 
         // Hapus semua token user terkait, supaya otomatis logout
         $user->tokens()->delete();
 
         // Kirim email dengan password baru
-        // AccountEmailJob::dispatch($newEmail, $generatedPassword, $data['nama']);
+        AccountEmailJob::dispatch($newEmail, $generatedPassword, $data['nama']);
       }
 
       try {
@@ -1453,6 +1636,8 @@ class DataKaryawanController extends Controller
         }
 
         DB::commit();
+
+        LogHelper::logAction('Karyawan', 'update', $karyawan->id);
 
         return response()->json([
           'status' => Response::HTTP_OK,
@@ -1512,6 +1697,8 @@ class DataKaryawanController extends Controller
         return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya terjadi kesalahan. Pesan: ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
       }
 
+      LogHelper::logAction('Karyawan', 'import', 0);
+
       return response()->json(new WithoutDataResource(Response::HTTP_OK, 'Data karyawan berhasil di import kedalam table.'), Response::HTTP_OK);
     } catch (\Exception $e) {
       Log::error('| Karyawan | - Error function importKaryawan: ' . $e->getMessage());
@@ -1562,16 +1749,22 @@ class DataKaryawanController extends Controller
         }
         $karyawan->save();
         $message = "Karyawan '{$karyawan->users->nama}' berhasil diaktifkan.";
+
+        LogHelper::logAction('Karyawan', 'update', $karyawan->id);
       } elseif ($user->status_aktif === 2) {
         $user->status_aktif = 3;
         $user->tgl_dinonaktifkan = Carbon::now('Asia/Jakarta');
         $user->alasan = $request->input('alasan');
         $message = "Karyawan '{$karyawan->users->nama}' berhasil dinonaktifkan.";
+
+        LogHelper::logAction('Karyawan', 'update', $karyawan->id);
       } elseif ($user->status_aktif === 3) {
         $user->status_aktif = 2;
         $user->tgl_dinonaktifkan = null;
         $user->alasan = null;
         $message = "Karyawan '{$karyawan->users->nama}' berhasil diaktifkan kembali.";
+
+        LogHelper::logAction('Karyawan', 'update', $karyawan->id);
       } else {
         return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, "Karyawan '{$karyawan->users->nama}' belum melengkapi data karyawan."), Response::HTTP_NOT_ACCEPTABLE);
       }

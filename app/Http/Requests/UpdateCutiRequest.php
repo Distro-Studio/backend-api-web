@@ -6,6 +6,7 @@ use Illuminate\Http\Response;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Http\Exceptions\HttpResponseException;
+use Illuminate\Validation\Rule;
 
 class UpdateCutiRequest extends FormRequest
 {
@@ -25,7 +26,7 @@ class UpdateCutiRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'nama' => 'required|string|max:255',
+            'nama' => 'required|string|max:225',
             'kuota' => 'required|integer',
             'is_need_requirement' => 'required|boolean',
             'keterangan' => 'required|string|max:255',
@@ -39,6 +40,7 @@ class UpdateCutiRequest extends FormRequest
             'nama.required' => 'Nama cuti tidak diperbolehkan kosong.',
             'nama.string' => 'Nama cuti tidak diperbolehkan mengandung karakter selain huruf.',
             'nama.max' => 'Nama cuti melebihi batas maksimum panjang karakter.',
+            'nama.unique' => 'Nama cuti tersebut sudah pernah dibuat.',
             'kuota.required' => 'Kuota cuti tidak diperbolehkan kosong.',
             'kuota.integer' => 'Kuota cuti tidak diperbolehkan mengandung karakter selain angka.',
             'is_need_requirement.required' => 'Persyaratan cuti tidak diperbolehkan kosong.',

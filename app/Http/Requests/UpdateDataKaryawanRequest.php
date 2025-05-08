@@ -6,6 +6,7 @@ use Illuminate\Http\Response;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Http\Exceptions\HttpResponseException;
+use Illuminate\Validation\Rule;
 
 class UpdateDataKaryawanRequest extends FormRequest
 {
@@ -19,9 +20,10 @@ class UpdateDataKaryawanRequest extends FormRequest
 
     public function rules(): array
     {
+
         return [
             'nama' => 'required|string|max:225',
-            'email' => 'nullable|email|string',
+            'email' => 'nullable|email',
             'role_id' => 'required|integer|exists:roles,id',
             'no_rm' => 'required|string',
             'no_manulife' => 'nullable|string',
@@ -90,6 +92,7 @@ class UpdateDataKaryawanRequest extends FormRequest
             'email.string' => 'Email karyawan tidak diperbolehkan mengandung selain huruf.',
             'email.email' => 'Alamat email yang valid wajib menggunakan @.',
             'email.max' => 'Email karyawan melebihi batas maksimum panjang karakter.',
+            'email.unique' => 'Email tersebut sudah terdaftar. Silakan gunakan email lain atau biarkan kosong jika tidak ingin mengubahnya.',
             'role_id.required' => 'Silahkan pilih role untuk karyawan terlebih dahulu.',
             'role_id.exists' => 'Maaf role yang dipilih tidak valid.',
             'no_rm.required' => 'Nomor rekam medis karyawan tidak diperbolehkan kosong.',

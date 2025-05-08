@@ -81,6 +81,7 @@ class DataLemburController extends Controller
                 ];
             }
 
+            $baseUrl = env('STORAGE_SERVER_DOMAIN');
             return response()->json([
                 'status' => Response::HTTP_OK,
                 'message' => "Detail karyawan dan jadwalnya berhasil ditampilkan.",
@@ -90,7 +91,16 @@ class DataLemburController extends Controller
                         'nama' => $user->nama,
                         'email_verified_at' => $user->email_verified_at,
                         'data_karyawan_id' => $user->data_karyawan_id,
-                        'foto_profil' => $user->foto_profil,
+                        'foto_profil' => $user->foto_profiles ? [
+                            'id' => $user->foto_profiles->id,
+                            'user_id' => $user->foto_profiles->user_id,
+                            'file_id' => $user->foto_profiles->file_id,
+                            'nama' => $user->foto_profiles->nama,
+                            'nama_file' => $user->foto_profiles->nama_file,
+                            'path' => $baseUrl . $user->foto_profiles->path,
+                            'ext' => $user->foto_profiles->ext,
+                            'size' => $user->foto_profiles->size,
+                        ] : null,
                         'data_completion_step' => $user->data_completion_step,
                         'status_aktif' => $user->status_aktif,
                         'created_at' => $user->created_at,
@@ -315,7 +325,8 @@ class DataLemburController extends Controller
 
             $nonShiftData = NonShift::find(1);
 
-            $formattedData = $dataLembur->map(function ($lembur) use ($nonShiftData) {
+            $baseUrl = env('STORAGE_SERVER_DOMAIN');
+            $formattedData = $dataLembur->map(function ($lembur) use ($nonShiftData, $baseUrl) {
                 $unitKerja = $lembur->users->data_karyawans->unit_kerjas ?? null;
                 $jenisKaryawan = $unitKerja->jenis_karyawan ?? null;
 
@@ -352,7 +363,16 @@ class DataLemburController extends Controller
                         'username' => $lembur->users->username,
                         'email_verified_at' => $lembur->users->email_verified_at,
                         'data_karyawan_id' => $lembur->users->data_karyawan_id,
-                        'foto_profil' => $lembur->users->foto_profil,
+                        'foto_profil' => $lembur->users->foto_profiles ? [
+                            'id' => $lembur->users->foto_profiles->id,
+                            'user_id' => $lembur->users->foto_profiles->user_id,
+                            'file_id' => $lembur->users->foto_profiles->file_id,
+                            'nama' => $lembur->users->foto_profiles->nama,
+                            'nama_file' => $lembur->users->foto_profiles->nama_file,
+                            'path' => $baseUrl . $lembur->users->foto_profiles->path,
+                            'ext' => $lembur->users->foto_profiles->ext,
+                            'size' => $lembur->users->foto_profiles->size,
+                        ] : null,
                         'data_completion_step' => $lembur->users->data_completion_step,
                         'status_aktif' => $lembur->users->status_aktif,
                         'created_at' => $lembur->users->created_at,
@@ -469,6 +489,7 @@ class DataLemburController extends Controller
             }
 
             // Format data untuk respon
+            $baseUrl = env('STORAGE_SERVER_DOMAIN');
             $formattedData = [
                 'id' => $dataLembur->id,
                 'user' => [
@@ -477,7 +498,16 @@ class DataLemburController extends Controller
                     'username' => $dataLembur->users->username,
                     'email_verified_at' => $dataLembur->users->email_verified_at,
                     'data_karyawan_id' => $dataLembur->users->data_karyawan_id,
-                    'foto_profil' => $dataLembur->users->foto_profil,
+                    'foto_profil' => $dataLembur->users->foto_profiles ? [
+                        'id' => $dataLembur->users->foto_profiles->id,
+                        'user_id' => $dataLembur->users->foto_profiles->user_id,
+                        'file_id' => $dataLembur->users->foto_profiles->file_id,
+                        'nama' => $dataLembur->users->foto_profiles->nama,
+                        'nama_file' => $dataLembur->users->foto_profiles->nama_file,
+                        'path' => $baseUrl . $dataLembur->users->foto_profiles->path,
+                        'ext' => $dataLembur->users->foto_profiles->ext,
+                        'size' => $dataLembur->users->foto_profiles->size,
+                    ] : null,
                     'data_completion_step' => $dataLembur->users->data_completion_step,
                     'status_aktif' => $dataLembur->users->status_aktif,
                     'created_at' => $dataLembur->users->created_at,

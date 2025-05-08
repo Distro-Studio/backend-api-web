@@ -105,7 +105,8 @@ class DiklatController extends Controller
         }
 
         // Format data untuk output
-        $formattedData = $dataDiklat->map(function ($diklat) {
+        $baseUrl = env('STORAGE_SERVER_DOMAIN');
+        $formattedData = $dataDiklat->map(function ($diklat) use ($baseUrl) {
             $pesertaList = $diklat->peserta_diklat->map(function ($peserta) {
                 return [
                     'user' => $peserta->users,
@@ -134,7 +135,16 @@ class DiklatController extends Controller
                         'username' => $verifikasiForOrder->users->username,
                         'email_verified_at' => $verifikasiForOrder->users->email_verified_at,
                         'data_karyawan_id' => $verifikasiForOrder->users->data_karyawan_id,
-                        'foto_profil' => $verifikasiForOrder->users->foto_profil,
+                        'foto_profil' => $verifikasiForOrder->users->foto_profiles ? [
+                            'id' => $verifikasiForOrder->users->foto_profiles->id,
+                            'user_id' => $verifikasiForOrder->users->foto_profiles->user_id,
+                            'file_id' => $verifikasiForOrder->users->foto_profiles->file_id,
+                            'nama' => $verifikasiForOrder->users->foto_profiles->nama,
+                            'nama_file' => $verifikasiForOrder->users->foto_profiles->nama_file,
+                            'path' => $baseUrl . $verifikasiForOrder->users->foto_profiles->path,
+                            'ext' => $verifikasiForOrder->users->foto_profiles->ext,
+                            'size' => $verifikasiForOrder->users->foto_profiles->size,
+                        ] : null,
                         'data_completion_step' => $verifikasiForOrder->users->data_completion_step,
                         'status_aktif' => $verifikasiForOrder->users->status_aktif,
                         'created_at' => $verifikasiForOrder->users->created_at,
@@ -174,6 +184,11 @@ class DiklatController extends Controller
                 'list_peserta' => $pesertaList,
                 'alasan' => $diklat->alasan ?? null,
                 'skp' => $diklat->skp ?? null,
+                'dokumen_diklat_1' => $diklat->berkas_internal_1 ?? null,
+                'dokumen_diklat_2' => $diklat->berkas_internal_2 ?? null,
+                'dokumen_diklat_3' => $diklat->berkas_internal_3 ?? null,
+                'dokumen_diklat_4' => $diklat->berkas_internal_4 ?? null,
+                'dokumen_diklat_5' => $diklat->berkas_internal_5 ?? null,
                 'certificate_published' => $diklat->certificate_published,
                 'certificate_verified_by' => $diklat->certificate_diklats,
                 'relasi_verifikasi' => $formattedRelasiVerifikasi,
@@ -264,7 +279,8 @@ class DiklatController extends Controller
         }
 
         // Format data untuk output
-        $formattedData = $dataDiklat->map(function ($diklat) {
+        $baseUrl = env('STORAGE_SERVER_DOMAIN');
+        $formattedData = $dataDiklat->map(function ($diklat) use ($baseUrl) {
             $pesertaList = $diklat->peserta_diklat->map(function ($peserta) {
                 return [
                     'user' => $peserta->users,
@@ -295,7 +311,16 @@ class DiklatController extends Controller
                         'username' => $verifikasiForOrder->users->username,
                         'email_verified_at' => $verifikasiForOrder->users->email_verified_at,
                         'data_karyawan_id' => $verifikasiForOrder->users->data_karyawan_id,
-                        'foto_profil' => $verifikasiForOrder->users->foto_profil,
+                        'foto_profil' => $verifikasiForOrder->users->foto_profiles ? [
+                            'id' => $verifikasiForOrder->users->foto_profiles->id,
+                            'user_id' => $verifikasiForOrder->users->foto_profiles->user_id,
+                            'file_id' => $verifikasiForOrder->users->foto_profiles->file_id,
+                            'nama' => $verifikasiForOrder->users->foto_profiles->nama,
+                            'nama_file' => $verifikasiForOrder->users->foto_profiles->nama_file,
+                            'path' => $baseUrl . $verifikasiForOrder->users->foto_profiles->path,
+                            'ext' => $verifikasiForOrder->users->foto_profiles->ext,
+                            'size' => $verifikasiForOrder->users->foto_profiles->size,
+                        ] : null,
                         'data_completion_step' => $verifikasiForOrder->users->data_completion_step,
                         'status_aktif' => $verifikasiForOrder->users->status_aktif,
                         'created_at' => $verifikasiForOrder->users->created_at,
@@ -359,55 +384,47 @@ class DiklatController extends Controller
 
         $data = $request->validated();
 
-        $now = Carbon::now('Asia/Jakarta');
-        $hPlusOne = $now->addDay()->startOfDay();
-
-        $tglMulai = Carbon::createFromFormat('d-m-Y', $data['tgl_mulai'], 'Asia/Jakarta')->startOfDay();
-        if ($tglMulai->lessThan($hPlusOne)) {
-            return response()->json([
-                'status' => Response::HTTP_BAD_REQUEST,
-                'message' => 'Tanggal mulai harus diisi mulai H+1 dari hari ini.'
-            ], Response::HTTP_BAD_REQUEST);
-        }
-
         DB::beginTransaction();
         try {
-            $gambarUrl = null;
-            $berkas = null;
+            StorageServerHelper::login();
+            $berkasIds = [
+                'dokumen' => null,
+                'dokumen_diklat_1' => null,
+                'dokumen_diklat_2' => null,
+                'dokumen_diklat_3' => null,
+                'dokumen_diklat_4' => null,
+                'dokumen_diklat_5' => null,
+            ];
 
-            if ($request->hasFile('dokumen')) {
-                $authUser = Auth::user();
+            // Upload dokumen_diklat_1 s.d. dokumen_diklat_5 (sebagian boleh kosong)
+            $authUser = Auth::user();
+            foreach ($berkasIds as $field => $value) {
+                if ($request->hasFile($field)) {
+                    $file = $request->file($field);
+                    $random_filename = Str::random(20);
+                    $dataupload = StorageServerHelper::multipleUploadToServer($file, $random_filename);
 
-                // Login to the storage server
-                StorageServerHelper::login();
+                    // Simpan data berkas ke tabel berkas
+                    $berkas = Berkas::create([
+                        'user_id' => $authUser->id,
+                        'file_id' => $dataupload['id_file']['id'],
+                        'nama' => $random_filename,
+                        'kategori_berkas_id' => 2,
+                        'status_berkas_id' => 2,
+                        'path' => $dataupload['path'],
+                        'tgl_upload' => now('Asia/Jakarta'),
+                        'nama_file' => $dataupload['nama_file'],
+                        'ext' => $dataupload['ext'],
+                        'size' => $dataupload['size'],
+                    ]);
 
-                $file = $request->file('dokumen');
-
-                // Upload file using helper
-                $random_filename = Str::random(20);
-                $dataupload = StorageServerHelper::uploadToServer($request, $random_filename);
-                // $gambarUrl = $dataupload['path'];
-
-                $berkas = Berkas::create([
-                    'user_id' => $authUser->id,
-                    'file_id' => $dataupload['id_file']['id'],
-                    'nama' => $random_filename,
-                    'kategori_berkas_id' => 2, // umum
-                    'status_berkas_id' => 2,
-                    'path' => $dataupload['path'],
-                    'tgl_upload' => now(),
-                    'nama_file' => $dataupload['nama_file'],
-                    'ext' => $dataupload['ext'],
-                    'size' => $dataupload['size'],
-                ]);
-                if (!$berkas) {
-                    throw new Exception('Berkas gagal di upload.');
+                    // Simpan ID berkas ke urutan yang sesuai
+                    $berkasIds[$field] = $berkas->id;
+                    Log::info("Berkas dokumen pada kolom {$field} berhasil diupload.");
                 }
-
-                $gambarId = $berkas->id;
-
-                StorageServerHelper::logout();
             }
+
+            StorageServerHelper::logout();
 
             $jamMulai = Carbon::createFromFormat('H:i:s', $data['jam_mulai'], 'Asia/Jakarta');
             $jamSelesai = Carbon::createFromFormat('H:i:s', $data['jam_selesai'], 'Asia/Jakarta');
@@ -428,7 +445,12 @@ class DiklatController extends Controller
             $durasi = $selisihJam * $totalHari;
 
             $diklat = Diklat::create([
-                'gambar' => $gambarId,
+                'gambar' => $berkasIds['dokumen'],
+                'dokumen_diklat_1' => $berkasIds['dokumen_diklat_1'],
+                'dokumen_diklat_2' => $berkasIds['dokumen_diklat_2'],
+                'dokumen_diklat_3' => $berkasIds['dokumen_diklat_3'],
+                'dokumen_diklat_4' => $berkasIds['dokumen_diklat_4'],
+                'dokumen_diklat_5' => $berkasIds['dokumen_diklat_5'],
                 'nama' => $data['nama'],
                 'kategori_diklat_id' => 1,
                 'status_diklat_id' => 1,
@@ -439,9 +461,34 @@ class DiklatController extends Controller
                 'jam_mulai' => $data['jam_mulai'],
                 'jam_selesai' => $data['jam_selesai'],
                 'durasi' => $durasi,
-                'lokasi' => $data['lokasi'],
+                'lokasi' => $data['lokasi']
             ]);
-            $this->createNotifikasiDiklat($diklat);
+
+            $userIds = $data['user_id'] ?? null;
+
+            // Menyimpan peserta diklat dan menentukan is_whitelist
+            if ($userIds) {
+                foreach ($userIds as $userId) {
+                    DB::table('peserta_diklats')->insert([
+                        'diklat_id' => $diklat->id,
+                        'peserta' => $userId,
+                    ]);
+                }
+
+                // Update kolom is_whitelist pada diklat jika ada user
+                $diklat->update(['is_whitelist' => 1]);
+
+                // Update total peserta berdasarkan jumlah user_id
+                $diklat->update(['total_peserta' => count($userIds)]);
+            } else {
+                // Jika user_id null, kuota tetap diambil dari payload
+                $diklat->update(['total_peserta' => 0]);
+            }
+
+            // Mengupdate kuota sesuai dengan total peserta
+            $diklat->update(['kuota' => $diklat->total_peserta]);
+
+            $this->createNotifikasiDiklat($diklat, $userIds);
 
             DB::commit();
 
@@ -548,6 +595,7 @@ class DiklatController extends Controller
                 'lokasi' => $data['lokasi'],
                 'verifikator_1' => $verifikatorId,
                 'verifikator_2' => $verifikatorId,
+                'is_whitelist' => 1
             ]);
 
             PesertaDiklat::create([
@@ -619,6 +667,7 @@ class DiklatController extends Controller
         }
 
         // Format the data for the response
+        $baseUrl = env('STORAGE_SERVER_DOMAIN');
         $detailDiklat = [
             'id' => $diklat->id,
             'nama' => $diklat->nama,
@@ -642,7 +691,16 @@ class DiklatController extends Controller
                 'nama' => $diklat->verifikator_1_diklats->nama,
                 'email_verified_at' => $diklat->verifikator_1_diklats->email_verified_at,
                 'data_karyawan_id' => $diklat->verifikator_1_diklats->data_karyawan_id,
-                'foto_profil' => $diklat->verifikator_1_diklats->foto_profil,
+                'foto_profil' => $diklat->verifikator_1_diklats->foto_profiles ? [
+                    'id' => $diklat->verifikator_1_diklats->foto_profiles->id,
+                    'user_id' => $diklat->verifikator_1_diklats->foto_profiles->user_id,
+                    'file_id' => $diklat->verifikator_1_diklats->foto_profiles->file_id,
+                    'nama' => $diklat->verifikator_1_diklats->foto_profiles->nama,
+                    'nama_file' => $diklat->verifikator_1_diklats->foto_profiles->nama_file,
+                    'path' => $baseUrl . $diklat->verifikator_1_diklats->foto_profiles->path,
+                    'ext' => $diklat->verifikator_1_diklats->foto_profiles->ext,
+                    'size' => $diklat->verifikator_1_diklats->foto_profiles->size,
+                ] : null,
                 'data_completion_step' => $diklat->verifikator_1_diklats->data_completion_step,
                 'status_aktif' => $diklat->verifikator_1_diklats->status_aktif,
                 'created_at' => $diklat->verifikator_1_diklats->created_at,
@@ -653,7 +711,16 @@ class DiklatController extends Controller
                 'nama' => $diklat->verifikator_2_diklats->nama,
                 'email_verified_at' => $diklat->verifikator_2_diklats->email_verified_at,
                 'data_karyawan_id' => $diklat->verifikator_2_diklats->data_karyawan_id,
-                'foto_profil' => $diklat->verifikator_2_diklats->foto_profil,
+                'foto_profil' => $diklat->verifikator_2_diklats->foto_profiles ? [
+                    'id' => $diklat->verifikator_2_diklats->foto_profiles->id,
+                    'user_id' => $diklat->verifikator_2_diklats->foto_profiles->user_id,
+                    'file_id' => $diklat->verifikator_2_diklats->foto_profiles->file_id,
+                    'nama' => $diklat->verifikator_2_diklats->foto_profiles->nama,
+                    'nama_file' => $diklat->verifikator_2_diklats->foto_profiles->nama_file,
+                    'path' => $baseUrl . $diklat->verifikator_2_diklats->foto_profiles->path,
+                    'ext' => $diklat->verifikator_2_diklats->foto_profiles->ext,
+                    'size' => $diklat->verifikator_2_diklats->foto_profiles->size,
+                ] : null,
                 'data_completion_step' => $diklat->verifikator_2_diklats->data_completion_step,
                 'status_aktif' => $diklat->verifikator_2_diklats->status_aktif,
                 'created_at' => $diklat->verifikator_2_diklats->created_at,
@@ -860,36 +927,36 @@ class DiklatController extends Controller
                 $diklat->save();
 
                 // Update masa diklat karyawan
-                $pesertaDiklat = PesertaDiklat::where('diklat_id', $diklatId)->pluck('peserta');
-                if ($pesertaDiklat->isNotEmpty()) {
-                    foreach ($pesertaDiklat as $userId) {
-                        $dataKaryawan = DataKaryawan::where('user_id', $userId)->first();
-                        if ($dataKaryawan) {
-                            // Ambil daftar diklat ID untuk user
-                            $diklatIds = PesertaDiklat::where('peserta', $userId)->pluck('diklat_id');
-                            if ($diklatIds->isNotEmpty()) { // Pastikan diklatIds tidak kosong
-                                Log::info("| Diklat | - User ID {$userId} memiliki {$diklatIds->count()} diklat.");
+                // $pesertaDiklat = PesertaDiklat::where('diklat_id', $diklatId)->pluck('peserta');
+                // if ($pesertaDiklat->isNotEmpty()) {
+                //     foreach ($pesertaDiklat as $userId) {
+                //         $dataKaryawan = DataKaryawan::where('user_id', $userId)->first();
+                //         if ($dataKaryawan) {
+                //             // Ambil daftar diklat ID untuk user
+                //             $diklatIds = PesertaDiklat::where('peserta', $userId)->pluck('diklat_id');
+                //             if ($diklatIds->isNotEmpty()) { // Pastikan diklatIds tidak kosong
+                //                 Log::info("| Diklat | - User ID {$userId} memiliki {$diklatIds->count()} diklat.");
 
-                                // Hitung total durasi
-                                $totalDurasi = Diklat::whereIn('id', $diklatIds)
-                                    ->where('status_diklat_id', 4) // Hanya diklat dengan status 'Disetujui'
-                                    ->sum('durasi');
-                                Log::info("| Diklat | - Total masa diklat untuk user ID {$userId} adalah {$totalDurasi} jam.");
+                //                 // Hitung total durasi
+                //                 $totalDurasi = Diklat::whereIn('id', $diklatIds)
+                //                     ->where('status_diklat_id', 4) // Hanya diklat dengan status 'Disetujui'
+                //                     ->sum('durasi');
+                //                 Log::info("| Diklat | - Total masa diklat untuk user ID {$userId} adalah {$totalDurasi} jam.");
 
-                                // Update masa_diklat
-                                $dataKaryawan->masa_diklat = $totalDurasi;
-                                $dataKaryawan->save();
-                            } else {
-                                Log::info("| Diklat | - User ID {$userId} tidak memiliki diklat terkait.");
-                            }
-                        } else {
-                            Log::error("Data karyawan dengan user_id {$userId} tidak ditemukan saat mencoba update masa diklat untuk diklat ID {$diklat->id}.");
-                        }
-                    }
-                    Log::info("Proses update masa diklat selesai untuk diklat ID {$diklat->id} dengan jumlah peserta {$pesertaDiklat->count()}.");
-                } else {
-                    Log::info("Tidak ada peserta untuk diklat ID {$diklat->id} saat melakukan update masa diklat.");
-                }
+                //                 // Update masa_diklat
+                //                 $dataKaryawan->masa_diklat = $totalDurasi;
+                //                 $dataKaryawan->save();
+                //             } else {
+                //                 Log::info("| Diklat | - User ID {$userId} tidak memiliki diklat terkait.");
+                //             }
+                //         } else {
+                //             Log::error("Data karyawan dengan user_id {$userId} tidak ditemukan saat mencoba update masa diklat untuk diklat ID {$diklat->id}.");
+                //         }
+                //     }
+                //     Log::info("Proses update masa diklat selesai untuk diklat ID {$diklat->id} dengan jumlah peserta {$pesertaDiklat->count()}.");
+                // } else {
+                //     Log::info("Tidak ada peserta untuk diklat ID {$diklat->id} saat melakukan update masa diklat.");
+                // }
 
                 $totalPeserta = PesertaDiklat::where('diklat_id', $diklat->id)->pluck('peserta');
                 $users = User::whereIn('id', $totalPeserta)->get();
@@ -987,7 +1054,6 @@ class DiklatController extends Controller
             // Pembuatan sertifikat untuk diklat internal
             if ($diklat->kategori_diklat_id == 1) {
                 $pesertaDiklat = PesertaDiklat::where('diklat_id', $diklatId)->pluck('peserta');
-
                 if ($pesertaDiklat->isNotEmpty()) {
                     foreach ($pesertaDiklat as $userId) {
                         $dataKaryawan = DataKaryawan::where('user_id', $userId)->first();
@@ -995,6 +1061,19 @@ class DiklatController extends Controller
                             $user = $dataKaryawan->users;
                             GenerateCertificateHelper::generateCertificate($diklat, $user);
                             Log::info("Sertifikat untuk Peserta Diklat Internal '{$diklat->nama}' dengan user_id {$userId} telah dibuat.");
+
+                            // Refactored: update masa_diklat saat generate sertifikat
+                            $diklatIds = PesertaDiklat::where('peserta', $userId)->pluck('diklat_id');
+                            if ($diklatIds->isNotEmpty()) {
+                                $totalDurasi = Diklat::whereIn('id', $diklatIds)
+                                    ->where('status_diklat_id', 4)
+                                    ->sum('durasi');
+
+                                $dataKaryawan->masa_diklat = $totalDurasi;
+                                $dataKaryawan->save();
+
+                                Log::info("Masa diklat user_id {$userId} diupdate menjadi {$totalDurasi} jam.");
+                            }
                         }
                     }
                     $diklat->certificate_published = 1;
@@ -1300,9 +1379,9 @@ class DiklatController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Tidak dapat menghapus peserta dari diklat eksternal. Silakan lakukan penolakan verifikasi untuk memungkinkan pengajuan ulang.'), Response::HTTP_BAD_REQUEST);
         }
 
-        if ($diklat->status_diklat_id == 4) {
-            return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Tidak dapat menghapus peserta dari diklat yang sudah disetujui.'), Response::HTTP_BAD_REQUEST);
-        }
+        // if ($diklat->status_diklat_id == 4) {
+        //     return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Tidak dapat menghapus peserta dari diklat yang sudah disetujui.'), Response::HTTP_BAD_REQUEST);
+        // }
 
         $peserta_diklat = PesertaDiklat::where('diklat_id', $diklatId)->where('peserta', $userId)->first();
         if (!$peserta_diklat) {
@@ -1320,14 +1399,16 @@ class DiklatController extends Controller
 
         return response()->json([
             'status' => Response::HTTP_OK,
-            'message' => "Peserta diklat '{$userName}' berhasil dihapus dari diklat '{$diklat->nama}'."
+            'message' => "Peserta diklat '{$userName}' berhasil dihapus dari diklat internal '{$diklat->nama}'."
         ], Response::HTTP_OK);
     }
 
-    private function createNotifikasiDiklat($diklat)
+    private function createNotifikasiDiklat($diklat, $userIds = null)
     {
         try {
-            $users = User::all();
+            $users = is_array($userIds) && count($userIds) > 0
+                ? User::whereIn('id', $userIds)->get()
+                : User::all();
 
             foreach ($users as $user) {
                 $message = "Diklat Internal baru '{$diklat->nama}' telah ditambahkan pada tanggal mulai {$diklat->tgl_mulai}.";

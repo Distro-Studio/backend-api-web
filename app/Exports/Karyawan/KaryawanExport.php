@@ -35,7 +35,9 @@ class KaryawanExport implements FromCollection, WithHeadings, WithMapping
             'kelompok_gajis',
             'ptkps',
             'kategori_darahs'
-        ])->where('id', '!=', 1);
+        ])
+            ->where('id', '!=', 1)
+            ->orderBy('nik', 'asc');
 
         if (isset($this->filters['unit_kerja'])) {
             $namaUnitKerja = $this->filters['unit_kerja'];

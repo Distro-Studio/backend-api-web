@@ -86,12 +86,6 @@ class StatusKaryawanController extends Controller
 
         $data = $request->validated();
 
-        // Validasi unique
-        $existingDataValidation = StatusKaryawan::where('label', $data['label'])->where('id', '!=', $id)->first();
-        if ($existingDataValidation) {
-            return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Nama status karyawan tersebut sudah pernah dibuat.'), Response::HTTP_BAD_REQUEST);
-        }
-
         $statusKaryawan->update($data);
         $updatedStatusKaryawan = $statusKaryawan->fresh();
         $successMessage = "Data status karyawan '{$updatedStatusKaryawan->label}' berhasil diubah.";
@@ -141,6 +135,7 @@ class StatusKaryawanController extends Controller
             return [
                 'id' => $statusKaryawan->id,
                 'label' => $statusKaryawan->label,
+                'kategori_status' => $statusKaryawan->kategori_status,
                 'deleted_at' => $statusKaryawan->deleted_at,
                 'created_at' => $statusKaryawan->created_at,
                 'updated_at' => $statusKaryawan->updated_at

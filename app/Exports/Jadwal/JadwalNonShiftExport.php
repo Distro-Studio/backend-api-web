@@ -18,10 +18,12 @@ class JadwalNonShiftExport implements FromCollection, WithHeadings, WithTitle
     protected $end_date;
     protected $counter;
 
-    public function __construct()
+    public function __construct($startDate, $endDate)
     {
-        $this->start_date = Carbon::now('Asia/Jakarta')->startOfMonth();
-        $this->end_date = Carbon::now('Asia/Jakarta')->endOfMonth();
+        // $this->start_date = Carbon::now('Asia/Jakarta')->startOfMonth();
+        // $this->end_date = Carbon::now('Asia/Jakarta')->endOfMonth();
+        $this->start_date = $startDate;
+        $this->end_date = $endDate;
         $this->counter = 1;
     }
 
@@ -33,6 +35,8 @@ class JadwalNonShiftExport implements FromCollection, WithHeadings, WithTitle
             ->whereHas('data_karyawans.unit_kerjas', function ($query) {
                 $query->where('jenis_karyawan', 0);
             })
+            ->join('data_karyawans', 'users.id', '=', 'data_karyawans.user_id')
+            ->orderBy('data_karyawans.nik', 'asc') // Urutkan berdasarkan NIK
             ->get();
 
         $hariLibur = HariLibur::whereIn('tanggal', $date_range)->get()->keyBy('tanggal');
@@ -53,59 +57,68 @@ class JadwalNonShiftExport implements FromCollection, WithHeadings, WithTitle
                 }
             }
 
-            if ($user->data_karyawans->unit_kerjas->jenis_karyawan == 0) {
-                foreach ($date_range as $date) {
-                    $day_of_week = Carbon::createFromFormat('Y-m-d', $date)->locale('id')->dayName;
-                    $nonShift = $nonShifts->get($day_of_week);
+            // Pastikan user memiliki data_karyawans dan unit_kerjas
+            if ($user->data_karyawans && $user->data_karyawans->unit_kerjas) {
 
-                    if (isset($cuti_dates[$date])) {
-                        $user_schedule_array[] = [
-                            $this->counter++,
-                            'user' => $user->nama,
-                            'jenis_karyawan' => 'Non-Shift',
-                            'nama_unit' => $user->data_karyawans->unit_kerjas->nama_unit ?? 'N/A',
-                            'nama_shift' => $cuti_dates[$date],
-                            'tanggal_mulai' => Carbon::parse($date)->format('d-m-Y'),
-                            'tanggal_selesai' => Carbon::parse($date)->format('d-m-Y'),
-                            'jam_mulai' => 'N/A',
-                            'jam_selesai' => 'N/A'
-                        ];
-                    } else if ($day_of_week == 'Minggu') {
-                        $user_schedule_array[] = [
-                            $this->counter++,
-                            'user' => $user->nama,
-                            'jenis_karyawan' => 'Non-Shift',
-                            'nama_unit' => $user->data_karyawans->unit_kerjas->nama_unit ?? 'N/A',
-                            'nama_shift' => 'Libur Hari Minggu',
-                            'tanggal_mulai' => Carbon::parse($date)->format('d-m-Y'),
-                            'tanggal_selesai' => Carbon::parse($date)->format('d-m-Y'),
-                            'jam_mulai' => 'N/A',
-                            'jam_selesai' => 'N/A'
-                        ];
-                    } elseif (isset($hariLibur[$date])) {
-                        $user_schedule_array[] = [
-                            $this->counter++,
-                            'user' => $user->nama,
-                            'jenis_karyawan' => 'Non-Shift',
-                            'nama_unit' => $user->data_karyawans->unit_kerjas->nama_unit ?? 'N/A',
-                            'nama_shift' => $hariLibur[$date]->nama,
-                            'tanggal_mulai' => Carbon::parse($date)->format('d-m-Y'),
-                            'tanggal_selesai' => Carbon::parse($date)->format('d-m-Y'),
-                            'jam_mulai' => 'N/A',
-                            'jam_selesai' => 'N/A'
-                        ];
-                    } elseif ($nonShift) {
-                        $user_schedule_array[] = [
-                            $this->counter++,
-                            'user' => $user->nama,
-                            'jenis_karyawan' => 'Non-Shift',
-                            'nama_unit' => $user->data_karyawans->unit_kerjas->nama_unit ?? 'N/A',
-                            'nama_shift' => $nonShift->nama,
-                            'tanggal_mulai' => Carbon::parse($date)->format('d-m-Y'),
-                            'tanggal_selesai' => Carbon::parse($date)->format('d-m-Y'),
-                            'jam_mulai' => $nonShift->jam_from,
-                            'jam_selesai' => $nonShift->jam_to
-                        ];
+                // Cek jika jenis_karyawan adalah non-shift
+                if ($user->data_karyawans->unit_kerjas->jenis_karyawan == 0) {
+                    foreach ($date_range as $date) {
+                        $day_of_week = Carbon::createFromFormat('Y-m-d', $date)->locale('id')->dayName;
+                        $nonShift = $nonShifts->get($day_of_week);
+
+                        if (isset($cuti_dates[$date])) {
+                            $user_schedule_array[] = [
+                                $this->counter++,
+                                'user' => $user->nama,
+                                'nik' => $user->data_karyawans->nik,
+                                'jenis_karyawan' => 'Non-Shift',
+                                'nama_unit' => $user->data_karyawans->unit_kerjas->nama_unit ?? 'N/A',
+                                'nama_shift' => $cuti_dates[$date],
+                                'tanggal_mulai' => Carbon::parse($date)->format('d-m-Y'),
+                                'tanggal_selesai' => Carbon::parse($date)->format('d-m-Y'),
+                                'jam_mulai' => 'N/A',
+                                'jam_selesai' => 'N/A'
+                            ];
+                        } else if ($day_of_week == 'Minggu') {
+                            $user_schedule_array[] = [
+                                $this->counter++,
+                                'user' => $user->nama,
+                                'nik' => $user->data_karyawans->nik,
+                                'jenis_karyawan' => 'Non-Shift',
+                                'nama_unit' => $user->data_karyawans->unit_kerjas->nama_unit ?? 'N/A',
+                                'nama_shift' => 'Libur Hari Minggu',
+                                'tanggal_mulai' => Carbon::parse($date)->format('d-m-Y'),
+                                'tanggal_selesai' => Carbon::parse($date)->format('d-m-Y'),
+                                'jam_mulai' => 'N/A',
+                                'jam_selesai' => 'N/A'
+                            ];
+                        } elseif (isset($hariLibur[$date])) {
+                            $user_schedule_array[] = [
+                                $this->counter++,
+                                'user' => $user->nama,
+                                'nik' => $user->data_karyawans->nik,
+                                'jenis_karyawan' => 'Non-Shift',
+                                'nama_unit' => $user->data_karyawans->unit_kerjas->nama_unit ?? 'N/A',
+                                'nama_shift' => $hariLibur[$date]->nama,
+                                'tanggal_mulai' => Carbon::parse($date)->format('d-m-Y'),
+                                'tanggal_selesai' => Carbon::parse($date)->format('d-m-Y'),
+                                'jam_mulai' => 'N/A',
+                                'jam_selesai' => 'N/A'
+                            ];
+                        } elseif ($nonShift) {
+                            $user_schedule_array[] = [
+                                $this->counter++,
+                                'user' => $user->nama,
+                                'nik' => $user->data_karyawans->nik,
+                                'jenis_karyawan' => 'Non-Shift',
+                                'nama_unit' => $user->data_karyawans->unit_kerjas->nama_unit ?? 'N/A',
+                                'nama_shift' => $nonShift->nama,
+                                'tanggal_mulai' => Carbon::parse($date)->format('d-m-Y'),
+                                'tanggal_selesai' => Carbon::parse($date)->format('d-m-Y'),
+                                'jam_mulai' => $nonShift->jam_from,
+                                'jam_selesai' => $nonShift->jam_to
+                            ];
+                        }
                     }
                 }
             }
@@ -121,6 +134,7 @@ class JadwalNonShiftExport implements FromCollection, WithHeadings, WithTitle
         return [
             'no',
             'nama',
+            'nik',
             'jenis_karyawan',
             'unit_kerja',
             'shift',

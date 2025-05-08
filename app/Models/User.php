@@ -42,11 +42,32 @@ class User extends Authenticatable
         'id' => 'integer',
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
+        'foto_profil' => 'integer',
         'role_id' => 'integer',
         'data_karyawan_id' => 'integer',
         'data_completion_step' => 'integer',
         'status_aktif' => 'integer'
     ];
+
+    /**
+     * Get the foto_profil that owns the User
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function foto_profiles(): BelongsTo
+    {
+        return $this->belongsTo(Berkas::class, 'foto_profil', 'id');
+    }
+
+    /**
+     * Get all of the deviceTokens for the User
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function deviceTokens(): HasMany
+    {
+        return $this->hasMany(UserDeviceToken::class, 'user_id', 'id');
+    }
 
     /**
      * Get the data_karyawan associated with the User

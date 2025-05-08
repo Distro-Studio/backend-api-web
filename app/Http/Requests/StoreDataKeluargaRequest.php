@@ -24,8 +24,13 @@ class StoreDataKeluargaRequest extends FormRequest
         return [
             'nama_keluarga' => 'required|string|max:255',
             'hubungan' => 'required',
-            'pendidikan_terakhir' => 'required|integer|exists:kategori_pendidikans,id',
+            'pendidikan_terakhir' => 'nullable|integer|exists:kategori_pendidikans,id',
             'tgl_lahir' => 'required',
+            'tempat_lahir' => 'nullable|string|max:255',
+            'jenis_kelamin' => 'nullable|boolean',
+            'kategori_agama_id' => 'nullable|integer|exists:kategori_agamas,id',
+            'kategori_darah_id' => 'nullable|integer|exists:kategori_darahs,id',
+            'no_rm' => 'nullable',
             'status_hidup' => 'required|boolean',
             'pekerjaan' => 'nullable|string|max:255',
             'no_hp' => 'nullable|numeric',
@@ -46,6 +51,17 @@ class StoreDataKeluargaRequest extends FormRequest
             'pendidikan_terakhir.integer' => 'Pendidikan terakhir harus berupa angka.',
             'pendidikan_terakhir.exists' => 'Pendidikan terakhir tidak ditemukan dalam daftar yang valid.',
             'tgl_lahir.required' => 'Tanggal lahir anggota keluarga harus diisi.',
+            'tempat_lahir.required' => 'Tempat lahir anggota keluarga harus diisi.',
+            'tempat_lahir.string' => 'Tempat lahir harus berupa text.',
+            'tempat_lahir.max' => 'Tempat lahir maksimal 255 karakter.',
+            'jenis_kelamin.required' => 'Jenis kelamin harus diisi.',
+            'jenis_kelamin.boolean' => 'Jenis kelamin harus berupa true atau false.',
+            'kategori_agama_id.required' => 'Kategori agama harus diisi.',
+            'kategori_agama_id.integer' => 'Kategori agama harus berupa angka.',
+            'kategori_agama_id.exists' => 'Kategori agama tidak ditemukan dalam daftar yang valid.',
+            'kategori_darah_id.required' => 'Kategori darah harus diisi.',
+            'kategori_darah_id.integer' => 'Kategori darah harus berupa angka.',
+            'kategori_darah_id.exists' => 'Kategori darah tidak ditemukan dalam daftar yang valid.',
             'status_hidup.required' => 'Status hidup harus diisi.',
             'status_hidup.boolean' => 'Status hidup harus berupa true atau false.',
             'pekerjaan.string' => 'Pekerjaan harus berupa string.',
@@ -61,11 +77,12 @@ class StoreDataKeluargaRequest extends FormRequest
 
     public function failedValidation(Validator $validator)
     {
-        $reponse = [
+        $messages = implode(' ', $validator->errors()->all());
+        $response = [
             'status' => Response::HTTP_BAD_REQUEST,
-            'message' => $validator->errors()
+            'message' => $messages,
         ];
 
-        throw new HttpResponseException(response()->json($reponse, Response::HTTP_BAD_REQUEST));
+        throw new HttpResponseException(response()->json($response, Response::HTTP_BAD_REQUEST));
     }
 }

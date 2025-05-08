@@ -421,6 +421,7 @@ class DataPresensiController extends Controller
             $jadwalNonShift = NonShift::where('nama', $hariNamaIndonesia)->first();
         }
 
+        $baseUrl = env('STORAGE_SERVER_DOMAIN');
         return response()->json([
             'status' => Response::HTTP_OK,
             'message' => "Detail data presensi karyawan '{$presensiHariIni->users->nama}' berhasil ditampilkan.",
@@ -432,7 +433,16 @@ class DataPresensiController extends Controller
                     'username' => $presensiHariIni->users->username,
                     'email_verified_at' => $presensiHariIni->users->email_verified_at,
                     'data_karyawan_id' => $presensiHariIni->users->data_karyawan_id,
-                    'foto_profil' => $presensiHariIni->users->foto_profil,
+                    'foto_profil' => $presensiHariIni->users->foto_profiles ? [
+                        'id' => $presensiHariIni->users->foto_profiles->id,
+                        'user_id' => $presensiHariIni->users->foto_profiles->user_id,
+                        'file_id' => $presensiHariIni->users->foto_profiles->file_id,
+                        'nama' => $presensiHariIni->users->foto_profiles->nama,
+                        'nama_file' => $presensiHariIni->users->foto_profiles->nama_file,
+                        'path' => $baseUrl . $presensiHariIni->users->foto_profiles->path,
+                        'ext' => $presensiHariIni->users->foto_profiles->ext,
+                        'size' => $presensiHariIni->users->foto_profiles->size,
+                    ] : null,
                     'data_completion_step' => $presensiHariIni->users->data_completion_step,
                     'status_aktif' => $presensiHariIni->users->status_aktif,
                     'created_at' => $presensiHariIni->users->created_at,

@@ -300,6 +300,7 @@ class DataCutiController extends Controller
                     // Cari data verifikasi untuk order tertentu
                     $verifikasiForOrder = $relasiVerifikasi->firstWhere('order', $i);
 
+                    $baseUrl = env('STORAGE_SERVER_DOMAIN');
                     if ($verifikasiForOrder) {
                         $formattedRelasiVerifikasi[] = [
                             'id' => $verifikasiForOrder->id,
@@ -310,7 +311,16 @@ class DataCutiController extends Controller
                                 'username' => $verifikasiForOrder->users->username,
                                 'email_verified_at' => $verifikasiForOrder->users->email_verified_at,
                                 'data_karyawan_id' => $verifikasiForOrder->users->data_karyawan_id,
-                                'foto_profil' => $verifikasiForOrder->users->foto_profil,
+                                'foto_profil' => $verifikasiForOrder->users->foto_profiles ? [
+                                    'id' => $verifikasiForOrder->users->foto_profiles->id,
+                                    'user_id' => $verifikasiForOrder->users->foto_profiles->user_id,
+                                    'file_id' => $verifikasiForOrder->users->foto_profiles->file_id,
+                                    'nama' => $verifikasiForOrder->users->foto_profiles->nama,
+                                    'nama_file' => $verifikasiForOrder->users->foto_profiles->nama_file,
+                                    'path' => $baseUrl . $verifikasiForOrder->users->foto_profiles->path,
+                                    'ext' => $verifikasiForOrder->users->foto_profiles->ext,
+                                    'size' => $verifikasiForOrder->users->foto_profiles->size,
+                                ] : null,
                                 'data_completion_step' => $verifikasiForOrder->users->data_completion_step,
                                 'status_aktif' => $verifikasiForOrder->users->status_aktif,
                                 'created_at' => $verifikasiForOrder->users->created_at,
@@ -345,7 +355,16 @@ class DataCutiController extends Controller
                         'username' => $dataCuti->users->username,
                         'email_verified_at' => $dataCuti->users->email_verified_at,
                         'data_karyawan_id' => $dataCuti->users->data_karyawan_id,
-                        'foto_profil' => $dataCuti->users->foto_profil,
+                        'foto_profil' => $dataCuti->users->foto_profiles ? [
+                            'id' => $dataCuti->users->foto_profiles->id,
+                            'user_id' => $dataCuti->users->foto_profiles->user_id,
+                            'file_id' => $dataCuti->users->foto_profiles->file_id,
+                            'nama' => $dataCuti->users->foto_profiles->nama,
+                            'nama_file' => $dataCuti->users->foto_profiles->nama_file,
+                            'path' => $baseUrl . $dataCuti->users->foto_profiles->path,
+                            'ext' => $dataCuti->users->foto_profiles->ext,
+                            'size' => $dataCuti->users->foto_profiles->size,
+                        ] : null,
                         'data_completion_step' => $dataCuti->users->data_completion_step,
                         'status_aktif' => $dataCuti->users->status_aktif,
                         'created_at' => $dataCuti->users->created_at,
@@ -577,7 +596,8 @@ class DataCutiController extends Controller
                 return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data cuti karyawan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
             }
 
-            $listCuti = $dataCuti->users->cutis->map(function ($cuti) {
+            $baseUrl = env('STORAGE_SERVER_DOMAIN');
+            $listCuti = $dataCuti->users->cutis->map(function ($cuti) use ($baseUrl) {
                 return [
                     'id' => $cuti->id,
                     'tipe_cuti' => $cuti->tipe_cutis,
@@ -592,7 +612,16 @@ class DataCutiController extends Controller
                         'nama' => $cuti->verifikator_1_cutis->nama,
                         'email_verified_at' => $cuti->verifikator_1_cutis->email_verified_at,
                         'data_karyawan_id' => $cuti->verifikator_1_cutis->data_karyawan_id,
-                        'foto_profil' => $cuti->verifikator_1_cutis->foto_profil,
+                        'foto_profil' => $cuti->verifikator_1_cutis->foto_profiles ? [
+                            'id' => $cuti->verifikator_1_cutis->foto_profiles->id,
+                            'user_id' => $cuti->verifikator_1_cutis->foto_profiles->user_id,
+                            'file_id' => $cuti->verifikator_1_cutis->foto_profiles->file_id,
+                            'nama' => $cuti->verifikator_1_cutis->foto_profiles->nama,
+                            'nama_file' => $cuti->verifikator_1_cutis->foto_profiles->nama_file,
+                            'path' => $baseUrl . $cuti->verifikator_1_cutis->foto_profiles->path,
+                            'ext' => $cuti->verifikator_1_cutis->foto_profiles->ext,
+                            'size' => $cuti->verifikator_1_cutis->foto_profiles->size,
+                        ] : null,
                         'data_completion_step' => $cuti->verifikator_1_cutis->data_completion_step,
                         'status_aktif' => $cuti->verifikator_1_cutis->status_aktif,
                         'created_at' => $cuti->verifikator_1_cutis->created_at,
@@ -603,7 +632,16 @@ class DataCutiController extends Controller
                         'nama' => $cuti->verifikator_2_cutis->nama,
                         'email_verified_at' => $cuti->verifikator_2_cutis->email_verified_at,
                         'data_karyawan_id' => $cuti->verifikator_2_cutis->data_karyawan_id,
-                        'foto_profil' => $cuti->verifikator_2_cutis->foto_profil,
+                        'foto_profil' => $cuti->verifikator_2_cutis->foto_profiles ? [
+                            'id' => $cuti->verifikator_2_cutis->foto_profiles->id,
+                            'user_id' => $cuti->verifikator_2_cutis->foto_profiles->user_id,
+                            'file_id' => $cuti->verifikator_2_cutis->foto_profiles->file_id,
+                            'nama' => $cuti->verifikator_2_cutis->foto_profiles->nama,
+                            'nama_file' => $cuti->verifikator_2_cutis->foto_profiles->nama_file,
+                            'path' => $baseUrl . $cuti->verifikator_2_cutis->foto_profiles->path,
+                            'ext' => $cuti->verifikator_2_cutis->foto_profiles->ext,
+                            'size' => $cuti->verifikator_2_cutis->foto_profiles->size,
+                        ] : null,
                         'data_completion_step' => $cuti->verifikator_2_cutis->data_completion_step,
                         'status_aktif' => $cuti->verifikator_2_cutis->status_aktif,
                         'created_at' => $cuti->verifikator_2_cutis->created_at,
@@ -623,7 +661,16 @@ class DataCutiController extends Controller
                     'username' => $dataCuti->users->username,
                     'email_verified_at' => $dataCuti->users->email_verified_at,
                     'data_karyawan_id' => $dataCuti->users->data_karyawan_id,
-                    'foto_profil' => $dataCuti->users->foto_profil,
+                    'foto_profil' => $dataCuti->users->foto_profiles ? [
+                        'id' => $dataCuti->users->foto_profiles->id,
+                        'user_id' => $dataCuti->users->foto_profiles->user_id,
+                        'file_id' => $dataCuti->users->foto_profiles->file_id,
+                        'nama' => $dataCuti->users->foto_profiles->nama,
+                        'nama_file' => $dataCuti->users->foto_profiles->nama_file,
+                        'path' => $baseUrl . $dataCuti->users->foto_profiles->path,
+                        'ext' => $dataCuti->users->foto_profiles->ext,
+                        'size' => $dataCuti->users->foto_profiles->size,
+                    ] : null,
                     'data_completion_step' => $dataCuti->users->data_completion_step,
                     'status_aktif' => $dataCuti->users->status_aktif,
                     'created_at' => $dataCuti->users->created_at,
