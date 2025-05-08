@@ -33,14 +33,13 @@ class DashboardController extends Controller
         })->where('id', '!=', 1)->count();
 
         // Calculate the number of fulltime, parttime, and outsourcing employees
-        $calculatedKaryawanFulltime = DataKaryawan::whereHas('status_karyawans', function ($query) {
-            $query->where('kategori_status_id', 1)
-                ->whereNotNull('kategori_status_id');
-        })->where('id', '!=', 1)->count();
+        $calculatedKaryawanFulltime = DataKaryawan::whereIn('status_karyawan_id', [1, 2, 3])->where('id', '!=', 1)->count();
+
         $calculatedKaryawanParttime = DataKaryawan::whereHas('status_karyawans', function ($query) {
             $query->where('kategori_status_id', 2)
                 ->whereNotNull('kategori_status_id');
         })->where('id', '!=', 1)->count();
+
         $calculatedKaryawanOutsourcing = DataKaryawan::whereHas('status_karyawans', function ($query) {
             $query->where('kategori_status_id', 3)
                 ->whereNotNull('kategori_status_id');
