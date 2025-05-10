@@ -34,7 +34,7 @@ class DashboardController extends Controller
 
         // Calculate the number of fulltime, parttime, and outsourcing employees
         $calculatedKaryawanFulltime = DataKaryawan::whereHas('status_karyawans', function ($query) {
-            $query->where('kategori_status_id', 2)
+            $query->where('kategori_status_id', 1)
                 ->whereNotNull('kategori_status_id');
         })
             ->whereHas('users', function ($query) {
