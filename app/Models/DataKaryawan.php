@@ -117,11 +117,11 @@ class DataKaryawan extends Model
     }
 
     /**
-     * Get the spesialisasi that owns the DataKaryawan
+     * Get the spesialisasis that owns the DataKaryawan
      *
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function spesialisasi(): BelongsTo
+    public function spesialisasis(): BelongsTo
     {
         return $this->belongsTo(User::class, 'foreign_key', 'other_key');
     }

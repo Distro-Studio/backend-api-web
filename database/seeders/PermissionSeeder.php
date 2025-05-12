@@ -48,6 +48,7 @@ class PermissionSeeder extends Seeder
             'Pengaturan Permission' => ['edit permission', 'delete permission', 'view permission'],
             'Pengaturan Materi Pelatihan' => ['create pelatihanKaryawan', 'edit pelatihanKaryawan', 'delete pelatihanKaryawan', 'view pelatihanKaryawan'],
             'Pengaturan Unit Kerja' => ['create unitKerja', 'edit unitKerja', 'delete unitKerja', 'view unitKerja'],
+            'Pengaturan Spesialisasi' => ['create spesialisasi', 'edit spesialisasi', 'delete spesialisasi', 'view spesialisasi'],
             'Pengaturan Pendidikan' => ['create pendidikan', 'edit pendidikan', 'delete pendidikan', 'view pendidikan'],
             'Pengaturan Jabatan' => ['create jabatan', 'edit jabatan', 'delete jabatan', 'view jabatan'],
             'Pengaturan Status Karyawan' => ['create statusKaryawan', 'edit statusKaryawan', 'delete statusKaryawan', 'view statusKaryawan'],

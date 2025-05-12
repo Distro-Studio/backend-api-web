@@ -46,6 +46,7 @@ use App\Http\Requests\UpdateDataKaryawanRequest;
 use App\Http\Requests\Excel_Import\ImportKaryawanRequest;
 use App\Http\Resources\Dashboard\Karyawan\KaryawanResource;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
+use App\Models\Spesialisasi;
 
 class DataKaryawanController extends Controller
 {
@@ -324,6 +325,31 @@ class DataKaryawanController extends Controller
       ], Response::HTTP_OK);
     } catch (\Exception $e) {
       Log::error('| Karyawan | - Error function getAllDataUnitKerja: ' . $e->getMessage());
+      return response()->json([
+        'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
+        'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
+      ], Response::HTTP_INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  public function getAllDataSpesialisasi()
+  {
+    try {
+      $spesialisasi = Spesialisasi::all();
+      if ($spesialisasi->isEmpty()) {
+        return response()->json([
+          'status' => Response::HTTP_NOT_FOUND,
+          'message' => 'Data spesialisasi tidak ditemukan.',
+        ], Response::HTTP_NOT_FOUND);
+      }
+
+      return response()->json([
+        'status' => Response::HTTP_OK,
+        'message' => 'Retrieving all spesialisasi for dropdown',
+        'data' => $spesialisasi
+      ], Response::HTTP_OK);
+    } catch (\Exception $e) {
+      Log::error('| Karyawan | - Error function getAllDataSpesialisasi: ' . $e->getMessage());
       return response()->json([
         'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
         'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
@@ -938,6 +964,7 @@ class DataKaryawanController extends Controller
           'unit_kerja' => $karyawan->unit_kerjas, // unit_kerja_id
           'jabatan' => $karyawan->jabatans, // jabatan_id
           'kompetensi' => $karyawan->kompetensis, // kompetensi_id
+          'spesialisasi' => $karyawan->spesialisasis, // spesialisasi_id
           'nik_ktp' => $karyawan->nik_ktp,
           'status_karyawan' => $karyawan->status_karyawans, // status_karyawan_id
           'tempat_lahir' => $karyawan->tempat_lahir,
@@ -1046,6 +1073,7 @@ class DataKaryawanController extends Controller
           'jabatan_id' => $data['jabatan_id'],
           'kompetensi_id' => $data['kompetensi_id'] ?? null,
           'status_karyawan_id' => $data['status_karyawan_id'],
+          'spesialisasi_id' => $data['spesialisasi_id'] ?? null,
           'kelompok_gaji_id' => $data['kelompok_gaji_id'],
           'no_rekening' => $data['no_rekening'],
           'tunjangan_jabatan' => $data['tunjangan_jabatan'],
@@ -1236,6 +1264,7 @@ class DataKaryawanController extends Controller
         'unit_kerja' => $karyawan->unit_kerjas,
         'jabatan' => $karyawan->jabatans,
         'kompetensi' => $karyawan->kompetensis,
+        'spesialisasi' => $karyawan->spesialisasis,
         'nik_ktp' => $karyawan->nik_ktp,
         'status_karyawan' => $karyawan->status_karyawans,
         'tempat_lahir' => $karyawan->tempat_lahir,
@@ -1493,6 +1522,7 @@ class DataKaryawanController extends Controller
         'unit_kerja' => $karyawan->unit_kerjas, // unit_kerja_id
         'jabatan' => $karyawan->jabatans, // jabatan_id
         'kompetensi' => $karyawan->kompetensis, // kompetensi_id
+        'spesialisasi' => $karyawan->spesialisasis, // spesialisasi_id
         'nik_ktp' => $karyawan->nik_ktp,
         'status_karyawan' => $karyawan->status_karyawans, // status_karyawan_id
         'tempat_lahir' => $karyawan->tempat_lahir,

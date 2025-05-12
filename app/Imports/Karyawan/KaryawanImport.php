@@ -17,6 +17,7 @@ use App\Mail\SendAccoundUsersMail;
 use App\Models\KategoriAgama;
 use App\Models\KategoriDarah;
 use App\Models\KategoriPendidikan;
+use App\Models\Spesialisasi;
 use Spatie\Permission\Models\Role;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
@@ -35,6 +36,7 @@ class KaryawanImport implements ToModel, WithHeadingRow, WithValidation
   private $Jabatan;
   private $UnitKerja;
   private $Kompetensi;
+  private $Spesialisasi;
   private $KelompokGaji;
   private $PTKP;
   private $StatusKaryawan;
@@ -49,6 +51,7 @@ class KaryawanImport implements ToModel, WithHeadingRow, WithValidation
     $this->Jabatan = Jabatan::select('id', 'nama_jabatan')->get();
     $this->UnitKerja = UnitKerja::select('id', 'nama_unit')->get();
     $this->Kompetensi = Kompetensi::select('id', 'nama_kompetensi')->get();
+    $this->Spesialisasi = Spesialisasi::select('id', 'nama_spesialisasi')->get();
     $this->KelompokGaji = KelompokGaji::select('id', 'nama_kelompok')->get();
     $this->PTKP = Ptkp::select('id', 'kode_ptkp')->get();
     $this->StatusKaryawan = StatusKaryawan::select('id', 'label')->get();
@@ -70,16 +73,17 @@ class KaryawanImport implements ToModel, WithHeadingRow, WithValidation
       'unit_kerja' => 'nullable',
       'jabatan' => 'nullable',
       'kompetensi' => 'nullable',
+      'spesialisasi' => 'nullable',
       'status_karyawan' => 'required',
       'kelompok_gaji' => 'nullable',
-      'no_rekening' => 'required|numeric',
-      'tunjangan_fungsional' => 'required|numeric',
-      'tunjangan_khusus' => 'required|numeric',
-      'tunjangan_lainnya' => 'required|numeric',
-      'uang_makan' => 'required|numeric',
+      'no_rekening' => 'nullable|numeric',
+      'tunjangan_fungsional' => 'nullable|numeric',
+      'tunjangan_khusus' => 'nullable|numeric',
+      'tunjangan_lainnya' => 'nullable|numeric',
+      'uang_makan' => 'nullable|numeric',
       'uang_lembur' => 'nullable|numeric',
-      'kode_ptkp' => 'required',
-      'pendidikan_terakhir' => 'required',
+      'kode_ptkp' => 'nullable',
+      'pendidikan_terakhir' => 'nullable',
 
       // tambahan
       'gelar_depan' => 'nullable',
@@ -214,6 +218,15 @@ class KaryawanImport implements ToModel, WithHeadingRow, WithValidation
       $kompetensi = null;
     }
 
+    if (!empty($row['spesialisasi'])) {
+      $spesialisasi = $this->Spesialisasi->where('nama_spesialisasi', $row['spesialisasi'])->first();
+      if (!$spesialisasi) {
+        throw new \Exception("Spesialisasi '" . $row['spesialisasi'] . "' tidak ditemukan.");
+      }
+    } else {
+      $spesialisasi = null;
+    }
+
     $kelompok_gaji = $this->KelompokGaji->where('nama_kelompok', $row['kelompok_gaji'])->first();
     if (!$kelompok_gaji) {
       throw new \Exception("Kelompok gaji '" . $row['kelompok_gaji'] . "' tidak ditemukan.");
@@ -291,6 +304,7 @@ class KaryawanImport implements ToModel, WithHeadingRow, WithValidation
       'jabatan_id' => $jabatan ? $jabatan->id : null,
       'kompetensi_id' => $kompetensi ? $kompetensi->id : null,
       'status_karyawan_id' => $status_karyawan ? $status_karyawan->id : null,
+      'spesialisasi_id' => $spesialisasi ? $spesialisasi->id : null,
       'kelompok_gaji_id' => $kelompok_gaji ? $kelompok_gaji->id : null,
       'no_rekening' => $row['no_rekening'],
       'tunjangan_fungsional' => $row['tunjangan_fungsional'],
