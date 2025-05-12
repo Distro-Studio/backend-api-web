@@ -27,6 +27,8 @@ use App\Helpers\GenerateCertificateHelper;
 use App\Exports\Perusahaan\DiklatInternalExport;
 use App\Exports\Perusahaan\DiklatEksternalExport;
 use App\Http\Requests\StoreDiklatExternalRequest;
+use App\Http\Requests\UpdateDiklatExternalRequest;
+use App\Http\Requests\UpdateDiklatRequest;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
 
 class DiklatController extends Controller
@@ -594,8 +596,7 @@ class DiklatController extends Controller
                 'durasi' => $durasi,
                 'lokasi' => $data['lokasi'],
                 'verifikator_1' => $verifikatorId,
-                'verifikator_2' => $verifikatorId,
-                'is_whitelist' => 1
+                'verifikator_2' => $verifikatorId
             ]);
 
             PesertaDiklat::create([
@@ -736,6 +737,271 @@ class DiklatController extends Controller
             'message' => "Detail diklat '{$diklat->nama}' berhasil ditampilkan.",
             'data' => $detailDiklat,
         ], Response::HTTP_OK);
+    }
+
+    public function updateInternal(UpdateDiklatRequest $request, $diklatId)
+    {
+        if (!Gate::allows('edit diklat')) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
+
+        $data = $request->validated();
+
+        $diklat = Diklat::findOrFail($diklatId);
+        if ($diklat->status_diklat_id !== 1) {
+            return response()->json(new WithoutDataResource(
+                Response::HTTP_FORBIDDEN,
+                "Hanya diklat yang memiliki status 'Menunggu Verifikasi' yang dapat dilakukan perubahan."
+            ), Response::HTTP_FORBIDDEN);
+        }
+
+        DB::beginTransaction();
+        try {
+            StorageServerHelper::login();
+            $berkasIds = [
+                'dokumen' => null,
+                'dokumen_diklat_1' => null,
+                'dokumen_diklat_2' => null,
+                'dokumen_diklat_3' => null,
+                'dokumen_diklat_4' => null,
+                'dokumen_diklat_5' => null,
+            ];
+
+            // Upload dokumen_diklat_1 s.d. dokumen_diklat_5 (sebagian boleh kosong)
+            $authUser = Auth::user();
+            foreach ($berkasIds as $field => $value) {
+                if ($request->hasFile($field)) {
+                    $file = $request->file($field);
+                    $random_filename = Str::random(20);
+                    $dataupload = StorageServerHelper::multipleUploadToServer($file, $random_filename);
+
+                    // Simpan data berkas ke tabel berkas
+                    $berkas = Berkas::create([
+                        'user_id' => $authUser->id,
+                        'file_id' => $dataupload['id_file']['id'],
+                        'nama' => $random_filename,
+                        'kategori_berkas_id' => 2,
+                        'status_berkas_id' => 2,
+                        'path' => $dataupload['path'],
+                        'tgl_upload' => now('Asia/Jakarta'),
+                        'nama_file' => $dataupload['nama_file'],
+                        'ext' => $dataupload['ext'],
+                        'size' => $dataupload['size'],
+                    ]);
+
+                    // Simpan ID berkas ke urutan yang sesuai
+                    $berkasIds[$field] = $berkas->id;
+                    Log::info("Berkas dokumen pada kolom {$field} berhasil diupload.");
+                }
+            }
+
+            StorageServerHelper::logout();
+
+            $jamMulai = Carbon::createFromFormat('H:i:s', $data['jam_mulai'], 'Asia/Jakarta');
+            $jamSelesai = Carbon::createFromFormat('H:i:s', $data['jam_selesai'], 'Asia/Jakarta');
+
+            // Cek apakah jam selesai lebih kecil dari jam mulai (berarti selesai keesokan hari)
+            if ($jamSelesai->lessThan($jamMulai)) {
+                $jamSelesai->addDay(); // Tambahkan 1 hari ke jam selesai
+            }
+
+            // Hitung selisih jam (dalam detik)
+            $selisihJam = $jamMulai->diffInSeconds($jamSelesai);
+
+            // Hitung total hari (selisih tanggal)
+            $tglMulai = Carbon::createFromFormat('d-m-Y', $data['tgl_mulai'], 'Asia/Jakarta');
+            $tglSelesai = Carbon::createFromFormat('d-m-Y', $data['tgl_selesai'], 'Asia/Jakarta');
+            $totalHari = $tglMulai->diffInDays($tglSelesai) + 1; // +1 untuk menghitung hari mulai
+
+            $durasi = $selisihJam * $totalHari;
+
+            $diklat->update([
+                'gambar' => $berkasIds['dokumen'] ?? $diklat->gambar,
+                'dokumen_diklat_1' => $berkasIds['dokumen_diklat_1'] ?? $diklat->dokumen_diklat_1,
+                'dokumen_diklat_2' => $berkasIds['dokumen_diklat_2'] ?? $diklat->dokumen_diklat_2,
+                'dokumen_diklat_3' => $berkasIds['dokumen_diklat_3'] ?? $diklat->dokumen_diklat_3,
+                'dokumen_diklat_4' => $berkasIds['dokumen_diklat_4'] ?? $diklat->dokumen_diklat_4,
+                'dokumen_diklat_5' => $berkasIds['dokumen_diklat_5'] ?? $diklat->dokumen_diklat_5,
+                'nama' => $data['nama'],
+                'deskripsi' => $data['deskripsi'],
+                'kuota' => $data['kuota'],
+                'tgl_mulai' => $data['tgl_mulai'],
+                'tgl_selesai' => $data['tgl_selesai'],
+                'jam_mulai' => $data['jam_mulai'],
+                'jam_selesai' => $data['jam_selesai'],
+                'durasi' => $durasi,
+                'lokasi' => $data['lokasi']
+            ]);
+
+            $userIds = $data['user_id'] ?? [];
+            $existingUserIds = DB::table('peserta_diklats')
+                ->where('diklat_id', $diklat->id)
+                ->pluck('peserta')
+                ->toArray();
+
+            // Bandingkan array user_id lama dan baru (tanpa memperhatikan urutan)
+            $hasUserChanged = array_diff($userIds, $existingUserIds) || array_diff($existingUserIds, $userIds);
+            if ($hasUserChanged) {
+                DB::table('peserta_diklats')->where('diklat_id', $diklat->id)->delete();
+
+                // Menyimpan peserta diklat dan menentukan is_whitelist
+                if ($userIds) {
+                    foreach ($userIds as $userId) {
+                        DB::table('peserta_diklats')->insert([
+                            'diklat_id' => $diklat->id,
+                            'peserta' => $userId,
+                        ]);
+                    }
+
+                    $diklat->update([
+                        'is_whitelist' => 1,
+                        'total_peserta' => count($userIds),
+                        'kuota' => count($userIds),
+                    ]);
+                } else {
+                    $diklat->update([
+                        'is_whitelist' => 0,
+                        'total_peserta' => 0,
+                        'kuota' => $data['kuota'] ?? 0,
+                    ]);
+                }
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'status' => Response::HTTP_OK,
+                'message' => "Diklat Internal '{$diklat->nama}' berhasil diperbarui.",
+                'data' => $diklat,
+            ], Response::HTTP_OK);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('| Diklat Internal | - Error function updateInternal: ' . $e->getMessage());
+            return response()->json([
+                'status'  => Response::HTTP_INTERNAL_SERVER_ERROR,
+                'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    public function updateExternal(UpdateDiklatExternalRequest $request, $diklatId)
+    {
+        if (!Gate::allows('edit diklat')) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
+
+        $data = $request->validated();
+        $verifikatorId = Auth::id();
+        $berkas = null;
+
+        $diklat = Diklat::findOrFail($diklatId);
+        // if ($diklat->status_diklat_id !== 1) {
+        //     return response()->json(new WithoutDataResource(
+        //         Response::HTTP_FORBIDDEN,
+        //         "Hanya diklat yang memiliki status 'Menunggu Verifikasi' yang dapat dilakukan perubahan."
+        //     ), Response::HTTP_FORBIDDEN);
+        // }
+
+        DB::beginTransaction();
+        try {
+            if ($request->hasFile('dokumen')) {
+                $authUser = Auth::user();
+
+                // Login to the storage server
+                StorageServerHelper::login();
+
+                $file = $request->file('dokumen');
+
+                // Upload file using helper
+                $random_filename = Str::random(20);
+                $dataupload = StorageServerHelper::uploadToServer($request, $random_filename);
+                // $gambarUrl = $dataupload['path'];
+
+                $berkas = Berkas::create([
+                    'user_id' => $authUser->id,
+                    'file_id' => $dataupload['id_file']['id'],
+                    'nama' => $random_filename,
+                    'kategori_berkas_id' => 2, // umum
+                    'status_berkas_id' => 2,
+                    'path' => $dataupload['path'],
+                    'tgl_upload' => now(),
+                    'nama_file' => $dataupload['nama_file'],
+                    'ext' => $dataupload['ext'],
+                    'size' => $dataupload['size'],
+                ]);
+                if (!$berkas) {
+                    throw new Exception('Berkas gagal di upload.');
+                }
+
+                $gambarId = $berkas->id;
+
+                StorageServerHelper::logout();
+            }
+
+            $jamMulai = Carbon::createFromFormat('H:i:s', $data['jam_mulai'], 'Asia/Jakarta');
+            $jamSelesai = Carbon::createFromFormat('H:i:s', $data['jam_selesai'], 'Asia/Jakarta');
+
+            // Cek apakah jam selesai lebih kecil dari jam mulai (berarti selesai keesokan hari)
+            if ($jamSelesai->lessThan($jamMulai)) {
+                $jamSelesai->addDay(); // Tambahkan 1 hari ke jam selesai
+            }
+
+            // Hitung selisih jam (dalam detik)
+            $selisihJam = $jamMulai->diffInSeconds($jamSelesai);
+
+            // Hitung total hari (selisih tanggal)
+            $tglMulai = Carbon::createFromFormat('d-m-Y', $data['tgl_mulai'], 'Asia/Jakarta');
+            $tglSelesai = Carbon::createFromFormat('d-m-Y', $data['tgl_selesai'], 'Asia/Jakarta');
+            $totalHari = $tglMulai->diffInDays($tglSelesai) + 1; // +1 untuk menghitung hari mulai
+
+            $durasi = $selisihJam * $totalHari;
+
+            $diklat->update([
+                'dokumen_eksternal' => $gambarId ?? $diklat->dokumen_eksternal,
+                'nama'              => $data['nama'],
+                'deskripsi'         => $data['deskripsi'],
+                'tgl_mulai'         => $data['tgl_mulai'],
+                'tgl_selesai'       => $data['tgl_selesai'],
+                'jam_mulai'         => $data['jam_mulai'],
+                'jam_selesai'       => $data['jam_selesai'],
+                'durasi'            => $durasi,
+                'lokasi'            => $data['lokasi'],
+                'verifikator_1'     => $verifikatorId,
+                'verifikator_2'     => $verifikatorId,
+            ]);
+
+            // Perbarui peserta jika berbeda dari sebelumnya
+            $existing = PesertaDiklat::where('diklat_id', $diklat->id)->pluck('peserta')->first();
+            $newUserId = $data['user_id'];
+            if ($existing !== $newUserId) {
+                // ⬇️ Kurangi durasi dari peserta sebelumnya
+                $this->decreaseDiklatDurationForRemovedUsers($diklat->id, [$newUserId], $durasi);
+
+                PesertaDiklat::where('diklat_id', $diklat->id)->delete();
+
+                PesertaDiklat::create([
+                    'diklat_id' => $diklat->id,
+                    'peserta'   => $data['user_id'],
+                ]);
+            }
+
+            $user = User::find($data['user_id']);
+
+            DB::commit();
+
+            return response()->json([
+                'status'  => Response::HTTP_OK,
+                'message' => "Diklat Eksternal '{$diklat->nama}' dari karyawan '{$user->nama}' berhasil diperbarui.",
+                'data'    => $diklat,
+            ], Response::HTTP_OK);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('| Diklat Internal | - Error function updateExternal: ' . $e->getMessage());
+            return response()->json([
+                'status'  => Response::HTTP_INTERNAL_SERVER_ERROR,
+                'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
     }
 
     public function exportDiklatInternal()
@@ -1335,53 +1601,21 @@ class DiklatController extends Controller
     // Untuk verifikasi apakah karyawan benar" ikut diklat (dari absensi manual)
     public function fakeAssignDiklat($diklatId, $userId)
     {
-        $verifikatorId = Auth::id();
+        $SuperAdmin = Auth::user();
+
+        // Cek apakah user memiliki role 'Super Admin'
+        if (!$SuperAdmin->hasRole('Super Admin')) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
 
         $diklat = Diklat::find($diklatId);
         if (!$diklat) {
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data diklat tidak ditemukan.'), Response::HTTP_NOT_FOUND);
         }
 
-        if (!Auth::user()->hasRole('Super Admin')) {
-            // Dapatkan relasi_verifikasis, pastikan verifikator memiliki ID user yang sama
-            $relasiVerifikasi = RelasiVerifikasi::where('verifikator', $verifikatorId)
-                ->where('modul_verifikasi', 5) // 5 adalah modul diklat
-                ->where('order', 3)
-                ->first();
-            if (!$relasiVerifikasi) {
-                return response()->json([
-                    'status' => Response::HTTP_NOT_FOUND,
-                    'message' => "Anda tidak memiliki hak akses untuk verifikasi diklat internal tahap publikasi sertifikat dengan modul '{$relasiVerifikasi->modul_verifikasis->label}'.",
-                    'relasi_verifikasi' => null,
-                ], Response::HTTP_NOT_FOUND);
-            }
-
-            // Pastikan order verifikasi adalah 3 untuk pembuatan sertifikat
-            if ($relasiVerifikasi->order != 3) {
-                return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Diklat internal ini tidak dalam status untuk dilakukan pembuatan sertifikat.'), Response::HTTP_BAD_REQUEST);
-            }
-
-            // Dapatkan peserta diklat yang diverifikasi
-            $userIdPeserta = $diklat->peserta_diklat->pluck('users.id')->first();
-
-            // Cocokkan user_id peserta dengan user_diverifikasi pada tabel relasi_verifikasis
-            $userDiverifikasi = $relasiVerifikasi->user_diverifikasi;
-            if (!is_array($userDiverifikasi)) {
-                Log::warning('Kesalahan format data user diverifikasi pada generate sertifikat diklat internal.');
-                return response()->json(new WithoutDataResource(Response::HTTP_INTERNAL_SERVER_ERROR, 'Kesalahan format data user diverifikasi.'), Response::HTTP_INTERNAL_SERVER_ERROR);
-            }
-            if (!in_array($userIdPeserta, $userDiverifikasi)) {
-                return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak dapat membuat sertifikat diklat internal ini karena peserta tidak ada dalam daftar verifikasi Anda.'), Response::HTTP_FORBIDDEN);
-            }
-        }
-
         if ($diklat->kategori_diklat_id != 1) {
             return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Tidak dapat menghapus peserta dari diklat eksternal. Silakan lakukan penolakan verifikasi untuk memungkinkan pengajuan ulang.'), Response::HTTP_BAD_REQUEST);
         }
-
-        // if ($diklat->status_diklat_id == 4) {
-        //     return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Tidak dapat menghapus peserta dari diklat yang sudah disetujui.'), Response::HTTP_BAD_REQUEST);
-        // }
 
         $peserta_diklat = PesertaDiklat::where('diklat_id', $diklatId)->where('peserta', $userId)->first();
         if (!$peserta_diklat) {
@@ -1394,13 +1628,135 @@ class DiklatController extends Controller
         // Delete karyawan
         $peserta_diklat->delete();
 
-        // Hitung kembali jumlah peserta
-        $jumlahPesertaTersisa = PesertaDiklat::where('diklat_id', $diklatId)->count();
-
         return response()->json([
             'status' => Response::HTTP_OK,
             'message' => "Peserta diklat '{$userName}' berhasil dihapus dari diklat internal '{$diklat->nama}'."
         ], Response::HTTP_OK);
+    }
+
+    // Untuk assign karyawan yang lupa join via online
+    public function assignDiklat(Request $request, $diklatId)
+    {
+        try {
+            $SuperAdmin = Auth::user();
+
+            if (!$SuperAdmin->hasRole('Super Admin')) {
+                return response()->json(new WithoutDataResource(
+                    Response::HTTP_FORBIDDEN,
+                    'Anda tidak memiliki hak akses untuk melakukan proses ini.'
+                ), Response::HTTP_FORBIDDEN);
+            }
+
+            $userIds = $request->user_id;
+
+            if (!is_array($userIds) || count($userIds) === 0) {
+                return response()->json(new WithoutDataResource(
+                    Response::HTTP_BAD_REQUEST,
+                    'User ID harus berupa array dan tidak boleh kosong.'
+                ), Response::HTTP_BAD_REQUEST);
+            }
+
+            // Validasi: cek apakah semua user_id ada di database
+            $validUserIds = User::whereIn('id', $userIds)->pluck('id')->toArray();
+            $invalidUserIds = array_diff($userIds, $validUserIds);
+            if (count($invalidUserIds) > 0) {
+                return response()->json(new WithoutDataResource(
+                    Response::HTTP_BAD_REQUEST,
+                    'Ada user ID yang tidak ditemukan, pastikan user ID yang dimasukkan valid.'
+                ), Response::HTTP_BAD_REQUEST);
+            }
+
+            // Validasi: pastikan belum ada user yang terdaftar di diklat
+            $alreadyExistIds = PesertaDiklat::where('diklat_id', $diklatId)
+                ->whereIn('peserta', $userIds)
+                ->pluck('peserta')
+                ->toArray();
+            if (count($alreadyExistIds) > 0) {
+                return response()->json(new WithoutDataResource(
+                    Response::HTTP_CONFLICT,
+                    'Ada user ID yang sudah terdaftar di diklat tersebut, pastikan user ID yang dimasukkan valid.'
+                ), Response::HTTP_CONFLICT);
+            }
+
+            $diklat = Diklat::find($diklatId);
+            if (!$diklat) {
+                return response()->json(new WithoutDataResource(
+                    Response::HTTP_NOT_FOUND,
+                    'Data diklat tidak ditemukan.'
+                ), Response::HTTP_NOT_FOUND);
+            }
+
+            if ($diklat->kategori_diklat_id != 1) {
+                return response()->json(new WithoutDataResource(
+                    Response::HTTP_BAD_REQUEST,
+                    'Peserta hanya dapat ditambahkan ke diklat internal.'
+                ), Response::HTTP_BAD_REQUEST);
+            }
+
+            DB::beginTransaction();
+
+            $addedNames = [];
+            $now = now('Asia/Jakarta');
+
+            foreach ($validUserIds as $userId) {
+                $exists = PesertaDiklat::where('diklat_id', $diklatId)
+                    ->where('peserta', $userId)
+                    ->exists();
+
+                if ($exists) continue;
+
+                PesertaDiklat::create([
+                    'diklat_id'  => $diklatId,
+                    'peserta'    => $userId,
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ]);
+
+                $user = User::find($userId);
+                $addedNames[] = $user->nama;
+            }
+
+            $jumlahPesertaBaru = count($addedNames);
+            $diklat->total_peserta = PesertaDiklat::where('diklat_id', $diklatId)->count();
+
+            if (!is_null($diklat->kuota)) {
+                $diklat->kuota += $jumlahPesertaBaru;
+            }
+
+            $diklat->save();
+            DB::commit();
+
+            return response()->json([
+                'status'  => Response::HTTP_OK,
+                'message' => "Sebanyak {$jumlahPesertaBaru} peserta berhasil ditambahkan ke diklat '{$diklat->nama}': " . implode(', ', $addedNames)
+            ], Response::HTTP_OK);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('| Diklat Internal | - Error function assignDiklat: ' . $e->getMessage());
+            return response()->json([
+                'status'  => Response::HTTP_INTERNAL_SERVER_ERROR,
+                'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    // Mengurangi masa diklat peserta saat edit diklat external jika peserta diganti
+    private function decreaseDiklatDurationForRemovedUsers(int $diklatId, array $newUserIds, int $durasi): void
+    {
+        $oldUserIds = DB::table('peserta_diklats')
+            ->where('diklat_id', $diklatId)
+            ->pluck('peserta')
+            ->toArray();
+
+        $removedUserIds = array_diff($oldUserIds, $newUserIds);
+
+        if (empty($removedUserIds)) return;
+
+        foreach ($removedUserIds as $userId) {
+            DB::table('data_karyawans')
+                ->where('user_id', $userId)
+                ->decrement('masa_diklat', $durasi);
+        }
     }
 
     private function createNotifikasiDiklat($diklat, $userIds = null)

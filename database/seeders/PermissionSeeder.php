@@ -19,7 +19,7 @@ class PermissionSeeder extends Seeder
             'Dashboard Karyawan' => ['view dashboardKaryawan'],
 
             // Perusahaan
-            'Diklat' => ['create diklat', 'view diklat', 'export diklat', 'publikasi sertifikat'],
+            'Diklat' => ['create diklat', 'edit diklat', 'view diklat', 'export diklat', 'publikasi sertifikat'],
 
             // Keuangan
             'Penggajian THR Karyawan' => ['create thrKaryawan', 'view thrKaryawan', 'export thrKaryawan'],

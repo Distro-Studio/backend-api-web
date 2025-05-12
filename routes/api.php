@@ -282,11 +282,13 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::post('/get-diklat-internal', [DiklatController::class, 'indexInternal']);
             Route::post('/get-diklat-eksternal', [DiklatController::class, 'indexEksternal']);
             Route::post('/diklat', [DiklatController::class, 'store']);
+            Route::post('/update-diklat/{diklatId}', [DiklatController::class, 'updateInternal']);
             Route::post('/diklat-eksternal-user', [DiklatController::class, 'storeExternal']);
             Route::get('/diklat/{diklatId}', [DiklatController::class, 'show']);
             Route::get('/diklat-internal/export', [DiklatController::class, 'exportDiklatInternal']);
             Route::get('/diklat-eksternal/export', [DiklatController::class, 'exportDiklatEksternal']);
             Route::delete('/diklat/{diklatId}/delete-peserta-diklat/{userId}', [DiklatController::class, 'fakeAssignDiklat']);
+            Route::post('/diklat/{diklatId}/add-peserta-diklat', [DiklatController::class, 'assignDiklat']);
             Route::post('/diklat/{diklatId}/verifikasi-step-1', [DiklatController::class, 'verifikasiTahap1']);
             Route::post('/diklat/{diklatId}/verifikasi-step-2', [DiklatController::class, 'verifikasiTahap2']);
             Route::post('/diklat/{diklatId}/certificates', [DiklatController::class, 'generateCertificate']);
