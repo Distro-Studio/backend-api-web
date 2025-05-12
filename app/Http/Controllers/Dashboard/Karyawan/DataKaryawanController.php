@@ -664,6 +664,21 @@ class DataKaryawanController extends Controller
       if ($request->hasFile('dokumen')) {
         $authUser = Auth::user();
         StorageServerHelper::login();
+
+        // ✅ Jika ada foto profil lama, hapus dulu
+        if ($user->foto_profil) {
+          $berkasLama = Berkas::find($user->foto_profil);
+          if ($berkasLama) {
+            try {
+              StorageServerHelper::deleteFromServer($berkasLama->file_id);
+            } catch (\Exception $e) {
+              Log::warning("Gagal hapus foto_profil lama dari server (file_id: {$berkasLama->file_id}): " . $e->getMessage());
+            }
+            $berkasLama->delete();
+          }
+        }
+
+        // ✅ Upload file baru
         $file = $request->file('dokumen');
         $random_filename = Str::random(20);
         $dataupload = StorageServerHelper::uploadToServer($request, $random_filename);
