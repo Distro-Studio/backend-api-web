@@ -162,6 +162,17 @@ class CutiJadwalExport implements FromCollection, WithHeadings, WithMapping
             });
         }
 
+        if (isset($this->filters['tipe_cuti'])) {
+            $namaTipeCuti = $this->filters['tipe_cuti'];
+            $query->whereHas('tipe_cutis', function ($query) use ($namaTipeCuti) {
+                if (is_array($namaTipeCuti)) {
+                    $query->whereIn('id', $namaTipeCuti);
+                } else {
+                    $query->where('id', '=', $namaTipeCuti);
+                }
+            });
+        }
+
         return $query->get();
     }
 

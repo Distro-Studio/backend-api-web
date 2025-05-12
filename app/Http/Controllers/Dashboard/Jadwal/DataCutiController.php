@@ -756,7 +756,6 @@ class DataCutiController extends Controller
         }
     }
 
-    // TODO | New Update
     public function deleteCuti(Request $request)
     {
         try {
