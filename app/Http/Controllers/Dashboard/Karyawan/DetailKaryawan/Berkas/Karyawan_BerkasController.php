@@ -182,9 +182,7 @@ class Karyawan_BerkasController extends Controller
     {
         try {
             if (!Gate::allows('edit dataKaryawan')) {
-                if (!Gate::allows('edit dataKaryawan')) {
-                    return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
-                }
+                return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
             }
 
             // buat validasi dokumen
@@ -254,7 +252,79 @@ class Karyawan_BerkasController extends Controller
 
             return response()->json(new WithoutDataResource(Response::HTTP_CREATED, 'Berkas dari karyawan ' . $karyawan->users->nama . ' berhasil diupload.'), Response::HTTP_CREATED);
         } catch (\Exception $e) {
-            // Log::error('| Karyawan | - Error function store: ' . $e->getMessage());
+            Log::error('| Karyawan | - Error function createPersonalFile: ' . $e->getMessage());
+            return response()->json([
+                'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
+                'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    public function deletePersonalFile(Request $request, $data_karyawan_id)
+    {
+        try {
+            if (!Gate::allows('edit dataKaryawan')) {
+                return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+            }
+
+            $validator = Validator::make($request->all(), [
+                'berkas_id' => 'required|array|min:1',
+                'berkas_id.*' => 'integer',
+            ], [
+                'berkas_id.required' => 'Parameter berkas_id wajib dikirim.',
+                'berkas_id.array' => 'Format berkas_id harus array.',
+                'berkas_id.min' => 'Minimal berkas_id adalah 1.',
+                'berkas_id.*.integer' => 'Format berkas_id harus integer.',
+            ]);
+            if ($validator->fails()) {
+                return response()->json([
+                    'status' => Response::HTTP_BAD_REQUEST,
+                    'message' => implode(' ', $validator->errors()->all()),
+                ], Response::HTTP_BAD_REQUEST);
+            }
+
+            $karyawan = DataKaryawan::where('id', '!=', 1)->find($data_karyawan_id);
+            if (!$karyawan) {
+                return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data karyawan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+            }
+
+            // Ambil semua berkas yang cocok dari array
+            $berkas_ids = $request->berkas_id;
+            $berkasList = Berkas::whereIn('id', $berkas_ids)->get();
+
+            // Validasi jika ada ID yang tidak ditemukan
+            $foundIds = $berkasList->pluck('id')->toArray();
+            $notFoundIds = array_diff($berkas_ids, $foundIds);
+            if (count($notFoundIds) > 0) {
+                return response()->json(new WithoutDataResource(
+                    Response::HTTP_NOT_FOUND,
+                    'Berkas dengan ID berikut tidak ditemukan: ' . implode(', ', $notFoundIds)
+                ), Response::HTTP_NOT_FOUND);
+            }
+
+            DB::beginTransaction();
+
+            // Loop untuk delete satu per satu
+            foreach ($berkasList as $berkas) {
+                $file_id = $berkas->file_id;
+
+                // Hapus dari server
+                try {
+                    StorageServerHelper::deleteFromServer($file_id);
+                } catch (\Exception $e) {
+                    Log::warning("Gagal menghapus file_id $file_id dari server: " . $e->getMessage());
+                }
+
+                // Hapus dari database
+                $berkas->delete();
+            }
+
+            DB::commit();
+
+            return response()->json(new WithoutDataResource(Response::HTTP_CREATED, 'Berkas dari karyawan ' . $karyawan->users->nama . ' berhasil dihapus.'), Response::HTTP_CREATED);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('| Karyawan | - Error function deletePersonalFile: ' . $e->getMessage());
             return response()->json([
                 'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
                 'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
