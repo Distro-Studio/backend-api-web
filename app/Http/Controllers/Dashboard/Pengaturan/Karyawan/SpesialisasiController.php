@@ -66,7 +66,7 @@ class SpesialisasiController extends Controller
         }
 
         $successMessage = "Data spesialisasi '{$spesialisasi->nama_spesialisasi}' berhasil ditampilkan.";
-        $formattedData = $this->formatData(collect([$unit_kerja]))->first();
+        $formattedData = $this->formatData(collect([$spesialisasi]))->first();
 
         return response()->json([
             'status' => Response::HTTP_OK,

@@ -35,6 +35,7 @@ use App\Http\Controllers\Dashboard\Pengaturan\Karyawan\KompetensiController;
 use App\Http\Controllers\Dashboard\Pengaturan\Karyawan\MateriPelatihanController;
 use App\Http\Controllers\Dashboard\Pengaturan\Karyawan\PendidikanTerakhirController;
 use App\Http\Controllers\Dashboard\Pengaturan\Karyawan\PertanyaanController;
+use App\Http\Controllers\Dashboard\Pengaturan\Karyawan\SpesialisasiController;
 use App\Http\Controllers\Dashboard\Pengaturan\Karyawan\StatusKaryawanController;
 use App\Http\Controllers\Dashboard\Pengaturan\Karyawan\UnitKerjaController;
 use App\Http\Controllers\Dashboard\Pengaturan\ManagemenWaktu\CutiController;
@@ -87,6 +88,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/get-list-user-shift', [DataKaryawanController::class, 'getAllDataUserShift']);
     Route::get('/get-list-user-non-shift', [DataKaryawanController::class, 'getAllDataUserNonShift']);
     Route::get('/get-list-unit-kerja', [DataKaryawanController::class, 'getAllDataUnitKerja']);
+    Route::get('/get-list-spesialisasi', [DataKaryawanController::class, 'getAllDataSpesialisasi']);
     Route::get('/get-list-kategori-unit-kerja', [DataKaryawanController::class, 'getAllDataKategoriUnitKerja']);
     Route::get('/get-list-jabatan', [DataKaryawanController::class, 'getAllDataJabatan']);
     Route::get('/get-list-kategori-status-karyawan', [DataKaryawanController::class, 'getAllDataKategoriStatusKaryawan']);
@@ -284,6 +286,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::post('/diklat', [DiklatController::class, 'store']);
             Route::post('/update-diklat/{diklatId}', [DiklatController::class, 'updateInternal']);
             Route::post('/diklat-eksternal-user', [DiklatController::class, 'storeExternal']);
+            Route::post('/update-diklat-eksternal-user/{diklatId}', [DiklatController::class, 'updateExternal']);
             Route::get('/diklat/{diklatId}', [DiklatController::class, 'show']);
             Route::get('/diklat-internal/export', [DiklatController::class, 'exportDiklatInternal']);
             Route::get('/diklat-eksternal/export', [DiklatController::class, 'exportDiklatEksternal']);
@@ -360,6 +363,10 @@ Route::middleware(['auth:sanctum'])->group(function () {
             // ! Unit Kerja ===========>
             Route::post('/unit-kerja/restore/{id}', [UnitKerjaController::class, 'restore']);
             Route::apiResource('/unit-kerja', UnitKerjaController::class);
+
+            // ! Spesialisasi ===========>
+            Route::post('/spesialisasi/restore/{id}', [SpesialisasiController::class, 'restore']);
+            Route::apiResource('/spesialisasi', SpesialisasiController::class);
 
             // ! Kategori Pendidikan ===========>
             Route::post('/pendidikan/restore/{id}', [PendidikanTerakhirController::class, 'restore']);
