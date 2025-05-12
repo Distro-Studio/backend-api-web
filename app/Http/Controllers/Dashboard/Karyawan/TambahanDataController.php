@@ -730,13 +730,13 @@ class TambahanDataController extends Controller
             if (is_numeric($date)) {
                 return Carbon::instance(
                     \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($date)
-                )->format('Y-m-d H:i:s');
+                )->format('d-m-Y');
             }
 
-            return Carbon::createFromFormat('d-m-Y', $date)->format('Y-m-d H:i:s');
+            return Carbon::createFromFormat('d-m-Y', $date)->format('d-m-Y');
         } catch (\Exception $e) {
             try {
-                return Carbon::createFromFormat('d/m/Y', $date)->format('Y-m-d H:i:s');
+                return Carbon::createFromFormat('d/m/Y', $date)->format('d-m-Y');
             } catch (\Exception $e) {
                 return null;
             }

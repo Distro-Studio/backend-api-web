@@ -18,6 +18,7 @@ class DataKaryawan extends Model
         'unit_kerja_id' => 'integer',
         'jabatan_id' => 'integer',
         'kompetensi_id' => 'integer',
+        'spesialisasi_id' => 'integer',
         'tunjangan_fungsional' => 'integer',
         'tunjangan_khusus' => 'integer',
         'tunjangan_lainnya' => 'integer',
@@ -113,6 +114,16 @@ class DataKaryawan extends Model
     public function jabatans(): BelongsTo
     {
         return $this->belongsTo(Jabatan::class, 'jabatan_id', 'id');
+    }
+
+    /**
+     * Get the spesialisasi that owns the DataKaryawan
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function spesialisasi(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'foreign_key', 'other_key');
     }
 
     /**
