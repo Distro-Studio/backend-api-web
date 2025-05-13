@@ -469,6 +469,97 @@ class TambahanDataController extends Controller
         }
     }
 
+    public function insertSTRSIP(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'karyawan_file' => 'required|mimes:xlsx,xls',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()->first()]);
+        }
+
+        DB::beginTransaction();
+
+        try {
+            $file = $request->file('karyawan_file');
+            $spreadsheet = IOFactory::load($file->getRealPath());
+            $sheet = $spreadsheet->getActiveSheet();
+
+            $updatedRecords = 0;
+
+            foreach ($sheet->getRowIterator(2) as $row) {
+                $cellIterator = $row->getCellIterator();
+                $cellIterator->setIterateOnlyExistingCells(true);
+
+                $nik = null;
+                $no_str = null;
+                $created_str = null;
+                $masa_berlaku_str = null;
+                $no_sip = null;
+                $created_sip = null;
+                $masa_berlaku_sip = null;
+
+                foreach ($cellIterator as $cell) {
+                    $column = $cell->getColumn();
+                    $value = trim($cell->getValue());
+
+                    if ($column === 'A') {
+                        $nik = $value;
+                    } elseif ($column === 'B') {
+                        $no_str = $value;
+                    } elseif ($column === 'C') {
+                        $created_str = $this->convertDateFormat($value);
+                    } elseif ($column === 'D') {
+                        $masa_berlaku_str = ($value === 'Seumur Hidup') ? null : $this->convertDateFormat($value);
+                    } elseif ($column === 'E') {
+                        $no_sip = $value;
+                    } elseif ($column === 'F') {
+                        $created_sip = $this->convertDateFormat($value);
+                    } elseif ($column === 'G') {
+                        $masa_berlaku_sip = $this->convertDateFormat($value);
+                    }
+                }
+
+                if (!empty($nik)) {
+                    $karyawan = DataKaryawan::where('nik', $nik)->first();
+                    if ($karyawan) {
+                        if (!empty($no_str)) {
+                            $karyawan->no_str = $no_str;
+                        }
+                        if (!empty($created_str)) {
+                            $karyawan->created_str = $created_str;
+                        }
+                        if (!empty($masa_berlaku_str)) {
+                            $masa_berlaku_str = ($value === 'Seumur Hidup') ? null : $value;
+                        }
+                        if (!empty($no_sip)) {
+                            $karyawan->no_sip = $no_sip;
+                        }
+                        if (!empty($created_sip)) {
+                            $karyawan->created_sip = $created_sip;
+                        }
+                        if (!empty($masa_berlaku_sip)) {
+                            $karyawan->masa_berlaku_sip = $masa_berlaku_sip;
+                        }
+
+                        $karyawan->save();
+                        $updatedRecords++;
+                    }
+                }
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'message' => "$updatedRecords data(s) updated successfully."
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['errors' => $e->getMessage()]);
+        }
+    }
+
     public function insertMasterShift(Request $request)
     {
         $validator = Validator::make($request->all(), [

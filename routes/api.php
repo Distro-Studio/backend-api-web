@@ -68,6 +68,7 @@ use Illuminate\Support\Facades\Route;
 
 // Untuk case nambah data
 // Route::post('/add-data-karyawan', [TambahanDataController::class, 'insertDataKaryawan']);
+// Route::post('/add-str-sip', [TambahanDataController::class, 'insertSTRSIP']);
 // Route::post('/add-data-keluarga', [TambahanDataController::class, 'insertDataKeluarga']);
 // Route::post('/cek-data-pendidikan', [TambahanDataController::class, 'cekDataPendidikanFromDataKeluarga']);
 // Route::post('/cek-nik-karyawan', [TambahanDataController::class, 'cekNIK']);
