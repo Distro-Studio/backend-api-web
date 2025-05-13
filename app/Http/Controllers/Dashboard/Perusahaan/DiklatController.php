@@ -604,6 +604,9 @@ class DiklatController extends Controller
                 'peserta' => $data['user_id'],
             ]);
 
+            // Update masa_diklat karyawan
+            $this->increaseMasaDiklat($data['user_id'], $durasi);
+
             $user = User::find($data['user_id']);
             if (!$user) {
                 throw new Exception('Karyawan tidak ditemukan.');
@@ -797,24 +800,6 @@ class DiklatController extends Controller
 
             StorageServerHelper::logout();
 
-            $jamMulai = Carbon::createFromFormat('H:i:s', $data['jam_mulai'], 'Asia/Jakarta');
-            $jamSelesai = Carbon::createFromFormat('H:i:s', $data['jam_selesai'], 'Asia/Jakarta');
-
-            // Cek apakah jam selesai lebih kecil dari jam mulai (berarti selesai keesokan hari)
-            if ($jamSelesai->lessThan($jamMulai)) {
-                $jamSelesai->addDay(); // Tambahkan 1 hari ke jam selesai
-            }
-
-            // Hitung selisih jam (dalam detik)
-            $selisihJam = $jamMulai->diffInSeconds($jamSelesai);
-
-            // Hitung total hari (selisih tanggal)
-            $tglMulai = Carbon::createFromFormat('d-m-Y', $data['tgl_mulai'], 'Asia/Jakarta');
-            $tglSelesai = Carbon::createFromFormat('d-m-Y', $data['tgl_selesai'], 'Asia/Jakarta');
-            $totalHari = $tglMulai->diffInDays($tglSelesai) + 1; // +1 untuk menghitung hari mulai
-
-            $durasi = $selisihJam * $totalHari;
-
             $diklat->update([
                 'gambar' => $berkasIds['dokumen'] ?? $diklat->gambar,
                 'dokumen_diklat_1' => $berkasIds['dokumen_diklat_1'] ?? $diklat->dokumen_diklat_1,
@@ -825,11 +810,7 @@ class DiklatController extends Controller
                 'nama' => $data['nama'],
                 'deskripsi' => $data['deskripsi'],
                 'kuota' => $data['kuota'],
-                'tgl_mulai' => $data['tgl_mulai'],
-                'tgl_selesai' => $data['tgl_selesai'],
-                'jam_mulai' => $data['jam_mulai'],
-                'jam_selesai' => $data['jam_selesai'],
-                'durasi' => $durasi,
+                'skp' => $data['skp'],
                 'lokasi' => $data['lokasi']
             ]);
 
@@ -938,34 +919,14 @@ class DiklatController extends Controller
                 StorageServerHelper::logout();
             }
 
-            $jamMulai = Carbon::createFromFormat('H:i:s', $data['jam_mulai'], 'Asia/Jakarta');
-            $jamSelesai = Carbon::createFromFormat('H:i:s', $data['jam_selesai'], 'Asia/Jakarta');
-
-            // Cek apakah jam selesai lebih kecil dari jam mulai (berarti selesai keesokan hari)
-            if ($jamSelesai->lessThan($jamMulai)) {
-                $jamSelesai->addDay(); // Tambahkan 1 hari ke jam selesai
-            }
-
-            // Hitung selisih jam (dalam detik)
-            $selisihJam = $jamMulai->diffInSeconds($jamSelesai);
-
-            // Hitung total hari (selisih tanggal)
-            $tglMulai = Carbon::createFromFormat('d-m-Y', $data['tgl_mulai'], 'Asia/Jakarta');
-            $tglSelesai = Carbon::createFromFormat('d-m-Y', $data['tgl_selesai'], 'Asia/Jakarta');
-            $totalHari = $tglMulai->diffInDays($tglSelesai) + 1; // +1 untuk menghitung hari mulai
-
-            $durasi = $selisihJam * $totalHari;
+            $durasi = $diklat->durasi;
 
             $diklat->update([
                 'dokumen_eksternal' => $gambarId ?? $diklat->dokumen_eksternal,
                 'nama'              => $data['nama'],
                 'deskripsi'         => $data['deskripsi'],
-                'tgl_mulai'         => $data['tgl_mulai'],
-                'tgl_selesai'       => $data['tgl_selesai'],
-                'jam_mulai'         => $data['jam_mulai'],
-                'jam_selesai'       => $data['jam_selesai'],
-                'durasi'            => $durasi,
                 'lokasi'            => $data['lokasi'],
+                'skp'               => $data['skp'],
                 'verifikator_1'     => $verifikatorId,
                 'verifikator_2'     => $verifikatorId,
             ]);
@@ -983,6 +944,9 @@ class DiklatController extends Controller
                     'diklat_id' => $diklat->id,
                     'peserta'   => $data['user_id'],
                 ]);
+
+                // Update masa_diklat karyawan
+                $this->increaseMasaDiklat($data['user_id'], $durasi);
             }
 
             $user = User::find($data['user_id']);
@@ -991,8 +955,7 @@ class DiklatController extends Controller
 
             return response()->json([
                 'status'  => Response::HTTP_OK,
-                'message' => "Diklat Eksternal '{$diklat->nama}' dari karyawan '{$user->nama}' berhasil diperbarui.",
-                'data'    => $diklat,
+                'message' => "Diklat Eksternal '{$diklat->nama}' dari karyawan '{$user->nama}' berhasil diperbarui."
             ], Response::HTTP_OK);
         } catch (\Exception $e) {
             DB::rollBack();
@@ -1617,16 +1580,33 @@ class DiklatController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Tidak dapat menghapus peserta dari diklat eksternal. Silakan lakukan penolakan verifikasi untuk memungkinkan pengajuan ulang.'), Response::HTTP_BAD_REQUEST);
         }
 
-        $peserta_diklat = PesertaDiklat::where('diklat_id', $diklatId)->where('peserta', $userId)->first();
-        if (!$peserta_diklat) {
+        // Mendapatkan peserta yang terdaftar di diklat tersebut
+        $peserta_diklat = PesertaDiklat::where('diklat_id', $diklatId)->pluck('peserta')->toArray();
+        if (!in_array($userId, $peserta_diklat)) {
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data peserta diklat tidak ditemukan.'), Response::HTTP_NOT_FOUND);
         }
 
+        // Get masa diklat peserta yang dihapus
+        $durasi = $diklat->durasi;
+
+        // Mengirim array userId selain yang dihapus
+        $remainingUserIds = array_diff($peserta_diklat, [$userId]);
+
+        // Log untuk verifikasi user yang akan dikurangi masa diklatnya
+        Log::info('User ID yang tidak akan dikurangi masa diklat: ' . implode(', ', $remainingUserIds));
+
+        // Mengurangi masa diklat peserta yang tetap ada (bukan yang dihapus)
+        $this->decreaseDiklatDurationForRemovedUsers($diklatId, $remainingUserIds, $durasi);
+
+        // Hapus peserta dari diklat
+        $peserta_diklat = PesertaDiklat::where('diklat_id', $diklatId)->where('peserta', $userId);
         $user = User::find($userId);
         $userName = $user ? $user->nama : $userId;
 
-        // Delete karyawan
+        // Menghapus peserta dari diklat
         $peserta_diklat->delete();
+
+        Log::info("Peserta diklat '{$userName}' berhasil dihapus dari diklat internal '{$diklat->nama}'.");
 
         return response()->json([
             'status' => Response::HTTP_OK,
@@ -1714,6 +1694,9 @@ class DiklatController extends Controller
 
                 $user = User::find($userId);
                 $addedNames[] = $user->nama;
+
+                // Tambahkan masa diklat untuk peserta yang baru ditambahkan
+                $this->increaseMasaDiklat($userId, $diklat->durasi);
             }
 
             $jumlahPesertaBaru = count($addedNames);
@@ -1728,7 +1711,8 @@ class DiklatController extends Controller
 
             return response()->json([
                 'status'  => Response::HTTP_OK,
-                'message' => "Sebanyak {$jumlahPesertaBaru} peserta berhasil ditambahkan ke diklat '{$diklat->nama}': " . implode(', ', $addedNames)
+                'message' => "Sebanyak {$jumlahPesertaBaru} peserta berhasil ditambahkan ke Diklat Internal '{$diklat->nama}'."
+                // 'message' => "Sebanyak {$jumlahPesertaBaru} peserta berhasil ditambahkan ke diklat '{$diklat->nama}': " . implode(', ', $addedNames)
             ], Response::HTTP_OK);
         } catch (\Exception $e) {
             DB::rollBack();
@@ -1748,14 +1732,54 @@ class DiklatController extends Controller
             ->pluck('peserta')
             ->toArray();
 
+        // Log Old User IDs
+        Log::info('Old User IDs: ' . implode(', ', $oldUserIds));
+        Log::info('New User IDs: ' . implode(', ', $newUserIds));
+
         $removedUserIds = array_diff($oldUserIds, $newUserIds);
+
+        // Log Removed User IDs
+        Log::info('Removed User IDs: ' . implode(', ', $removedUserIds));
 
         if (empty($removedUserIds)) return;
 
         foreach ($removedUserIds as $userId) {
+            // Ambil masa_diklat saat ini
+            $current = DB::table('data_karyawans')
+                ->where('user_id', $userId)
+                ->value('masa_diklat');
+
+            if ($current === null) continue;
+
+            $newDuration = $current - $durasi;
+
+            if ($newDuration <= 0) {
+                DB::table('data_karyawans')
+                    ->where('user_id', $userId)
+                    ->update(['masa_diklat' => null]);
+            } else {
+                DB::table('data_karyawans')
+                    ->where('user_id', $userId)
+                    ->update(['masa_diklat' => $newDuration]);
+            }
+        }
+    }
+
+    // Menambahkan masa diklat
+    private function increaseMasaDiklat(int $userId, int $durasi): void
+    {
+        $current = DB::table('data_karyawans')
+            ->where('user_id', $userId)
+            ->value('masa_diklat');
+
+        if ($current === null) {
             DB::table('data_karyawans')
                 ->where('user_id', $userId)
-                ->decrement('masa_diklat', $durasi);
+                ->update(['masa_diklat' => $durasi]);
+        } else {
+            DB::table('data_karyawans')
+                ->where('user_id', $userId)
+                ->update(['masa_diklat' => $current + $durasi]);
         }
     }
 
@@ -1778,7 +1802,7 @@ class DiklatController extends Controller
                 ]);
             }
 
-            Log::info('Notifikasi diklat telah berhasil dikirimkan ke semua pengguna.');
+            Log::info('Notifikasi diklat internal telah berhasil dikirimkan ke pengguna yang bersangkutan.');
         } catch (\Exception $e) {
             Log::error('| Notifikasi Diklat | - Error saat mengirim notifikasi: ' . $e->getMessage());
         }
@@ -1809,7 +1833,7 @@ class DiklatController extends Controller
                 ]);
             }
 
-            Log::info('Notifikasi diklat telah berhasil dikirimkan ke semua pengguna.');
+            Log::info("Notifikasi diklat external telah berhasil dikirimkan ke pengguna '{$user->nama}'.");
         } catch (\Exception $e) {
             Log::error('| Notifikasi Diklat | - Error saat mengirim notifikasi: ' . $e->getMessage());
         }

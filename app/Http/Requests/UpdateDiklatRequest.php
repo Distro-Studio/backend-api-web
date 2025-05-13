@@ -32,10 +32,6 @@ class UpdateDiklatRequest extends FormRequest
             'dokumen_diklat_4' => 'nullable|file|max:10240|mimes:pdf,pptx,docx',
             'dokumen_diklat_5' => 'nullable|file|max:10240|mimes:pdf,pptx,docx',
             'kuota' => 'nullable|integer|min:1',
-            'tgl_mulai' => 'required|string',
-            'tgl_selesai' => 'required|string',
-            'jam_mulai' => 'required|string',
-            'jam_selesai' => 'required|string',
             'lokasi' => 'required|string',
             'skp' => 'nullable|string',
         ];

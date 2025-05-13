@@ -20,14 +20,10 @@ class UpdateDiklatExternalRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'dokumen' => 'required|mimes:jpeg,png,jpg,pdf|max:10240',
+            'dokumen' => 'nullable|mimes:jpeg,png,jpg,pdf|max:10240',
             'nama' => 'required|string|max:255',
             'user_id' => 'required|integer|exists:users,id',
             'deskripsi' => 'required|string|max:225',
-            'tgl_mulai' => 'required|string',
-            'tgl_selesai' => 'required|string',
-            'jam_mulai' => 'required|string',
-            'jam_selesai' => 'required|string',
             'lokasi' => 'required|string',
             'skp' => 'nullable|string',
         ];
