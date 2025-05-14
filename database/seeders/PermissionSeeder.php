@@ -31,6 +31,9 @@ class PermissionSeeder extends Seeder
             'Jadwal Lembur Karyawan' => ['create lemburKaryawan', 'edit lemburKaryawan', 'delete lemburKaryawan', 'view lemburKaryawan', 'export lemburKaryawan'],
             'Jadwal Cuti Karyawan' => ['create cutiKaryawan', 'edit cutiKaryawan', 'delete cutiKaryawan', 'view cutiKaryawan', 'export cutiKaryawan'],
 
+            // Hak Cuti
+            'Hak Cuti Karyawan' => ['create hakCuti', 'edit hakCuti', 'delete hakCuti', 'view hakCuti', 'export hakCuti'],
+
             // Presensi
             'Presensi Karyawan' => ['view presensiKaryawan', 'import presensiKaryawan', 'export presensiKaryawan'],
             'Anulir Presensi Karyawan' => ['view anulirPresensi', 'create anulirPresensi', 'delete anulirPresensi'],

@@ -262,7 +262,8 @@ class DataCutiController extends Controller
                 ], Response::HTTP_NOT_FOUND);
             }
 
-            $formattedData = $dataCuti->map(function ($dataCuti) {
+            $baseUrl = env('STORAGE_SERVER_DOMAIN');
+            $formattedData = $dataCuti->map(function ($dataCuti) use ($baseUrl) {
                 $userId = $dataCuti->users->id ?? null;
 
                 // Ambil kuota cuti berdasarkan tipe cuti
@@ -300,7 +301,6 @@ class DataCutiController extends Controller
                     // Cari data verifikasi untuk order tertentu
                     $verifikasiForOrder = $relasiVerifikasi->firstWhere('order', $i);
 
-                    $baseUrl = env('STORAGE_SERVER_DOMAIN');
                     if ($verifikasiForOrder) {
                         $formattedRelasiVerifikasi[] = [
                             'id' => $verifikasiForOrder->id,

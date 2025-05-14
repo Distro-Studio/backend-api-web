@@ -3,6 +3,7 @@
 use App\Http\Controllers\Dashboard\DashboardController;
 use App\Http\Controllers\Dashboard\InboxController;
 use App\Http\Controllers\Dashboard\Jadwal\DataCutiController;
+use App\Http\Controllers\Dashboard\Jadwal\DataHakCutiController;
 use App\Http\Controllers\Dashboard\Jadwal\DataJadwalController;
 use App\Http\Controllers\Dashboard\Jadwal\DataLemburController;
 use App\Http\Controllers\Dashboard\Jadwal\DataRiwayatPerizinanController;
@@ -427,6 +428,12 @@ Route::middleware(['auth:sanctum'])->group(function () {
                 'update'  => 'cuti.updatePengaturan',
                 'destroy' => 'cuti.destroyPengaturan',
             ]);
+
+            // ! Hak Cuti ===========>
+            Route::post('/hak-cuti/restore/{id}', [DataHakCutiController::class, 'restore']);
+            Route::post('/get-hak-cuti', [DataHakCutiController::class, 'index']);
+            Route::post('/hak-cuti/export', [DataHakCutiController::class, 'export']);
+            Route::apiResource('/hak-cuti', DataHakCutiController::class);
 
             // ! Lokasi Presensi ===========>
             Route::get('/get-lokasi-kantor/{id}', [LokasiKantorController::class, 'getLokasiKantor']);
