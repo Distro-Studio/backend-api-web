@@ -30,10 +30,7 @@ class DataHakCutiController extends Controller
             $limit = $request->input('limit', 10);
             $hakCuti = HakCuti::whereHas('data_karyawans', function ($query) {
                 $query->orderBy('nik', 'asc');
-            })
-                ->whereHas('data_karyawans.users', function ($query) {
-                    $query->where('status_aktif', 2);
-                });
+            });
             $filters = $request->all();
 
             // Filter
@@ -286,12 +283,6 @@ class DataHakCutiController extends Controller
                         'updated_at' => $first->data_karyawans->users->updated_at
                     ],
                     'nik' => $first->data_karyawans->nik,
-                    'kuota_hak_cuti' => $group->map(function ($item) {
-                        return [
-                            'nama' => $item->tipe_cutis->nama,
-                            'kuota' => $item->kuota, // ini dari tabel hak_cutis
-                        ];
-                    })->values(),
                     'hak_cuti' => $group->map(function ($tipeCuti) {
                         return [
                             'id' => $tipeCuti->tipe_cutis->id,
