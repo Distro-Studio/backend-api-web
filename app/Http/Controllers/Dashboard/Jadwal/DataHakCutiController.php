@@ -28,9 +28,10 @@ class DataHakCutiController extends Controller
             }
 
             $limit = $request->input('limit', 10);
-            $hakCuti = HakCuti::whereHas('data_karyawans', function ($query) {
-                $query->orderBy('nik', 'asc');
-            });
+            $page = $request->input('page', 1);
+            $hakCuti =  HakCuti::join('data_karyawans', 'hak_cutis.data_karyawan_id', '=', 'data_karyawans.id')
+                ->orderBy('data_karyawans.nik', 'asc')
+                ->select('hak_cutis.*');
             $filters = $request->all();
 
             // Filter
@@ -87,7 +88,7 @@ class DataHakCutiController extends Controller
 
             if (isset($filters['status_aktif'])) {
                 $statusAktif = $filters['status_aktif'];
-                $hakCuti->whereHas('users', function ($query) use ($statusAktif) {
+                $hakCuti->whereHas('data_karyawans.users', function ($query) use ($statusAktif) {
                     if (is_array($statusAktif)) {
                         $query->whereIn('status_aktif', $statusAktif);
                     } else {
@@ -208,7 +209,7 @@ class DataHakCutiController extends Controller
             if (isset($filters['search'])) {
                 $searchTerm = '%' . $filters['search'] . '%';
                 $hakCuti->where(function ($query) use ($searchTerm) {
-                    $query->whereHas('users', function ($query) use ($searchTerm) {
+                    $query->whereHas('data_karyawans.users', function ($query) use ($searchTerm) {
                         $query->where('nama', 'like', $searchTerm);
                     })->orWhereHas('data_karyawans', function ($query) use ($searchTerm) {
                         $query->where('nik', 'like', $searchTerm);
@@ -245,7 +246,6 @@ class DataHakCutiController extends Controller
             // Ambil ulang semua hak cuti berdasarkan data_karyawan_id yang sudah dipaginate
             $dataHakCuti = HakCuti::whereIn('data_karyawan_id', $paginatedIds)
                 ->get();
-
             if ($dataHakCuti->isEmpty()) {
                 return response()->json([
                     'status' => Response::HTTP_NOT_FOUND,
@@ -283,7 +283,9 @@ class DataHakCutiController extends Controller
                         'updated_at' => $first->data_karyawans->users->updated_at
                     ],
                     'nik' => $first->data_karyawans->nik,
-                    'hak_cuti' => $group->map(function ($tipeCuti) {
+                    'hak_cuti' => $group->filter(function ($tipeCuti) {
+                        return $tipeCuti->tipe_cutis !== null;
+                    })->map(function ($tipeCuti) {
                         return [
                             'id' => $tipeCuti->tipe_cutis->id,
                             'nama' => $tipeCuti->tipe_cutis->nama,
@@ -473,44 +475,30 @@ class DataHakCutiController extends Controller
                 return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data hak cuti tidak ditemukan.'), Response::HTTP_NOT_FOUND);
             }
 
-            $data = $request->validated();
             $dataKaryawanId = $id;
-            $newTipeCutiIds = $data['tipe_cuti_id'];
 
-            // Ambil data nama karyawan
+            // Validasi keberadaan user
             $user = User::where('data_karyawan_id', $dataKaryawanId)->first();
-
-            // Ambil tipe cuti lama dari database
-            $existing = HakCuti::where('data_karyawan_id', $dataKaryawanId)
-                ->pluck('tipe_cuti_id')
-                ->toArray();
-
-            // 1. Hapus tipe cuti yang sudah tidak ada
-            $tipeCutiToDelete = array_diff($existing, $newTipeCutiIds);
-            if (!empty($tipeCutiToDelete)) {
-                HakCuti::where('data_karyawan_id', $dataKaryawanId)
-                    ->whereIn('tipe_cuti_id', $tipeCutiToDelete)
-                    ->delete();
+            if (!$user) {
+                return response()->json([
+                    'status' => Response::HTTP_NOT_FOUND,
+                    'message' => 'Data karyawan tidak ditemukan.'
+                ], Response::HTTP_NOT_FOUND);
             }
 
-            // 2. Tambahkan tipe cuti yang baru ditambahkan
-            $tipeCutiToAdd = array_diff($newTipeCutiIds, $existing);
-            if (!empty($tipeCutiToAdd)) {
-                $tipeCutiData = TipeCuti::whereIn('id', $tipeCutiToAdd)->get()->keyBy('id');
-                $now = now('Asia/Jakarta');
-                $insertData = [];
+            $cutiItems = $request->validated()['hak_cuti'];
 
-                foreach ($tipeCutiToAdd as $tipeId) {
-                    $insertData[] = [
+            foreach ($cutiItems as $item) {
+                HakCuti::updateOrCreate(
+                    [
                         'data_karyawan_id' => $dataKaryawanId,
-                        'tipe_cuti_id' => $tipeId,
-                        'kuota' => $tipeCutiData[$tipeId]->kuota ?? 0,
-                        'created_at' => $now,
-                        'updated_at' => $now,
-                    ];
-                }
-
-                HakCuti::insert($insertData);
+                        'tipe_cuti_id' => $item['id'],
+                    ],
+                    [
+                        'kuota' => $item['kuota'],
+                        'updated_at' => now('Asia/Jakarta'),
+                    ]
+                );
             }
 
             DB::commit();

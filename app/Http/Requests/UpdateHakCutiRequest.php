@@ -20,20 +20,22 @@ class UpdateHakCutiRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'tipe_cuti_id' => 'required|array|min:1',
-            'tipe_cuti_id.*' => 'required|exists:tipe_cutis,id',
+            'hak_cuti' => 'required|array|min:1',
+            'hak_cuti.*.id' => 'required|exists:tipe_cutis,id',
+            'hak_cuti.*.kuota' => 'required|integer|min:0',
         ];
     }
 
-    public function messages()
+    public function messages(): array
     {
         return [
-            'data_karyawan_id.required' => 'Data karyawan tidak boleh kosong.',
-            'data_karyawan_id.exists' => 'Data karyawan tidak ditemukan.',
-            'tipe_cuti_id.required' => 'Tipe cuti tidak boleh kosong.',
-            'tipe_cuti_id.array' => 'Tipe cuti harus berupa array.',
-            'tipe_cuti_id.*.required' => 'Tipe cuti tidak boleh kosong.',
-            'tipe_cuti_id.*.exists' => 'Terdapat salah satu tipe cuti yang tidak valid.',
+            'hak_cuti.required' => 'Data hak cuti tidak boleh kosong.',
+            'hak_cuti.array' => 'Data hak cuti harus berupa array.',
+            'hak_cuti.*.id.required' => 'Tipe cuti wajib diisi.',
+            'hak_cuti.*.id.exists' => 'Terdapat tipe cuti yang tidak valid.',
+            'hak_cuti.*.kuota.required' => 'Kuota wajib diisi.',
+            'hak_cuti.*.kuota.integer' => 'Kuota harus berupa angka.',
+            'hak_cuti.*.kuota.min' => 'Kuota minimal adalah 0.',
         ];
     }
 
