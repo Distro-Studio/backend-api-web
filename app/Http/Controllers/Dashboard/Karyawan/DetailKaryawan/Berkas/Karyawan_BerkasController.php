@@ -321,7 +321,7 @@ class Karyawan_BerkasController extends Controller
 
             DB::commit();
 
-            return response()->json(new WithoutDataResource(Response::HTTP_CREATED, 'Berkas dari karyawan ' . $karyawan->users->nama . ' berhasil dihapus.'), Response::HTTP_CREATED);
+            return response()->json(new WithoutDataResource(Response::HTTP_OK, 'Berkas dari karyawan ' . $karyawan->users->nama . ' berhasil dihapus.'), Response::HTTP_OK);
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('| Karyawan | - Error function deletePersonalFile: ' . $e->getMessage());
