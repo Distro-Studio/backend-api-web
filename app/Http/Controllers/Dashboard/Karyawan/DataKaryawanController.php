@@ -1060,6 +1060,7 @@ class DataKaryawanController extends Controller
       $data = $request->validated();
       $requestedRoleId = $request->input('role_id');
       $premis = $request->input('premi_id', []); // Mengambil daftar premi yang dipilih
+      $tipe_cuti = $request->input('tipe_cuti_id', []); // Mengambil daftar tipe cuti yang dipilih
 
       DB::beginTransaction();
       $generatedUsername = RandomHelper::generateUsername($data['nama']);
@@ -1122,8 +1123,26 @@ class DataKaryawanController extends Controller
             DB::table('pengurang_gajis')->insert([
               'data_karyawan_id' => $createDataKaryawan->id,
               'premi_id' => $premi->id,
-              'created_at' => Carbon::now(),
-              'updated_at' => Carbon::now(),
+              'created_at' => now('Asia/Jakarta'),
+              'updated_at' => now('Asia/Jakarta'),
+            ]);
+          }
+        }
+
+        // Masukkan data ke tabel hak_cutis jika ada tipe cuti yang dipilih
+        if (!empty($tipe_cuti)) {
+          $tipeCutiData = DB::table('tipe_cutis')->whereIn('id', $tipe_cuti)->get();
+          if ($tipeCutiData->isEmpty()) {
+            return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Tipe cuti yang dipilih tidak valid.'), Response::HTTP_NOT_FOUND);
+          }
+
+          foreach ($tipeCutiData as $tipeCuti) {
+            DB::table('hak_cutis')->insert([
+              'data_karyawan_id' => $createDataKaryawan->id,
+              'tipe_cuti_id' => $tipeCuti->id,
+              'kuota' => $tipeCuti->kuota,
+              'created_at' => now('Asia/Jakarta'),
+              'updated_at' => now('Asia/Jakarta'),
             ]);
           }
         }
@@ -1139,7 +1158,7 @@ class DataKaryawanController extends Controller
         return response()->json(new KaryawanResource(Response::HTTP_OK, "Data karyawan '{$createDataKaryawan->users->nama}' berhasil dibuat.", $createDataKaryawan), Response::HTTP_OK);
       } catch (\Throwable $th) {
         DB::rollBack();
-        return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Maaf sepertinya pembuatan data karyawan bermasalah, Error: ' . $th->getMessage()), Response::HTTP_BAD_REQUEST);
+        return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Maaf sepertinya pembuatan data karyawan bermasalah. Silakan coba lagi nanti.'), Response::HTTP_BAD_REQUEST);
       }
     } catch (\Exception $e) {
       Log::error('| Karyawan | - Error function store: ' . $e->getMessage());

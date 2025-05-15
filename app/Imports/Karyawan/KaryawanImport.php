@@ -65,6 +65,7 @@ class KaryawanImport implements ToModel, WithHeadingRow, WithValidation
     return [
       'nama' => 'required|string',
       'email' => 'nullable|email|max:225|unique:data_karyawans,email',
+      'nik' => 'nullable|numeric|unique:data_karyawans,nik',
       'role' => 'required',
       'no_rm' => 'required',
       'no_manulife' => 'nullable',
@@ -117,6 +118,10 @@ class KaryawanImport implements ToModel, WithHeadingRow, WithValidation
       'email.email' => 'Alamat email yang valid wajib menggunakan @.',
       'email.max' => 'Email karyawan melebihi batas maksimum panjang karakter.',
       'email.unique' => 'Email karyawan tersebut sudah pernah digunakan.',
+      'nik.required' => 'Nomor induk karyawan tidak diperbolehkan kosong.',
+      'nik.string' => 'Nomor induk karyawan tidak diperbolehkan kosong.',
+      'nik.numeric' => 'Nomor induk karyawan tidak diperbolehkan mengandung selain angka.',
+      'nik.unique' => 'Nomor induk karyawan tersebut sudah pernah digunakan.',
       'role.required' => 'Silahkan masukkan nama role karyawan terlebih dahulu.',
       'no_rm.required' => 'Nomor rekam medis karyawan tidak diperbolehkan kosong.',
       'no_manulife.string' => 'Nomor manulife karyawan tidak diperbolehkan kosong.',

@@ -32,7 +32,7 @@ class StoreDataKaryawanRequest extends FormRequest
             'no_manulife' => 'nullable|string',
             'tgl_masuk' => 'required|string',
             'tgl_berakhir_pks' => 'required|string',
-            'nik' => 'nullable|numeric',
+            'nik' => 'nullable|numeric|unique:data_karyawans,nik',
             'unit_kerja_id' => 'required|integer|exists:unit_kerjas,id',
             'jabatan_id' => 'required|integer|exists:jabatans,id',
             'kompetensi_id' => 'nullable|integer|exists:kompetensis,id',
@@ -40,6 +40,8 @@ class StoreDataKaryawanRequest extends FormRequest
             'spesialisasi_id' => 'nullable|integer|exists:spesialisasis,id',
             'premi_id' => 'array|nullable',
             'premi_id.*' => 'integer|exists:premis,id',
+            'tipe_cuti_id' => 'required|array|min:1',
+            'tipe_cuti_id.*' => 'required|exists:tipe_cutis,id',
 
             // Step 2
             'kelompok_gaji_id' => 'nullable|integer|exists:kelompok_gajis,id',
@@ -74,6 +76,7 @@ class StoreDataKaryawanRequest extends FormRequest
             'nik.required' => 'Nomor induk karyawan tidak diperbolehkan kosong.',
             'nik.string' => 'Nomor induk karyawan tidak diperbolehkan kosong.',
             'nik.numeric' => 'Nomor induk karyawan tidak diperbolehkan mengandung selain angka.',
+            'nik.unique' => 'Nomor induk karyawan tersebut sudah pernah digunakan.',
             'tgl_masuk.required' => 'Tanggal masuk karyawan tidak diperbolehkan kosong.',
             'tgl_masuk.string' => 'Tanggal masuk karyawan tidak diperbolehkan mengandung selain angka dan huruf.',
             'tgl_berakhir_pks.required' => 'Tanggal berakhir PKS karyawan tidak diperbolehkan kosong.',
@@ -91,6 +94,10 @@ class StoreDataKaryawanRequest extends FormRequest
             // 'premi_id.required' => 'Silahkan pilih potongan penggajian karyawan terlebih dahulu.',
             'premi_id.array' => 'Potongan penggajian harus berupa array.',
             'premi_id.*.exists' => 'Maaf potongan penggajian yang dipilih tidak valid.',
+            'tipe_cuti_id.required' => 'Tipe cuti tidak boleh kosong.',
+            'tipe_cuti_id.array' => 'Tipe cuti harus berupa array.',
+            'tipe_cuti_id.*.required' => 'Tipe cuti tidak boleh kosong.',
+            'tipe_cuti_id.*.exists' => 'Terdapat salah satu tipe cuti yang tidak valid.',
 
             'kelompok_gaji_id.required' => 'Silahkan pilih kelompok gaji karyawan terlebih dahulu.',
             'kelompok_gaji_id.exists' => 'Maaf kelompok gaji yang dipilih tidak valid.',
