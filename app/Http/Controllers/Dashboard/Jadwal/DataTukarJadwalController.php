@@ -1440,10 +1440,16 @@ class DataTukarJadwalController extends Controller
 
     private function CreateTukarJadwal($userPengajuan, $userDitukar, $jadwalPengajuan, $jadwalDitukar, $jadwalLiburPengajuan, $jadwalLiburDitukar)
     {
+        Log::info("[CreateTukarJadwal] Mulai proses tukar jadwal user {$userPengajuan->id} dan user {$userDitukar->id}");
+
         // Jika shift_id bukan libur (tidak sama dengan 0)
         if ($jadwalPengajuan->shift_id != 0 && $jadwalDitukar->shift_id != 0) {
+            Log::info("[CreateTukarJadwal] Keduanya bukan libur. Shift pengajuan: {$jadwalPengajuan->shift_id}, Shift ditukar: {$jadwalDitukar->shift_id}");
+
             // Jika salah satu shift adalah shift malam (shift_id == 3)
             if ($jadwalPengajuan->shift_id == 3 || $jadwalDitukar->shift_id == 3) {
+                Log::info("[CreateTukarJadwal] Ada shift malam (shift_id=3), handle khusus...");
+
                 $tanggalMulaiPengajuan = Carbon::createFromFormat('Y-m-d', $jadwalPengajuan->tgl_mulai);
                 $tanggalMulaiDitukar = Carbon::createFromFormat('Y-m-d', $jadwalDitukar->tgl_mulai);
 
@@ -1454,6 +1460,8 @@ class DataTukarJadwalController extends Controller
                         ->whereDate('tgl_mulai', $nextDay)
                         ->first();
                     if ($nextDayShift) {
+                        Log::info("[CreateTukarJadwal] Hapus jadwal hari berikutnya dari user {$userDitukar->id} tanggal {$nextDay->toDateString()}");
+
                         // Hapus jadwal hari berikutnya jika ada
                         $nextDayShift->delete();
                     }
@@ -1466,6 +1474,8 @@ class DataTukarJadwalController extends Controller
                         ->whereDate('tgl_mulai', $nextDay)
                         ->first();
                     if ($nextDayShift) {
+                        Log::info("[CreateTukarJadwal] Hapus jadwal hari berikutnya dari user {$userPengajuan->id} tanggal {$nextDay->toDateString()}");
+
                         // Hapus jadwal hari berikutnya jika ada
                         $nextDayShift->delete();
                     }
@@ -1473,35 +1483,64 @@ class DataTukarJadwalController extends Controller
             }
 
             // Tukar user_id
+            Log::info("[CreateTukarJadwal] Tukar user_id pada jadwal.");
+
             $tempUserId = $jadwalPengajuan->user_id;
             $jadwalPengajuan->user_id = $jadwalDitukar->user_id;
             $jadwalDitukar->user_id = $tempUserId;
 
             if ($jadwalLiburPengajuan == null && $jadwalLiburDitukar == null) {
+                Log::info("[CreateTukarJadwal] Tidak ada jadwal libur yang harus ditukar.");
+
+                // Update bug disini - 15-05-2025
+                $jadwalPengajuan->save();
+                $jadwalDitukar->save();
+                // Update bug disini - 15-05-2025
+
                 return;
             } elseif ($jadwalLiburPengajuan == null) {
+                Log::info("[CreateTukarJadwal] Jadwal libur pengajuan null, update jadwal libur ditukar.");
+
                 $jadwalLiburDitukar->tgl_mulai = $jadwalPengajuan->tgl_mulai;
                 $jadwalLiburDitukar->tgl_selesai = $jadwalPengajuan->tgl_selesai;
+
+                // Update potensi bug disini - 15-05-2025
+                $jadwalLiburDitukar->save();
             } elseif ($jadwalLiburDitukar == null) {
+                Log::info("[CreateTukarJadwal] Jadwal libur ditukar null, update jadwal libur pengajuan.");
+
                 $jadwalLiburPengajuan->tgl_mulai = $jadwalDitukar->tgl_mulai;
                 $jadwalLiburPengajuan->tgl_selesai = $jadwalDitukar->tgl_selesai;
+
+                // Update potensi bug disini - 15-05-2025
+                $jadwalLiburPengajuan->save();
             } else {
+                Log::info("[CreateTukarJadwal] Tukar user_id pada jadwal libur.");
+
                 $tempUserIdLibur = $jadwalLiburPengajuan->user_id;
                 $jadwalLiburPengajuan->user_id = $jadwalLiburDitukar->user_id;
                 $jadwalLiburDitukar->user_id = $tempUserIdLibur;
+
+                // Update potensi bug disini - 15-05-2025
+                $jadwalLiburPengajuan->save();
+                $jadwalLiburDitukar->save();
             }
 
             $jadwalPengajuan->save();
             $jadwalDitukar->save();
-            if ($jadwalLiburPengajuan) {
-                $jadwalLiburPengajuan->save();
-            }
-            if ($jadwalLiburDitukar) {
-                $jadwalLiburDitukar->save();
-            }
+            // if ($jadwalLiburPengajuan) {
+            //     $jadwalLiburPengajuan->save();
+            // }
+            // if ($jadwalLiburDitukar) {
+            //     $jadwalLiburDitukar->save();
+            // }
+
+            Log::info("[CreateTukarJadwal] Tukar jadwal berhasil disimpan.");
         }
         // Jika keduanya libur (shift_id == 0)
         else if ($jadwalPengajuan->shift_id == 0 && $jadwalDitukar->shift_id == 0) {
+            Log::info("[CreateTukarJadwal] Kedua jadwal adalah libur (shift_id=0).");
+
             $tglMulaiPengajuan = RandomHelper::convertToDateString($jadwalPengajuan->tgl_mulai);
             $tglMulaiDitukar = RandomHelper::convertToDateString($jadwalDitukar->tgl_mulai);
 
@@ -1514,6 +1553,9 @@ class DataTukarJadwalController extends Controller
                 ->where('tgl_mulai', $tglMulaiPengajuan)
                 ->whereNotNull('shift_id')
                 ->first();
+
+            Log::info("[CreateTukarJadwal] Jadwal kerja pengajuan ditemukan: " . ($jadwalKerjaPengajuan ? 'ada' : 'tidak ada'));
+            Log::info("[CreateTukarJadwal] Jadwal kerja ditukar ditemukan: " . ($jadwalKerjaDitukar ? 'ada' : 'tidak ada'));
 
             // dd(
             //     "user pengajuan {$userPengajuan->id}, jadwal kerja yang ada {$jadwalKerjaPengajuan}",
@@ -1528,6 +1570,8 @@ class DataTukarJadwalController extends Controller
             $jadwalDitukar->save();
 
             if ($jadwalKerjaPengajuan && $jadwalKerjaDitukar) {
+                Log::info("[CreateTukarJadwal] Tukar shift dan user_id pada jadwal kerja.");
+
                 // Tukar shift mereka
                 $tempShiftId = $jadwalKerjaPengajuan->shift_id;
                 $jadwalKerjaPengajuan->shift_id = $jadwalKerjaDitukar->shift_id;
@@ -1540,8 +1584,11 @@ class DataTukarJadwalController extends Controller
                 $jadwalKerjaPengajuan->save();
                 $jadwalKerjaDitukar->save();
             }
+            Log::info("[CreateTukarJadwal] Proses tukar jadwal libur selesai.");
         } else {
-            return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Tidak bisa menukar shift dengan libur atau sebaliknya.'), Response::HTTP_BAD_REQUEST);
+            // return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Tidak bisa menukar shift dengan libur atau sebaliknya.'), Response::HTTP_BAD_REQUEST);
+            Log::warning("[CreateTukarJadwal] Gagal tukar jadwal: tidak bisa menukar shift dengan libur atau sebaliknya.");
+            throw new \Exception('Tidak bisa menukar shift dengan libur atau sebaliknya.');
         }
     }
 }
