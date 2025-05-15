@@ -14,7 +14,8 @@ class LogHelper
             'create' => 'membuat',
             'update' => 'memperbarui',
             'delete' => 'menghapus',
-			'import' => 'mengimport'
+			'import' => 'mengimport',
+            'update-reward-presensi' => 'memperbarui reward presensi',
         ];
 
         $actionLabel = ucfirst($action) . ' ' . $entity;

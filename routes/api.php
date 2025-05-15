@@ -147,6 +147,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::get('/detail-karyawan-user/{user_id}', [DataKaryawanController::class, 'showByUserId']);
             Route::get('/detail-karyawan/{data_karyawan_id}', [DataKaryawanController::class, 'showByDataKaryawanId']);
             Route::post('/upload-photo-profile/{data_karyawan_id}', [DataKaryawanController::class, 'uploadPhotoProfile']);
+            Route::post('/update-reward-presensi/{data_karyawan_id}', [DataKaryawanController::class, 'updateRewardPresensi']);
 
             Route::post('/detail-karyawan-presensi/{data_karyawan_id}', [Karyawan_DetailController::class, 'getDataPresensi']);
             Route::post('/detail-karyawan-presensi/{data_karyawan_id}/export', [Karyawan_DetailController::class, 'exportDataPresensi']);

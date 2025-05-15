@@ -646,6 +646,11 @@ class DataKaryawanController extends Controller
         return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
       }
 
+      $karyawan = DataKaryawan::find($data_karyawan_id);
+      if (!$karyawan) {
+        return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data karyawan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+      }
+
       $request->validate([
         'dokumen' => 'required|file|mimes:jpg,jpeg,png|max:5120',
       ], [
@@ -729,6 +734,49 @@ class DataKaryawanController extends Controller
     } catch (\Exception $e) {
       DB::rollBack();
       Log::error('| Karyawan | - Error function uploadPhoto: ' . $e->getMessage());
+      return response()->json([
+        'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
+        'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
+      ], Response::HTTP_INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  public function updateRewardPresensi(Request $request, $data_karyawan_id)
+  {
+    try {
+      if (!Auth::user()->hasRole('Super Admin')) {
+        return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+      }
+
+      $validated = $request->validate([
+        'status_reward' => 'required|boolean',
+      ]);
+
+      DB::beginTransaction();
+
+      $statusReward = DataKaryawan::where('id', $data_karyawan_id)
+        ->update(['status_reward_presensi' => $validated['status_reward']]);
+      if (!$statusReward) {
+        DB::rollBack();
+        return response()->json([
+          'status' => Response::HTTP_NOT_FOUND,
+          'message' => 'Data karyawan tidak ditemukan dan reward presensi gagal diperbarui.',
+        ], Response::HTTP_NOT_FOUND);
+      }
+
+      DB::commit();
+
+      LogHelper::logAction('Karyawan', 'update-reward-presensi', $data_karyawan_id);
+
+      $user = User::where('data_karyawan_id', $data_karyawan_id)->first();
+
+      return response()->json([
+        'status' => Response::HTTP_OK,
+        'message' => "Status reward presensi karyawan '{$user->nama}' berhasil diperbarui."
+      ], Response::HTTP_OK);
+    } catch (\Exception $e) {
+      DB::rollBack();
+      Log::error('| Karyawan | - Error function updateRewardPresensi: ' . $e->getMessage());
       return response()->json([
         'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
         'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
