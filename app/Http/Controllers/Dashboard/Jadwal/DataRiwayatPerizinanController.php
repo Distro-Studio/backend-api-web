@@ -26,10 +26,41 @@ class DataRiwayatPerizinanController extends Controller
                 return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
             }
 
+            $user = auth()->user();
+            $userId = $user->id;
+
+            // Periksa apakah user adalah Super Admin
+            $isSuperAdmin = $user->hasRole('Super Admin');
+
+            // Jika bukan super admin, cek apakah dia verifikator untuk modul izin
+            $userDivVerifiedIds = [];
+            if (!$isSuperAdmin) {
+                $relasi = RelasiVerifikasi::where('verifikator', $userId)
+                    ->where('modul_verifikasi', 4)
+                    ->first();
+
+                if ($relasi) {
+                    // Ambil array user_diverifikasi dari relasi_verifikasis
+                    $userDivVerifiedIds = $relasi->user_diverifikasi ?? [];
+                }
+            }
+
             // Per page
             $limit = $request->input('limit', 10); // Default per page is 10
 
             $riwayat_izin = RiwayatIzin::query()->orderBy('created_at', 'desc');
+
+            // Terapkan filter data berdasarkan role/verifikator
+            if (!$isSuperAdmin) {
+                if (empty($userDivVerifiedIds)) {
+                    // Bukan super admin dan bukan verifikator => kosongkan hasil
+                    // Jadi, query dibuat WHERE 0=1 agar kosong
+                    $riwayat_izin->whereRaw('0=1');
+                } else {
+                    // Filter hanya user_id yang termasuk dalam user_diverifikasi
+                    $riwayat_izin->whereIn('user_id', $userDivVerifiedIds);
+                }
+            }
 
             // Ambil semua filter dari request body
             $filters = $request->all();

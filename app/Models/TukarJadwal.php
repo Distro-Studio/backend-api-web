@@ -20,6 +20,7 @@ class TukarJadwal extends Model
         'jadwal_ditukar' => 'integer',
         'status_penukaran_id' => 'integer',
         'kategori_penukaran_id' => 'integer',
+        'acc_user_ditukar' => 'integer',
         'verifikator_1' => 'integer',
         'verifikator_2' => 'integer'
     ];

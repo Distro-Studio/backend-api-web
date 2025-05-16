@@ -17,6 +17,7 @@ use App\Mail\SendAccoundUsersMail;
 use App\Models\KategoriAgama;
 use App\Models\KategoriDarah;
 use App\Models\KategoriPendidikan;
+use App\Models\Spesialisasi;
 use Spatie\Permission\Models\Role;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
@@ -35,6 +36,7 @@ class KaryawanImport implements ToModel, WithHeadingRow, WithValidation
   private $Jabatan;
   private $UnitKerja;
   private $Kompetensi;
+  private $Spesialisasi;
   private $KelompokGaji;
   private $PTKP;
   private $StatusKaryawan;
@@ -49,6 +51,7 @@ class KaryawanImport implements ToModel, WithHeadingRow, WithValidation
     $this->Jabatan = Jabatan::select('id', 'nama_jabatan')->get();
     $this->UnitKerja = UnitKerja::select('id', 'nama_unit')->get();
     $this->Kompetensi = Kompetensi::select('id', 'nama_kompetensi')->get();
+    $this->Spesialisasi = Spesialisasi::select('id', 'nama_spesialisasi')->get();
     $this->KelompokGaji = KelompokGaji::select('id', 'nama_kelompok')->get();
     $this->PTKP = Ptkp::select('id', 'kode_ptkp')->get();
     $this->StatusKaryawan = StatusKaryawan::select('id', 'label')->get();
@@ -62,24 +65,26 @@ class KaryawanImport implements ToModel, WithHeadingRow, WithValidation
     return [
       'nama' => 'required|string',
       'email' => 'nullable|email|max:225|unique:data_karyawans,email',
+      'nik' => 'nullable|numeric|unique:data_karyawans,nik',
       'role' => 'required',
-      'no_rm' => 'required',
+      'no_rm' => 'nullable',
       'no_manulife' => 'nullable',
       'tgl_masuk' => 'required',
-      'tgl_berakhir_pks' => 'required',
+      'tgl_berakhir_pks' => 'nullable',
       'unit_kerja' => 'nullable',
       'jabatan' => 'nullable',
       'kompetensi' => 'nullable',
+      'spesialisasi' => 'nullable',
       'status_karyawan' => 'required',
       'kelompok_gaji' => 'nullable',
-      'no_rekening' => 'required|numeric',
-      'tunjangan_fungsional' => 'required|numeric',
-      'tunjangan_khusus' => 'required|numeric',
-      'tunjangan_lainnya' => 'required|numeric',
-      'uang_makan' => 'required|numeric',
+      'no_rekening' => 'nullable|numeric',
+      'tunjangan_fungsional' => 'nullable|numeric',
+      'tunjangan_khusus' => 'nullable|numeric',
+      'tunjangan_lainnya' => 'nullable|numeric',
+      'uang_makan' => 'nullable|numeric',
       'uang_lembur' => 'nullable|numeric',
-      'kode_ptkp' => 'required',
-      'pendidikan_terakhir' => 'required',
+      'kode_ptkp' => 'nullable',
+      'pendidikan_terakhir' => 'nullable',
 
       // tambahan
       'gelar_depan' => 'nullable',
@@ -88,7 +93,7 @@ class KaryawanImport implements ToModel, WithHeadingRow, WithValidation
       'tgl_lahir' => 'nullable',
       'alamat' => 'nullable',
       'no_hp' => 'nullable|numeric',
-      'nik_ktp' => 'nullable|numeric|max:16',
+      'nik_ktp' => 'nullable|numeric',
       'no_kk' => 'nullable|numeric',
       'npwp' => 'nullable|numeric',
       'jenis_kelamin' => 'nullable|in:P,L',
@@ -113,6 +118,10 @@ class KaryawanImport implements ToModel, WithHeadingRow, WithValidation
       'email.email' => 'Alamat email yang valid wajib menggunakan @.',
       'email.max' => 'Email karyawan melebihi batas maksimum panjang karakter.',
       'email.unique' => 'Email karyawan tersebut sudah pernah digunakan.',
+      'nik.required' => 'Nomor induk karyawan tidak diperbolehkan kosong.',
+      'nik.string' => 'Nomor induk karyawan tidak diperbolehkan kosong.',
+      'nik.numeric' => 'Nomor induk karyawan tidak diperbolehkan mengandung selain angka.',
+      'nik.unique' => 'Nomor induk karyawan tersebut sudah pernah digunakan.',
       'role.required' => 'Silahkan masukkan nama role karyawan terlebih dahulu.',
       'no_rm.required' => 'Nomor rekam medis karyawan tidak diperbolehkan kosong.',
       'no_manulife.string' => 'Nomor manulife karyawan tidak diperbolehkan kosong.',
@@ -214,14 +223,27 @@ class KaryawanImport implements ToModel, WithHeadingRow, WithValidation
       $kompetensi = null;
     }
 
+    if (!empty($row['spesialisasi'])) {
+      $spesialisasi = $this->Spesialisasi->where('nama_spesialisasi', $row['spesialisasi'])->first();
+      if (!$spesialisasi) {
+        throw new \Exception("Spesialisasi '" . $row['spesialisasi'] . "' tidak ditemukan.");
+      }
+    } else {
+      $spesialisasi = null;
+    }
+
     $kelompok_gaji = $this->KelompokGaji->where('nama_kelompok', $row['kelompok_gaji'])->first();
     if (!$kelompok_gaji) {
       throw new \Exception("Kelompok gaji '" . $row['kelompok_gaji'] . "' tidak ditemukan.");
     }
 
-    $ptkp = $this->PTKP->where('kode_ptkp', $row['kode_ptkp'])->first();
-    if (!$ptkp) {
-      throw new \Exception("PTKP '" . $row['kode_ptkp'] . "' tidak ditemukan.");
+    if (!empty($row['kode_ptkp'])) {
+      $ptkp = $this->PTKP->where('kode_ptkp', $row['kode_ptkp'])->first();
+      if (!$ptkp) {
+        throw new \Exception("PTKP '" . $row['kode_ptkp'] . "' tidak ditemukan.");
+      }
+    } else {
+      $ptkp = null;
     }
 
     $status_karyawan = $this->StatusKaryawan->where('label', $row['status_karyawan'])->first();
@@ -291,6 +313,7 @@ class KaryawanImport implements ToModel, WithHeadingRow, WithValidation
       'jabatan_id' => $jabatan ? $jabatan->id : null,
       'kompetensi_id' => $kompetensi ? $kompetensi->id : null,
       'status_karyawan_id' => $status_karyawan ? $status_karyawan->id : null,
+      'spesialisasi_id' => $spesialisasi ? $spesialisasi->id : null,
       'kelompok_gaji_id' => $kelompok_gaji ? $kelompok_gaji->id : null,
       'no_rekening' => $row['no_rekening'],
       'tunjangan_fungsional' => $row['tunjangan_fungsional'],
@@ -304,7 +327,7 @@ class KaryawanImport implements ToModel, WithHeadingRow, WithValidation
       'gelar_depan' => $row['gelar_depan'],
       'gelar_belakang' => $row['gelar_belakang'],
       'tempat_lahir' => $row['tempat_lahir'],
-      'tgl_lahir' => $row['tgl_lahir'],
+      'tgl_lahir' => $this->convertDateFormat($row['tgl_lahir']),
       'alamat' => $row['alamat'],
       'no_hp' => $row['no_hp'],
       'nik_ktp' => $row['nik_ktp'],
@@ -320,10 +343,33 @@ class KaryawanImport implements ToModel, WithHeadingRow, WithValidation
       'pendidikan_terakhir' => $pendidikan_terakhir ? $pendidikan_terakhir->id : null,
       'asal_sekolah' => $row['asal_sekolah'],
       'tahun_lulus' => $tahun_lulus,
-      'tgl_diangkat' => $row['tgl_diangkat'],
+      'tgl_diangkat' => $this->convertDateFormat($row['tgl_diangkat']),
     ]);
 
     $createUser->update(['data_karyawan_id' => $dataKaryawan->id]);
     return $dataKaryawan;
+  }
+
+  private function convertDateFormat($date)
+  {
+    if (empty($date)) {
+      return null;
+    }
+
+    try {
+      if (is_numeric($date)) {
+        return Carbon::instance(
+          \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($date)
+        )->format('d-m-Y');
+      }
+
+      return Carbon::createFromFormat('d-m-Y', $date)->format('d-m-Y');
+    } catch (\Exception $e) {
+      try {
+        return Carbon::createFromFormat('d/m/Y', $date)->format('d-m-Y');
+      } catch (\Exception $e) {
+        return null;
+      }
+    }
   }
 }

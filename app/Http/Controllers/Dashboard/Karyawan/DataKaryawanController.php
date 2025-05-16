@@ -46,6 +46,7 @@ use App\Http\Requests\UpdateDataKaryawanRequest;
 use App\Http\Requests\Excel_Import\ImportKaryawanRequest;
 use App\Http\Resources\Dashboard\Karyawan\KaryawanResource;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
+use App\Models\Spesialisasi;
 
 class DataKaryawanController extends Controller
 {
@@ -324,6 +325,31 @@ class DataKaryawanController extends Controller
       ], Response::HTTP_OK);
     } catch (\Exception $e) {
       Log::error('| Karyawan | - Error function getAllDataUnitKerja: ' . $e->getMessage());
+      return response()->json([
+        'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
+        'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
+      ], Response::HTTP_INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  public function getAllDataSpesialisasi()
+  {
+    try {
+      $spesialisasi = Spesialisasi::all();
+      if ($spesialisasi->isEmpty()) {
+        return response()->json([
+          'status' => Response::HTTP_NOT_FOUND,
+          'message' => 'Data spesialisasi tidak ditemukan.',
+        ], Response::HTTP_NOT_FOUND);
+      }
+
+      return response()->json([
+        'status' => Response::HTTP_OK,
+        'message' => 'Retrieving all spesialisasi for dropdown',
+        'data' => $spesialisasi
+      ], Response::HTTP_OK);
+    } catch (\Exception $e) {
+      Log::error('| Karyawan | - Error function getAllDataSpesialisasi: ' . $e->getMessage());
       return response()->json([
         'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
         'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
@@ -620,6 +646,11 @@ class DataKaryawanController extends Controller
         return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
       }
 
+      $karyawan = DataKaryawan::find($data_karyawan_id);
+      if (!$karyawan) {
+        return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data karyawan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+      }
+
       $request->validate([
         'dokumen' => 'required|file|mimes:jpg,jpeg,png|max:5120',
       ], [
@@ -638,6 +669,27 @@ class DataKaryawanController extends Controller
       if ($request->hasFile('dokumen')) {
         $authUser = Auth::user();
         StorageServerHelper::login();
+
+        // ✅ Jika ada foto profil lama, hapus dulu
+        if ($user->foto_profil) {
+          $berkasLama = Berkas::find($user->foto_profil);
+          if ($berkasLama) {
+            try {
+              StorageServerHelper::deleteFromServer($berkasLama->file_id);
+            } catch (\Exception $e) {
+              Log::warning("Gagal hapus foto_profil lama dari server (file_id: {$berkasLama->file_id}): " . $e->getMessage());
+            }
+
+            // Set hubungan ke NULL dulu sebelum hapus
+            $user->foto_profil = null;
+            $user->save();
+
+            // Setelah tidak ada referensi, baru aman dihapus
+            $berkasLama->delete();
+          }
+        }
+
+        // ✅ Upload file baru
         $file = $request->file('dokumen');
         $random_filename = Str::random(20);
         $dataupload = StorageServerHelper::uploadToServer($request, $random_filename);
@@ -682,6 +734,49 @@ class DataKaryawanController extends Controller
     } catch (\Exception $e) {
       DB::rollBack();
       Log::error('| Karyawan | - Error function uploadPhoto: ' . $e->getMessage());
+      return response()->json([
+        'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
+        'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
+      ], Response::HTTP_INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  public function updateRewardPresensi(Request $request, $data_karyawan_id)
+  {
+    try {
+      if (!Auth::user()->hasRole('Super Admin')) {
+        return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+      }
+
+      $validated = $request->validate([
+        'status_reward' => 'required|boolean',
+      ]);
+
+      DB::beginTransaction();
+
+      $statusReward = DataKaryawan::where('id', $data_karyawan_id)
+        ->update(['status_reward_presensi' => $validated['status_reward']]);
+      if (!$statusReward) {
+        DB::rollBack();
+        return response()->json([
+          'status' => Response::HTTP_NOT_FOUND,
+          'message' => 'Data karyawan tidak ditemukan dan reward presensi gagal diperbarui.',
+        ], Response::HTTP_NOT_FOUND);
+      }
+
+      DB::commit();
+
+      LogHelper::logAction('Karyawan', 'update-reward-presensi', $data_karyawan_id);
+
+      $user = User::where('data_karyawan_id', $data_karyawan_id)->first();
+
+      return response()->json([
+        'status' => Response::HTTP_OK,
+        'message' => "Status reward presensi karyawan '{$user->nama}' berhasil diperbarui."
+      ], Response::HTTP_OK);
+    } catch (\Exception $e) {
+      DB::rollBack();
+      Log::error('| Karyawan | - Error function updateRewardPresensi: ' . $e->getMessage());
       return response()->json([
         'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
         'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
@@ -938,6 +1033,7 @@ class DataKaryawanController extends Controller
           'unit_kerja' => $karyawan->unit_kerjas, // unit_kerja_id
           'jabatan' => $karyawan->jabatans, // jabatan_id
           'kompetensi' => $karyawan->kompetensis, // kompetensi_id
+          'spesialisasi' => $karyawan->spesialisasis, // spesialisasi_id
           'nik_ktp' => $karyawan->nik_ktp,
           'status_karyawan' => $karyawan->status_karyawans, // status_karyawan_id
           'tempat_lahir' => $karyawan->tempat_lahir,
@@ -1012,6 +1108,7 @@ class DataKaryawanController extends Controller
       $data = $request->validated();
       $requestedRoleId = $request->input('role_id');
       $premis = $request->input('premi_id', []); // Mengambil daftar premi yang dipilih
+      $tipe_cuti = $request->input('tipe_cuti_id', []); // Mengambil daftar tipe cuti yang dipilih
 
       DB::beginTransaction();
       $generatedUsername = RandomHelper::generateUsername($data['nama']);
@@ -1046,6 +1143,7 @@ class DataKaryawanController extends Controller
           'jabatan_id' => $data['jabatan_id'],
           'kompetensi_id' => $data['kompetensi_id'] ?? null,
           'status_karyawan_id' => $data['status_karyawan_id'],
+          'spesialisasi_id' => $data['spesialisasi_id'] ?? null,
           'kelompok_gaji_id' => $data['kelompok_gaji_id'],
           'no_rekening' => $data['no_rekening'],
           'tunjangan_jabatan' => $data['tunjangan_jabatan'],
@@ -1073,8 +1171,26 @@ class DataKaryawanController extends Controller
             DB::table('pengurang_gajis')->insert([
               'data_karyawan_id' => $createDataKaryawan->id,
               'premi_id' => $premi->id,
-              'created_at' => Carbon::now(),
-              'updated_at' => Carbon::now(),
+              'created_at' => now('Asia/Jakarta'),
+              'updated_at' => now('Asia/Jakarta'),
+            ]);
+          }
+        }
+
+        // Masukkan data ke tabel hak_cutis jika ada tipe cuti yang dipilih
+        if (!empty($tipe_cuti)) {
+          $tipeCutiData = DB::table('tipe_cutis')->whereIn('id', $tipe_cuti)->get();
+          if ($tipeCutiData->isEmpty()) {
+            return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Tipe cuti yang dipilih tidak valid.'), Response::HTTP_NOT_FOUND);
+          }
+
+          foreach ($tipeCutiData as $tipeCuti) {
+            DB::table('hak_cutis')->insert([
+              'data_karyawan_id' => $createDataKaryawan->id,
+              'tipe_cuti_id' => $tipeCuti->id,
+              'kuota' => $tipeCuti->kuota,
+              'created_at' => now('Asia/Jakarta'),
+              'updated_at' => now('Asia/Jakarta'),
             ]);
           }
         }
@@ -1090,7 +1206,7 @@ class DataKaryawanController extends Controller
         return response()->json(new KaryawanResource(Response::HTTP_OK, "Data karyawan '{$createDataKaryawan->users->nama}' berhasil dibuat.", $createDataKaryawan), Response::HTTP_OK);
       } catch (\Throwable $th) {
         DB::rollBack();
-        return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Maaf sepertinya pembuatan data karyawan bermasalah, Error: ' . $th->getMessage()), Response::HTTP_BAD_REQUEST);
+        return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Maaf sepertinya pembuatan data karyawan bermasalah. Silakan coba lagi nanti.'), Response::HTTP_BAD_REQUEST);
       }
     } catch (\Exception $e) {
       Log::error('| Karyawan | - Error function store: ' . $e->getMessage());
@@ -1236,6 +1352,7 @@ class DataKaryawanController extends Controller
         'unit_kerja' => $karyawan->unit_kerjas,
         'jabatan' => $karyawan->jabatans,
         'kompetensi' => $karyawan->kompetensis,
+        'spesialisasi' => $karyawan->spesialisasis,
         'nik_ktp' => $karyawan->nik_ktp,
         'status_karyawan' => $karyawan->status_karyawans,
         'tempat_lahir' => $karyawan->tempat_lahir,
@@ -1493,6 +1610,7 @@ class DataKaryawanController extends Controller
         'unit_kerja' => $karyawan->unit_kerjas, // unit_kerja_id
         'jabatan' => $karyawan->jabatans, // jabatan_id
         'kompetensi' => $karyawan->kompetensis, // kompetensi_id
+        'spesialisasi' => $karyawan->spesialisasis, // spesialisasi_id
         'nik_ktp' => $karyawan->nik_ktp,
         'status_karyawan' => $karyawan->status_karyawans, // status_karyawan_id
         'tempat_lahir' => $karyawan->tempat_lahir,
@@ -1629,8 +1747,29 @@ class DataKaryawanController extends Controller
             DB::table('pengurang_gajis')->insert([
               'data_karyawan_id' => $karyawan->id,
               'premi_id' => $premi->id,
-              'created_at' => Carbon::now(),
-              'updated_at' => Carbon::now(),
+              'created_at' => now('Asia/Jakarta'),
+              'updated_at' => now('Asia/Jakarta'),
+            ]);
+          }
+        }
+
+        // Update Hak cuti
+        $tipe_cuti = $request->input('tipe_cuti_id', []);
+        DB::table('hak_cutis')->where('data_karyawan_id', $karyawan->id)->delete(); // Hapus hak cuti yang lama
+
+        if (!empty($tipe_cuti)) {
+          $tipeCutiData = DB::table('tipe_cutis')->whereIn('id', $tipe_cuti)->get();
+          if ($tipeCutiData->isEmpty()) {
+            return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Tipe cuti yang dipilih tidak valid.'), Response::HTTP_NOT_FOUND);
+          }
+
+          foreach ($tipeCutiData as $tipeCuti) {
+            DB::table('hak_cutis')->insert([
+              'data_karyawan_id' => $karyawan->id,
+              'tipe_cuti_id' => $tipeCuti->id,
+              'kuota' => $tipeCuti->kuota,
+              'created_at' => now('Asia/Jakarta'),
+              'updated_at' => now('Asia/Jakarta'),
             ]);
           }
         }

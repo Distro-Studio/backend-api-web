@@ -10,6 +10,7 @@ use App\Models\KategoriAgama;
 use App\Models\KategoriDarah;
 use App\Models\KategoriPendidikan;
 use App\Models\Shift;
+use App\Models\Spesialisasi;
 use App\Models\UnitKerja;
 use PhpOffice\PhpSpreadsheet\Shared\Date;
 use Carbon\Carbon;
@@ -469,6 +470,97 @@ class TambahanDataController extends Controller
         }
     }
 
+    public function insertSTRSIP(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'karyawan_file' => 'required|mimes:xlsx,xls',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()->first()]);
+        }
+
+        DB::beginTransaction();
+
+        try {
+            $file = $request->file('karyawan_file');
+            $spreadsheet = IOFactory::load($file->getRealPath());
+            $sheet = $spreadsheet->getActiveSheet();
+
+            $updatedRecords = 0;
+
+            foreach ($sheet->getRowIterator(2) as $row) {
+                $cellIterator = $row->getCellIterator();
+                $cellIterator->setIterateOnlyExistingCells(true);
+
+                $nik = null;
+                $no_str = null;
+                $created_str = null;
+                $masa_berlaku_str = null;
+                $no_sip = null;
+                $created_sip = null;
+                $masa_berlaku_sip = null;
+
+                foreach ($cellIterator as $cell) {
+                    $column = $cell->getColumn();
+                    $value = trim($cell->getValue());
+
+                    if ($column === 'A') {
+                        $nik = $value;
+                    } elseif ($column === 'B') {
+                        $no_str = $value;
+                    } elseif ($column === 'C') {
+                        $created_str = $this->convertDateFormat($value);
+                    } elseif ($column === 'D') {
+                        $masa_berlaku_str = ($value === 'Seumur Hidup') ? null : $this->convertDateFormat($value);
+                    } elseif ($column === 'E') {
+                        $no_sip = $value;
+                    } elseif ($column === 'F') {
+                        $created_sip = $this->convertDateFormat($value);
+                    } elseif ($column === 'G') {
+                        $masa_berlaku_sip = $this->convertDateFormat($value);
+                    }
+                }
+
+                if (!empty($nik)) {
+                    $karyawan = DataKaryawan::where('nik', $nik)->first();
+                    if ($karyawan) {
+                        if (!empty($no_str)) {
+                            $karyawan->no_str = $no_str;
+                        }
+                        if (!empty($created_str)) {
+                            $karyawan->created_str = $created_str;
+                        }
+                        if (!empty($masa_berlaku_str)) {
+                            $masa_berlaku_str = ($value === 'Seumur Hidup') ? null : $value;
+                        }
+                        if (!empty($no_sip)) {
+                            $karyawan->no_sip = $no_sip;
+                        }
+                        if (!empty($created_sip)) {
+                            $karyawan->created_sip = $created_sip;
+                        }
+                        if (!empty($masa_berlaku_sip)) {
+                            $karyawan->masa_berlaku_sip = $masa_berlaku_sip;
+                        }
+
+                        $karyawan->save();
+                        $updatedRecords++;
+                    }
+                }
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'message' => "$updatedRecords data(s) updated successfully."
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['errors' => $e->getMessage()]);
+        }
+    }
+
     public function insertMasterShift(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -572,6 +664,69 @@ class TambahanDataController extends Controller
                 'message' => 'Import selesai.'
             ]);
         } catch (\Exception $e) {
+            return response()->json(['errors' => $e->getMessage()]);
+        }
+    }
+
+    public function insertMasterSpesialisasi(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'karyawan_file' => 'required|mimes:xlsx,xls',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()->first()]);
+        }
+
+        DB::beginTransaction();
+
+        try {
+            $file = $request->file('karyawan_file');
+            $spreadsheet = IOFactory::load($file->getRealPath());
+            $sheet = $spreadsheet->getActiveSheet();
+
+            $spesialisasiFromExcel = [];
+
+            // Ambil data unik dari kolom P (nomor 2 sampai akhir)
+            foreach ($sheet->getRowIterator(2) as $row) {
+                $cell = $sheet->getCell('P' . $row->getRowIndex());
+                $value = trim($cell->getValue());
+                if ($value !== null && $value !== '') {
+                    $spesialisasiFromExcel[] = $value;
+                }
+            }
+            $spesialisasiFromExcel = array_unique($spesialisasiFromExcel);
+
+            // Cek duplikat di DB (nama_spesialisasi)
+            $existingSpesialisasi = Spesialisasi::whereIn('nama_spesialisasi', $spesialisasiFromExcel)->pluck('nama_spesialisasi')->toArray();
+
+            if (count($existingSpesialisasi) > 0) {
+                // Jika ada yang duplikat, rollback dan kembalikan response error
+                DB::rollBack();
+                return response()->json([
+                    'errors' => 'Spesialisasi berikut sudah ada di database: ' . implode(', ', $existingSpesialisasi)
+                ]);
+            }
+
+            // Jika tidak ada duplikat, simpan ke DB (batch insert)
+            $insertData = [];
+            foreach ($spesialisasiFromExcel as $nama) {
+                $insertData[] = [
+                    'nama_spesialisasi' => $nama,
+                    'created_at' => now('Asia/Jakarta'),
+                    'updated_at' => now('Asia/Jakarta'),
+                ];
+            }
+
+            Spesialisasi::insert($insertData);
+
+            DB::commit();
+
+            return response()->json([
+                'message' => count($insertData) . " spesialisasi berhasil disimpan."
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
             return response()->json(['errors' => $e->getMessage()]);
         }
     }
@@ -730,13 +885,13 @@ class TambahanDataController extends Controller
             if (is_numeric($date)) {
                 return Carbon::instance(
                     \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($date)
-                )->format('Y-m-d H:i:s');
+                )->format('d-m-Y');
             }
 
-            return Carbon::createFromFormat('d-m-Y', $date)->format('Y-m-d H:i:s');
+            return Carbon::createFromFormat('d-m-Y', $date)->format('d-m-Y');
         } catch (\Exception $e) {
             try {
-                return Carbon::createFromFormat('d/m/Y', $date)->format('Y-m-d H:i:s');
+                return Carbon::createFromFormat('d/m/Y', $date)->format('d-m-Y');
             } catch (\Exception $e) {
                 return null;
             }
