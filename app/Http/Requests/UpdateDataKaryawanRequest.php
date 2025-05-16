@@ -37,8 +37,8 @@ class UpdateDataKaryawanRequest extends FormRequest
             'spesialisasi_id' => 'nullable|integer|exists:spesialisasis,id',
             'premi_id' => 'array|nullable',
             'premi_id.*' => 'integer|exists:premis,id',
-            'tipe_cuti_id' => 'required|array|min:1',
-            'tipe_cuti_id.*' => 'required|exists:tipe_cutis,id',
+            'tipe_cuti_id' => 'nullable|array|min:1',
+            'tipe_cuti_id.*' => 'nullable|exists:tipe_cutis,id',
 
             // Step 2
             'kelompok_gaji_id' => 'nullable|integer|exists:kelompok_gajis,id',
