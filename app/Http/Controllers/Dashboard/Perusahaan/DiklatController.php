@@ -809,7 +809,7 @@ class DiklatController extends Controller
                 'dokumen_diklat_5' => $berkasIds['dokumen_diklat_5'] ?? $diklat->dokumen_diklat_5,
                 'nama' => $data['nama'],
                 'deskripsi' => $data['deskripsi'],
-                'kuota' => $data['kuota'],
+                'kuota' => $data['kuota'] ?? $diklat->kuota,
                 'skp' => $data['skp'],
                 'lokasi' => $data['lokasi']
             ]);

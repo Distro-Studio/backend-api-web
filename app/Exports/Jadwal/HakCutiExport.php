@@ -81,7 +81,7 @@ class HakCutiExport implements FromCollection, WithHeadings, WithMapping
 
         if (isset($this->filters['status_aktif'])) {
             $statusAktif = $this->filters['status_aktif'];
-            $query->whereHas('users', function ($query) use ($statusAktif) {
+            $query->whereHas('data_karyawans.users', function ($query) use ($statusAktif) {
                 if (is_array($statusAktif)) {
                     $query->whereIn('status_aktif', $statusAktif);
                 } else {
