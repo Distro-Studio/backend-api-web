@@ -39,9 +39,43 @@ class DiklatController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
+        $user = auth()->user();
+        $userId = $user->id;
+
+        // Periksa apakah user adalah Super Admin
+        $isSuperAdmin = $user->hasRole('Super Admin');
+
+        // Jika bukan super admin, cek apakah dia verifikator untuk modul diklat internal
+        $userDivVerifiedIds = [];
+        if (!$isSuperAdmin) {
+            $relasi = RelasiVerifikasi::where('verifikator', $userId)
+                ->where('modul_verifikasi', 5)
+                ->first();
+
+            if ($relasi) {
+                // Ambil array user_diverifikasi dari relasi_verifikasis
+                $userDivVerifiedIds = $relasi->user_diverifikasi ?? [];
+            }
+        }
+
         // Per page
         $limit = $request->input('limit', 10); // Default per page is 10
         $diklat = Diklat::where('kategori_diklat_id', 1)->orderBy('created_at', 'desc');
+
+        // Terapkan filter data berdasarkan role/verifikator
+        if (!$isSuperAdmin) {
+            if (empty($userDivVerifiedIds)) {
+                // Bukan super admin dan bukan verifikator => kosongkan hasil
+                // Jadi, query dibuat WHERE 0=1 agar kosong
+                $diklat->whereRaw('0=1');
+            } else {
+                // Filter hanya user_id yang termasuk dalam user_diverifikasi
+                $diklat->whereHas('peserta_diklat', function ($query) use ($userDivVerifiedIds) {
+                    $query->whereIn('id', $userDivVerifiedIds);
+                });
+            }
+        }
+
         $filters = $request->all();
 
         // Filter periode tahun jika ada
@@ -213,9 +247,43 @@ class DiklatController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
+        $user = auth()->user();
+        $userId = $user->id;
+
+        // Periksa apakah user adalah Super Admin
+        $isSuperAdmin = $user->hasRole('Super Admin');
+
+        // Jika bukan super admin, cek apakah dia verifikator untuk modul diklat eksternal
+        $userDivVerifiedIds = [];
+        if (!$isSuperAdmin) {
+            $relasi = RelasiVerifikasi::where('verifikator', $userId)
+                ->where('modul_verifikasi', 5)
+                ->first();
+
+            if ($relasi) {
+                // Ambil array user_diverifikasi dari relasi_verifikasis
+                $userDivVerifiedIds = $relasi->user_diverifikasi ?? [];
+            }
+        }
+
         // Per page
         $limit = $request->input('limit', 10); // Default per page is 10
         $diklat = Diklat::where('kategori_diklat_id', 2)->orderBy('created_at', 'desc');
+
+        // Terapkan filter data berdasarkan role/verifikator
+        if (!$isSuperAdmin) {
+            if (empty($userDivVerifiedIds)) {
+                // Bukan super admin dan bukan verifikator => kosongkan hasil
+                // Jadi, query dibuat WHERE 0=1 agar kosong
+                $diklat->whereRaw('0=1');
+            } else {
+                // Filter hanya user_id yang termasuk dalam user_diverifikasi
+                $diklat->whereHas('peserta_diklat', function ($query) use ($userDivVerifiedIds) {
+                    $query->whereIn('id', $userDivVerifiedIds);
+                });
+            }
+        }
+
         $filters = $request->all();
 
         // Filter periode tahun jika ada
