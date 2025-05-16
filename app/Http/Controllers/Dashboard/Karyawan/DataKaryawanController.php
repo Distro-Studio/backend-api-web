@@ -1747,8 +1747,29 @@ class DataKaryawanController extends Controller
             DB::table('pengurang_gajis')->insert([
               'data_karyawan_id' => $karyawan->id,
               'premi_id' => $premi->id,
-              'created_at' => Carbon::now(),
-              'updated_at' => Carbon::now(),
+              'created_at' => now('Asia/Jakarta'),
+              'updated_at' => now('Asia/Jakarta'),
+            ]);
+          }
+        }
+
+        // Update Hak cuti
+        $tipe_cuti = $request->input('tipe_cuti_id', []);
+        DB::table('hak_cutis')->where('data_karyawan_id', $karyawan->id)->delete(); // Hapus hak cuti yang lama
+
+        if (!empty($tipe_cuti)) {
+          $tipeCutiData = DB::table('tipe_cutis')->whereIn('id', $tipe_cuti)->get();
+          if ($tipeCutiData->isEmpty()) {
+            return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Tipe cuti yang dipilih tidak valid.'), Response::HTTP_NOT_FOUND);
+          }
+
+          foreach ($tipeCutiData as $tipeCuti) {
+            DB::table('hak_cutis')->insert([
+              'data_karyawan_id' => $karyawan->id,
+              'tipe_cuti_id' => $tipeCuti->id,
+              'kuota' => $tipeCuti->kuota,
+              'created_at' => now('Asia/Jakarta'),
+              'updated_at' => now('Asia/Jakarta'),
             ]);
           }
         }

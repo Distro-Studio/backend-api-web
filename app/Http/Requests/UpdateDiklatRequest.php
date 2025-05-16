@@ -20,18 +20,18 @@ class UpdateDiklatRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'dokumen' => 'nullable|image|max:10240|mimes:jpeg,png,jpg,svg',
+            // 'dokumen' => 'nullable|image|max:10240|mimes:jpeg,png,jpg,svg',
             'nama' => 'required|string|max:255',
             // 'kategori_diklat_id' => 'required|integer|exists:kategori_diklats,id',
             'deskripsi' => 'required|string|max:225',
-            'user_id' => 'nullable|array', // Penerima notifikasi
-            'user_id.*' => 'integer|exists:users,id',
-            'dokumen_diklat_1' => 'nullable|file|max:10240|mimes:pdf,pptx,docx',
-            'dokumen_diklat_2' => 'nullable|file|max:10240|mimes:pdf,pptx,docx',
-            'dokumen_diklat_3' => 'nullable|file|max:10240|mimes:pdf,pptx,docx',
-            'dokumen_diklat_4' => 'nullable|file|max:10240|mimes:pdf,pptx,docx',
-            'dokumen_diklat_5' => 'nullable|file|max:10240|mimes:pdf,pptx,docx',
-            'kuota' => 'nullable|integer|min:1',
+            // 'user_id' => 'nullable|array', // Penerima notifikasi
+            // 'user_id.*' => 'integer|exists:users,id',
+            // 'dokumen_diklat_1' => 'nullable|file|max:10240|mimes:pdf,pptx,docx',
+            // 'dokumen_diklat_2' => 'nullable|file|max:10240|mimes:pdf,pptx,docx',
+            // 'dokumen_diklat_3' => 'nullable|file|max:10240|mimes:pdf,pptx,docx',
+            // 'dokumen_diklat_4' => 'nullable|file|max:10240|mimes:pdf,pptx,docx',
+            // 'dokumen_diklat_5' => 'nullable|file|max:10240|mimes:pdf,pptx,docx',
+            // 'kuota' => 'nullable|integer|min:1',
             'lokasi' => 'required|string',
             'skp' => 'nullable|string',
         ];

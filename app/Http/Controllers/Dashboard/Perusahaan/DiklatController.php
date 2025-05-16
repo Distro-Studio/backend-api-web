@@ -760,100 +760,99 @@ class DiklatController extends Controller
 
         DB::beginTransaction();
         try {
-            StorageServerHelper::login();
-            $berkasIds = [
-                'dokumen' => null,
-                'dokumen_diklat_1' => null,
-                'dokumen_diklat_2' => null,
-                'dokumen_diklat_3' => null,
-                'dokumen_diklat_4' => null,
-                'dokumen_diklat_5' => null,
-            ];
+            // StorageServerHelper::login();
+            // $berkasIds = [
+            //     'dokumen' => null,
+            //     'dokumen_diklat_1' => null,
+            //     'dokumen_diklat_2' => null,
+            //     'dokumen_diklat_3' => null,
+            //     'dokumen_diklat_4' => null,
+            //     'dokumen_diklat_5' => null,
+            // ];
 
             // Upload dokumen_diklat_1 s.d. dokumen_diklat_5 (sebagian boleh kosong)
-            $authUser = Auth::user();
-            foreach ($berkasIds as $field => $value) {
-                if ($request->hasFile($field)) {
-                    $file = $request->file($field);
-                    $random_filename = Str::random(20);
-                    $dataupload = StorageServerHelper::multipleUploadToServer($file, $random_filename);
+            // $authUser = Auth::user();
+            // foreach ($berkasIds as $field => $value) {
+            //     if ($request->hasFile($field)) {
+            //         $file = $request->file($field);
+            //         $random_filename = Str::random(20);
+            //         $dataupload = StorageServerHelper::multipleUploadToServer($file, $random_filename);
 
-                    // Simpan data berkas ke tabel berkas
-                    $berkas = Berkas::create([
-                        'user_id' => $authUser->id,
-                        'file_id' => $dataupload['id_file']['id'],
-                        'nama' => $random_filename,
-                        'kategori_berkas_id' => 2,
-                        'status_berkas_id' => 2,
-                        'path' => $dataupload['path'],
-                        'tgl_upload' => now('Asia/Jakarta'),
-                        'nama_file' => $dataupload['nama_file'],
-                        'ext' => $dataupload['ext'],
-                        'size' => $dataupload['size'],
-                    ]);
+            //         // Simpan data berkas ke tabel berkas
+            //         $berkas = Berkas::create([
+            //             'user_id' => $authUser->id,
+            //             'file_id' => $dataupload['id_file']['id'],
+            //             'nama' => $random_filename,
+            //             'kategori_berkas_id' => 2,
+            //             'status_berkas_id' => 2,
+            //             'path' => $dataupload['path'],
+            //             'tgl_upload' => now('Asia/Jakarta'),
+            //             'nama_file' => $dataupload['nama_file'],
+            //             'ext' => $dataupload['ext'],
+            //             'size' => $dataupload['size'],
+            //         ]);
 
-                    // Simpan ID berkas ke urutan yang sesuai
-                    $berkasIds[$field] = $berkas->id;
-                    Log::info("Berkas dokumen pada kolom {$field} berhasil diupload.");
-                }
-            }
+            //         // Simpan ID berkas ke urutan yang sesuai
+            //         $berkasIds[$field] = $berkas->id;
+            //         Log::info("Berkas dokumen pada kolom {$field} berhasil diupload.");
+            //     }
+            // }
 
-            StorageServerHelper::logout();
+            // StorageServerHelper::logout();
 
             $diklat->update([
-                'gambar' => $berkasIds['dokumen'] ?? $diklat->gambar,
-                'dokumen_diklat_1' => $berkasIds['dokumen_diklat_1'] ?? $diklat->dokumen_diklat_1,
-                'dokumen_diklat_2' => $berkasIds['dokumen_diklat_2'] ?? $diklat->dokumen_diklat_2,
-                'dokumen_diklat_3' => $berkasIds['dokumen_diklat_3'] ?? $diklat->dokumen_diklat_3,
-                'dokumen_diklat_4' => $berkasIds['dokumen_diklat_4'] ?? $diklat->dokumen_diklat_4,
-                'dokumen_diklat_5' => $berkasIds['dokumen_diklat_5'] ?? $diklat->dokumen_diklat_5,
+                // 'gambar' => $berkasIds['dokumen'] ?? $diklat->gambar,
+                // 'dokumen_diklat_1' => $berkasIds['dokumen_diklat_1'] ?? $diklat->dokumen_diklat_1,
+                // 'dokumen_diklat_2' => $berkasIds['dokumen_diklat_2'] ?? $diklat->dokumen_diklat_2,
+                // 'dokumen_diklat_3' => $berkasIds['dokumen_diklat_3'] ?? $diklat->dokumen_diklat_3,
+                // 'dokumen_diklat_4' => $berkasIds['dokumen_diklat_4'] ?? $diklat->dokumen_diklat_4,
+                // 'dokumen_diklat_5' => $berkasIds['dokumen_diklat_5'] ?? $diklat->dokumen_diklat_5,
                 'nama' => $data['nama'],
                 'deskripsi' => $data['deskripsi'],
-                'kuota' => $data['kuota'] ?? $diklat->kuota,
+                // 'kuota' => $data['kuota'] ?? $diklat->kuota,
                 'skp' => $data['skp'],
                 'lokasi' => $data['lokasi']
             ]);
 
-            $userIds = $data['user_id'] ?? [];
-            $existingUserIds = DB::table('peserta_diklats')
-                ->where('diklat_id', $diklat->id)
-                ->pluck('peserta')
-                ->toArray();
+            // $userIds = $data['user_id'] ?? [];
+            // $existingUserIds = DB::table('peserta_diklats')
+            //     ->where('diklat_id', $diklat->id)
+            //     ->pluck('peserta')
+            //     ->toArray();
 
             // Bandingkan array user_id lama dan baru (tanpa memperhatikan urutan)
-            $hasUserChanged = array_diff($userIds, $existingUserIds) || array_diff($existingUserIds, $userIds);
-            if ($hasUserChanged) {
-                DB::table('peserta_diklats')->where('diklat_id', $diklat->id)->delete();
+            // $hasUserChanged = array_diff($userIds, $existingUserIds) || array_diff($existingUserIds, $userIds);
+            // if ($hasUserChanged) {
+            //     DB::table('peserta_diklats')->where('diklat_id', $diklat->id)->delete();
 
-                // Menyimpan peserta diklat dan menentukan is_whitelist
-                if ($userIds) {
-                    foreach ($userIds as $userId) {
-                        DB::table('peserta_diklats')->insert([
-                            'diklat_id' => $diklat->id,
-                            'peserta' => $userId,
-                        ]);
-                    }
+            //     // Menyimpan peserta diklat dan menentukan is_whitelist
+            //     if ($userIds) {
+            //         foreach ($userIds as $userId) {
+            //             DB::table('peserta_diklats')->insert([
+            //                 'diklat_id' => $diklat->id,
+            //                 'peserta' => $userId,
+            //             ]);
+            //         }
 
-                    $diklat->update([
-                        'is_whitelist' => 1,
-                        'total_peserta' => count($userIds),
-                        'kuota' => count($userIds),
-                    ]);
-                } else {
-                    $diklat->update([
-                        'is_whitelist' => 0,
-                        'total_peserta' => 0,
-                        'kuota' => $data['kuota'] ?? 0,
-                    ]);
-                }
-            }
+            //         $diklat->update([
+            //             'is_whitelist' => 1,
+            //             'total_peserta' => count($userIds),
+            //             'kuota' => count($userIds),
+            //         ]);
+            //     } else {
+            //         $diklat->update([
+            //             'is_whitelist' => 0,
+            //             'total_peserta' => 0,
+            //             'kuota' => $data['kuota'] ?? 0,
+            //         ]);
+            //     }
+            // }
 
             DB::commit();
 
             return response()->json([
                 'status' => Response::HTTP_OK,
-                'message' => "Diklat Internal '{$diklat->nama}' berhasil diperbarui.",
-                'data' => $diklat,
+                'message' => "Diklat Internal '{$diklat->nama}' berhasil diperbarui."
             ], Response::HTTP_OK);
         } catch (\Exception $e) {
             DB::rollBack();
@@ -873,56 +872,56 @@ class DiklatController extends Controller
 
         $data = $request->validated();
         $verifikatorId = Auth::id();
-        $berkas = null;
+        // $berkas = null;
 
         $diklat = Diklat::findOrFail($diklatId);
-        // if ($diklat->status_diklat_id !== 1) {
-        //     return response()->json(new WithoutDataResource(
-        //         Response::HTTP_FORBIDDEN,
-        //         "Hanya diklat yang memiliki status 'Menunggu Verifikasi' yang dapat dilakukan perubahan."
-        //     ), Response::HTTP_FORBIDDEN);
-        // }
+        if ($diklat->status_diklat_id !== 1) {
+            return response()->json(new WithoutDataResource(
+                Response::HTTP_FORBIDDEN,
+                "Hanya diklat yang memiliki status 'Menunggu Verifikasi' yang dapat dilakukan perubahan."
+            ), Response::HTTP_FORBIDDEN);
+        }
 
         DB::beginTransaction();
         try {
-            if ($request->hasFile('dokumen')) {
-                $authUser = Auth::user();
+            // if ($request->hasFile('dokumen')) {
+            //     $authUser = Auth::user();
 
-                // Login to the storage server
-                StorageServerHelper::login();
+            //     // Login to the storage server
+            //     StorageServerHelper::login();
 
-                $file = $request->file('dokumen');
+            //     $file = $request->file('dokumen');
 
-                // Upload file using helper
-                $random_filename = Str::random(20);
-                $dataupload = StorageServerHelper::uploadToServer($request, $random_filename);
-                // $gambarUrl = $dataupload['path'];
+            //     // Upload file using helper
+            //     $random_filename = Str::random(20);
+            //     $dataupload = StorageServerHelper::uploadToServer($request, $random_filename);
+            //     // $gambarUrl = $dataupload['path'];
 
-                $berkas = Berkas::create([
-                    'user_id' => $authUser->id,
-                    'file_id' => $dataupload['id_file']['id'],
-                    'nama' => $random_filename,
-                    'kategori_berkas_id' => 2, // umum
-                    'status_berkas_id' => 2,
-                    'path' => $dataupload['path'],
-                    'tgl_upload' => now(),
-                    'nama_file' => $dataupload['nama_file'],
-                    'ext' => $dataupload['ext'],
-                    'size' => $dataupload['size'],
-                ]);
-                if (!$berkas) {
-                    throw new Exception('Berkas gagal di upload.');
-                }
+            //     $berkas = Berkas::create([
+            //         'user_id' => $authUser->id,
+            //         'file_id' => $dataupload['id_file']['id'],
+            //         'nama' => $random_filename,
+            //         'kategori_berkas_id' => 2, // umum
+            //         'status_berkas_id' => 2,
+            //         'path' => $dataupload['path'],
+            //         'tgl_upload' => now(),
+            //         'nama_file' => $dataupload['nama_file'],
+            //         'ext' => $dataupload['ext'],
+            //         'size' => $dataupload['size'],
+            //     ]);
+            //     if (!$berkas) {
+            //         throw new Exception('Berkas gagal di upload.');
+            //     }
 
-                $gambarId = $berkas->id;
+            //     $gambarId = $berkas->id;
 
-                StorageServerHelper::logout();
-            }
+            //     StorageServerHelper::logout();
+            // }
 
-            $durasi = $diklat->durasi;
+            // $durasi = $diklat->durasi;
 
             $diklat->update([
-                'dokumen_eksternal' => $gambarId ?? $diklat->dokumen_eksternal,
+                // 'dokumen_eksternal' => $gambarId ?? $diklat->dokumen_eksternal,
                 'nama'              => $data['nama'],
                 'deskripsi'         => $data['deskripsi'],
                 'lokasi'            => $data['lokasi'],
@@ -933,23 +932,23 @@ class DiklatController extends Controller
 
             // Perbarui peserta jika berbeda dari sebelumnya
             $existing = PesertaDiklat::where('diklat_id', $diklat->id)->pluck('peserta')->first();
-            $newUserId = $data['user_id'];
-            if ($existing !== $newUserId) {
-                // ⬇️ Kurangi durasi dari peserta sebelumnya
-                $this->decreaseDiklatDurationForRemovedUsers($diklat->id, [$newUserId], $durasi);
+            // $newUserId = $data['user_id'];
+            // if ($existing !== $newUserId) {
+            //     // ⬇️ Kurangi durasi dari peserta sebelumnya
+            //     $this->decreaseDiklatDurationForRemovedUsers($diklat->id, [$newUserId], $durasi);
 
-                PesertaDiklat::where('diklat_id', $diklat->id)->delete();
+            //     PesertaDiklat::where('diklat_id', $diklat->id)->delete();
 
-                PesertaDiklat::create([
-                    'diklat_id' => $diklat->id,
-                    'peserta'   => $data['user_id'],
-                ]);
+            //     PesertaDiklat::create([
+            //         'diklat_id' => $diklat->id,
+            //         'peserta'   => $data['user_id'],
+            //     ]);
 
-                // Update masa_diklat karyawan
-                $this->increaseMasaDiklat($data['user_id'], $durasi);
-            }
+            //     // Update masa_diklat karyawan
+            //     $this->increaseMasaDiklat($data['user_id'], $durasi);
+            // }
 
-            $user = User::find($data['user_id']);
+            $user = User::find($existing);
 
             DB::commit();
 

@@ -37,6 +37,8 @@ class UpdateDataKaryawanRequest extends FormRequest
             'spesialisasi_id' => 'nullable|integer|exists:spesialisasis,id',
             'premi_id' => 'array|nullable',
             'premi_id.*' => 'integer|exists:premis,id',
+            'tipe_cuti_id' => 'required|array|min:1',
+            'tipe_cuti_id.*' => 'required|exists:tipe_cutis,id',
 
             // Step 2
             'kelompok_gaji_id' => 'nullable|integer|exists:kelompok_gajis,id',
@@ -113,6 +115,10 @@ class UpdateDataKaryawanRequest extends FormRequest
             'status_karyawan_id.exists' => 'Maaf status karyawan yang dipilih tidak valid.',
             'premi_id.array' => 'Potongan penggajian harus berupa array.',
             'premi_id.*.exists' => 'Maaf potongan penggajian yang dipilih tidak valid.',
+            'tipe_cuti_id.required' => 'Hak cuti tidak boleh kosong.',
+            'tipe_cuti_id.array' => 'Hak cuti harus berupa array.',
+            'tipe_cuti_id.*.required' => 'Hak cuti tidak boleh kosong.',
+            'tipe_cuti_id.*.exists' => 'Terdapat salah satu Hak cuti yang tidak valid.',
 
             'kelompok_gaji_id.required' => 'Silahkan pilih kelompok gaji karyawan terlebih dahulu.',
             'kelompok_gaji_id.exists' => 'Maaf kelompok gaji yang dipilih tidak valid.',
