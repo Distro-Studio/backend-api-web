@@ -526,9 +526,6 @@ class DataCutiController extends Controller
             //         ->update(['status_reward_presensi' => false]);
             // }
 
-            // Update sisa kuota di hak_cutis
-            $hakCuti->kuota = $sisaSetelahPengajuan;
-            $hakCuti->save();
             DB::commit();
 
             $message = "Data cuti karyawan '{$dataCuti->users->nama}' berhasil dibuat untuk tipe cuti '{$dataCuti->tipe_cutis->nama}' dengan durasi {$dataCuti->durasi} hari.";
