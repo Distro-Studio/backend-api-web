@@ -10,6 +10,7 @@ use App\Models\KategoriAgama;
 use App\Models\KategoriDarah;
 use App\Models\KategoriPendidikan;
 use App\Models\Shift;
+use App\Models\Spesialisasi;
 use App\Models\UnitKerja;
 use PhpOffice\PhpSpreadsheet\Shared\Date;
 use Carbon\Carbon;
@@ -667,6 +668,69 @@ class TambahanDataController extends Controller
         }
     }
 
+    public function insertMasterSpesialisasi(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'karyawan_file' => 'required|mimes:xlsx,xls',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()->first()]);
+        }
+
+        DB::beginTransaction();
+
+        try {
+            $file = $request->file('karyawan_file');
+            $spreadsheet = IOFactory::load($file->getRealPath());
+            $sheet = $spreadsheet->getActiveSheet();
+
+            $spesialisasiFromExcel = [];
+
+            // Ambil data unik dari kolom P (nomor 2 sampai akhir)
+            foreach ($sheet->getRowIterator(2) as $row) {
+                $cell = $sheet->getCell('P' . $row->getRowIndex());
+                $value = trim($cell->getValue());
+                if ($value !== null && $value !== '') {
+                    $spesialisasiFromExcel[] = $value;
+                }
+            }
+            $spesialisasiFromExcel = array_unique($spesialisasiFromExcel);
+
+            // Cek duplikat di DB (nama_spesialisasi)
+            $existingSpesialisasi = Spesialisasi::whereIn('nama_spesialisasi', $spesialisasiFromExcel)->pluck('nama_spesialisasi')->toArray();
+
+            if (count($existingSpesialisasi) > 0) {
+                // Jika ada yang duplikat, rollback dan kembalikan response error
+                DB::rollBack();
+                return response()->json([
+                    'errors' => 'Spesialisasi berikut sudah ada di database: ' . implode(', ', $existingSpesialisasi)
+                ]);
+            }
+
+            // Jika tidak ada duplikat, simpan ke DB (batch insert)
+            $insertData = [];
+            foreach ($spesialisasiFromExcel as $nama) {
+                $insertData[] = [
+                    'nama_spesialisasi' => $nama,
+                    'created_at' => now('Asia/Jakarta'),
+                    'updated_at' => now('Asia/Jakarta'),
+                ];
+            }
+
+            Spesialisasi::insert($insertData);
+
+            DB::commit();
+
+            return response()->json([
+                'message' => count($insertData) . " spesialisasi berhasil disimpan."
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['errors' => $e->getMessage()]);
+        }
+    }
+
     public function insertDataKeluarga(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -792,8 +856,6 @@ class TambahanDataController extends Controller
             return response()->json(['errors' => $e->getMessage()]);
         }
     }
-
-    // TODO: Insert karyawan doktor mitra
 
     private function findPendidikanId($pendidikanLabel)
     {

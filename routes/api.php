@@ -78,6 +78,7 @@ use Illuminate\Support\Facades\Route;
 // Route::post('/cek-hubungan-keluarga', [TambahanDataController::class, 'cekHubunganKeluarga']);
 // Route::post('/test-unit', [TambahanDataController::class, 'cekUnitKerja']);
 // Route::post('/add-data-shifts', [TambahanDataController::class, 'insertMasterShift']);
+// Route::post('/add-data-spesialisasi', [TambahanDataController::class, 'insertMasterSpesialisasi']);
 
 Route::post('/login', [LoginController::class, 'login']);
 Route::post('/forgot-password-sendOtp', [ForgotPasswordController::class, 'sendOtp']);

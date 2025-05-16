@@ -67,10 +67,10 @@ class KaryawanImport implements ToModel, WithHeadingRow, WithValidation
       'email' => 'nullable|email|max:225|unique:data_karyawans,email',
       'nik' => 'nullable|numeric|unique:data_karyawans,nik',
       'role' => 'required',
-      'no_rm' => 'required',
+      'no_rm' => 'nullable',
       'no_manulife' => 'nullable',
       'tgl_masuk' => 'required',
-      'tgl_berakhir_pks' => 'required',
+      'tgl_berakhir_pks' => 'nullable',
       'unit_kerja' => 'nullable',
       'jabatan' => 'nullable',
       'kompetensi' => 'nullable',
@@ -93,7 +93,7 @@ class KaryawanImport implements ToModel, WithHeadingRow, WithValidation
       'tgl_lahir' => 'nullable',
       'alamat' => 'nullable',
       'no_hp' => 'nullable|numeric',
-      'nik_ktp' => 'nullable|numeric|max:16',
+      'nik_ktp' => 'nullable|numeric',
       'no_kk' => 'nullable|numeric',
       'npwp' => 'nullable|numeric',
       'jenis_kelamin' => 'nullable|in:P,L',
@@ -237,9 +237,13 @@ class KaryawanImport implements ToModel, WithHeadingRow, WithValidation
       throw new \Exception("Kelompok gaji '" . $row['kelompok_gaji'] . "' tidak ditemukan.");
     }
 
-    $ptkp = $this->PTKP->where('kode_ptkp', $row['kode_ptkp'])->first();
-    if (!$ptkp) {
-      throw new \Exception("PTKP '" . $row['kode_ptkp'] . "' tidak ditemukan.");
+    if (!empty($row['kode_ptkp'])) {
+      $ptkp = $this->PTKP->where('kode_ptkp', $row['kode_ptkp'])->first();
+      if (!$ptkp) {
+        throw new \Exception("PTKP '" . $row['kode_ptkp'] . "' tidak ditemukan.");
+      }
+    } else {
+      $ptkp = null;
     }
 
     $status_karyawan = $this->StatusKaryawan->where('label', $row['status_karyawan'])->first();
@@ -323,7 +327,7 @@ class KaryawanImport implements ToModel, WithHeadingRow, WithValidation
       'gelar_depan' => $row['gelar_depan'],
       'gelar_belakang' => $row['gelar_belakang'],
       'tempat_lahir' => $row['tempat_lahir'],
-      'tgl_lahir' => $row['tgl_lahir'],
+      'tgl_lahir' => $this->convertDateFormat($row['tgl_lahir']),
       'alamat' => $row['alamat'],
       'no_hp' => $row['no_hp'],
       'nik_ktp' => $row['nik_ktp'],
@@ -339,10 +343,33 @@ class KaryawanImport implements ToModel, WithHeadingRow, WithValidation
       'pendidikan_terakhir' => $pendidikan_terakhir ? $pendidikan_terakhir->id : null,
       'asal_sekolah' => $row['asal_sekolah'],
       'tahun_lulus' => $tahun_lulus,
-      'tgl_diangkat' => $row['tgl_diangkat'],
+      'tgl_diangkat' => $this->convertDateFormat($row['tgl_diangkat']),
     ]);
 
     $createUser->update(['data_karyawan_id' => $dataKaryawan->id]);
     return $dataKaryawan;
+  }
+
+  private function convertDateFormat($date)
+  {
+    if (empty($date)) {
+      return null;
+    }
+
+    try {
+      if (is_numeric($date)) {
+        return Carbon::instance(
+          \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($date)
+        )->format('d-m-Y');
+      }
+
+      return Carbon::createFromFormat('d-m-Y', $date)->format('d-m-Y');
+    } catch (\Exception $e) {
+      try {
+        return Carbon::createFromFormat('d/m/Y', $date)->format('d-m-Y');
+      } catch (\Exception $e) {
+        return null;
+      }
+    }
   }
 }
