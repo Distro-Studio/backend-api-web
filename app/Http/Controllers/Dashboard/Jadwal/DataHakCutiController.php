@@ -28,7 +28,6 @@ class DataHakCutiController extends Controller
             }
 
             $limit = $request->input('limit', 10);
-            $page = $request->input('page', 1);
             $hakCuti =  HakCuti::join('data_karyawans', 'hak_cutis.data_karyawan_id', '=', 'data_karyawans.id')
                 ->orderBy('data_karyawans.nik', 'asc')
                 ->select('hak_cutis.*');
@@ -425,22 +424,18 @@ class DataHakCutiController extends Controller
                     'updated_at' => $first->data_karyawans->users->updated_at
                 ],
                 'nik' => $first->data_karyawans->nik,
-                'kuota_hak_cuti' => $hakCuti->map(function ($item) {
+                'hak_cuti' => $hakCuti->map(function ($hakCuti) {
+                    return $hakCuti->tipe_cutis !== null;
+                })->map(function ($hakCuti) {
                     return [
-                        'nama' => $item->tipe_cutis->nama,
-                        'kuota' => $item->kuota, // ini dari tabel hak_cutis
-                    ];
-                })->values(),
-                'hak_cuti' => $hakCuti->map(function ($tipeCuti) {
-                    return [
-                        'id' => $tipeCuti->tipe_cutis->id,
-                        'nama' => $tipeCuti->tipe_cutis->nama,
-                        'kuota' => $tipeCuti->kuota,
-                        'is_need_requirement' => $tipeCuti->tipe_cutis->is_need_requirement,
-                        'keterangan' => $tipeCuti->tipe_cutis->keterangan,
-                        'cuti_administratif' => $tipeCuti->tipe_cutis->cuti_administratif,
-                        'created_at' => $tipeCuti->tipe_cutis->created_at,
-                        'updated_at' => $tipeCuti->tipe_cutis->updated_at
+                        'id' => $hakCuti->tipe_cutis->id,
+                        'nama' => $hakCuti->tipe_cutis->nama,
+                        'kuota' => $hakCuti->kuota,
+                        'is_need_requirement' => $hakCuti->tipe_cutis->is_need_requirement,
+                        'keterangan' => $hakCuti->tipe_cutis->keterangan,
+                        'cuti_administratif' => $hakCuti->tipe_cutis->cuti_administratif,
+                        'created_at' => $hakCuti->tipe_cutis->created_at,
+                        'updated_at' => $hakCuti->tipe_cutis->updated_at
                     ];
                 })->values(),
                 'created_at' => $first->created_at,
