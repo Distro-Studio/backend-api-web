@@ -14,10 +14,11 @@ return new class extends Migration
         Schema::create('tipe_cutis', function (Blueprint $table) {
             $table->id();
             $table->string('nama');
-            $table->integer('kuota');
+            $table->integer('kuota')->nullable();
             $table->boolean('is_need_requirement');
             $table->string('keterangan');
             $table->boolean('cuti_administratif')->default(0);
+            $table->boolean('is_unlimited')->default(0); // 0 = limited, 1 = unlimited
             $table->softDeletes();
             $table->timestamps();
         });

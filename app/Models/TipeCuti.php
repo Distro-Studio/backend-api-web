@@ -16,7 +16,8 @@ class TipeCuti extends Model
         'id' => 'integer',
         'kuota' => 'integer',
         'is_need_requirement' => 'integer',
-        'cuti_administratif' => 'integer'
+        'cuti_administratif' => 'integer',
+        'is_unlimited' => 'integer'
     ];
 
     /**

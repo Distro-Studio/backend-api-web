@@ -153,6 +153,7 @@ class CutiController extends Controller
                 'is_need_requirement' => $tipe_cuti->is_need_requirement,
                 'keterangan' => $tipe_cuti->keterangan,
                 'cuti_administratif' => $tipe_cuti->cuti_administratif,
+                'is_unlimited' => $tipe_cuti->is_unlimited,
                 'deleted_at' => $tipe_cuti->deleted_at,
                 'created_at' => $tipe_cuti->created_at,
                 'updated_at' => $tipe_cuti->updated_at
