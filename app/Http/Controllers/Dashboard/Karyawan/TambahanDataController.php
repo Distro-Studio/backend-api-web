@@ -857,6 +857,74 @@ class TambahanDataController extends Controller
         }
     }
 
+    public function insertSpesialiasaiKaryawan(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'karyawan_file' => 'required|mimes:xlsx,xls',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()->first()]);
+        }
+
+        DB::beginTransaction();
+
+        try {
+            $file = $request->file('karyawan_file');
+            $spreadsheet = IOFactory::load($file->getRealPath());
+            $sheet = $spreadsheet->getActiveSheet();
+
+            $updatedRecords = 0;
+            $errors = [];
+
+            foreach ($sheet->getRowIterator(2) as $row) {
+                $cellIterator = $row->getCellIterator();
+                $cellIterator->setIterateOnlyExistingCells(true);
+
+                $nik = null;
+                $namaSpesialisasi = null;
+
+                foreach ($cellIterator as $cell) {
+                    $column = $cell->getColumn();
+                    $value = trim($cell->getValue());
+
+                    if ($column === 'A') {
+                        $nik = $value;
+                    } elseif ($column === 'P') {
+                        $namaSpesialisasi = $value;
+                    }
+                }
+
+                if (!empty($nik) && !empty($namaSpesialisasi)) {
+                    $karyawan = DataKaryawan::where('nik', $nik)->first();
+                    $spesialisasi = Spesialisasi::where('nama_spesialisasi', 'like', '%' . $namaSpesialisasi . '%')->first();
+
+                    if ($karyawan && $spesialisasi) {
+                        $karyawan->spesialisasi_id = $spesialisasi->id;
+                        $karyawan->save();
+                        $updatedRecords++;
+                    } else {
+                        $errors[] = [
+                            'nik' => $nik,
+                            'spesialisasi' => $namaSpesialisasi,
+                            'karyawan_found' => $karyawan ? true : false,
+                            'spesialisasi_found' => $spesialisasi ? true : false
+                        ];
+                    }
+                }
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'message' => "$updatedRecords data spesialisasi berhasil diperbarui."
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['errors' => $e->getMessage()]);
+        }
+    }
+
     private function findPendidikanId($pendidikanLabel)
     {
         $pendidikan = KategoriPendidikan::where('label', $pendidikanLabel)->first();
