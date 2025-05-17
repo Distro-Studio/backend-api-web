@@ -26,10 +26,11 @@ class StoreCutiRequest extends FormRequest
     {
         return [
             'nama' => 'required|string|max:255|unique:tipe_cutis,nama',
-            'kuota' => 'required|integer',
+            'kuota' => 'nullable|integer',
             'is_need_requirement' => 'required|boolean',
             'keterangan' => 'required|string|max:255',
             'cuti_administratif' => 'required|boolean',
+            'is_unlimited' => 'required|boolean',
         ];
     }
 
@@ -49,6 +50,8 @@ class StoreCutiRequest extends FormRequest
             'keterangan.max' => 'Keterangan melebihi batas maksimum panjang karakter.',
             'cuti_administratif.required' => 'Cuti absensi tidak boleh kosong.',
             'cuti_administratif.boolean' => 'Cuti absensi harus berupa boolean.',
+            'is_unlimited.required' => 'Cuti yang tak terbatas tidak boleh kosong.',
+            'is_unlimited.boolean' => 'Cuti yang tak terbatas harus berupa boolean.',
         ];
     }
 

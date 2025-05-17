@@ -123,7 +123,7 @@ class DataKaryawan extends Model
      */
     public function spesialisasis(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'foreign_key', 'other_key');
+        return $this->belongsTo(Spesialisasi::class, 'spesialisasi_id', 'id');
     }
 
     /**

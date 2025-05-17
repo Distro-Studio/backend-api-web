@@ -282,18 +282,19 @@ class DataHakCutiController extends Controller
                         'updated_at' => $first->data_karyawans->users->updated_at
                     ],
                     'nik' => $first->data_karyawans->nik,
-                    'hak_cuti' => $group->filter(function ($tipeCuti) {
-                        return $tipeCuti->tipe_cutis !== null;
-                    })->map(function ($tipeCuti) {
+                    'hak_cuti' => $group->filter(function ($hakCuti) {
+                        return $hakCuti->tipe_cutis !== null;
+                    })->map(function ($hakCuti) {
                         return [
-                            'id' => $tipeCuti->tipe_cutis->id,
-                            'nama' => $tipeCuti->tipe_cutis->nama,
-                            'kuota' => $tipeCuti->kuota,
-                            'is_need_requirement' => $tipeCuti->tipe_cutis->is_need_requirement,
-                            'keterangan' => $tipeCuti->tipe_cutis->keterangan,
-                            'cuti_administratif' => $tipeCuti->tipe_cutis->cuti_administratif,
-                            'created_at' => $tipeCuti->tipe_cutis->created_at,
-                            'updated_at' => $tipeCuti->tipe_cutis->updated_at
+                            'id' => $hakCuti->tipe_cutis->id,
+                            'nama' => $hakCuti->tipe_cutis->nama,
+                            'kuota' => $hakCuti->kuota,
+                            'is_need_requirement' => $hakCuti->tipe_cutis->is_need_requirement,
+                            'keterangan' => $hakCuti->tipe_cutis->keterangan,
+                            'cuti_administratif' => $hakCuti->tipe_cutis->cuti_administratif,
+                            'is_unlimited' => $hakCuti->tipe_cutis->is_unlimited,
+                            'created_at' => $hakCuti->tipe_cutis->created_at,
+                            'updated_at' => $hakCuti->tipe_cutis->updated_at
                         ];
                     })->values(),
                     'created_at' => $first->created_at,
@@ -434,6 +435,7 @@ class DataHakCutiController extends Controller
                         'is_need_requirement' => $hakCuti->tipe_cutis->is_need_requirement,
                         'keterangan' => $hakCuti->tipe_cutis->keterangan,
                         'cuti_administratif' => $hakCuti->tipe_cutis->cuti_administratif,
+                        'is_unlimited' => $hakCuti->tipe_cutis->is_unlimited,
                         'created_at' => $hakCuti->tipe_cutis->created_at,
                         'updated_at' => $hakCuti->tipe_cutis->updated_at
                     ];
