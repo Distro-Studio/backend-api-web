@@ -33,7 +33,7 @@ class StoreTransferKaryawanRequest extends FormRequest
             'role_tujuan' => 'nullable|integer|exists:roles,id',
             'kategori_transfer_id' => 'required|integer|exists:kategori_transfer_karyawans,id',
             'alasan' => 'required|string',
-            'dokumen' => 'required|file|max:10240|mimes:pdf',
+            'dokumen' => 'nullable|file|max:10240|mimes:pdf',
         ];
     }
 
