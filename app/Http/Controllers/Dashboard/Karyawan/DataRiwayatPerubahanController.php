@@ -279,107 +279,68 @@ class DataRiwayatPerubahanController extends Controller
             $originalData = $data_perubahan->original_data ?? null;
             $updatedData = $data_perubahan->updated_data;
 
-            // if ($data_perubahan->jenis_perubahan === 'Keluarga') {
-            //     if (is_array($originalData)) {
-            //         foreach ($originalData as &$item) {
-            //             if (isset($item['pendidikan_terakhir'])) {
-            //                 $item['pendidikan_terakhir'] = KategoriPendidikan::find($item['pendidikan_terakhir']) ?? null;
-            //             }
-            //         }
-            //     }
-
-            //     if (is_array($updatedData)) {
-            //         foreach ($updatedData as &$item) {
-            //             if (isset($item['pendidikan_terakhir'])) {
-            //                 $item['pendidikan_terakhir'] = KategoriPendidikan::find($item['pendidikan_terakhir']) ?? null;
-            //             }
-            //         }
-            //     }
-
-
-            //     if (is_array($originalData)) {
-            //         foreach ($originalData as &$item) {
-            //             if (isset($item['kategori_agama_id'])) {
-            //                 $item['kategori_agama_id'] = KategoriAgama::find($item['kategori_agama_id']) ?? null;
-            //             }
-            //         }
-            //     }
-
-            //     if (is_array($updatedData)) {
-            //         foreach ($updatedData as &$item) {
-            //             if (isset($item['kategori_agama_id'])) {
-            //                 $item['kategori_agama_id'] = KategoriAgama::find($item['kategori_agama_id']) ?? null;
-            //             }
-            //         }
-            //     }
-
-            //     if (is_array($originalData)) {
-            //         foreach ($originalData as &$item) {
-            //             if (isset($item['kategori_darah_id'])) {
-            //                 $item['kategori_darah_id'] = KategoriDarah::find($item['kategori_darah_id']) ?? null;
-            //             }
-            //         }
-            //     }
-
-            //     if (is_array($updatedData)) {
-            //         foreach ($updatedData as &$item) {
-            //             if (isset($item['kategori_darah_id'])) {
-            //                 $item['kategori_darah_id'] = KategoriDarah::find($item['kategori_darah_id']) ?? null;
-            //             }
-            //         }
-            //     }
-            // }
-
             if ($data_perubahan->jenis_perubahan === 'Keluarga') {
-                // Array yang berisi kolom-kolom yang perlu diproses
-                $columnsToUpdate = [
-                    'kategori_agama_id' => KategoriAgama::class,
-                    'kategori_darah_id' => KategoriDarah::class,
-                    'pendidikan_terakhir' => KategoriPendidikan::class,
-                ];
+                if (is_array($originalData)) {
+                    foreach ($originalData as &$item) {
+                        if (isset($item['pendidikan_terakhir'])) {
+                            $item['pendidikan_terakhir'] = KategoriPendidikan::find($item['pendidikan_terakhir']) ?? null;
+                        }
+                    }
+                }
 
-                // Fungsi untuk memproses setiap kolom dalam $columnsToUpdate
-                foreach (['originalData', 'updatedData'] as $dataType) {
-                    if (is_array($data_perubahan->{$dataType})) {
-                        foreach ($data_perubahan->{$dataType} as &$item) {
-                            foreach ($columnsToUpdate as $column => $modelClass) {
-                                if (isset($item[$column])) {
-                                    $item[$column] = $modelClass::find($item[$column]) ?? null;
-                                }
-                            }
+                if (is_array($updatedData)) {
+                    foreach ($updatedData as &$item) {
+                        if (isset($item['pendidikan_terakhir'])) {
+                            $item['pendidikan_terakhir'] = KategoriPendidikan::find($item['pendidikan_terakhir']) ?? null;
+                        }
+                    }
+                }
+
+
+                if (is_array($originalData)) {
+                    foreach ($originalData as &$item) {
+                        if (isset($item['kategori_agama_id'])) {
+                            $item['kategori_agama_id'] = KategoriAgama::find($item['kategori_agama_id']) ?? null;
+                        }
+                    }
+                }
+
+                if (is_array($updatedData)) {
+                    foreach ($updatedData as &$item) {
+                        if (isset($item['kategori_agama_id'])) {
+                            $item['kategori_agama_id'] = KategoriAgama::find($item['kategori_agama_id']) ?? null;
+                        }
+                    }
+                }
+
+                if (is_array($originalData)) {
+                    foreach ($originalData as &$item) {
+                        if (isset($item['kategori_darah_id'])) {
+                            $item['kategori_darah_id'] = KategoriDarah::find($item['kategori_darah_id']) ?? null;
+                        }
+                    }
+                }
+
+                if (is_array($updatedData)) {
+                    foreach ($updatedData as &$item) {
+                        if (isset($item['kategori_darah_id'])) {
+                            $item['kategori_darah_id'] = KategoriDarah::find($item['kategori_darah_id']) ?? null;
                         }
                     }
                 }
             }
 
-            // if ($data_perubahan->jenis_perubahan === 'Personal') {
-            //     if (in_array($data_perubahan->kolom, ['agama', 'golongan_darah', 'pendidikan_terakhir'])) {
-            //         if ($data_perubahan->kolom === 'agama') {
-            //             $originalData = KategoriAgama::find($originalData) ?? $originalData;
-            //             $updatedData = KategoriAgama::find($updatedData) ?? $updatedData;
-            //         } elseif ($data_perubahan->kolom === 'golongan_darah') {
-            //             $originalData = KategoriDarah::find($originalData) ?? $originalData;
-            //             $updatedData = KategoriDarah::find($updatedData) ?? $updatedData;
-            //         } elseif ($data_perubahan->kolom === 'pendidikan_terakhir') {
-            //             $originalData = KategoriPendidikan::find($originalData) ?? $originalData;
-            //             $updatedData = KategoriPendidikan::find($updatedData) ?? $updatedData;
-            //         }
-            //     }
-            // }
-
             if ($data_perubahan->jenis_perubahan === 'Personal') {
-                // Array yang berisi kolom-kolom yang perlu diproses
-                $columnsToUpdate = [
-                    'agama' => KategoriAgama::class,
-                    'golongan_darah' => KategoriDarah::class,
-                    'pendidikan_terakhir' => KategoriPendidikan::class,
-                ];
-
-                // Memproses originalData dan updatedData dalam loop untuk setiap kolom
-                foreach (['originalData', 'updatedData'] as $dataType) {
-                    if (in_array($data_perubahan->kolom, array_keys($columnsToUpdate))) {
-                        $modelClass = $columnsToUpdate[$data_perubahan->kolom];
-                        $$dataType = $modelClass::find($$dataType) ?? $$dataType;
+                if (in_array($data_perubahan->kolom, ['agama', 'golongan_darah', 'pendidikan_terakhir'])) {
+                    if ($data_perubahan->kolom === 'agama') {
+                        $originalData = KategoriAgama::find($originalData) ?? $originalData;
+                        $updatedData = KategoriAgama::find($updatedData) ?? $updatedData;
+                    } elseif ($data_perubahan->kolom === 'golongan_darah') {
+                        $originalData = KategoriDarah::find($originalData) ?? $originalData;
+                        $updatedData = KategoriDarah::find($updatedData) ?? $updatedData;
+                    } elseif ($data_perubahan->kolom === 'pendidikan_terakhir') {
+                        $originalData = KategoriPendidikan::find($originalData) ?? $originalData;
+                        $updatedData = KategoriPendidikan::find($updatedData) ?? $updatedData;
                     }
                 }
             }
