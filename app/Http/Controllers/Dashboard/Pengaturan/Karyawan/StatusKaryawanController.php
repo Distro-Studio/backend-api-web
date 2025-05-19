@@ -22,7 +22,7 @@ class StatusKaryawanController extends Controller
         }
 
         $statusKaryawan = StatusKaryawan::withTrashed()
-            ->orderByRaw('FIELD(id, 1, 2, 3) desc') // ID 1,2,3 di atas
+            ->orderByRaw('FIELD(id, 3, 2, 1) desc')
             ->orderBy('created_at', 'desc');
 
         $dataStatusKaryawan = $statusKaryawan->get();
