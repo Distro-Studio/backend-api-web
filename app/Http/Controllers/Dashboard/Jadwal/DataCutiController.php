@@ -299,24 +299,24 @@ class DataCutiController extends Controller
                 $userId = $dataCuti->users->id ?? null;
 
                 // Ambil kuota cuti berdasarkan tipe cuti
-                $leaveType = TipeCuti::find($dataCuti->tipe_cuti_id);
-                $quota = $leaveType->kuota;
+                // $leaveType = TipeCuti::find($dataCuti->tipe_cuti_id);
+                // $quota = $leaveType->kuota;
 
                 // Hitung jumlah hari cuti yang sudah digunakan dalam tahun ini
-                $usedDays = Cuti::where('tipe_cuti_id', $leaveType->id)
-                    ->whereNotIn('status_cuti_id', [3, 5])
-                    ->where('user_id', $userId)
-                    ->whereYear('created_at', Carbon::now('Asia/Jakarta')->year)
-                    ->get()
-                    ->sum(function ($cuti) {
-                        $tglFrom = Carbon::parse($cuti->tgl_from);
-                        $tglTo = Carbon::parse($cuti->tgl_to);
-                        return $tglFrom->diffInDays($tglTo) + 1;
-                    });
-                // dd($usedDays);
+                // $usedDays = Cuti::where('tipe_cuti_id', $leaveType->id)
+                //     ->whereNotIn('status_cuti_id', [3, 5])
+                //     ->where('user_id', $userId)
+                //     ->whereYear('created_at', Carbon::now('Asia/Jakarta')->year)
+                //     ->get()
+                //     ->sum(function ($cuti) {
+                //         $tglFrom = Carbon::parse($cuti->tgl_from);
+                //         $tglTo = Carbon::parse($cuti->tgl_to);
+                //         return $tglFrom->diffInDays($tglTo) + 1;
+                //     });
+                // // dd($usedDays);
 
                 // Hitung sisa kuota
-                $sisaKuota = $quota - $usedDays;
+                // $sisaKuota = $quota - $usedDays;
 
                 // Ambil max_order dari modul_verifikasis
                 $modulVerifikasi = ModulVerifikasi::where('id', 3)->first(); // 3 untuk modul cuti
@@ -398,6 +398,7 @@ class DataCutiController extends Controller
                         'updated_at' => $tipeCuti->updated_at,
                     ] : null,
                     'kuota' => $hakCuti->kuota,
+                    'used_kuota' => $hakCuti->used_kuota,
                     'created_at' => $hakCuti->created_at,
                     'updated_at' => $hakCuti->updated_at,
                 ] : null;
@@ -433,8 +434,8 @@ class DataCutiController extends Controller
                     'tgl_to' => $dataCuti->tgl_to,
                     'catatan' => $dataCuti->catatan,
                     'durasi' => $dataCuti->durasi,
-                    'total_kuota' => $quota,
-                    'sisa_kuota' => $sisaKuota,
+                    // 'total_kuota' => $quota,
+                    // 'sisa_kuota' => $sisaKuota,
                     'status_cuti' => $dataCuti->status_cutis,
                     'alasan' => $dataCuti->alasan ?? null,
                     'relasi_verifikasi' => $formattedRelasiVerifikasi,
@@ -636,6 +637,7 @@ class DataCutiController extends Controller
                         'updated_at' => $tipeCuti->updated_at,
                     ] : null,
                     'kuota' => $hakCuti->kuota,
+                    'used_kuota' => $hakCuti->used_kuota,
                     'created_at' => $hakCuti->created_at,
                     'updated_at' => $hakCuti->updated_at,
                 ] : null;
@@ -789,6 +791,7 @@ class DataCutiController extends Controller
             if ($data['tipe_cuti_id'] != $dataCuti->tipe_cuti_id) {
                 if ($hakCutiLama && !$hakCutiLama->tipe_cutis->is_unlimited) {
                     $hakCutiLama->kuota += $durasiLama;
+                    $hakCutiLama->used_kuota -= $durasiLama;
                     $hakCutiLama->save();
                 }
 
@@ -805,6 +808,7 @@ class DataCutiController extends Controller
                     }
 
                     $hakCutiBaru->kuota -= $durasiBaru;
+                    $hakCutiBaru->used_kuota += $durasiBaru;
                     $hakCutiBaru->save();
                 }
             } else {
@@ -824,6 +828,7 @@ class DataCutiController extends Controller
                     }
 
                     $hakCutiBaru->kuota -= $selisihDurasi;
+                    $hakCutiBaru->used_kuota += $selisihDurasi;
                     $hakCutiBaru->save();
                 }
             }
@@ -885,9 +890,11 @@ class DataCutiController extends Controller
                                 // 1. Cuti masih berjalan
                                 $sisaHari = $now->diffInDays($tglTo) + 1;
                                 $hakCuti->kuota += $sisaHari;
+                                $hakCuti->used_kuota -= $sisaHari;
                             } elseif ($now->lt($tglFrom)) {
                                 // 2. Cuti belum berjalan
                                 $hakCuti->kuota += $cuti->durasi;
+                                $hakCuti->used_kuota -= $cuti->durasi;
                             }
 
                             // 3. Cuti selesai → tidak perlu kembalikan kuota
@@ -1155,6 +1162,7 @@ class DataCutiController extends Controller
                             // Kurangi kuota hanya jika bukan unlimited
                             $durasi = $cuti->durasi;
                             $hakCuti->kuota = max(0, $hakCuti->kuota - $durasi);
+                            $hakCuti->used_kuota = $hakCuti->used_kuota + $durasi;
                             $hakCuti->save();
                         } else {
                             Log::info("Kuota tidak dikurangi karena tipe cuti '{$hakCuti->tipe_cutis->nama}' bersifat unlimited.");
