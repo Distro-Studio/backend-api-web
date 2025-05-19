@@ -21,7 +21,9 @@ class StatusKaryawanController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
-        $statusKaryawan = StatusKaryawan::withTrashed()->orderBy('created_at', 'desc');
+        $statusKaryawan = StatusKaryawan::withTrashed()
+            ->orderByRaw('FIELD(id, 3, 2, 1) desc')
+            ->orderBy('created_at', 'desc');
 
         $dataStatusKaryawan = $statusKaryawan->get();
         if ($dataStatusKaryawan->isEmpty()) {
@@ -102,6 +104,15 @@ class StatusKaryawanController extends Controller
     {
         if (!Gate::allows('delete statusKaryawan', $statusKaryawan)) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
+
+        // Daftar ID yang tidak boleh dihapus
+        $excludedIds = [1, 2, 3];
+        if (in_array($statusKaryawan->id, $excludedIds)) {
+            return response()->json(
+                new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Status karyawan 'Tetap, Magang, dan Kontrak' tidak dapat dihapus karena termasuk data sensitif."),
+                Response::HTTP_BAD_REQUEST
+            );
         }
 
         $statusKaryawan->delete();

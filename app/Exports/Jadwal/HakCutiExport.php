@@ -184,9 +184,9 @@ class HakCutiExport implements FromCollection, WithHeadings, WithMapping
             'no',
             'nama',
             'nik',
-            'kuota_dipakai',
+            'jatah_kuota',
             'hak_cuti',
-            // 'kuota_max',
+            'kuota_terpakai',
             'cuti_administratif',
             'kuota_cuti_unlimited',
             'created_at',
@@ -202,9 +202,9 @@ class HakCutiExport implements FromCollection, WithHeadings, WithMapping
             $no++,
             $hakCuti->users->nama,
             $hakCuti->data_karyawans->nik,
-            $hakCuti->kuota, // Kuota yang bakal dipakek
+            $hakCuti->kuota ?? 0, // Jatah kuota yang tersedia
             $hakCuti->tipe_cutis->nama,
-            // $hakCuti->tipe_cutis->kuota ?? 'N/A', // Kuota max
+            $hakCuti->used_kuota ?? 0, // Kuota yang sudah digunakan
             $hakCuti->tipe_cutis->cuti_administratif ? 'Ya' : 'Tidak',
             $hakCuti->tipe_cutis->is_unlimited ? 'Ya' : 'Tidak',
             Carbon::parse($hakCuti->created_at)->format('d-m-Y H:i:s'),

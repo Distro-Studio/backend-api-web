@@ -519,8 +519,13 @@ class DataRiwayatPerubahanController extends Controller
                 $riwayat->alasan = null;
                 $riwayat->save();
 
+                Log::info('Data riwayat berhasil disetujui.', $riwayat->toArray());
+
                 // Lakukan pembaruan data pada tabel asli
                 $this->updateOriginalData($riwayat);
+
+                DB::commit();
+
                 $this->createNotifikasiPerubahan($riwayat, 'Disetujui');
 
                 return response()->json(new WithoutDataResource(Response::HTTP_OK, "Verifikasi untuk riwayat perubahan '{$riwayat->kolom}' telah disetujui."), Response::HTTP_OK);
@@ -536,13 +541,17 @@ class DataRiwayatPerubahanController extends Controller
                 $riwayat->alasan = $request->input('alasan');
                 $riwayat->save();
 
+                Log::info('Riwayat perubahan berhasil ditolak', $riwayat->toArray());
+
+                DB::commit();
+
                 $this->createNotifikasiPerubahan($riwayat, 'Ditolak');
 
                 return response()->json(new WithoutDataResource(Response::HTTP_OK, "Verifikasi untuk riwayat perubahan '{$riwayat->kolom}' telah ditolak."), Response::HTTP_OK);
             } else {
                 return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Riwayat perubahan '{$riwayat->kolom}' tidak dalam status untuk ditolak."), Response::HTTP_BAD_REQUEST);
             }
-            DB::commit();
+            // DB::commit();
         } else {
             DB::rollBack();
             return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Aksi tidak valid.'), Response::HTTP_BAD_REQUEST);

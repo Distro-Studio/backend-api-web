@@ -6,6 +6,7 @@ use App\Console\Commands\DetectChangeEnv;
 use App\Console\Commands\NotificationAnakBPJS;
 use App\Console\Commands\NotificationSIP;
 use App\Console\Commands\NotificationSTR;
+use App\Console\Commands\ResetHakCuti;
 use App\Console\Commands\ResetMasaDiklat;
 use App\Console\Commands\UpdateAndResetReward;
 use App\Console\Commands\UpdateAutoAlfaPresensi;
@@ -27,7 +28,8 @@ class Kernel extends ConsoleKernel
         NotificationSIP::class,
         NotificationSTR::class,
         NotificationAnakBPJS::class,
-        UpdateAutoAlfaPresensi::class
+        UpdateAutoAlfaPresensi::class,
+        ResetHakCuti::class
     ];
 
     /**
@@ -59,6 +61,11 @@ class Kernel extends ConsoleKernel
         $schedule->command('app:reset-masa-diklat')
             ->timezone('Asia/Jakarta')
             ->yearlyOn(12, 31, '23:59');
+
+        // Rest hak cuti
+        $schedule->command('app:reset-hak-cuti')
+            ->monthlyOn(1, '00:00')
+            ->timezone('Asia/Jakarta');
 
         // Notification SIP
         $schedule->command('app:notification-warning-sip')

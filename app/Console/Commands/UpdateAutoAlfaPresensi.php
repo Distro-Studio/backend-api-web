@@ -38,25 +38,66 @@ class UpdateAutoAlfaPresensi extends Command
             ->get();
         Log::info("Ada '{$presensiHariIni->count()}' presensi yang harus diperbarui.");
 
-        $today = Carbon::now('Asia/Jakarta')->format('Y-m-d');
+        // Ini yg lama
+        // $today = Carbon::now('Asia/Jakarta')->format('Y-m-d');
+        // foreach ($presensiHariIni as $presensi) {
+        //     if ($presensi->jadwal_id) {
+        //         // Case A: Presensi dengan jadwal_id yang valid
+        //         $jadwal = Jadwal::find($presensi->jadwal_id);
+
+        //         if ($jadwal && $jadwal->tgl_selesai) {
+        //             if ($jadwal->tgl_selesai !== $today) {
+        //                 $presensi->update(['kategori_presensi_id' => 4]);
+        //                 Log::info("Presensi ID {$presensi->id} diperbarui menjadi Alfa (Case A).");
+        //             }
+        //         }
+        //     } else {
+        //         // Case B: Presensi tanpa jadwal_id (karyawan non-shift)
+        //         $jamMasukDate = Carbon::parse($presensi->jam_masuk)->format('Y-m-d');
+        //         if ($jamMasukDate !== $today) {
+        //             $presensi->update(['kategori_presensi_id' => 4]);
+        //             Log::info("Presensi ID {$presensi->id} diperbarui menjadi Alfa (Case B).");
+        //         }
+        //     }
+        // }
+
+        // Ini yang baru (update untuk estimasi jam keluar + 2 jam)
+        $today = Carbon::now('Asia/Jakarta');
         foreach ($presensiHariIni as $presensi) {
+            $updateAlfa = false;
             if ($presensi->jadwal_id) {
                 // Case A: Presensi dengan jadwal_id yang valid
-                $jadwal = Jadwal::find($presensi->jadwal_id);
+                $jadwal = Jadwal::with('shifts')->find($presensi->jadwal_id);
 
+                // Update untuk kondisi jam 00.00
                 if ($jadwal && $jadwal->tgl_selesai) {
-                    if ($jadwal->tgl_selesai !== $today) {
-                        $presensi->update(['kategori_presensi_id' => 4]);
-                        Log::info("Presensi ID {$presensi->id} diperbarui menjadi Alfa (Case A).");
+                    if ($jadwal->tgl_selesai !== $today->format('Y-m-d')) {
+                        // Cek shift jam_to + 2 jam
+                        if ($jadwal->shifts && $jadwal->shifts->jam_to) {
+                            $jamTo = Carbon::parse("{$kemarin} {$jadwal->shifts->jam_to}", 'Asia/Jakarta')->addHours(2);
+                            if ($today->greaterThan($jamTo)) {
+                                $updateAlfa = true;
+                                Log::info("Presensi ID {$presensi->id} melebihi batas jam_to + 2 jam (Case A).");
+                            } else {
+                                Log::info("Presensi ID {$presensi->id} belum melebihi batas jam_to + 2 jam (Case A).");
+                            }
+                        } else {
+                            // Jika tidak ada shift atau jam_to, langsung update
+                            $updateAlfa = true;
+                        }
                     }
                 }
             } else {
                 // Case B: Presensi tanpa jadwal_id (karyawan non-shift)
                 $jamMasukDate = Carbon::parse($presensi->jam_masuk)->format('Y-m-d');
-                if ($jamMasukDate !== $today) {
-                    $presensi->update(['kategori_presensi_id' => 4]);
+                if ($jamMasukDate !== $today->format('Y-m-d')) {
+                    $updateAlfa = true;
                     Log::info("Presensi ID {$presensi->id} diperbarui menjadi Alfa (Case B).");
                 }
+            }
+
+            if ($updateAlfa) {
+                $presensi->update(['kategori_presensi_id' => 4]);
             }
         }
 

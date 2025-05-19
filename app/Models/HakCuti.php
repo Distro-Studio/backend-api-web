@@ -17,6 +17,7 @@ class HakCuti extends Model
         'data_karyawan_id' => 'integer',
         'tipe_cuti_id' => 'integer',
         'kuota' => 'integer',
+        'used_kuota' => 'integer',
     ];
 
     /**
