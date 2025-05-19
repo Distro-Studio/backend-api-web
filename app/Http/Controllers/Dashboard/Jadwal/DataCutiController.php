@@ -299,24 +299,27 @@ class DataCutiController extends Controller
                 $userId = $dataCuti->users->id ?? null;
 
                 // Ambil kuota cuti berdasarkan tipe cuti
-                // $leaveType = TipeCuti::find($dataCuti->tipe_cuti_id);
-                // $quota = $leaveType->kuota;
+                $tipeCuti = TipeCuti::find($dataCuti->tipe_cuti_id);
+                $hakCuti = HakCuti::where('data_karyawan_id', $dataCuti->users->data_karyawan_id)
+                    ->where('tipe_cuti_id', $tipeCuti->id)
+                    ->first();
+                $quota = $hakCuti->kuota;
 
                 // Hitung jumlah hari cuti yang sudah digunakan dalam tahun ini
-                // $usedDays = Cuti::where('tipe_cuti_id', $leaveType->id)
-                //     ->whereNotIn('status_cuti_id', [3, 5])
-                //     ->where('user_id', $userId)
-                //     ->whereYear('created_at', Carbon::now('Asia/Jakarta')->year)
-                //     ->get()
-                //     ->sum(function ($cuti) {
-                //         $tglFrom = Carbon::parse($cuti->tgl_from);
-                //         $tglTo = Carbon::parse($cuti->tgl_to);
-                //         return $tglFrom->diffInDays($tglTo) + 1;
-                //     });
-                // // dd($usedDays);
+                $usedDays = Cuti::where('tipe_cuti_id', $tipeCuti->id)
+                    ->whereNotIn('status_cuti_id', [3, 5])
+                    ->where('user_id', $userId)
+                    ->whereYear('created_at', Carbon::now('Asia/Jakarta')->year)
+                    ->get()
+                    ->sum(function ($cuti) {
+                        $tglFrom = Carbon::parse($cuti->tgl_from);
+                        $tglTo = Carbon::parse($cuti->tgl_to);
+                        return $tglFrom->diffInDays($tglTo) + 1;
+                    });
+                // dd($usedDays);
 
                 // Hitung sisa kuota
-                // $sisaKuota = $quota - $usedDays;
+                $sisaKuota = $quota - $usedDays;
 
                 // Ambil max_order dari modul_verifikasis
                 $modulVerifikasi = ModulVerifikasi::where('id', 3)->first(); // 3 untuk modul cuti
@@ -434,8 +437,8 @@ class DataCutiController extends Controller
                     'tgl_to' => $dataCuti->tgl_to,
                     'catatan' => $dataCuti->catatan,
                     'durasi' => $dataCuti->durasi,
-                    // 'total_kuota' => $quota,
-                    // 'sisa_kuota' => $sisaKuota,
+                    'total_kuota' => $quota,
+                    'sisa_kuota' => $sisaKuota,
                     'status_cuti' => $dataCuti->status_cutis,
                     'alasan' => $dataCuti->alasan ?? null,
                     'relasi_verifikasi' => $formattedRelasiVerifikasi,
