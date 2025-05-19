@@ -41,6 +41,14 @@ class RekapGaji_1_Sheet implements FromCollection, WithHeadings, WithTitle, With
         ];
 
         foreach ($this->unitKerjas as $unitKerja) {
+            // TODO: Lakukan pengelompokan lagi dari unit kerja yang diambil.
+            // 1. Ambil karyawan yg digaji dulu
+            // BIKIN 3 variabel direksi, karyawan, dan magang_kontrak = []
+
+            // direksi => dari step 1, ambil data karyawan where unit_kerjas.kategori_unit_id = 1
+            // magang_kontrak => dari step 1, ambil data karyawan where status_karyawan_id = 2 dan 3
+            // karyawan => dari step 1, ambil data karyawan where unit_kerjas.kategori_unit_id = 2, dan where status_karyawan_id = 1
+
             $penggajians = Penggajian::whereHas('data_karyawans', function ($query) use ($unitKerja) {
                 $query->where('unit_kerja_id', $unitKerja->id);
             })->whereMonth('tgl_penggajian', $this->month)
@@ -49,7 +57,6 @@ class RekapGaji_1_Sheet implements FromCollection, WithHeadings, WithTitle, With
 
             $takeHomePay = $penggajians->sum('take_home_pay');
 
-            // TODO: Lakukan pengelompokan gaji sesuai bagian, Seperti yang diberikan bu kus
             // Calculate total number employees in this unit
             $jumlahKaryawanGaji = Penggajian::whereHas('data_karyawans', function ($query) use ($unitKerja) {
                 $query->where('unit_kerja_id', $unitKerja->id);
