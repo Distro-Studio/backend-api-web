@@ -57,7 +57,7 @@ class RekapGajiUnitExport implements FromCollection, WithMultipleSheets
 
                 // Rekapitulasi
                 if ($unitKerjas->isNotEmpty()) {
-                    $sheets[] = new RekapGaji_1_Sheet('Rekapitulasi Gaji', $unitKerjas, $month, $year);
+                    $sheets[] = new RekapGaji_1_Sheet('Rekapitulasi Gaji', $month, $year);
                 }
 
                 // Laporan khusus Penambah

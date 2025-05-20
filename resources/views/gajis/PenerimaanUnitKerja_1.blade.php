@@ -58,7 +58,7 @@
 		<thead>
 			<tr>
 				<th>No</th>
-				<th>Unit Kerja</th>
+				<th>Kategori</th>
 				<th>Jumlah Karyawan</th>
 				<th>Take Home Pay</th>
 			</tr>
@@ -77,7 +77,7 @@
 			</div> -->
 			<tr>
 				<td>{{ $row['No'] }}</td>
-				<td>{{ $row['Unit Kerja'] }}</td>
+				<td>{{ $row['Kategori'] }}</td>
 				<td>{{ $row['Jumlah Karyawan'] }}</td>
 				<td>{{ number_format($row['Take Home Pay'], 0, ',', '.') }}</td>
 			</tr>
