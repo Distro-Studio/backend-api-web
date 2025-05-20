@@ -13,15 +13,13 @@ use Maatwebsite\Excel\Concerns\FromCollection;
 class RekapGaji_1_Sheet implements FromCollection, WithHeadings, WithTitle, WithEvents
 {
     protected $sheetType;
-    protected $unitKerjas;
     protected $periode_sekarang;
     protected $month;
     protected $year;
 
-    public function __construct($sheetType, $unitKerjas, $month, $year)
+    public function __construct($sheetType, $month, $year)
     {
         $this->sheetType = $sheetType;
-        $this->unitKerjas = $unitKerjas;
         $this->periode_sekarang = Carbon::create($year, $month)->locale('id')->isoFormat('MMMM Y');
         $this->month = $month;
         $this->year = $year;
@@ -29,58 +27,64 @@ class RekapGaji_1_Sheet implements FromCollection, WithHeadings, WithTitle, With
 
     public function collection()
     {
-        if ($this->unitKerjas->isEmpty()) {
-            return collect([]);
-        }
+        // Ambil semua penggajian di bulan & tahun tersebut
+        $penggajians = Penggajian::with('data_karyawans.unit_kerjas')
+            ->whereMonth('tgl_penggajian', $this->month)
+            ->whereYear('tgl_penggajian', $this->year)
+            ->get();
+
+        // Filter Direksi (unit_kerjas.kategori_unit_id == 1)
+        $direksiPenggajian = $penggajians->filter(function ($pg) {
+            return $pg->data_karyawans->unit_kerjas->kategori_unit_id == 1;
+        });
+        $direksiCount = $direksiPenggajian->pluck('data_karyawan_id')->unique()->count();
+        $direksiTakeHomePay = $direksiPenggajian->sum('take_home_pay');
+
+        // Filter Magang/Kontrak (status_karyawan_id == 2 atau 3)
+        $magangKontrakPenggajian = $penggajians->filter(function ($pg) {
+            return in_array($pg->data_karyawans->status_karyawan_id, [2, 3]);
+        });
+        $magangKontrakCount = $magangKontrakPenggajian->pluck('data_karyawan_id')->unique()->count();
+        $magangKontrakTakeHomePay = $magangKontrakPenggajian->sum('take_home_pay');
+
+        // Filter Karyawan (unit_kerjas.kategori_unit_id == 2 dan status_karyawan_id == 1)
+        $karyawanPenggajian = $penggajians->filter(function ($pg) {
+            $unitKategori = $pg->data_karyawans->unit_kerjas->kategori_unit_id ?? null;
+            return $unitKategori == 2 && $pg->data_karyawans->status_karyawan_id == 1;
+        });
+        $karyawanCount = $karyawanPenggajian->pluck('data_karyawan_id')->unique()->count();
+        $karyawanTakeHomePay = $karyawanPenggajian->sum('take_home_pay');
 
         $rows = [];
-        $counter = 1;
-        $totals = [
-            'Jumlah Karyawan' => 0,
-            'Take Home Pay' => 0,
+
+        $rows[] = [
+            'No' => 1,
+            'Kategori' => 'Direksi',
+            'Jumlah Karyawan' => $direksiCount,
+            'Take Home Pay' => $direksiTakeHomePay,
         ];
 
-        foreach ($this->unitKerjas as $unitKerja) {
-            // TODO: Lakukan pengelompokan lagi dari unit kerja yang diambil.
-            // 1. Ambil karyawan yg digaji dulu
-            // BIKIN 3 variabel direksi, karyawan, dan magang_kontrak = []
+        $rows[] = [
+            'No' => 2,
+            'Kategori' => 'Karyawan',
+            'Jumlah Karyawan' => $karyawanCount,
+            'Take Home Pay' => $karyawanTakeHomePay,
+        ];
 
-            // direksi => dari step 1, ambil data karyawan where unit_kerjas.kategori_unit_id = 1
-            // magang_kontrak => dari step 1, ambil data karyawan where status_karyawan_id = 2 dan 3
-            // karyawan => dari step 1, ambil data karyawan where unit_kerjas.kategori_unit_id = 2, dan where status_karyawan_id = 1
+        $rows[] = [
+            'No' => 3,
+            'Kategori' => 'Magang/Kontrak',
+            'Jumlah Karyawan' => $magangKontrakCount,
+            'Take Home Pay' => $magangKontrakTakeHomePay,
+        ];
 
-            $penggajians = Penggajian::whereHas('data_karyawans', function ($query) use ($unitKerja) {
-                $query->where('unit_kerja_id', $unitKerja->id);
-            })->whereMonth('tgl_penggajian', $this->month)
-                ->whereYear('tgl_penggajian', $this->year)
-                ->get();
-
-            $takeHomePay = $penggajians->sum('take_home_pay');
-
-            // Calculate total number employees in this unit
-            $jumlahKaryawanGaji = Penggajian::whereHas('data_karyawans', function ($query) use ($unitKerja) {
-                $query->where('unit_kerja_id', $unitKerja->id);
-            })->distinct('data_karyawan_id')->count('data_karyawan_id');
-
-            $rows[] = [
-                'No' => $counter++,
-                'Unit Kerja' => $unitKerja->nama_unit,
-                'Jumlah Karyawan' => $jumlahKaryawanGaji,
-                'Take Home Pay' => $takeHomePay
-            ];
-
-            $totals['Jumlah Karyawan'] += $jumlahKaryawanGaji;
-            $totals['Take Home Pay'] += $takeHomePay;
-        }
-
-        $rows[] = array_merge(
-            [
-                'No' => 'Total',
-                'Unit Kerja' => '',
-                $totals['Jumlah Karyawan'],
-                $totals['Take Home Pay']
-            ]
-        );
+        // Baris total keseluruhan
+        $rows[] = [
+            'No' => 'Total',
+            'Kategori' => '',
+            'Jumlah Karyawan' => $direksiCount + $karyawanCount + $magangKontrakCount,
+            'Take Home Pay' => $direksiTakeHomePay + $karyawanTakeHomePay + $magangKontrakTakeHomePay,
+        ];
 
         return collect($rows);
     }
@@ -89,7 +93,7 @@ class RekapGaji_1_Sheet implements FromCollection, WithHeadings, WithTitle, With
     {
         $headers = [
             'No',
-            'Unit Kerja',
+            'Kategori',
             'Jumlah Karyawan',
             'Take Home Pay',
         ];
