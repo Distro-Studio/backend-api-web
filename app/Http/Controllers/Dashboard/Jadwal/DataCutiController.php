@@ -556,14 +556,6 @@ class DataCutiController extends Controller
             $dataCuti = Cuti::create($data);
             // dd("Presensi: {$data['presensi_ids']}, Jadwal: {$data['jadwal_ids']}, Izin: {$data['izin_ids']}, Lembur: {$data['lembur_ids']}");
 
-            // Setelah pembuatan cuti, cari cuti yang baru dibuat dan periksa cuti_administratif
-            // $cutiTerbaru = Cuti::where('user_id', $data['user_id'])->latest()->first();
-            // if ($cutiTerbaru && !$cutiTerbaru->tipe_cutis->cuti_administratif) {
-            //     DB::table('data_karyawans')
-            //         ->where('user_id', $data['user_id'])
-            //         ->update(['status_reward_presensi' => false]);
-            // }
-
             DB::commit();
 
             $message = "Data cuti karyawan '{$dataCuti->users->nama}' berhasil dibuat untuk tipe cuti '{$dataCuti->tipe_cutis->nama}' dengan durasi {$dataCuti->durasi} hari.";
@@ -929,7 +921,7 @@ class DataCutiController extends Controller
 
             return response()->json([
                 'status' => Response::HTTP_OK,
-                'message' => "Total $deletedCount data cuti berhasil dihapus."
+                'message' => "Total $deletedCount data cuti berhasil dihapus. Jika tipe cuti bukan administratif, maka reward presensi tidak akan dikembalikan."
             ], Response::HTTP_OK);
         } catch (\Exception $e) {
             Log::error('| Cuti | - Error saat restore data cuti karyawan: ' . $e->getMessage());
@@ -1172,6 +1164,52 @@ class DataCutiController extends Controller
                         }
                     } else {
                         Log::warning("Hak cuti ID {$cuti->hak_cuti_id} tidak ditemukan saat verifikasi tahap 2 cuti ID {$cutiId}.");
+                    }
+
+                    // Update status_reward_presensi
+                    $cutiTerbaru = Cuti::where('user_id', $cuti->user_id)->latest()->first();
+                    if ($cutiTerbaru && !$cutiTerbaru->tipe_cutis->cuti_administratif) {
+                        $userId = $cuti->user_id;
+                        $now = Carbon::now('Asia/Jakarta');
+
+                        // Cek ada tidaknya riwayat penggajian untuk bulan & tahun ini
+                        $gajiBulanIni = DB::table('riwayat_penggajians')
+                            ->whereYear('periode', $now->year)
+                            ->whereMonth('periode', $now->month)
+                            ->exists();
+                        if ($gajiBulanIni) {
+                            // Jika sudah ada gaji bulan ini, update status_reward_presensi di data_karyawans
+                            DB::table('data_karyawans')
+                                ->where('user_id', $userId)
+                                ->update(['status_reward_presensi' => false]);
+                        } else {
+                            // Jika belum ada gaji bulan ini, update status_reward di reward_bulan_lalus
+                            $dataKaryawan = DB::table('data_karyawans')->where('user_id', $userId)->first();
+
+                            if ($dataKaryawan) {
+                                DB::table('reward_bulan_lalus')
+                                    ->where('data_karyawan_id', $dataKaryawan->id)
+                                    ->update(['status_reward' => false]);
+                            } else {
+                                Log::warning("Data karyawan dengan user_id $userId tidak ditemukan saat update reward bulan lalu.");
+                            }
+                        }
+
+                        // === Tambahan: Create record di riwayat_pembatalan_rewards ===
+                        try {
+                            DB::table('riwayat_pembatalan_rewards')->insert([
+                                'data_karyawan_id' => $dataKaryawan->id ?? null,
+                                'tipe_pembatalan' => 'cuti',
+                                'tgl_pembatalan' => now('Asia/Jakarta'),
+                                'keterangan' => "Pembatalan reward otomatis dikarenakan {$cuti->tipe_cutis->nama} non administratif",
+                                'cuti_id' => $cuti ? $cuti->id : null,
+                                'verifikator_1' => $verifikatorId,
+                                'created_at' => now('Asia/Jakarta'),
+                                'updated_at' => now('Asia/Jakarta'),
+                            ]);
+                        } catch (\Exception $e) {
+                            Log::error("Gagal insert riwayat pembatalan reward: " . $e->getMessage());
+                        }
                     }
 
                     $this->createNotifikasiCutiTahap2($cuti, 'Disetujui');

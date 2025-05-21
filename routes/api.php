@@ -15,6 +15,7 @@ use App\Http\Controllers\Dashboard\Karyawan\DataTransferKaryawanController;
 use App\Http\Controllers\Dashboard\Karyawan\DetailKaryawan\Berkas\Karyawan_BerkasController;
 use App\Http\Controllers\Dashboard\Karyawan\DetailKaryawan\Karyawan_DetailController;
 use App\Http\Controllers\Dashboard\Karyawan\DetailKaryawan\Keluarga\Karyawan_KeluargaController;
+use App\Http\Controllers\Dashboard\Karyawan\PembatalanRewardController;
 use App\Http\Controllers\Dashboard\Karyawan\TambahanDataController;
 use App\Http\Controllers\Dashboard\Keuangan\PenggajianController;
 use App\Http\Controllers\Dashboard\Keuangan\PenggajianKemenkeuController;
@@ -189,6 +190,11 @@ Route::middleware(['auth:sanctum'])->group(function () {
             // ! Riwayat Perubahan Karyawan ===========>
             Route::post('/riwayat-perubahan/get-riwayat-perubahan-karyawan', [DataRiwayatPerubahanController::class, 'index']);
             Route::post('/riwayat-perubahan/verifikasi-data/{id}', [DataRiwayatPerubahanController::class, 'verifikasiPerubahan']);
+        });
+
+        Route::group(['prefix' => '/anulir-presensi'], function () {
+            Route::post('/get-data-history-reward', [PembatalanRewardController::class, 'index']);
+            Route::post('/history-reward/export', [PembatalanRewardController::class, 'exportPembatalanReward']);
         });
 
         Route::group(['prefix' => '/presensi'], function () {

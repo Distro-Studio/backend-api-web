@@ -41,6 +41,7 @@ class PermissionSeeder extends Seeder
             // Karyawan
             'Karyawan Data' => ['create dataKaryawan', 'edit dataKaryawan', 'view dataKaryawan', 'import dataKaryawan', 'export dataKaryawan'],
             'Transfer Karyawan' => ['create transferKaryawan', 'edit transferKaryawan', 'view transferKaryawan', 'export transferKaryawan'],
+            'Pembatalan Reward Presensi' => ['view pembatalanReward', 'export pembatalanReward'],
 
             // Dashboard
             'Pengumuman' => ['create pengumuman', 'edit pengumuman', 'delete pengumuman', 'view pengumuman'],
