@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('riwayat_penggajians', function (Blueprint $table) {
             $table->id();
-            $table->date('periode');
+            $table->date('periode'); // Y-m-d
             $table->integer('karyawan_verifikasi');
             $table->boolean('jenis_riwayat'); // 0 = thr, 1 = non-thr
             $table->foreignId('status_gaji_id')->constrained('status_gajis'); // 1 = created 2 = published
