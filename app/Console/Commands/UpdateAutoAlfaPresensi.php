@@ -107,27 +107,32 @@ class UpdateAutoAlfaPresensi extends Command
             ->pluck('data_karyawan_id')
             ->unique();
 
-        $now = Carbon::now('Asia/Jakarta');
+        $now = now('Asia/Jakarta');
 
         foreach ($dataKaryawanIds as $dataKaryawanId) {
+            DB::table('data_karyawans')
+                ->where('id', $dataKaryawanId)
+                ->update(['status_reward_presensi' => false]);
+            Log::info("Status reward presensi karyawan ID {$dataKaryawanId} diperbarui menjadi false di data_karyawans.");
+
             // Cek ada tidaknya riwayat penggajian bulan ini untuk karyawan ini
-            $gajiBulanIni = DB::table('riwayat_penggajians')
-                ->whereYear('periode', $now->year)
-                ->whereMonth('periode', $now->month)
-                ->exists();
-            if ($gajiBulanIni) {
-                // Jika ada gaji bulan ini, update di data_karyawans
-                DB::table('data_karyawans')
-                    ->where('id', $dataKaryawanId)
-                    ->update(['status_reward_presensi' => false]);
-                Log::info("Status reward presensi karyawan ID {$dataKaryawanId} diperbarui menjadi false di data_karyawans.");
-            } else {
-                // Jika tidak ada, update di reward_bulan_lalus
-                DB::table('reward_bulan_lalus')
-                    ->where('data_karyawan_id', $dataKaryawanId)
-                    ->update(['status_reward' => false]);
-                Log::info("Status reward bulan lalu karyawan ID {$dataKaryawanId} diperbarui menjadi false di reward_bulan_lalus.");
-            }
+            // $gajiBulanIni = DB::table('riwayat_penggajians')
+            //     ->whereYear('periode', $now->year)
+            //     ->whereMonth('periode', $now->month)
+            //     ->exists();
+            // if ($gajiBulanIni) {
+            //     // Jika ada gaji bulan ini, update di data_karyawans
+            //     DB::table('data_karyawans')
+            //         ->where('id', $dataKaryawanId)
+            //         ->update(['status_reward_presensi' => false]);
+            //     Log::info("Status reward presensi karyawan ID {$dataKaryawanId} diperbarui menjadi false di data_karyawans.");
+            // } else {
+            //     // Jika tidak ada, update di reward_bulan_lalus
+            //     DB::table('reward_bulan_lalus')
+            //         ->where('data_karyawan_id', $dataKaryawanId)
+            //         ->update(['status_reward' => false]);
+            //     Log::info("Status reward bulan lalu karyawan ID {$dataKaryawanId} diperbarui menjadi false di reward_bulan_lalus.");
+            // }
 
             // Insert ke riwayat_pembatalan_rewards
             $presensi = Presensi::where('data_karyawan_id', $dataKaryawanId)
@@ -139,12 +144,12 @@ class UpdateAutoAlfaPresensi extends Command
                 DB::table('riwayat_pembatalan_rewards')->insert([
                     'data_karyawan_id' => $dataKaryawanId,
                     'tipe_pembatalan' => 'presensi',
-                    'tgl_pembatalan' => now('Asia/Jakarta'),
+                    'tgl_pembatalan' => $now,
                     'keterangan' => "Update presensi alfa untuk pembatalan reward presensi otomatis",
                     'presensi_id' => $presensi ? $presensi->id : null,
                     'verifikator_1' => 1,
-                    'created_at' => now('Asia/Jakarta'),
-                    'updated_at' => now('Asia/Jakarta'),
+                    'created_at' => $now,
+                    'updated_at' => $now,
                 ]);
                 Log::info("Riwayat pembatalan reward presensi dibuat untuk karyawan ID {$dataKaryawanId}.");
             } catch (\Exception $e) {
