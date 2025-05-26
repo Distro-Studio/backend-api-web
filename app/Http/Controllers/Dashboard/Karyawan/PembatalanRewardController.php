@@ -225,6 +225,7 @@ class PembatalanRewardController extends Controller
             $baseUrl = env('STORAGE_SERVER_DOMAIN');
             $formattedData = $dataPembatalanReward->map(function ($pembatalanReward) use ($baseUrl) {
                 $unitKerja = $pembatalanReward->data_karyawans->unit_kerjas;
+                $nik = $pembatalanReward->data_karyawans;
                 $dataUsers = $pembatalanReward->data_karyawans->users;
                 $dataVerifikator = $pembatalanReward->verifikators;
                 $dataCutis = $pembatalanReward->cutis;
@@ -254,6 +255,7 @@ class PembatalanRewardController extends Controller
                         'created_at' => $dataUsers->created_at,
                         'updated_at' => $dataUsers->updated_at
                     ] : null,
+                    'nik' => $nik->nik ?? null,
                     'unit_kerja' => $unitKerja ? [
                         'id' => $unitKerja->id,
                         'nama_unit' => $unitKerja->nama_unit,
