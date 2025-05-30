@@ -24,6 +24,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\Jadwal\CutiJadwalExport;
+use App\Exports\Jadwal\CutiNew\CutiExport;
 use App\Http\Requests\StoreCutiJadwalRequest;
 use App\Http\Requests\UpdateCutiJadwalRequest;
 use App\Http\Resources\Dashboard\Jadwal\CutiJadwalResource;
@@ -303,11 +304,12 @@ class DataCutiController extends Controller
                 $hakCuti = HakCuti::where('data_karyawan_id', $dataCuti->users->data_karyawan_id)
                     ->where('tipe_cuti_id', $tipeCuti->id)
                     ->first();
-                $quota = $hakCuti->kuota;
+                $quotaTipeCuti = $tipeCuti->kuota;
+                $quotaHakCuti = $hakCuti->kuota;
 
                 // Hitung jumlah hari cuti yang sudah digunakan dalam tahun ini
                 $usedDays = Cuti::where('tipe_cuti_id', $tipeCuti->id)
-                    ->whereNotIn('status_cuti_id', [3, 5])
+                    ->where('status_cuti_id', 4)
                     ->where('user_id', $userId)
                     ->whereYear('created_at', Carbon::now('Asia/Jakarta')->year)
                     ->get()
@@ -319,7 +321,7 @@ class DataCutiController extends Controller
                 // dd($usedDays);
 
                 // Hitung sisa kuota
-                $sisaKuota = $quota - $usedDays;
+                $sisaKuota = max(0, $quotaHakCuti - $usedDays);
 
                 // Ambil max_order dari modul_verifikasis
                 $modulVerifikasi = ModulVerifikasi::where('id', 3)->first(); // 3 untuk modul cuti
@@ -437,8 +439,8 @@ class DataCutiController extends Controller
                     'tgl_to' => $dataCuti->tgl_to,
                     'catatan' => $dataCuti->catatan,
                     'durasi' => $dataCuti->durasi,
-                    'total_kuota' => $quota,
-                    'sisa_kuota' => $sisaKuota,
+                    'total_kuota' => $quotaTipeCuti,
+                    'sisa_kuota' => $dataCuti->status_cuti_id === 4 ? $quotaHakCuti : $sisaKuota,
                     'status_cuti' => $dataCuti->status_cutis,
                     'alasan' => $dataCuti->alasan ?? null,
                     'relasi_verifikasi' => $formattedRelasiVerifikasi,
@@ -530,10 +532,10 @@ class DataCutiController extends Controller
                 $totalDurasiDiambil = $cutiRecords->sum('durasi');
 
                 // Hitung sisa kuota dengan mengurangi kuota hak cuti dengan durasi yang sudah diambil
-                $sisaKuota = $hakCuti->kuota - $totalDurasiDiambil;
+                $sisaKuota = max(0, $hakCuti->kuota - $totalDurasiDiambil);
 
                 // Kurangi sisa kuota dengan durasi cuti yang akan diambil sekarang
-                $sisaSetelahPengajuan = $sisaKuota - $durasi;
+                $sisaSetelahPengajuan = max(0, $sisaKuota - $durasi);
 
                 // Validasi total durasi terhadap kuota
                 if ($sisaSetelahPengajuan < 0) {
@@ -953,7 +955,8 @@ class DataCutiController extends Controller
             }
 
             try {
-                return Excel::download(new CutiJadwalExport($request->all()), 'cuti-karyawan.xls');
+                return Excel::download(new CutiExport($request->all()), 'cuti-karyawan.xls');
+                // return Excel::download(new CutiJadwalExport($request->all()), 'cuti-karyawan.xls');
             } catch (\Throwable $e) {
                 return response()->json(new WithoutDataResource(Response::HTTP_INTERNAL_SERVER_ERROR, 'Maaf sepertinya terjadi error. Pesan: ' . $e->getMessage()), Response::HTTP_INTERNAL_SERVER_ERROR);
             }
@@ -1210,7 +1213,7 @@ class DataCutiController extends Controller
                         // === Tambahan: Create record di riwayat_pembatalan_rewards ===
                         try {
                             DB::table('riwayat_pembatalan_rewards')->insert([
-                                'data_karyawan_id' => $dataKaryawan->id ?? null,
+                                'data_karyawan_id' => $data_karyawan->id ?? null,
                                 'tipe_pembatalan' => 'cuti',
                                 'tgl_pembatalan' => $now,
                                 'keterangan' => "Pembatalan reward otomatis dikarenakan {$cuti->tipe_cutis->nama} non administratif",

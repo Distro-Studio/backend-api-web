@@ -345,4 +345,14 @@ class DataKaryawan extends Model
     {
         return $this->hasMany(TagihanPotongan::class, 'data_karyawan_id', 'id');
     }
+
+    /**
+     * Get all of the hak_cutis for the DataKaryawan
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function hak_cutis(): HasMany
+    {
+        return $this->hasMany(HakCuti::class, 'data_karyawan_id', 'id');
+    }
 }
