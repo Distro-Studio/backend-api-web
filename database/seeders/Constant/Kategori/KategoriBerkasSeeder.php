@@ -13,7 +13,7 @@ class KategoriBerkasSeeder extends Seeder
      */
     public function run(): void
     {
-        $kategori = ['Pribadi', 'Umum', 'System', 'Lainnya', 'Materi Pelatihan', 'Tentang RSKI'];
+        $kategori = ['Pribadi', 'Umum', 'System', 'Lainnya', 'Materi Pelatihan', 'Tentang RSKI', 'Anulir Presensi'];
 
         foreach ($kategori as $kategori) {
             DB::table('kategori_berkas')->insert([

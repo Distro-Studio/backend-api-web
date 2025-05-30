@@ -18,6 +18,7 @@ class RiwayatPembatalanReward extends Model
         'presensi_id' => 'integer',
         'riwayat_izin_id' => 'integer',
         'verifikator_1' => 'integer',
+        'is_anulir_presensi' => 'integer',
     ];
 
     /**
