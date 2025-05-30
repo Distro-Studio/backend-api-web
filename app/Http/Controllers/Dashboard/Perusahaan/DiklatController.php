@@ -30,6 +30,7 @@ use App\Http\Requests\StoreDiklatExternalRequest;
 use App\Http\Requests\UpdateDiklatExternalRequest;
 use App\Http\Requests\UpdateDiklatRequest;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
+use App\Jobs\GenerateCertificates\UploadCertificateJob;
 
 class DiklatController extends Controller
 {
@@ -1355,7 +1356,7 @@ class DiklatController extends Controller
                         $dataKaryawan = DataKaryawan::where('user_id', $userId)->first();
                         if ($dataKaryawan) {
                             $user = $dataKaryawan->users;
-                            GenerateCertificateHelper::generateCertificate($diklat, $user);
+                            UploadCertificateJob::dispatch($diklat, $user);
                             Log::info("Sertifikat untuk Peserta Diklat Internal '{$diklat->nama}' dengan user_id {$userId} telah dibuat.");
 
                             // Refactored: update masa_diklat saat generate sertifikat
