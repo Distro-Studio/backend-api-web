@@ -1352,11 +1352,13 @@ class DiklatController extends Controller
             if ($diklat->kategori_diklat_id == 1) {
                 $pesertaDiklat = PesertaDiklat::where('diklat_id', $diklatId)->pluck('peserta');
                 if ($pesertaDiklat->isNotEmpty()) {
+                    StorageServerHelper::login();
                     foreach ($pesertaDiklat as $userId) {
                         $dataKaryawan = DataKaryawan::where('user_id', $userId)->first();
                         if ($dataKaryawan) {
                             $user = $dataKaryawan->users;
-                            UploadCertificateJob::dispatch($diklat, $user);
+                            // UploadCertificateJob::dispatch($diklat, $user)->onQueue('upload_certificate');
+                            GenerateCertificateHelper::generateCertificate($diklat, $user);
                             Log::info("Sertifikat untuk Peserta Diklat Internal '{$diklat->nama}' dengan user_id {$userId} telah dibuat.");
 
                             // Refactored: update masa_diklat saat generate sertifikat
@@ -1373,6 +1375,7 @@ class DiklatController extends Controller
                             }
                         }
                     }
+                    StorageServerHelper::logout();
                     $diklat->certificate_published = 1;
                     $diklat->certificate_verified_by = Auth::id();
                     $diklat->save();
