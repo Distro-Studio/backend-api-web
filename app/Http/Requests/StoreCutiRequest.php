@@ -26,7 +26,7 @@ class StoreCutiRequest extends FormRequest
     {
         return [
             'nama' => 'required|string|max:255|unique:tipe_cutis,nama',
-            'kuota' => 'nullable|integer',
+            'kuota' => 'required|integer',
             'is_need_requirement' => 'required|boolean',
             'keterangan' => 'required|string|max:255',
             'cuti_administratif' => 'required|boolean',
