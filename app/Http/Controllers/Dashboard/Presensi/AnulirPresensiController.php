@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Dashboard\Presensi;
 
+use App\Exports\Presensi\AnulirPresensiExport;
 use Carbon\Carbon;
 use App\Models\Berkas;
 use App\Models\Presensi;
@@ -21,6 +22,7 @@ use App\Http\Requests\StoreAnulirPresensiRequest;
 use App\Http\Requests\UpdateAnulirPresensiRequest;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
 use Exception;
+use Maatwebsite\Excel\Facades\Excel;
 
 class AnulirPresensiController extends Controller
 {
@@ -337,14 +339,6 @@ class AnulirPresensiController extends Controller
 
     public function store(StoreAnulirPresensiRequest $request)
     {
-        $currentUser = Auth::user();
-        if (!$currentUser->hasRole('Super Admin')) {
-            return response()->json([
-                'status' => Response::HTTP_FORBIDDEN,
-                'message' => 'Anda tidak memiliki hak akses untuk melakukan proses ini.'
-            ], Response::HTTP_FORBIDDEN);
-        }
-
         try {
             if (!Gate::allows('create anulirPresensi')) {
                 return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
@@ -446,8 +440,6 @@ class AnulirPresensiController extends Controller
             DB::table('riwayat_pembatalan_rewards')
                 ->where('data_karyawan_id', $presensi->data_karyawan_id)
                 ->where('presensi_id', $presensi->id)
-                ->whereYear('tgl_pembatalan', $tahunPresensi)
-                ->whereMonth('tgl_pembatalan', $bulanPresensi)
                 ->update(['is_anulir_presensi' => true]);
 
             // Jika hanya 1 data pembatalan (data yang sedang dibuat), update riwayat_pembatalan_rewards terkait
@@ -462,13 +454,13 @@ class AnulirPresensiController extends Controller
                     // Jika ada gaji bulan ini, update di data_karyawans
                     DB::table('data_karyawans')
                         ->where('id', $presensi->data_karyawan_id)
-                        ->update(['status_reward_presensi' => false]);
+                        ->update(['status_reward_presensi' => true]);
                     Log::info("Status reward presensi karyawan ID {$presensi->data_karyawan_id} diperbarui menjadi false di data_karyawans.");
                 } else {
                     // Jika tidak ada, update di reward_bulan_lalus
                     DB::table('reward_bulan_lalus')
                         ->where('data_karyawan_id', $presensi->data_karyawan_id)
-                        ->update(['status_reward' => false]);
+                        ->update(['status_reward' => true]);
                     Log::info("Status reward bulan lalu karyawan ID {$presensi->data_karyawan_id} diperbarui menjadi false di reward_bulan_lalus.");
                 }
             }
@@ -491,18 +483,109 @@ class AnulirPresensiController extends Controller
         }
     }
 
-    public function update(UpdateAnulirPresensiRequest $request, $id)
-    {
-        //
-    }
-
     public function destroy($id)
     {
-        //
+        try {
+            if (!Gate::allows('delete anulirPresensi')) {
+                return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+            }
+
+            $data_anulir = AnulirPresensi::find($id);
+            if (!$data_anulir) {
+                return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data anulir presensi tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+            }
+
+            $presensi = Presensi::find($data_anulir->presensi_id);
+            if (!$presensi) {
+                return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Presensi tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+            }
+
+            // Ambil bulan dan tahun dari jam_masuk presensi
+            $bulanPresensi = Carbon::parse($presensi->jam_masuk)->format('m');
+            $tahunPresensi = Carbon::parse($presensi->jam_masuk)->format('Y');
+
+            DB::beginTransaction();
+            // Delete berkas nya dulu
+            $berkasLama = Berkas::find($data_anulir->dokumen_anulir_id);
+            if ($berkasLama) {
+                try {
+                    StorageServerHelper::deleteFromServer($berkasLama->file_id);
+                } catch (\Exception $e) {
+                    Log::warning("Gagal hapus dokumen_anulir_id lama dari server (file_id: {$berkasLama->file_id}): " . $e->getMessage());
+                }
+
+                // Set hubungan ke NULL dulu sebelum hapus
+                $data_anulir->dokumen_anulir_id = null;
+                $data_anulir->save();
+
+                // Setelah tidak ada referensi, baru aman dihapus
+                $berkasLama->delete();
+            }
+
+            $data_anulir->delete();
+
+            // Update is_anulir_presensi pada pembatalan yang sesuai presensi_id
+            DB::table('riwayat_pembatalan_rewards')
+                ->where('data_karyawan_id', $data_anulir->data_karyawan_id)
+                ->where('presensi_id', $data_anulir->presensi_id)
+                ->update(['is_anulir_presensi' => false]);
+
+            // Cek ada tidaknya riwayat penggajian bulan ini untuk karyawan ini
+            $gajiBulanIni = DB::table('riwayat_penggajians')
+                ->whereYear('periode', $tahunPresensi)
+                ->whereMonth('periode', $bulanPresensi)
+                ->where('data_karyawan_id', $presensi->data_karyawan_id)
+                ->exists();
+            if ($gajiBulanIni) {
+                // Jika ada gaji bulan ini, update di data_karyawans
+                DB::table('data_karyawans')
+                    ->where('id', $presensi->data_karyawan_id)
+                    ->update(['status_reward_presensi' => false]);
+                Log::info("Status reward presensi karyawan ID {$presensi->data_karyawan_id} diperbarui menjadi false di data_karyawans.");
+            } else {
+                // Jika tidak ada, update di reward_bulan_lalus
+                DB::table('reward_bulan_lalus')
+                    ->where('data_karyawan_id', $presensi->data_karyawan_id)
+                    ->update(['status_reward' => false]);
+                Log::info("Status reward bulan lalu karyawan ID {$presensi->data_karyawan_id} diperbarui menjadi false di reward_bulan_lalus.");
+            }
+
+            DB::commit();
+
+            LogHelper::logAction('Anulir Presensi', 'delete', $data_anulir->data_karyawan_id);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('| Anulir Presensi | - Error function destroy: ' . $e->getMessage());
+            return response()->json([
+                'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
+                'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
     }
 
     public function exportAnulir(Request $request)
     {
-        //
+        try {
+            if (!Gate::allows('export anulirPresensi')) {
+                return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+            }
+
+            $data_anulir = AnulirPresensi::all();
+            if ($data_anulir->isEmpty()) {
+                return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Tidak ada data anulir presensi yang tersedia untuk diekspor.'), Response::HTTP_NOT_FOUND);
+            }
+
+            try {
+                return Excel::download(new AnulirPresensiExport($request->all()), 'anulir-presensi.xls');
+            } catch (\Throwable $e) {
+                return response()->json(new WithoutDataResource(Response::HTTP_INTERNAL_SERVER_ERROR, 'Maaf sepertinya terjadi error. Pesan: ' . $e->getMessage()), Response::HTTP_INTERNAL_SERVER_ERROR);
+            }
+        } catch (\Exception $e) {
+            Log::error('| Anulir Presensi | - Error function exportAnulir: ' . $e->getMessage());
+            return response()->json([
+                'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
+                'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
     }
 }
