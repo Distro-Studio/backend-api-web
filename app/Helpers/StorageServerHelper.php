@@ -74,7 +74,8 @@ class StorageServerHelper
 
 		$uploadinfo = $responseupload->json();
 		if (!isset($uploadinfo['data'])) {
-			throw new \Exception('Error: ' . $responseupload->body());
+			Log::channel('storage_server_log')->error("Single Upload Failed - response tidak berisi data", ['response' => $responseupload->body()]);
+			// throw new \Exception('Error: ' . $responseupload->body());
 		}
 		$dataupload = $uploadinfo['data'];
 
@@ -99,7 +100,8 @@ class StorageServerHelper
 
 		$uploadinfo = $responseupload->json();
 		if (!isset($uploadinfo['data'])) {
-			throw new \Exception('Error: ' . $responseupload->body());
+			Log::channel('storage_server_log')->error("Multiple Upload Failed - response tidak berisi data", ['response' => $responseupload->body()]);
+			// throw new \Exception('Error: ' . $responseupload->body());
 		}
 		$dataupload = $uploadinfo['data'];
 
@@ -122,7 +124,8 @@ class StorageServerHelper
 
 		$uploadinfo = $responseupload->json();
 		if (!isset($uploadinfo['data'])) {
-			throw new \Exception('Error: ' . $responseupload->body());
+			Log::channel('storage_server_log')->error("Delete Failed - response tidak berisi data", ['response' => $responseupload->body()]);
+			// throw new \Exception('Error: ' . $responseupload->body());
 		}
 		$dataupload = $uploadinfo['data'];
 

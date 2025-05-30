@@ -128,6 +128,13 @@ return [
         ],
 
         // Tambahan Log
+        'storage_server_log' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/storage_server/storage_server_log.log'),
+            'level' => env('LOG_LEVEL', 'debug'),
+            'replace_placeholders' => true,
+        ],
+
         'reset_hak_cuti_tahunan' => [
             'driver' => 'single',
             'path' => storage_path('logs/hak_cuti/reset_hak_cuti_tahunan.log'),
