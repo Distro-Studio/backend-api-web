@@ -73,9 +73,9 @@ class StorageServerHelper
 		]);
 
 		$uploadinfo = $responseupload->json();
-		// if (!isset($uploadinfo['data'])) {
-		// 	throw new \Exception('Error: ' . $responseupload->body());
-		// }
+		if (!isset($uploadinfo['data'])) {
+			throw new \Exception('Error: ' . $responseupload->body());
+		}
 		$dataupload = $uploadinfo['data'];
 
 		self::logout();
@@ -98,9 +98,9 @@ class StorageServerHelper
 		]);
 
 		$uploadinfo = $responseupload->json();
-		// if (!isset($uploadinfo['data'])) {
-		// 	throw new \Exception('Error: ' . $responseupload->body());
-		// }
+		if (!isset($uploadinfo['data'])) {
+			throw new \Exception('Error: ' . $responseupload->body());
+		}
 		$dataupload = $uploadinfo['data'];
 
 		self::logout();
@@ -121,9 +121,9 @@ class StorageServerHelper
 		]);
 
 		$uploadinfo = $responseupload->json();
-		// if (!isset($uploadinfo['data'])) {
-		// 	throw new \Exception('Error: ' . $responseupload->body());
-		// }
+		if (!isset($uploadinfo['data'])) {
+			throw new \Exception('Error: ' . $responseupload->body());
+		}
 		$dataupload = $uploadinfo['data'];
 
 		self::logout();
