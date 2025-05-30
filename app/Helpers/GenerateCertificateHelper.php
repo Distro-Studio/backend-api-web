@@ -37,7 +37,6 @@ class GenerateCertificateHelper
 			$pdf->save($fullFilePath);
 
 			// Step 3: Upload to storage
-			StorageServerHelper::login();
 			$file = new File($fullFilePath);
 			$dataupload = StorageServerHelper::multipleUploadToServer($file, $random_filename);
 
@@ -58,8 +57,6 @@ class GenerateCertificateHelper
 			if (!$berkas) {
 				throw new Exception('Sertifikat gagal di upload');
 			}
-
-			StorageServerHelper::logout();
 		} catch (Exception $e) {
 			Log::error('Error generating certificate: ' . $e->getMessage());
 			throw $e;
