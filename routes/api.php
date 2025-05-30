@@ -51,6 +51,7 @@ use App\Http\Controllers\Dashboard\Perusahaan\DiklatController;
 use App\Http\Controllers\Dashboard\Perusahaan\JenisPenilaianController;
 use App\Http\Controllers\Dashboard\Perusahaan\MasaDiklatController;
 use App\Http\Controllers\Dashboard\Perusahaan\PenilaianController;
+use App\Http\Controllers\Dashboard\Presensi\AnulirPresensiController;
 use App\Http\Controllers\Dashboard\Presensi\DataPresensiController;
 use App\Http\Controllers\Publik\Auth\ForgotPasswordController;
 use App\Http\Controllers\Publik\Auth\LoginController;
@@ -192,19 +193,21 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::post('/riwayat-perubahan/verifikasi-data/{id}', [DataRiwayatPerubahanController::class, 'verifikasiPerubahan']);
         });
 
-        Route::group(['prefix' => '/anulir-presensi'], function () {
-            Route::post('/get-data-history-reward', [PembatalanRewardController::class, 'index']);
-            Route::post('/history-reward/export', [PembatalanRewardController::class, 'exportPembatalanReward']);
-        });
-
         Route::group(['prefix' => '/presensi'], function () {
-            // ! Presensi Tabel ===========>
+            // ! Presensi ===========>
             Route::post('/get-data-presensi', [DataPresensiController::class, 'index']);
             Route::post('/export', [DataPresensiController::class, 'exportPresensi']);
             Route::post('/import', [DataPresensiController::class, 'importPresensi']);
             Route::apiResource('/data-presensi', DataPresensiController::class);
-
             Route::get('/calculated', [DataPresensiController::class, 'calculatedPresensi']);
+
+            // ! Anulir Presensi ===========>
+            Route::post('/get-data-anulir-presensi', [AnulirPresensiController::class, 'index']);
+            Route::apiResource('/anulir-presensi', AnulirPresensiController::class);
+
+            // ! Riwayat Pembatalan Reward ===========>
+            Route::post('/get-data-history-reward', [PembatalanRewardController::class, 'index']);
+            Route::post('/history-reward/export', [PembatalanRewardController::class, 'exportPembatalanReward']);
         });
 
         Route::group(['prefix' => '/jadwal-karyawan'], function () {

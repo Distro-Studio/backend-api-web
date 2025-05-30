@@ -17,6 +17,7 @@ return new class extends Migration
             $table->foreignId('presensi_id')->constrained('presensis');
             $table->foreignId('dokumen_anulir_id')->nullable()->constrained('berkas')->onDelete('cascade')->onUpdate('cascade');
             $table->text('alasan');
+            $table->text('keterangan')->nullable();
             $table->softDeletes();
             $table->timestamps();
         });

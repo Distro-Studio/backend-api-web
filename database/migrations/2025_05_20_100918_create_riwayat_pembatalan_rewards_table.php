@@ -21,6 +21,7 @@ return new class extends Migration
             $table->foreignId('presensi_id')->nullable()->constrained('presensis')->onUpdate('cascade')->onDelete('cascade');
             $table->foreignId('riwayat_izin_id')->nullable()->constrained('riwayat_izins')->onUpdate('cascade')->onDelete('cascade');
             $table->foreignId('verifikator_1')->nullable()->constrained('users')->onUpdate('cascade')->onDelete('cascade');
+            $table->boolean('is_anulir_presensi')->default(0);
             $table->softDeletes();
             $table->timestamps();
         });

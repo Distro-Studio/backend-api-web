@@ -6,6 +6,8 @@ use Carbon\Carbon;
 use App\Models\Berkas;
 use App\Models\Presensi;
 use App\Helpers\LogHelper;
+use App\Helpers\StorageServerHelper;
+use Illuminate\Support\Str;
 use App\Models\DataKaryawan;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -16,7 +18,9 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use App\Http\Requests\StoreAnulirPresensiRequest;
+use App\Http\Requests\UpdateAnulirPresensiRequest;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
+use Exception;
 
 class AnulirPresensiController extends Controller
 {
@@ -298,7 +302,8 @@ class AnulirPresensiController extends Controller
                         'created_at' => $karyawanAnulir->presensis->created_at,
                         'updated_at' => $karyawanAnulir->presensis->updated_at
                     ] : null,
-                    'alasan' => $karyawanAnulir->alasan,
+                    'alasan' => $karyawanAnulir->alasan ?? null,
+                    'keterangan' => $karyawanAnulir->keterangan ?? null,
                     'dokumen_anulir' => $karyawanAnulir->dokumen_anulir ? [
                         'id' => $karyawanAnulir->dokumen_anulir->id,
                         'user_id' => $karyawanAnulir->dokumen_anulir->user_id,
@@ -330,7 +335,7 @@ class AnulirPresensiController extends Controller
         }
     }
 
-    public function store(StoreAnulirPresensiRequest $request, $presensi_id)
+    public function store(StoreAnulirPresensiRequest $request)
     {
         $currentUser = Auth::user();
         if (!$currentUser->hasRole('Super Admin')) {
@@ -345,7 +350,9 @@ class AnulirPresensiController extends Controller
                 return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
             }
 
-            $presensi = Presensi::where('id', $presensi_id)->first();
+            $data = $request->validated();
+
+            $presensi = Presensi::find($data['presensi_id']);
             if (!$presensi) {
                 return response()->json([
                     'status' => Response::HTTP_NOT_FOUND,
@@ -353,7 +360,7 @@ class AnulirPresensiController extends Controller
                 ], Response::HTTP_NOT_FOUND);
             }
 
-            $karyawanAnulir = DataKaryawan::where('id', $presensi->data_karyawan_id)->first();
+            $karyawanAnulir = DataKaryawan::find($presensi->data_karyawan_id);
             if (!$karyawanAnulir) {
                 return response()->json([
                     'status' => Response::HTTP_NOT_FOUND,
@@ -361,33 +368,118 @@ class AnulirPresensiController extends Controller
                 ], Response::HTTP_NOT_FOUND);
             }
 
-            $data = $request->validated();
+            // Ambil bulan dan tahun dari jam_masuk presensi
+            $bulanPresensi = Carbon::parse($presensi->jam_masuk)->format('m');
+            $tahunPresensi = Carbon::parse($presensi->jam_masuk)->format('Y');
 
-            // Validasi 4 tahap, Penggajian-Izin-Cuti-Presensi (bulan lalu)
-            // Validasi 4 tahap, Izin-Cuti-Presensi (bulan ini)
+            // Hitung total pembatalan di bulan dan tahun (semua tipe)
+            $totalPembatalanBulanIni = DB::table('riwayat_pembatalan_rewards')
+                ->where('data_karyawan_id', $presensi->data_karyawan_id)
+                ->whereYear('tgl_pembatalan', $tahunPresensi)
+                ->whereMonth('tgl_pembatalan', $bulanPresensi)
+                ->count();
+
+            // Hitung total pembatalan tipe 'presensi' dengan presensi_id yang sama
+            $totalPembatalanPresensiIni = DB::table('riwayat_pembatalan_rewards')
+                ->where('data_karyawan_id', $presensi->data_karyawan_id)
+                ->where('tipe_pembatalan', 'presensi')
+                ->where('presensi_id', $presensi->id)
+                ->whereYear('tgl_pembatalan', $tahunPresensi)
+                ->whereMonth('tgl_pembatalan', $bulanPresensi)
+                ->count();
+
+            if ($totalPembatalanBulanIni >= 1 && $totalPembatalanPresensiIni >= 2) {
+                Log::info("Jumlah riwayat pembatalan reward di bulan ini: '{$totalPembatalanBulanIni}'. Tidak mengubah status reward presensi.");
+                $message = "Data anulir dari karyawan '{$karyawanAnulir->users->nama}' berhasil ditambahkan. Namun tidak mengubah reward presensi karena ada beberapa riwayat pembatalan di bulan tersebut.";
+                $keterangan = "Data anulir berhasil ditambahkan. Namun tidak mengubah reward presensi karena ada beberapa riwayat pembatalan di bulan tersebut.";
+            } elseif ($totalPembatalanPresensiIni === 1) {
+                Log::info("Pembatalan presensi tunggal di bulan ini, status reward presensi dapat diperbarui.");
+                $message = "Data anulir dari karyawan '{$karyawanAnulir->users->nama}' berhasil ditambahkan dan reward presensi berhasil diperbarui.";
+                $keterangan = "Data anulir berhasil ditambahkan dan reward presensi berhasil diperbarui.";
+            } else {
+                // Kasus lain, misal tidak ada pembatalan presensi sama sekali (jarang terjadi)
+                Log::info("Pembatalan presensi tidak ditemukan meskipun total pembatalan kurang dari 2. Status reward tidak berubah.");
+                $message = "Data anulir dari karyawan '{$karyawanAnulir->users->nama}' berhasil ditambahkan, namun reward presensi tidak diubah.";
+                $keterangan = "Data anulir berhasil ditambahkan, namun reward presensi tidak diubah.";
+            }
 
             DB::beginTransaction();
-            $dataAnulir = AnulirPresensi::create([
+
+            if ($request->hasFile('dokumen')) {
+                StorageServerHelper::login();
+
+                $random_filename = Str::random(20);
+                $dataupload = StorageServerHelper::uploadToServer($request, $random_filename);
+                $data['dokumen'] = $dataupload['path'];
+
+                $berkas = Berkas::create([
+                    'user_id' => $karyawanAnulir->users->id,
+                    'file_id' => $dataupload['id_file']['id'],
+                    'nama' => $random_filename,
+                    'kategori_berkas_id' => 7, // umum
+                    'status_berkas_id' => 2,
+                    'path' => $dataupload['path'],
+                    'tgl_upload' => now('Asia/Jakarta'),
+                    'nama_file' => $dataupload['nama_file'],
+                    'ext' => $dataupload['ext'],
+                    'size' => $dataupload['size'],
+                ]);
+                Log::info('Berkas anulir ' . $karyawanAnulir->users->nama . ' berhasil di upload.');
+                StorageServerHelper::logout();
+
+                if (!$berkas) {
+                    throw new Exception('Berkas gagal di upload');
+                }
+            }
+
+            AnulirPresensi::create([
                 'data_karyawan_id' => $presensi->data_karyawan_id,
                 'presensi_id' => $presensi->id,
                 'alasan' => $data['alasan'],
-                'dokumen_anulir_id' => $data['dokumen_anulir_id'],
+                'keterangan' => $keterangan,
+                'dokumen_anulir_id' => $berkas->id,
                 'created_at' => now('Asia/Jakarta'),
                 'updated_at' => now('Asia/Jakarta'),
             ]);
 
-            if ($karyawanAnulir->status_reward_presensi === 1) {
-                $karyawanAnulir->update([
-                    'status_reward_presensi' => 0,
-                ]);
+            // Update is_anulir_presensi pada pembatalan yang sesuai presensi_id
+            DB::table('riwayat_pembatalan_rewards')
+                ->where('data_karyawan_id', $presensi->data_karyawan_id)
+                ->where('presensi_id', $presensi->id)
+                ->whereYear('tgl_pembatalan', $tahunPresensi)
+                ->whereMonth('tgl_pembatalan', $bulanPresensi)
+                ->update(['is_anulir_presensi' => true]);
+
+            // Jika hanya 1 data pembatalan (data yang sedang dibuat), update riwayat_pembatalan_rewards terkait
+            if ($totalPembatalanPresensiIni === 1) {
+                // Cek ada tidaknya riwayat penggajian bulan ini untuk karyawan ini
+                $gajiBulanIni = DB::table('riwayat_penggajians')
+                    ->whereYear('periode', $tahunPresensi)
+                    ->whereMonth('periode', $bulanPresensi)
+                    ->where('data_karyawan_id', $presensi->data_karyawan_id)
+                    ->exists();
+                if ($gajiBulanIni) {
+                    // Jika ada gaji bulan ini, update di data_karyawans
+                    DB::table('data_karyawans')
+                        ->where('id', $presensi->data_karyawan_id)
+                        ->update(['status_reward_presensi' => false]);
+                    Log::info("Status reward presensi karyawan ID {$presensi->data_karyawan_id} diperbarui menjadi false di data_karyawans.");
+                } else {
+                    // Jika tidak ada, update di reward_bulan_lalus
+                    DB::table('reward_bulan_lalus')
+                        ->where('data_karyawan_id', $presensi->data_karyawan_id)
+                        ->update(['status_reward' => false]);
+                    Log::info("Status reward bulan lalu karyawan ID {$presensi->data_karyawan_id} diperbarui menjadi false di reward_bulan_lalus.");
+                }
             }
+
             DB::commit();
 
             LogHelper::logAction('Anulir Presensi', 'create', $presensi->data_karyawan_id);
 
             return response()->json([
                 'status' => Response::HTTP_CREATED,
-                'message' => "Data anulir presensi dari karyawan '{$karyawanAnulir->users->nama}' berhasil ditambahkan."
+                'message' => $message
             ], Response::HTTP_CREATED);
         } catch (\Exception $e) {
             DB::rollBack();
@@ -397,5 +489,20 @@ class AnulirPresensiController extends Controller
                 'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
+    }
+
+    public function update(UpdateAnulirPresensiRequest $request, $id)
+    {
+        //
+    }
+
+    public function destroy($id)
+    {
+        //
+    }
+
+    public function exportAnulir(Request $request)
+    {
+        //
     }
 }
