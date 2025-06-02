@@ -1109,6 +1109,12 @@ class DataKaryawanController extends Controller
       $requestedRoleId = $request->input('role_id');
       $premis = $request->input('premi_id', []); // Mengambil daftar premi yang dipilih
       $tipe_cuti = $request->input('tipe_cuti_id', []); // Mengambil daftar tipe cuti yang dipilih
+      $pjUnitKerjaArray = $request->input('pj_unit_kerja', []); // ini sudah array, bisa kosong
+      if (empty($pjUnitKerjaArray)) {
+        $pjUnitKerjaString = '[]';
+      } else {
+        $pjUnitKerjaString = '[' . implode(',', $pjUnitKerjaArray) . ']';
+      }
 
       DB::beginTransaction();
       $generatedUsername = RandomHelper::generateUsername($data['nama']);
@@ -1139,6 +1145,7 @@ class DataKaryawanController extends Controller
           'nik' => $data['nik'],
           'tgl_masuk' => $data['tgl_masuk'],
           'tgl_berakhir_pks' => $data['tgl_berakhir_pks'],
+          'pj_unit_kerja' => $pjUnitKerjaString,
           'unit_kerja_id' => $data['unit_kerja_id'],
           'jabatan_id' => $data['jabatan_id'],
           'kompetensi_id' => $data['kompetensi_id'] ?? null,
@@ -1722,6 +1729,17 @@ class DataKaryawanController extends Controller
         // Update role di tabel users
         if (isset($data['role_id'])) {
           $user->roles()->sync([$data['role_id']]);
+        }
+
+        $pjUnitKerjaArray = $request->input('pj_unit_kerja', []);
+        if (is_array($pjUnitKerjaArray)) {
+          if (empty($pjUnitKerjaArray)) {
+            $pjUnitKerjaString = '[]';
+          } else {
+            $pjUnitKerjaString = '[' . implode(',', $pjUnitKerjaArray) . ']';
+          }
+          // Masukkan string ini ke $data untuk update
+          $data['pj_unit_kerja'] = $pjUnitKerjaString;
         }
 
         $karyawan->update($data);
