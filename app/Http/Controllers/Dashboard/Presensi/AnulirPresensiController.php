@@ -197,7 +197,9 @@ class AnulirPresensiController extends Controller
                 $presensiAnulir->where(function ($query) use ($searchTerm) {
                     $query->whereHas('data_karyawans.users', function ($query) use ($searchTerm) {
                         $query->where('nama', 'like', $searchTerm);
-                    })->orWhere('nik', 'like', $searchTerm);
+                    })->orWhereHas('data_karyawans', function ($query) use ($searchTerm) {
+                        $query->where('nik', 'like', $searchTerm);
+                    });
                 });
             }
 
@@ -379,6 +381,13 @@ class AnulirPresensiController extends Controller
                     'status' => Response::HTTP_NOT_FOUND,
                     'message' => 'Presensi tersebut tidak ditemukan.'
                 ], Response::HTTP_NOT_FOUND);
+            }
+
+            if (is_null($presensi->jadwal_id)) {
+                return response()->json([
+                    'status' => Response::HTTP_BAD_REQUEST,
+                    'message' => "Data presensi tidak valid untuk anulir karena jadwal kosong. Karena dipengaruhi oleh perubahan data jadwal saat absensi sudah dilakukan."
+                ], Response::HTTP_BAD_REQUEST);
             }
 
             $karyawanAnulir = DataKaryawan::find($presensi->data_karyawan_id);
