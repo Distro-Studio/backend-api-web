@@ -492,7 +492,6 @@ class AnulirPresensiController extends Controller
                 $gajiBulanIni = DB::table('riwayat_penggajians')
                     ->whereYear('periode', $tahunPresensi)
                     ->whereMonth('periode', $bulanPresensi)
-                    ->where('data_karyawan_id', $presensi->data_karyawan_id)
                     ->exists();
                 if ($gajiBulanIni) {
                     // Jika ada gaji bulan ini, update di data_karyawans
