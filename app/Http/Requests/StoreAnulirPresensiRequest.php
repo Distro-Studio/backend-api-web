@@ -28,7 +28,7 @@ class StoreAnulirPresensiRequest extends FormRequest
             'data_karyawan_id' => 'required|integer|exists:data_karyawans,id',
             'presensi_id' => 'required|integer|exists:presensis,id',
             'alasan' => 'required',
-            'dokumen' => 'nullable|file|mimes:pdf,jpeg,png,jpg|max:10240',
+            'dokumen' => 'nullable|file|max:10240|mimes:pdf,jpeg,png,jpg',
         ];
     }
 
