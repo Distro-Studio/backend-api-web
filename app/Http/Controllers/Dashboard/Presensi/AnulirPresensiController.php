@@ -392,7 +392,7 @@ class AnulirPresensiController extends Controller
             if ($presensi->kategori_presensi_id === 1) {
                 return response()->json([
                     'status' => Response::HTTP_BAD_REQUEST,
-                    'message' => "Data anulir dari karyawan '{$karyawanAnulir->users->nama}' dibatalkan, karena data presensi saat ini tidak valid untuk dilakukan anulir."
+                    'message' => "Pembuatan data anulir karyawan '{$karyawanAnulir->users->nama}' dibatalkan, karena data presensi saat ini tidak valid untuk dilakukan anulir."
                 ], Response::HTTP_BAD_REQUEST);
             }
 
@@ -420,16 +420,12 @@ class AnulirPresensiController extends Controller
                 Log::info("Jumlah riwayat pembatalan reward di bulan ini: '{$totalPembatalanBulanIni}'. Tidak mengubah status reward presensi.");
                 $message = "Data anulir dari karyawan '{$karyawanAnulir->users->nama}' berhasil ditambahkan. Namun tidak mengubah reward presensi karena ada beberapa riwayat pembatalan di bulan tersebut.";
                 $keterangan = "Data anulir berhasil ditambahkan. Namun tidak mengubah reward presensi karena ada beberapa riwayat pembatalan di bulan tersebut.";
-            } elseif ($totalPembatalanPresensiIni === 1) {
+            }
+
+            if ($totalPembatalanPresensiIni === 1) {
                 Log::info("Pembatalan presensi tunggal di bulan ini, status reward presensi dapat diperbarui.");
                 $message = "Data anulir dari karyawan '{$karyawanAnulir->users->nama}' berhasil ditambahkan dan reward presensi berhasil diperbarui.";
                 $keterangan = "Data anulir berhasil ditambahkan dan reward presensi berhasil diperbarui.";
-            } else {
-                Log::info("Pembatalan presensi tidak valid. Tidak memenuhi syarat pembatalan reward.");
-                return response()->json([
-                    'status' => Response::HTTP_BAD_REQUEST,
-                    'message' => "Data anulir dari karyawan '{$karyawanAnulir->users->nama}' dibatalkan karena tidak memenuhi syarat pembatalan reward presensi."
-                ], Response::HTTP_BAD_REQUEST);
             }
 
             DB::beginTransaction();
