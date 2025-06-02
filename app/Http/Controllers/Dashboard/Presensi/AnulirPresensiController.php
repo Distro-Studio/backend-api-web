@@ -130,8 +130,6 @@ class AnulirPresensiController extends Controller
                 });
             }
 
-            // test aja
-
             if (isset($filters['jenis_kelamin'])) {
                 $jenisKelamin = $filters['jenis_kelamin'];
                 if (is_array($jenisKelamin)) {
