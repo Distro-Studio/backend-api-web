@@ -619,7 +619,8 @@ class DataJadwalController extends Controller
                             $jamTo = Carbon::parse(RandomHelper::convertToTimeString($shift->jam_to));
 
                             if ($jamTo->format('H:i:s') === '00:00:00') {
-                                $tglSelesai = $currentTanggalMulai->copy();
+                                // $tglSelesai = $tglSelesai->copy(); // Ini potensi bug di mobile, harusnya sudah ganti hari
+                                $tglSelesai->addDay();
                             } elseif ($jamTo->lessThan($jamFrom)) {
                                 $tglSelesai->addDay();
                             } else {
@@ -1198,7 +1199,8 @@ class DataJadwalController extends Controller
                         $jamTo = Carbon::parse(RandomHelper::convertToTimeString($shift->jam_to));
 
                         if ($jamTo->format('H:i:s') === '00:00:00') {
-                            $tglSelesai = $tglSelesai->copy();
+                            // $tglSelesai = $tglSelesai->copy(); // Ini potensi bug di mobile, harusnya sudah ganti hari
+                            $tglSelesai->addDay();
                         } elseif ($jamTo->lessThan($jamFrom)) {
                             $tglSelesai->addDay();
                         } else {
