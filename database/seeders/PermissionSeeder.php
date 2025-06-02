@@ -19,7 +19,7 @@ class PermissionSeeder extends Seeder
             'Dashboard Karyawan' => ['view dashboardKaryawan'],
 
             // Perusahaan
-            'Diklat' => ['create diklat', 'view diklat', 'export diklat', 'publikasi sertifikat'],
+            'Diklat' => ['create diklat', 'edit diklat', 'view diklat', 'export diklat', 'publikasi sertifikat'],
 
             // Keuangan
             'Penggajian THR Karyawan' => ['create thrKaryawan', 'view thrKaryawan', 'export thrKaryawan'],
@@ -31,6 +31,9 @@ class PermissionSeeder extends Seeder
             'Jadwal Lembur Karyawan' => ['create lemburKaryawan', 'edit lemburKaryawan', 'delete lemburKaryawan', 'view lemburKaryawan', 'export lemburKaryawan'],
             'Jadwal Cuti Karyawan' => ['create cutiKaryawan', 'edit cutiKaryawan', 'delete cutiKaryawan', 'view cutiKaryawan', 'export cutiKaryawan'],
 
+            // Hak Cuti
+            'Hak Cuti Karyawan' => ['create hakCuti', 'edit hakCuti', 'delete hakCuti', 'view hakCuti', 'export hakCuti'],
+
             // Presensi
             'Presensi Karyawan' => ['view presensiKaryawan', 'import presensiKaryawan', 'export presensiKaryawan'],
             'Anulir Presensi Karyawan' => ['view anulirPresensi', 'create anulirPresensi', 'delete anulirPresensi'],
@@ -38,6 +41,7 @@ class PermissionSeeder extends Seeder
             // Karyawan
             'Karyawan Data' => ['create dataKaryawan', 'edit dataKaryawan', 'view dataKaryawan', 'import dataKaryawan', 'export dataKaryawan'],
             'Transfer Karyawan' => ['create transferKaryawan', 'edit transferKaryawan', 'view transferKaryawan', 'export transferKaryawan'],
+            'Pembatalan Reward Presensi' => ['view pembatalanReward', 'export pembatalanReward'],
 
             // Dashboard
             'Pengumuman' => ['create pengumuman', 'edit pengumuman', 'delete pengumuman', 'view pengumuman'],
@@ -48,6 +52,7 @@ class PermissionSeeder extends Seeder
             'Pengaturan Permission' => ['edit permission', 'delete permission', 'view permission'],
             'Pengaturan Materi Pelatihan' => ['create pelatihanKaryawan', 'edit pelatihanKaryawan', 'delete pelatihanKaryawan', 'view pelatihanKaryawan'],
             'Pengaturan Unit Kerja' => ['create unitKerja', 'edit unitKerja', 'delete unitKerja', 'view unitKerja'],
+            'Pengaturan Spesialisasi' => ['create spesialisasi', 'edit spesialisasi', 'delete spesialisasi', 'view spesialisasi'],
             'Pengaturan Pendidikan' => ['create pendidikan', 'edit pendidikan', 'delete pendidikan', 'view pendidikan'],
             'Pengaturan Jabatan' => ['create jabatan', 'edit jabatan', 'delete jabatan', 'view jabatan'],
             'Pengaturan Status Karyawan' => ['create statusKaryawan', 'edit statusKaryawan', 'delete statusKaryawan', 'view statusKaryawan'],

@@ -3,6 +3,7 @@
 use App\Http\Controllers\Dashboard\DashboardController;
 use App\Http\Controllers\Dashboard\InboxController;
 use App\Http\Controllers\Dashboard\Jadwal\DataCutiController;
+use App\Http\Controllers\Dashboard\Jadwal\DataHakCutiController;
 use App\Http\Controllers\Dashboard\Jadwal\DataJadwalController;
 use App\Http\Controllers\Dashboard\Jadwal\DataLemburController;
 use App\Http\Controllers\Dashboard\Jadwal\DataRiwayatPerizinanController;
@@ -14,6 +15,7 @@ use App\Http\Controllers\Dashboard\Karyawan\DataTransferKaryawanController;
 use App\Http\Controllers\Dashboard\Karyawan\DetailKaryawan\Berkas\Karyawan_BerkasController;
 use App\Http\Controllers\Dashboard\Karyawan\DetailKaryawan\Karyawan_DetailController;
 use App\Http\Controllers\Dashboard\Karyawan\DetailKaryawan\Keluarga\Karyawan_KeluargaController;
+use App\Http\Controllers\Dashboard\Karyawan\PembatalanRewardController;
 use App\Http\Controllers\Dashboard\Karyawan\TambahanDataController;
 use App\Http\Controllers\Dashboard\Keuangan\PenggajianController;
 use App\Http\Controllers\Dashboard\Keuangan\PenggajianKemenkeuController;
@@ -35,6 +37,7 @@ use App\Http\Controllers\Dashboard\Pengaturan\Karyawan\KompetensiController;
 use App\Http\Controllers\Dashboard\Pengaturan\Karyawan\MateriPelatihanController;
 use App\Http\Controllers\Dashboard\Pengaturan\Karyawan\PendidikanTerakhirController;
 use App\Http\Controllers\Dashboard\Pengaturan\Karyawan\PertanyaanController;
+use App\Http\Controllers\Dashboard\Pengaturan\Karyawan\SpesialisasiController;
 use App\Http\Controllers\Dashboard\Pengaturan\Karyawan\StatusKaryawanController;
 use App\Http\Controllers\Dashboard\Pengaturan\Karyawan\UnitKerjaController;
 use App\Http\Controllers\Dashboard\Pengaturan\ManagemenWaktu\CutiController;
@@ -48,6 +51,7 @@ use App\Http\Controllers\Dashboard\Perusahaan\DiklatController;
 use App\Http\Controllers\Dashboard\Perusahaan\JenisPenilaianController;
 use App\Http\Controllers\Dashboard\Perusahaan\MasaDiklatController;
 use App\Http\Controllers\Dashboard\Perusahaan\PenilaianController;
+use App\Http\Controllers\Dashboard\Presensi\AnulirPresensiController;
 use App\Http\Controllers\Dashboard\Presensi\DataPresensiController;
 use App\Http\Controllers\Publik\Auth\ForgotPasswordController;
 use App\Http\Controllers\Publik\Auth\LoginController;
@@ -67,6 +71,7 @@ use Illuminate\Support\Facades\Route;
 
 // Untuk case nambah data
 // Route::post('/add-data-karyawan', [TambahanDataController::class, 'insertDataKaryawan']);
+// Route::post('/add-str-sip', [TambahanDataController::class, 'insertSTRSIP']);
 // Route::post('/add-data-keluarga', [TambahanDataController::class, 'insertDataKeluarga']);
 // Route::post('/cek-data-pendidikan', [TambahanDataController::class, 'cekDataPendidikanFromDataKeluarga']);
 // Route::post('/cek-nik-karyawan', [TambahanDataController::class, 'cekNIK']);
@@ -75,6 +80,8 @@ use Illuminate\Support\Facades\Route;
 // Route::post('/cek-hubungan-keluarga', [TambahanDataController::class, 'cekHubunganKeluarga']);
 // Route::post('/test-unit', [TambahanDataController::class, 'cekUnitKerja']);
 // Route::post('/add-data-shifts', [TambahanDataController::class, 'insertMasterShift']);
+// Route::post('/add-data-master-spesialisasi', [TambahanDataController::class, 'insertMasterSpesialisasi']);
+// Route::post('/add-data-spesialisasi', [TambahanDataController::class, 'insertSpesialiasaiKaryawan']);
 
 Route::post('/login', [LoginController::class, 'login']);
 Route::post('/forgot-password-sendOtp', [ForgotPasswordController::class, 'sendOtp']);
@@ -87,6 +94,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/get-list-user-shift', [DataKaryawanController::class, 'getAllDataUserShift']);
     Route::get('/get-list-user-non-shift', [DataKaryawanController::class, 'getAllDataUserNonShift']);
     Route::get('/get-list-unit-kerja', [DataKaryawanController::class, 'getAllDataUnitKerja']);
+    Route::get('/get-list-spesialisasi', [DataKaryawanController::class, 'getAllDataSpesialisasi']);
     Route::get('/get-list-kategori-unit-kerja', [DataKaryawanController::class, 'getAllDataKategoriUnitKerja']);
     Route::get('/get-list-jabatan', [DataKaryawanController::class, 'getAllDataJabatan']);
     Route::get('/get-list-kategori-status-karyawan', [DataKaryawanController::class, 'getAllDataKategoriStatusKaryawan']);
@@ -143,6 +151,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::get('/detail-karyawan-user/{user_id}', [DataKaryawanController::class, 'showByUserId']);
             Route::get('/detail-karyawan/{data_karyawan_id}', [DataKaryawanController::class, 'showByDataKaryawanId']);
             Route::post('/upload-photo-profile/{data_karyawan_id}', [DataKaryawanController::class, 'uploadPhotoProfile']);
+            Route::post('/update-reward-presensi/{data_karyawan_id}', [DataKaryawanController::class, 'updateRewardPresensi']);
 
             Route::post('/detail-karyawan-presensi/{data_karyawan_id}', [Karyawan_DetailController::class, 'getDataPresensi']);
             Route::post('/detail-karyawan-presensi/{data_karyawan_id}/export', [Karyawan_DetailController::class, 'exportDataPresensi']);
@@ -163,6 +172,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::get('/detail-karyawan-dokumen/{data_karyawan_id}', [Karyawan_BerkasController::class, 'getDataDokumen']);
             Route::post('/detail-karyawan-dokumen/{data_karyawan_id}/verifikasi', [Karyawan_BerkasController::class, 'verifikasiBerkas']);
             Route::post('/detail-karyawan-dokumen/{data_karyawan_id}/create-berkas', [Karyawan_BerkasController::class, 'createPersonalFile']);
+            Route::post('/detail-karyawan-dokumen/{data_karyawan_id}/delete-berkas', [Karyawan_BerkasController::class, 'deletePersonalFile']);
 
             Route::get('/detail-karyawan-cuti/{data_karyawan_id}', [Karyawan_DetailController::class, 'getDataCuti']);
             Route::get('/detail-karyawan-tukar-jadwal/{data_karyawan_id}', [Karyawan_DetailController::class, 'getDataTukarJadwal']);
@@ -184,13 +194,20 @@ Route::middleware(['auth:sanctum'])->group(function () {
         });
 
         Route::group(['prefix' => '/presensi'], function () {
-            // ! Presensi Tabel ===========>
+            // ! Presensi ===========>
             Route::post('/get-data-presensi', [DataPresensiController::class, 'index']);
             Route::post('/export', [DataPresensiController::class, 'exportPresensi']);
             Route::post('/import', [DataPresensiController::class, 'importPresensi']);
             Route::apiResource('/data-presensi', DataPresensiController::class);
-
             Route::get('/calculated', [DataPresensiController::class, 'calculatedPresensi']);
+
+            // ! Anulir Presensi ===========>
+            Route::post('/get-data-anulir-presensi', [AnulirPresensiController::class, 'index']);
+            Route::apiResource('/anulir-presensi', AnulirPresensiController::class);
+
+            // ! Riwayat Pembatalan Reward ===========>
+            Route::post('/get-data-history-reward', [PembatalanRewardController::class, 'index']);
+            Route::post('/history-reward/export', [PembatalanRewardController::class, 'exportPembatalanReward']);
         });
 
         Route::group(['prefix' => '/jadwal-karyawan'], function () {
@@ -282,11 +299,14 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::post('/get-diklat-internal', [DiklatController::class, 'indexInternal']);
             Route::post('/get-diklat-eksternal', [DiklatController::class, 'indexEksternal']);
             Route::post('/diklat', [DiklatController::class, 'store']);
+            Route::post('/update-diklat/{diklatId}', [DiklatController::class, 'updateInternal']);
             Route::post('/diklat-eksternal-user', [DiklatController::class, 'storeExternal']);
+            Route::post('/update-diklat-eksternal-user/{diklatId}', [DiklatController::class, 'updateExternal']);
             Route::get('/diklat/{diklatId}', [DiklatController::class, 'show']);
             Route::get('/diklat-internal/export', [DiklatController::class, 'exportDiklatInternal']);
             Route::get('/diklat-eksternal/export', [DiklatController::class, 'exportDiklatEksternal']);
             Route::delete('/diklat/{diklatId}/delete-peserta-diklat/{userId}', [DiklatController::class, 'fakeAssignDiklat']);
+            Route::post('/diklat/{diklatId}/add-peserta-diklat', [DiklatController::class, 'assignDiklat']);
             Route::post('/diklat/{diklatId}/verifikasi-step-1', [DiklatController::class, 'verifikasiTahap1']);
             Route::post('/diklat/{diklatId}/verifikasi-step-2', [DiklatController::class, 'verifikasiTahap2']);
             Route::post('/diklat/{diklatId}/certificates', [DiklatController::class, 'generateCertificate']);
@@ -359,6 +379,10 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::post('/unit-kerja/restore/{id}', [UnitKerjaController::class, 'restore']);
             Route::apiResource('/unit-kerja', UnitKerjaController::class);
 
+            // ! Spesialisasi ===========>
+            Route::post('/spesialisasi/restore/{id}', [SpesialisasiController::class, 'restore']);
+            Route::apiResource('/spesialisasi', SpesialisasiController::class);
+
             // ! Kategori Pendidikan ===========>
             Route::post('/pendidikan/restore/{id}', [PendidikanTerakhirController::class, 'restore']);
             Route::apiResource('/pendidikan', PendidikanTerakhirController::class);
@@ -416,6 +440,12 @@ Route::middleware(['auth:sanctum'])->group(function () {
                 'update'  => 'cuti.updatePengaturan',
                 'destroy' => 'cuti.destroyPengaturan',
             ]);
+
+            // ! Hak Cuti ===========>
+            Route::post('/hak-cuti/restore/{id}', [DataHakCutiController::class, 'restore']);
+            Route::post('/get-hak-cuti', [DataHakCutiController::class, 'index']);
+            Route::post('/hak-cuti/export', [DataHakCutiController::class, 'export']);
+            Route::apiResource('/hak-cuti', DataHakCutiController::class);
 
             // ! Lokasi Presensi ===========>
             Route::get('/get-lokasi-kantor/{id}', [LokasiKantorController::class, 'getLokasiKantor']);

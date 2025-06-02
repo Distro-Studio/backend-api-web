@@ -36,15 +36,29 @@ class DashboardController extends Controller
         $calculatedKaryawanFulltime = DataKaryawan::whereHas('status_karyawans', function ($query) {
             $query->where('kategori_status_id', 1)
                 ->whereNotNull('kategori_status_id');
-        })->where('id', '!=', 1)->count();
+        })
+            ->whereHas('users', function ($query) {
+                $query->where('status_aktif', 2);
+            })
+            ->where('id', '!=', 1)->count();
+
         $calculatedKaryawanParttime = DataKaryawan::whereHas('status_karyawans', function ($query) {
             $query->where('kategori_status_id', 2)
                 ->whereNotNull('kategori_status_id');
-        })->where('id', '!=', 1)->count();
+        })
+            ->whereHas('users', function ($query) {
+                $query->where('status_aktif', 2);
+            })
+            ->where('id', '!=', 1)->count();
+
         $calculatedKaryawanOutsourcing = DataKaryawan::whereHas('status_karyawans', function ($query) {
             $query->where('kategori_status_id', 3)
                 ->whereNotNull('kategori_status_id');
-        })->where('id', '!=', 1)->count();
+        })
+            ->whereHas('users', function ($query) {
+                $query->where('status_aktif', 2);
+            })
+            ->where('id', '!=', 1)->count();
 
         // Hitung karyawan shift yang libur berdasarkan user_id
         $countLiburShift = Jadwal::where('shift_id', 0)
@@ -56,11 +70,15 @@ class DashboardController extends Controller
         $isHariLibur = HariLibur::whereDate('tanggal', Carbon::createFromFormat('d-m-Y', $today)->format('Y-m-d'))->exists();
         $countLiburNonShift = DataKaryawan::whereHas('unit_kerjas', function ($query) {
             $query->where('jenis_karyawan', 0);
-        })->when($isHariLibur, function ($query) {
-            return $query->distinct('id')->count('user_id');  // Hitung berdasarkan user_id
-        }, function ($query) {
-            return 0;
-        });
+        })
+            ->whereHas('users', function ($query) {
+                $query->where('status_aktif', 2);
+            })
+            ->when($isHariLibur, function ($query) {
+                return $query->distinct('id')->count('user_id');  // Hitung berdasarkan user_id
+            }, function ($query) {
+                return 0;
+            });
 
         // Total karyawan yang libur
         $countLibur = $countLiburShift + $countLiburNonShift;

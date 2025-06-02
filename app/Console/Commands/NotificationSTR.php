@@ -29,9 +29,9 @@ class NotificationSTR extends Command
     public function handle()
     {
         $today = Carbon::now('Asia/Jakarta');
-        $oneMonthAhead = $today->copy()->addMonth(6);
+        $oneMonthAhead = $today->copy()->addMonth(7);
 
-        // Ambil karyawan yang masa berlaku STR kurang dari atau sama dengan 6 bulan
+        // Ambil karyawan yang masa berlaku STR kurang dari atau sama dengan 7 bulan
         $dataKaryawanList = DataKaryawan::whereHas('users', function ($query) {
             $query->where('data_completion_step', 0)
                 ->where('status_aktif', 2);

@@ -15,6 +15,7 @@ class Cuti extends Model
         'id' => 'integer',
         'user_id' => 'integer',
         'tipe_cuti_id' => 'integer',
+        'hak_cuti_id' => 'integer',
         'durasi' => 'integer',
         'status_cuti_id' => 'integer',
         'verifikator_1' => 'integer',
@@ -44,6 +45,16 @@ class Cuti extends Model
     public function tipe_cutis(): BelongsTo
     {
         return $this->belongsTo(TipeCuti::class, 'tipe_cuti_id', 'id');
+    }
+
+    /**
+     * Get the hak_cutis that owns the Cuti
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function hak_cutis(): BelongsTo
+    {
+        return $this->belongsTo(HakCuti::class, 'hak_cuti_id', 'id');
     }
 
     /**

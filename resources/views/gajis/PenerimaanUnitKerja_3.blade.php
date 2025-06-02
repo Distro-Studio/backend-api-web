@@ -4,11 +4,11 @@
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>Rekap Penerimaan Gaji Unit Kerja</title>
+	<title>Rekap Laporan Gaji Pengurang</title>
 	<style>
 		body {
 			font-family: Arial, sans-serif;
-			font-size: 5pt;
+			font-size: 6pt;
 		}
 
 		h1,
@@ -28,13 +28,12 @@
 			width: 100%;
 			border-collapse: collapse;
 			margin-bottom: 10px;
-			margin-left: -20px;
 		}
 
 		th,
 		td {
 			border: 1px solid #000;
-			padding: 3px;
+			padding: 5px;
 			text-align: center;
 		}
 
@@ -50,7 +49,7 @@
 </head>
 
 <body>
-	<h1>Rekap Penerimaan dan Pengurang Gaji Unit Kerja</h1>
+	<h1>Rekap Laporan Gaji Pengurang</h1>
 	<h2>Periode: {{ \Carbon\Carbon::createFromFormat('Y-m', "{$years[0]}-{$months[0]}")->locale('id')->isoFormat('MMMM Y') }}</h2>
 
 	@foreach ($dataChunks as $index => $dataChunk)
@@ -58,19 +57,10 @@
 		<thead>
 			<tr>
 				<th>No</th>
-				<th>Nama Unit</th>
-				<th>Jumlah Karyawan Unit</th>
-				<th>Jumlah Karyawan Digaji</th>
-				<th>Gaji Pokok</th>
-				<th>Tunjangan Jabatan</th>
-				<th>Tunjangan Fungsional</th>
-				<th>Tunjangan Khusus</th>
-				<th>Tunjangan Lainnya</th>
-				<th>Uang Lembur</th>
-				<th>Uang Makan</th>
-				<th>Reward BOR</th>
-				<th>Reward Absensi</th>
-				<th>Tambahan Lainnya</th>
+				<th>Unit Kerja</th>
+				<th>Jumlah Karyawan</th>
+				<th>Gaji Bruto</th>
+				<th>Tambahan Lain</th>
 				<th>Total Penghasilan</th>
 				<th>PPh21</th>
 				<th>Pot. Koperasi</th>
@@ -97,19 +87,10 @@
 			</div> -->
 			<tr>
 				<td>{{ $row['No'] }}</td>
-				<td>{{ $row['Nama Unit'] }}</td>
-				<td>{{ $row['Jumlah Karyawan Unit'] }}</td>
-				<td>{{ $row['Jumlah Karyawan Digaji'] }}</td>
-				<td>{{ number_format($row['Gaji Pokok'], 0, ',', '.') }}</td>
-				<td>{{ number_format($row['Tunjangan Jabatan'], 0, ',', '.') }}</td>
-				<td>{{ number_format($row['Tunjangan Fungsional'], 0, ',', '.') }}</td>
-				<td>{{ number_format($row['Tunjangan Khusus'], 0, ',', '.') }}</td>
-				<td>{{ number_format($row['Tunjangan Lainnya'], 0, ',', '.') }}</td>
-				<td>{{ number_format($row['Uang Lembur'], 0, ',', '.') }}</td>
-				<td>{{ number_format($row['Uang Makan'], 0, ',', '.') }}</td>
-				<td>{{ number_format($row['Reward BOR'], 0, ',', '.') }}</td>
-				<td>{{ number_format($row['Reward Absensi'], 0, ',', '.') }}</td>
-				<td>{{ number_format($row['Tambahan Lainnya'], 0, ',', '.') }}</td>
+				<td>{{ $row['Unit Kerja'] }}</td>
+				<td>{{ $row['Jumlah Karyawan'] }}</td>
+				<td>{{ number_format($row['Gaji Bruto'], 0, ',', '.') }}</td>
+				<td>{{ number_format($row['Tambahan Lain'], 0, ',', '.') }}</td>
 				<td>{{ number_format($row['Total Penghasilan'], 0, ',', '.') }}</td>
 				<td>{{ number_format($row['PPh21'], 0, ',', '.') }}</td>
 				<td>{{ number_format($row['Pot. Koperasi'], 0, ',', '.') }}</td>
@@ -126,18 +107,9 @@
 			@if ($loop->last && $index == $dataChunks->count() - 1)
 			<tr class="total-row">
 				<td colspan="2">Total</td>
-				<td>{{ number_format($totals['Jumlah Karyawan Unit'], 0, ',', '.') }}</td>
-				<td>{{ number_format($totals['Jumlah Karyawan Digaji'], 0, ',', '.') }}</td>
-				<td>{{ number_format($totals['Gaji Pokok'], 0, ',', '.') }}</td>
-				<td>{{ number_format($totals['Tunjangan Jabatan'], 0, ',', '.') }}</td>
-				<td>{{ number_format($totals['Tunjangan Fungsional'], 0, ',', '.') }}</td>
-				<td>{{ number_format($totals['Tunjangan Khusus'], 0, ',', '.') }}</td>
-				<td>{{ number_format($totals['Tunjangan Lainnya'], 0, ',', '.') }}</td>
-				<td>{{ number_format($totals['Uang Lembur'], 0, ',', '.') }}</td>
-				<td>{{ number_format($totals['Uang Makan'], 0, ',', '.') }}</td>
-				<td>{{ number_format($totals['Reward BOR'], 0, ',', '.') }}</td>
-				<td>{{ number_format($totals['Reward Absensi'], 0, ',', '.') }}</td>
-				<td>{{ number_format($totals['Tambahan Lainnya'], 0, ',', '.') }}</td>
+				<td>{{ number_format($totals['Jumlah Karyawan'], 0, ',', '.') }}</td>
+				<td>{{ number_format($totals['Gaji Bruto'], 0, ',', '.') }}</td>
+				<td>{{ number_format($totals['Tambahan Lain'], 0, ',', '.') }}</td>
 				<td>{{ number_format($totals['Total Penghasilan'], 0, ',', '.') }}</td>
 				<td>{{ number_format($totals['PPh21'], 0, ',', '.') }}</td>
 				<td>{{ number_format($totals['Pot. Koperasi'], 0, ',', '.') }}</td>

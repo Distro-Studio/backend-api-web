@@ -118,6 +118,15 @@ class CutiController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
+        // Daftar ID yang tidak boleh dihapus
+        $excludedIds = [1, 5];
+        if (in_array($cuti->id, $excludedIds)) {
+            return response()->json(
+                new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Tipe cuti 'Besar dan Tahunan' tidak dapat dihapus karena termasuk data sensitif."),
+                Response::HTTP_BAD_REQUEST
+            );
+        }
+
         $cuti->delete();
 
         $successMessage = "Data cuti {$cuti->nama} berhasil dihapus.";
@@ -153,6 +162,7 @@ class CutiController extends Controller
                 'is_need_requirement' => $tipe_cuti->is_need_requirement,
                 'keterangan' => $tipe_cuti->keterangan,
                 'cuti_administratif' => $tipe_cuti->cuti_administratif,
+                'is_unlimited' => $tipe_cuti->is_unlimited,
                 'deleted_at' => $tipe_cuti->deleted_at,
                 'created_at' => $tipe_cuti->created_at,
                 'updated_at' => $tipe_cuti->updated_at

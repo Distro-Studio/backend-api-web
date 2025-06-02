@@ -31,6 +31,7 @@ class UpdateCutiRequest extends FormRequest
             'is_need_requirement' => 'required|boolean',
             'keterangan' => 'required|string|max:255',
             'cuti_administratif' => 'required|boolean',
+            'is_unlimited' => 'required|boolean',
         ];
     }
 
@@ -50,14 +51,17 @@ class UpdateCutiRequest extends FormRequest
             'keterangan.max' => 'Keterangan melebihi batas maksimum panjang karakter.',
             'cuti_administratif.required' => 'Cuti absensi tidak boleh kosong.',
             'cuti_administratif.boolean' => 'Cuti absensi harus berupa boolean.',
+            'is_unlimited.required' => 'Cuti yang tak terbatas tidak boleh kosong.',
+            'is_unlimited.boolean' => 'Cuti yang tak terbatas harus berupa boolean.',
         ];
     }
 
     public function failedValidation(Validator $validator)
     {
+        $messages = implode(' ', $validator->errors()->all());
         $reponse = [
             'status' => Response::HTTP_BAD_REQUEST,
-            'message' => $validator->errors()
+            'message' => $messages
         ];
 
         throw new HttpResponseException(response()->json($reponse, Response::HTTP_BAD_REQUEST));

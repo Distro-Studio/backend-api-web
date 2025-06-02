@@ -15,6 +15,9 @@ class RiwayatPerubahan extends Model
     protected $casts = [
         'id' => 'integer',
         'data_karyawan_id' => 'integer',
+        'jenis_kelamin' => 'integer',
+        'kategori_agama_id' => 'integer',
+        'kategori_darah_id' => 'integer',
         'status_perubahan_id' => 'integer',
         'verifikator_1' => 'integer'
     ];

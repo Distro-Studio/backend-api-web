@@ -24,10 +24,12 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\Jadwal\CutiJadwalExport;
+use App\Exports\Jadwal\CutiNew\CutiExport;
 use App\Http\Requests\StoreCutiJadwalRequest;
 use App\Http\Requests\UpdateCutiJadwalRequest;
 use App\Http\Resources\Dashboard\Jadwal\CutiJadwalResource;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
+use App\Models\HakCuti;
 use App\Models\RiwayatIzin;
 
 class DataCutiController extends Controller
@@ -39,10 +41,41 @@ class DataCutiController extends Controller
                 return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
             }
 
+            $user = auth()->user();
+            $userId = $user->id;
+
+            // Periksa apakah user adalah Super Admin
+            $isSuperAdmin = $user->hasRole('Super Admin');
+
+            // Jika bukan super admin, cek apakah dia verifikator untuk modul cuti
+            $userDivVerifiedIds = [];
+            if (!$isSuperAdmin) {
+                $relasi = RelasiVerifikasi::where('verifikator', $userId)
+                    ->where('modul_verifikasi', 3)
+                    ->first();
+
+                if ($relasi) {
+                    // Ambil array user_diverifikasi dari relasi_verifikasis
+                    $userDivVerifiedIds = $relasi->user_diverifikasi ?? [];
+                }
+            }
+
             // Per page
             $limit = $request->input('limit', 10);
 
             $cuti = Cuti::query()->orderBy('created_at', 'desc');
+
+            // Terapkan filter data berdasarkan role/verifikator
+            if (!$isSuperAdmin) {
+                if (empty($userDivVerifiedIds)) {
+                    // Bukan super admin dan bukan verifikator => kosongkan hasil
+                    // Jadi, query dibuat WHERE 0=1 agar kosong
+                    $cuti->whereRaw('0=1');
+                } else {
+                    // Filter hanya user_id yang termasuk dalam user_diverifikasi
+                    $cuti->whereIn('user_id', $userDivVerifiedIds);
+                }
+            }
 
             // Ambil semua filter dari request body
             $filters = $request->all();
@@ -262,16 +295,21 @@ class DataCutiController extends Controller
                 ], Response::HTTP_NOT_FOUND);
             }
 
-            $formattedData = $dataCuti->map(function ($dataCuti) {
+            $baseUrl = env('STORAGE_SERVER_DOMAIN');
+            $formattedData = $dataCuti->map(function ($dataCuti) use ($baseUrl) {
                 $userId = $dataCuti->users->id ?? null;
 
                 // Ambil kuota cuti berdasarkan tipe cuti
-                $leaveType = TipeCuti::find($dataCuti->tipe_cuti_id);
-                $quota = $leaveType->kuota;
+                $tipeCuti = TipeCuti::find($dataCuti->tipe_cuti_id);
+                $hakCuti = HakCuti::where('data_karyawan_id', $dataCuti->users->data_karyawan_id)
+                    ->where('tipe_cuti_id', $tipeCuti->id)
+                    ->first();
+                $quotaTipeCuti = $tipeCuti->kuota;
+                $quotaHakCuti = $hakCuti->kuota;
 
                 // Hitung jumlah hari cuti yang sudah digunakan dalam tahun ini
-                $usedDays = Cuti::where('tipe_cuti_id', $leaveType->id)
-                    ->whereNotIn('status_cuti_id', [3, 5])
+                $usedDays = Cuti::where('tipe_cuti_id', $tipeCuti->id)
+                    ->where('status_cuti_id', 4)
                     ->where('user_id', $userId)
                     ->whereYear('created_at', Carbon::now('Asia/Jakarta')->year)
                     ->get()
@@ -283,7 +321,7 @@ class DataCutiController extends Controller
                 // dd($usedDays);
 
                 // Hitung sisa kuota
-                $sisaKuota = $quota - $usedDays;
+                $sisaKuota = max(0, $quotaHakCuti - $usedDays);
 
                 // Ambil max_order dari modul_verifikasis
                 $modulVerifikasi = ModulVerifikasi::where('id', 3)->first(); // 3 untuk modul cuti
@@ -300,7 +338,6 @@ class DataCutiController extends Controller
                     // Cari data verifikasi untuk order tertentu
                     $verifikasiForOrder = $relasiVerifikasi->firstWhere('order', $i);
 
-                    $baseUrl = env('STORAGE_SERVER_DOMAIN');
                     if ($verifikasiForOrder) {
                         $formattedRelasiVerifikasi[] = [
                             'id' => $verifikasiForOrder->id,
@@ -347,6 +384,30 @@ class DataCutiController extends Controller
                     }
                 }
 
+                // Hak cuti
+                $hakCuti = $dataCuti->hak_cutis;
+                $tipeCuti = $hakCuti ? $hakCuti->tipe_cutis : null;
+
+                // Cek soft delete pada hak_cuti dan tipe_cuti
+                $hakCutiData = ($hakCuti && !$hakCuti->trashed()) ? [
+                    'id' => $hakCuti->id,
+                    // 'data_karyawan_id' => $hakCuti->data_karyawan_id,
+                    'tipe_cuti_id' => ($tipeCuti && !$tipeCuti->trashed()) ? [
+                        'id' => $tipeCuti->id,
+                        'nama' => $tipeCuti->nama,
+                        'kuota' => $tipeCuti->kuota,
+                        'is_need_requirement' => $tipeCuti->is_need_requirement,
+                        'keterangan' => $tipeCuti->keterangan,
+                        'cuti_administratif' => $tipeCuti->cuti_administratif,
+                        'created_at' => $tipeCuti->created_at,
+                        'updated_at' => $tipeCuti->updated_at,
+                    ] : null,
+                    'kuota' => $hakCuti->kuota,
+                    'used_kuota' => $hakCuti->used_kuota,
+                    'created_at' => $hakCuti->created_at,
+                    'updated_at' => $hakCuti->updated_at,
+                ] : null;
+
                 return [
                     'id' => $dataCuti->id,
                     'user' => [
@@ -372,13 +433,14 @@ class DataCutiController extends Controller
                     ],
                     'unit_kerja' => $dataCuti->users->data_karyawans->unit_kerjas,
                     'tipe_cuti' => $dataCuti->tipe_cutis,
+                    'hak_cuti' => $hakCutiData,
                     'keterangan' => $dataCuti->keterangan ?? null,
                     'tgl_from' => $dataCuti->tgl_from,
                     'tgl_to' => $dataCuti->tgl_to,
                     'catatan' => $dataCuti->catatan,
                     'durasi' => $dataCuti->durasi,
-                    'total_kuota' => $quota,
-                    'sisa_kuota' => $sisaKuota,
+                    'total_kuota' => $quotaTipeCuti,
+                    'sisa_kuota' => $dataCuti->status_cuti_id === 4 ? $quotaHakCuti : $sisaKuota,
                     'status_cuti' => $dataCuti->status_cutis,
                     'alasan' => $dataCuti->alasan ?? null,
                     'relasi_verifikasi' => $formattedRelasiVerifikasi,
@@ -397,7 +459,7 @@ class DataCutiController extends Controller
             Log::error('| Cuti | - Error saat mengambil data cuti karyawan: ' . $e->getMessage());
             return response()->json([
                 'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
-                'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
+                'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti. Error: ' . $e->getMessage() . ' Line: ' . $e->getLine(),
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
@@ -429,113 +491,63 @@ class DataCutiController extends Controller
                 return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Karyawan tersebut sudah memiliki cuti pada rentang tanggal yang diajukan.'), Response::HTTP_BAD_REQUEST);
             }
 
-            // Mengambil informasi tipe cuti berdasarkan tipe_cuti_id
-            $tipeCuti = TipeCuti::find($data['tipe_cuti_id']);
-            if (!$tipeCuti) {
-                return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Tipe cuti tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+            // Cari data_karyawan_id berdasarkan user_id
+            $dataKaryawan = DataKaryawan::where('user_id', $data['user_id'])->first();
+            if (!$dataKaryawan) {
+                return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data karyawan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+            }
+
+            // Ambil hak cuti dari tabel hak_cutis berdasarkan data_karyawan_id dan tipe_cuti_id
+            $hakCuti = HakCuti::with('tipe_cutis')
+                ->where('data_karyawan_id', $dataKaryawan->id)
+                ->where('tipe_cuti_id', $data['tipe_cuti_id'])
+                ->first();
+            if (!$hakCuti) {
+                return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Hak cuti untuk tipe cuti tersebut tidak ditemukan pada karyawan ini.'), Response::HTTP_BAD_REQUEST);
             }
 
             DB::beginTransaction();
 
-            // Mengonversi tanggal dari request menggunakan helper hanya untuk perhitungan durasi
-            $tglFrom = Carbon::createFromFormat('d-m-Y', $data['tgl_from'])->format('Y-m-d');
-            $tglTo = Carbon::createFromFormat('d-m-Y', $data['tgl_to'])->format('Y-m-d');
-
             // Menghitung durasi cuti dalam hari
             $durasi = Carbon::parse($tglFrom)->diffInDays($tglTo) + 1;
 
-            // Validasi durasi cuti terhadap kuota tipe cuti
-            if ($durasi > $tipeCuti->kuota) {
-                $message = "Durasi cuti ({$durasi} hari) melebihi kuota yang diizinkan untuk tipe cuti '{$tipeCuti->nama}'. Kuota maksimal: {$tipeCuti->kuota} hari.";
-                return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, $message), Response::HTTP_BAD_REQUEST);
+            if (!$hakCuti->tipe_cutis->is_unlimited) {
+                // Validasi durasi cuti tidak boleh melebihi kuota di hak_cuti
+                if ($durasi > $hakCuti->kuota) {
+                    $message = "Durasi cuti ({$durasi} hari) melebihi kuota yang diizinkan untuk tipe cuti '{$hakCuti->tipe_cutis->nama}'. Kuota maksimal: {$hakCuti->kuota} hari.";
+                    return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, $message), Response::HTTP_BAD_REQUEST);
+                }
+
+                // Ambil semua data cuti dengan tipe_cuti_id dan user_id yang sama pada tahun berjalan
+                $currentYear = Carbon::now('Asia/Jakarta')->year;
+                $cutiRecords = Cuti::where('user_id', $data['user_id'])
+                    ->where('tipe_cuti_id', $data['tipe_cuti_id'])
+                    ->where('status_cuti_id', 4)
+                    ->where(function ($query) use ($currentYear) {
+                        $query->whereYear(DB::raw("STR_TO_DATE(tgl_from, '%d-%m-%Y')"), $currentYear);
+                    })
+                    ->get();
+
+                // Hitung total durasi cuti yang sudah diambil
+                $totalDurasiDiambil = $cutiRecords->sum('durasi');
+
+                // Hitung sisa kuota dengan mengurangi kuota hak cuti dengan durasi yang sudah diambil
+                $sisaKuota = max(0, $hakCuti->kuota - $totalDurasiDiambil);
+
+                // Kurangi sisa kuota dengan durasi cuti yang akan diambil sekarang
+                $sisaSetelahPengajuan = max(0, $sisaKuota - $durasi);
+
+                // Validasi total durasi terhadap kuota
+                if ($sisaSetelahPengajuan < 0) {
+                    $message = "Durasi cuti melebihi kuota yang diizinkan untuk tipe cuti '{$hakCuti->tipe_cutis->nama}'. Sisa kuota cuti tahun ini: {$sisaKuota} hari. Durasi cuti yang diajukan: {$durasi} hari.";
+                    return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, $message), Response::HTTP_BAD_REQUEST);
+                }
             }
-
-            // Ambil semua data cuti dengan tipe_cuti_id dan user_id yang sama pada tahun berjalan
-            $currentYear = Carbon::now('Asia/Jakarta')->year;
-            $cutiRecords = Cuti::where('user_id', $data['user_id'])
-                ->where('tipe_cuti_id', $data['tipe_cuti_id'])
-                ->where('status_cuti_id', 4)
-                ->where(function ($query) use ($currentYear) {
-                    $query->whereYear(DB::raw("STR_TO_DATE(tgl_from, '%d-%m-%Y')"), $currentYear);
-                })
-                ->get();
-
-            // Hitung total durasi cuti yang sudah diambil
-            $totalDurasiDiambil = $cutiRecords->sum('durasi');
-
-            // Tambahkan durasi baru ke total durasi yang sudah diambil
-            $totalDurasi = $totalDurasiDiambil + $durasi;
-
-            // Validasi total durasi terhadap kuota
-            if ($totalDurasi > $tipeCuti->kuota) {
-                $sisaCuti = $tipeCuti->kuota - $totalDurasiDiambil;
-                $message = "Durasi cuti melebihi kuota yang diizinkan untuk tipe cuti '{$tipeCuti->nama}'. Sisa kuota cuti tahun ini: {$sisaCuti} hari. Total durasi yang diajukan: {$totalDurasi} hari.";
-                return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, $message), Response::HTTP_BAD_REQUEST);
-            }
-
-            // if (Gate::allows('verifikasi2 cutiKaryawan')) {
-            //     $statusCutiId = 4;
-
-            //     // Step 1: Cek jadwal kerja shift, jika ada yang cuti mendadak dan jika masih ada jadwal
-            //     $jadwalConflicts = Jadwal::where('user_id', $data['user_id'])
-            //         ->where(function ($query) use ($tglFrom, $tglTo) {
-            //             $query->whereBetween('tgl_mulai', [$tglFrom, $tglTo])
-            //                 ->orWhereBetween('tgl_selesai', [$tglFrom, $tglTo])
-            //                 ->orWhere(function ($query) use ($tglFrom, $tglTo) {
-            //                     $query->where('tgl_mulai', '<=', $tglFrom)
-            //                         ->where('tgl_selesai', '>=', $tglTo);
-            //                 });
-            //         })->get();
-
-            //     if ($jadwalConflicts->isNotEmpty()) {
-            //         foreach ($jadwalConflicts as $jadwal) {
-            //             $tukarJadwal = TukarJadwal::where('jadwal_pengajuan', $jadwal->id)
-            //                 ->orWhere('jadwal_ditukar', $jadwal->id)
-            //                 ->first();
-
-            //             if ($tukarJadwal) {
-            //                 // Kembalikan user_id dari jadwal_pengajuan ke user_pengajuan
-            //                 $jadwalPengajuan = Jadwal::find($tukarJadwal->jadwal_pengajuan);
-            //                 if ($jadwalPengajuan) {
-            //                     $jadwalPengajuan->user_id = $tukarJadwal->user_pengajuan;
-            //                     $jadwalPengajuan->save();
-
-            //                     $this->createNotifikasiJadwalKembali($jadwalPengajuan->user_id, $jadwalPengajuan->id);
-            //                 }
-
-            //                 // Kembalikan user_id dari jadwal_ditukar ke user_ditukar
-            //                 $jadwalDitukar = Jadwal::find($tukarJadwal->jadwal_ditukar);
-            //                 if ($jadwalDitukar) {
-            //                     $jadwalDitukar->user_id = $tukarJadwal->user_ditukar;
-            //                     $jadwalDitukar->save();
-
-            //                     $this->createNotifikasiJadwalKembali($jadwalDitukar->user_id, $jadwalDitukar->id);
-            //                 }
-
-            //                 // Hapus tukar jadwal setelah dikembalikan
-            //                 $tukarJadwal->delete();
-            //             }
-
-            //             // Hapus lembur
-            //             Lembur::where('jadwal_id', $jadwal->id)->delete();
-
-            //             // Hapus jadwal
-            //             Jadwal::where('user_id', $data['user_id'])->delete();
-            //         }
-            //     }
-
-            //     $data['verifikator_1'] = $verifikatorId;
-            //     $data['verifikator_2'] = $verifikatorId;
-            // } elseif (Gate::allows('verifikasi1 cutiKaryawan')) {
-            //     $statusCutiId = 2;
-            //     $data['verifikator_1'] = $verifikatorId;
-            // } else {
-            //     $statusCutiId = 1;
-            // }
 
             // Menambahkan durasi ke data sebelum menyimpan
             $data['durasi'] = $durasi;
             $data['status_cuti_id'] = 1;
+            $data['hak_cuti_id'] = $hakCuti->id;
 
             // New Update
             $data['presensi_ids'] = $this->getPresensiIds($data['user_id'], $data['tgl_from'], $data['tgl_to']);
@@ -546,13 +558,7 @@ class DataCutiController extends Controller
             $dataCuti = Cuti::create($data);
             // dd("Presensi: {$data['presensi_ids']}, Jadwal: {$data['jadwal_ids']}, Izin: {$data['izin_ids']}, Lembur: {$data['lembur_ids']}");
 
-            // Setelah pembuatan cuti, cari cuti yang baru dibuat dan periksa cuti_administratif
-            // $cutiTerbaru = Cuti::where('user_id', $data['user_id'])->latest()->first();
-            // if ($cutiTerbaru && !$cutiTerbaru->tipe_cutis->cuti_administratif) {
-            //     DB::table('data_karyawans')
-            //         ->where('user_id', $data['user_id'])
-            //         ->update(['status_reward_presensi' => false]);
-            // }
+            DB::commit();
 
             $message = "Data cuti karyawan '{$dataCuti->users->nama}' berhasil dibuat untuk tipe cuti '{$dataCuti->tipe_cutis->nama}' dengan durasi {$dataCuti->durasi} hari.";
 
@@ -576,6 +582,7 @@ class DataCutiController extends Controller
 
             return response()->json(new CutiJadwalResource(Response::HTTP_OK, $message, $dataCuti), Response::HTTP_OK);
         } catch (\Exception $e) {
+            DB::rollBack();
             Log::error('| Cuti | - Error saat menyimpan data cuti karyawan: ' . $e->getMessage());
             return response()->json([
                 'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
@@ -591,16 +598,51 @@ class DataCutiController extends Controller
                 return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
             }
 
-            $dataCuti = Cuti::with(['users.data_karyawans.unit_kerjas', 'users.cutis', 'tipe_cutis', 'status_cutis'])->find($id);
+            $dataCuti = Cuti::with([
+                'users.data_karyawans.unit_kerjas',
+                'users.cutis',
+                'tipe_cutis',
+                'status_cutis',
+                'hak_cutis' => function ($query) {
+                    $query->withTrashed(); // supaya bisa cek soft delete
+                },
+                'hak_cutis.tipe_cutis' => function ($query) {
+                    $query->withTrashed();
+                }
+            ])->find($id);
             if (!$dataCuti) {
                 return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data cuti karyawan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
             }
 
             $baseUrl = env('STORAGE_SERVER_DOMAIN');
             $listCuti = $dataCuti->users->cutis->map(function ($cuti) use ($baseUrl) {
+                // Pengecekan soft delete hak_cuti dan tipe_cuti
+                $hakCuti = $cuti->hak_cutis;
+                $tipeCuti = $hakCuti ? $hakCuti->tipe_cutis : null;
+
+                $hakCutiData = ($hakCuti && !$hakCuti->trashed()) ? [
+                    'id' => $hakCuti->id,
+                    // 'data_karyawan_id' => $hakCuti->data_karyawan_id,
+                    'tipe_cuti_id' => ($tipeCuti && !$tipeCuti->trashed()) ? [
+                        'id' => $tipeCuti->id,
+                        'nama' => $tipeCuti->nama,
+                        'kuota' => $tipeCuti->kuota,
+                        'is_need_requirement' => $tipeCuti->is_need_requirement,
+                        'keterangan' => $tipeCuti->keterangan,
+                        'cuti_administratif' => $tipeCuti->cuti_administratif,
+                        'created_at' => $tipeCuti->created_at,
+                        'updated_at' => $tipeCuti->updated_at,
+                    ] : null,
+                    'kuota' => $hakCuti->kuota,
+                    'used_kuota' => $hakCuti->used_kuota,
+                    'created_at' => $hakCuti->created_at,
+                    'updated_at' => $hakCuti->updated_at,
+                ] : null;
+
                 return [
                     'id' => $cuti->id,
                     'tipe_cuti' => $cuti->tipe_cutis,
+                    'hak_cuti' => $hakCutiData,
                     'keterangan' => $cuti->keterangan ?? null,
                     'tgl_from' => $cuti->tgl_from,
                     'tgl_to' => $cuti->tgl_to,
@@ -696,6 +738,8 @@ class DataCutiController extends Controller
 
     public function update(UpdateCutiJadwalRequest $request, $id)
     {
+        DB::beginTransaction();
+
         try {
             if (!Gate::allows('edit cutiKaryawan')) {
                 return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
@@ -707,48 +751,99 @@ class DataCutiController extends Controller
                 return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data cuti karyawan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
             }
 
-            // Mengonversi tanggal dari request menggunakan helper hanya untuk perhitungan durasi
-            $tglFrom = Carbon::createFromFormat('d-m-Y', $data['tgl_from'])->format('Y-m-d');
-            $tglTo = Carbon::createFromFormat('d-m-Y', $data['tgl_to'])->format('Y-m-d');
+            // Konversi tanggal input ke Y-m-d untuk perhitungan durasi
+            $tglFromBaru = Carbon::createFromFormat('d-m-Y', $data['tgl_from'])->format('Y-m-d');
+            $tglToBaru = Carbon::createFromFormat('d-m-Y', $data['tgl_to'])->format('Y-m-d');
 
             // Menghitung durasi cuti dalam hari
-            $durasi = Carbon::parse($tglFrom)->diffInDays(Carbon::parse($tglTo));
+            $durasiBaru = Carbon::parse($tglFromBaru)->diffInDays(Carbon::parse($tglToBaru)) + 1;
 
-            // Validasi durasi cuti terhadap kuota tipe cuti
-            $tipeCuti = TipeCuti::find($data['tipe_cuti_id']);
-            if (!$tipeCuti) {
-                return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Tipe cuti tidak ditemukan.'), Response::HTTP_NOT_FOUND);
+            // Ambil data_karyawan_id untuk akses hak_cuti
+            $dataKaryawan = DataKaryawan::where('user_id', $dataCuti->user_id)->first();
+            if (!$dataKaryawan) {
+                DB::rollBack();
+                return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data karyawan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
             }
 
-            // Periksa cuti yang telah diambil pada tahun berjalan
-            $currentYear = Carbon::now()->year;
-            $cutiTakenThisYear = Cuti::where('user_id', $dataCuti->user_id)
+            // Ambil hak_cuti lama dan baru
+            $hakCutiLama = HakCuti::with('tipe_cutis')
+                ->where('data_karyawan_id', $dataKaryawan->id)
+                ->where('tipe_cuti_id', $dataCuti->tipe_cuti_id)
+                ->first();
+
+            $hakCutiBaru = HakCuti::with('tipe_cutis')
+                ->where('data_karyawan_id', $dataKaryawan->id)
                 ->where('tipe_cuti_id', $data['tipe_cuti_id'])
-                ->whereYear('tgl_from', $currentYear)
-                ->where('id', '!=', $id)
-                ->sum('durasi');
+                ->first();
 
-            // Tambahkan durasi cuti yang sedang diupdate
-            $totalCutiTaken = $cutiTakenThisYear + $durasi;
-
-            // Hitung sisa kuota cuti
-            $sisaCuti = $tipeCuti->kuota - $cutiTakenThisYear;
-            if ($tipeCuti->kuota > 0 && $totalCutiTaken > $tipeCuti->kuota) {
-                $message = "Durasi cuti ({$durasi} hari) melebihi sisa kuota yang diizinkan untuk tipe cuti '{$tipeCuti->nama}' ({$sisaCuti} hari tersisa).";
-                return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, $message), Response::HTTP_BAD_REQUEST);
+            if (!$hakCutiBaru) {
+                DB::rollBack();
+                return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Hak cuti untuk tipe cuti baru tidak ditemukan.'), Response::HTTP_BAD_REQUEST);
             }
 
-            // Menambahkan durasi ke data sebelum memperbarui
-            $data['durasi'] = $durasi;
-            $data['status_cuti_id'] = 2;
+            // Durasi lama cuti yang sudah tersimpan
+            $durasiLama = $dataCuti->durasi;
+
+            // Jika tipe cuti berubah
+            if ($data['tipe_cuti_id'] != $dataCuti->tipe_cuti_id) {
+                if ($hakCutiLama && !$hakCutiLama->tipe_cutis->is_unlimited) {
+                    $hakCutiLama->kuota += $durasiLama;
+                    $hakCutiLama->used_kuota -= $durasiLama;
+                    $hakCutiLama->save();
+                }
+
+                if (!$hakCutiBaru->tipe_cutis->is_unlimited) {
+                    if ($hakCutiBaru->kuota < $durasiBaru) {
+                        DB::rollBack();
+                        return response()->json(
+                            new WithoutDataResource(
+                                Response::HTTP_BAD_REQUEST,
+                                "Kuota hak cuti untuk tipe cuti baru tidak mencukupi. Sisa kuota: {$hakCutiBaru->kuota} hari, durasi cuti: {$durasiBaru} hari."
+                            ),
+                            Response::HTTP_BAD_REQUEST
+                        );
+                    }
+
+                    $hakCutiBaru->kuota -= $durasiBaru;
+                    $hakCutiBaru->used_kuota += $durasiBaru;
+                    $hakCutiBaru->save();
+                }
+            } else {
+                // Jika hanya tanggal yang berubah
+                $selisihDurasi = $durasiBaru - $durasiLama;
+
+                if ($selisihDurasi != 0 && !$hakCutiBaru->tipe_cutis->is_unlimited) {
+                    if ($selisihDurasi > 0 && $hakCutiBaru->kuota < $selisihDurasi) {
+                        DB::rollBack();
+                        return response()->json(
+                            new WithoutDataResource(
+                                Response::HTTP_BAD_REQUEST,
+                                "Kuota hak cuti tidak mencukupi untuk penambahan durasi cuti. Sisa kuota: {$hakCutiBaru->kuota} hari, tambahan durasi: {$selisihDurasi} hari."
+                            ),
+                            Response::HTTP_BAD_REQUEST
+                        );
+                    }
+
+                    $hakCutiBaru->kuota -= $selisihDurasi;
+                    $hakCutiBaru->used_kuota += $selisihDurasi;
+                    $hakCutiBaru->save();
+                }
+            }
+
+            // Update data cuti
+            $data['durasi'] = $durasiBaru;
+            $data['status_cuti_id'] = 2; // misal status "diupdate"
 
             $dataCuti->update($data);
+
+            DB::commit();
 
             $message = "Data cuti karyawan '{$dataCuti->users->nama}' berhasil diperbarui untuk tipe cuti '{$dataCuti->tipe_cutis->nama}' dengan durasi {$dataCuti->durasi} hari.";
 
             return response()->json(new CutiJadwalResource(Response::HTTP_OK, $message, $dataCuti), Response::HTTP_OK);
         } catch (\Exception $e) {
-            Log::error('| Cuti | - Error saat update data cuti karyawan: ' . $e->getMessage());
+            DB::rollBack();
+            Log::error('| Cuti | - Error function update: ' . $e->getMessage());
             return response()->json([
                 'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
                 'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
@@ -756,7 +851,6 @@ class DataCutiController extends Controller
         }
     }
 
-    // TODO | New Update
     public function deleteCuti(Request $request)
     {
         try {
@@ -772,12 +866,50 @@ class DataCutiController extends Controller
 
             $idsCuti = $request->input('ids_cuti');
 
+            // Cek cuti yang sudah disetujui tahap 2 (status_cuti_id == 4)
+            $countDisetujuiTahap2 = Cuti::whereIn('id', $idsCuti)
+                ->where('status_cuti_id', 4)
+                ->count();
+            if ($countDisetujuiTahap2 > 0) {
+                return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Cuti yang sudah disetujui tahap 2 tidak diperbolehkan untuk dihapus.'), Response::HTTP_BAD_REQUEST);
+            }
+
             DB::beginTransaction();
+
+            $now = Carbon::now('Asia/Jakarta');
 
             // Looping untuk mendapatkan ID yang perlu di-restore sebelum menghapus cuti
             foreach ($idsCuti as $cutiId) {
                 $cuti = Cuti::find($cutiId);
                 if ($cuti) {
+                    $hakCuti = HakCuti::find($cuti->hak_cuti_id);
+                    if ($hakCuti) {
+                        $isUnlimited = $hakCuti->tipe_cutis?->is_unlimited ?? false;
+                        Log::info("Cuti ID {$cuti->id} tidak memulihkan kuota karena tipe cuti unlimited.");
+
+                        if (!$isUnlimited) {
+                            $tglFrom = Carbon::createFromFormat('d-m-Y', $cuti->tgl_from)->startOfDay();
+                            $tglTo = Carbon::createFromFormat('d-m-Y', $cuti->tgl_to)->endOfDay();
+
+                            if ($now->between($tglFrom, $tglTo)) {
+                                // 1. Cuti masih berjalan
+                                $sisaHari = $now->diffInDays($tglTo) + 1;
+                                $hakCuti->kuota += $sisaHari;
+                                $hakCuti->used_kuota -= $sisaHari;
+                            } elseif ($now->lt($tglFrom)) {
+                                // 2. Cuti belum berjalan
+                                $hakCuti->kuota += $cuti->durasi;
+                                $hakCuti->used_kuota -= $cuti->durasi;
+                            }
+
+                            // 3. Cuti selesai → tidak perlu kembalikan kuota
+                            $hakCuti->save();
+                        }
+                    } else {
+                        Log::warning("Hak cuti dengan ID {$cuti->hak_cuti_id} tidak ditemukan saat delete cuti ID {$cutiId}.");
+                    }
+
+                    // Restore data presensi, jadwal, izin, lembur sesuai kode lama
                     $restoreData = [
                         Presensi::class => json_decode($cuti->presensi_ids, true) ?? [],
                         Jadwal::class => json_decode($cuti->jadwal_ids, true) ?? [],
@@ -799,7 +931,7 @@ class DataCutiController extends Controller
 
             return response()->json([
                 'status' => Response::HTTP_OK,
-                'message' => "Total $deletedCount data cuti berhasil dihapus."
+                'message' => "Total $deletedCount data cuti berhasil dihapus. Jika tipe cuti bukan administratif, maka reward presensi tidak akan dikembalikan."
             ], Response::HTTP_OK);
         } catch (\Exception $e) {
             Log::error('| Cuti | - Error saat restore data cuti karyawan: ' . $e->getMessage());
@@ -823,7 +955,8 @@ class DataCutiController extends Controller
             }
 
             try {
-                return Excel::download(new CutiJadwalExport($request->all()), 'cuti-karyawan.xls');
+                return Excel::download(new CutiExport($request->all()), 'cuti-karyawan.xls');
+                // return Excel::download(new CutiJadwalExport($request->all()), 'cuti-karyawan.xls');
             } catch (\Throwable $e) {
                 return response()->json(new WithoutDataResource(Response::HTTP_INTERNAL_SERVER_ERROR, 'Maaf sepertinya terjadi error. Pesan: ' . $e->getMessage()), Response::HTTP_INTERNAL_SERVER_ERROR);
             }
@@ -1026,6 +1159,74 @@ class DataCutiController extends Controller
                         $this->deletePresensiJadwalIzin($userId, $tglFrom, $tglTo, $cuti);
                     }
 
+                    // Update kuota
+                    $hakCuti = HakCuti::find($cuti->hak_cuti_id);
+                    if ($hakCuti) {
+                        $isUnlimited = $hakCuti->tipe_cutis?->is_unlimited ?? false;
+
+                        if (!$isUnlimited) {
+                            // Kurangi kuota hanya jika bukan unlimited
+                            $durasi = $cuti->durasi;
+                            $hakCuti->kuota = max(0, $hakCuti->kuota - $durasi);
+                            $hakCuti->used_kuota = $hakCuti->used_kuota + $durasi;
+                            $hakCuti->save();
+                        } else {
+                            Log::info("Kuota tidak dikurangi karena tipe cuti '{$hakCuti->tipe_cutis->nama}' bersifat unlimited.");
+                        }
+                    } else {
+                        Log::warning("Hak cuti ID {$cuti->hak_cuti_id} tidak ditemukan saat verifikasi tahap 2 cuti ID {$cutiId}.");
+                    }
+
+                    // Update status_reward_presensi
+                    $cutiTerbaru = Cuti::where('user_id', $cuti->user_id)->latest()->first();
+                    if ($cutiTerbaru && !$cutiTerbaru->tipe_cutis->cuti_administratif) {
+                        $userId = $cuti->user_id;
+                        $now = now('Asia/Jakarta');
+
+                        DB::table('data_karyawans')
+                            ->where('user_id', $userId)
+                            ->update(['status_reward_presensi' => false]);
+
+                        // Cek ada tidaknya riwayat penggajian untuk bulan & tahun ini
+                        // $gajiBulanIni = DB::table('riwayat_penggajians')
+                        //     ->whereYear('periode', $now->year)
+                        //     ->whereMonth('periode', $now->month)
+                        //     ->exists();
+                        // if ($gajiBulanIni) {
+                        //     // Jika sudah ada gaji bulan ini, update status_reward_presensi di data_karyawans
+                        //     DB::table('data_karyawans')
+                        //         ->where('user_id', $userId)
+                        //         ->update(['status_reward_presensi' => false]);
+                        // } else {
+                        //     // Jika belum ada gaji bulan ini, update status_reward di reward_bulan_lalus
+                        //     $dataKaryawan = DB::table('data_karyawans')->where('user_id', $userId)->first();
+
+                        //     if ($dataKaryawan) {
+                        //         DB::table('reward_bulan_lalus')
+                        //             ->where('data_karyawan_id', $dataKaryawan->id)
+                        //             ->update(['status_reward' => false]);
+                        //     } else {
+                        //         Log::warning("Data karyawan dengan user_id $userId tidak ditemukan saat update reward bulan lalu.");
+                        //     }
+                        // }
+
+                        // === Tambahan: Create record di riwayat_pembatalan_rewards ===
+                        try {
+                            DB::table('riwayat_pembatalan_rewards')->insert([
+                                'data_karyawan_id' => $data_karyawan->id ?? null,
+                                'tipe_pembatalan' => 'cuti',
+                                'tgl_pembatalan' => $now,
+                                'keterangan' => "Pembatalan reward otomatis dikarenakan {$cuti->tipe_cutis->nama} non administratif",
+                                'cuti_id' => $cuti ? $cuti->id : null,
+                                'verifikator_1' => $verifikatorId,
+                                'created_at' => $now,
+                                'updated_at' => $now,
+                            ]);
+                        } catch (\Exception $e) {
+                            Log::error("Gagal insert riwayat pembatalan reward: " . $e->getMessage());
+                        }
+                    }
+
                     $this->createNotifikasiCutiTahap2($cuti, 'Disetujui');
 
                     return response()->json(new WithoutDataResource(Response::HTTP_OK, "Verifikasi tahap 2 untuk Cuti '{$cuti->tipe_cutis->nama}' telah disetujui."), Response::HTTP_OK);
@@ -1049,7 +1250,7 @@ class DataCutiController extends Controller
                 return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Aksi tidak valid.'), Response::HTTP_BAD_REQUEST);
             }
         } catch (\Exception $e) {
-            Log::error('| Cuti | - Error saat verif 2 data cuti karyawan: ' . $e->getMessage());
+            Log::error('| Cuti | - Error function verifikasiTahap2: ' . $e->getMessage());
             return response()->json([
                 'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
                 'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',

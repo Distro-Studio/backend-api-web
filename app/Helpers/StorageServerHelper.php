@@ -4,6 +4,7 @@ namespace App\Helpers;
 
 use App\Models\Berkas;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Http;
 
@@ -27,6 +28,13 @@ class StorageServerHelper
 	public static function login()
 	{
 		self::initDomain(); // Ensure domain is initialized
+
+		// Cek token cache dulu
+		if ($token = Cache::get('storage_server_token')) {
+			self::$token = $token;
+			return;
+		}
+
 		$response = Http::asForm()->post(self::$storageDomain . '/api/login', [
 			'username' => self::$storageUsername,
 			'password' => self::$storagePassword
@@ -43,6 +51,9 @@ class StorageServerHelper
 		}
 
 		self::$token = $logininfo['data']['token'];
+
+		// Simpan token di cache selama 5 menit (atur sesuai waktu expiry server)
+		Cache::put('storage_server_token', self::$token, now('Asia/Jakarta')->addMinutes(5));
 	}
 
 	public static function logout()
@@ -60,7 +71,9 @@ class StorageServerHelper
 	// Single upload
 	public static function uploadToServer(Request $request, $filename = 'File Upload')
 	{
-		self::login();
+		if (self::$token === null) {
+			self::login();
+		}
 		self::initDomain(); // Ensure domain is initialized
 		$file = $request->file('dokumen');
 
@@ -73,9 +86,15 @@ class StorageServerHelper
 		]);
 
 		$uploadinfo = $responseupload->json();
+		if (!isset($uploadinfo['data'])) {
+			Log::channel('storage_server_log')->error("Single Upload Failed - response tidak berisi data", [
+				'status_code' => $responseupload->status(),
+				'response_body' => $responseupload->body(),
+				'headers' => $responseupload->headers(),
+			]);
+			// throw new \Exception('Error: ' . $responseupload->body());
+		}
 		$dataupload = $uploadinfo['data'];
-
-		self::logout();
 
 		return $dataupload;
 	}
@@ -83,7 +102,10 @@ class StorageServerHelper
 	// Multi upload
 	public static function multipleUploadToServer($file, $filename = 'File Upload')
 	{
-		self::login();
+		if (self::$token === null) {
+			self::login();
+		}
+
 		self::initDomain();
 
 		$responseupload = Http::withHeaders([
@@ -94,10 +116,32 @@ class StorageServerHelper
 			'kategori' => 'Umum'
 		]);
 
-		$uploadinfo = $responseupload->json();
-		$dataupload = $uploadinfo['data'];
+		if ($responseupload->status() == 429) {
+			$retryAfter = (int) $responseupload->header('retry-after', 10); // default 10 detik
+			Log::channel('storage_server_log')->warning("Rate limit reached. Retrying after {$retryAfter} seconds.");
 
-		self::logout();
+			sleep($retryAfter); // tunggu sebelum retry
+
+			// Coba upload ulang sekali
+			$responseupload = Http::withHeaders([
+				'Authorization' => 'Bearer ' . self::$token,
+			])->asMultipart()->post(self::$storageDomain . '/api/upload', [
+				'filename' => $filename,
+				'file' => fopen($file->getRealPath(), 'r'),
+				'kategori' => 'Umum'
+			]);
+		}
+
+		$uploadinfo = $responseupload->json();
+
+		if (!isset($uploadinfo['data'])) {
+			Log::channel('storage_server_log')->error("Multiple Upload Failed - response tidak berisi data", [
+				'status_code' => $responseupload->status(),
+				'response_body' => $responseupload->body(),
+				'headers' => $responseupload->headers(),
+			]);
+		}
+		$dataupload = $uploadinfo['data'];
 
 		return $dataupload;
 	}
@@ -105,7 +149,10 @@ class StorageServerHelper
 	// Delete Berkas
 	public static function deleteFromServer($file_id)
 	{
-		self::login();
+		if (self::$token === null) {
+			self::login();
+		}
+
 		self::initDomain();
 
 		$responseupload = Http::withHeaders([
@@ -115,12 +162,15 @@ class StorageServerHelper
 		]);
 
 		$uploadinfo = $responseupload->json();
-		// if (!isset($uploadinfo['data'])) {
-		// 	throw new \Exception('Error: ' . $responseupload->body());
-		// }
+		if (!isset($uploadinfo['data'])) {
+			Log::channel('storage_server_log')->error("Delete Failed - response tidak berisi data", [
+				'status_code' => $responseupload->status(),
+				'response_body' => $responseupload->body(),
+				'headers' => $responseupload->headers(),
+			]);
+			// throw new \Exception('Error: ' . $responseupload->body());
+		}
 		$dataupload = $uploadinfo['data'];
-
-		self::logout();
 
 		return $dataupload;
 	}

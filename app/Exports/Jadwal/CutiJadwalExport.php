@@ -24,7 +24,10 @@ class CutiJadwalExport implements FromCollection, WithHeadings, WithMapping
 
     public function collection()
     {
-        $query = Cuti::with(['users', 'tipe_cutis', 'status_cutis']);
+        $query = Cuti::with(['users', 'tipe_cutis', 'status_cutis'])
+            ->whereHas('users.data_karyawans', function ($query) {
+                $query->orderBy('nik', 'asc');
+            });
 
         if (isset($this->filters['unit_kerja'])) {
             $namaUnitKerja = $this->filters['unit_kerja'];
@@ -162,6 +165,17 @@ class CutiJadwalExport implements FromCollection, WithHeadings, WithMapping
             });
         }
 
+        if (isset($this->filters['tipe_cuti'])) {
+            $namaTipeCuti = $this->filters['tipe_cuti'];
+            $query->whereHas('tipe_cutis', function ($query) use ($namaTipeCuti) {
+                if (is_array($namaTipeCuti)) {
+                    $query->whereIn('id', $namaTipeCuti);
+                } else {
+                    $query->where('id', '=', $namaTipeCuti);
+                }
+            });
+        }
+
         return $query->get();
     }
 
@@ -170,6 +184,7 @@ class CutiJadwalExport implements FromCollection, WithHeadings, WithMapping
         return [
             'no',
             'nama',
+            'nik',
             'tipe_cuti',
             'keterangan',
             'tgl_from',
@@ -192,33 +207,17 @@ class CutiJadwalExport implements FromCollection, WithHeadings, WithMapping
         $tgl_from = Carbon::parse($convertTgl_From)->format('d-m-Y');
         $tgl_to = Carbon::parse($convertTgl_To)->format('d-m-Y');
 
-        $leaveType = TipeCuti::find($cuti->tipe_cuti_id);
-        $quota = $leaveType ? $leaveType->kuota : 0;
-
-        // Hitung jumlah hari cuti yang sudah digunakan dalam tahun ini
-        $usedDays = Cuti::where('tipe_cuti_id', $cuti->tipe_cuti_id)
-            ->where('user_id', $cuti->user_id)
-            ->whereYear('created_at', Carbon::now('Asia/Jakarta')->year)
-            ->get()
-            ->sum(function ($cutiItem) {
-                $tglFrom = Carbon::parse($cutiItem->tgl_from);
-                $tglTo = Carbon::parse($cutiItem->tgl_to);
-                return $tglFrom->diffInDays($tglTo) + 1;
-            });
-
-        // Hitung sisa kuota
-        $sisaKuota = $quota - $usedDays;
-
         return [
             $no++,
             $cuti->users->nama,
+            $cuti->users->data_karyawans->nik,
             $cuti->tipe_cutis->nama,
             $cuti->keterangan ?? 'N/A',
             $tgl_from,
             $tgl_to,
             $cuti->catatan ?? 'N/A',
             $cuti->durasi . ' Hari',
-            $sisaKuota . ' Hari',
+            $cuti->hak_cutis->kuota . ' Hari',
             $cuti->status_cutis->label,
             Carbon::parse($cuti->created_at)->format('d-m-Y H:i:s'),
             Carbon::parse($cuti->updated_at)->format('d-m-Y H:i:s')

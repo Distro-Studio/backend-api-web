@@ -18,6 +18,7 @@ class DataKaryawan extends Model
         'unit_kerja_id' => 'integer',
         'jabatan_id' => 'integer',
         'kompetensi_id' => 'integer',
+        'spesialisasi_id' => 'integer',
         'tunjangan_fungsional' => 'integer',
         'tunjangan_khusus' => 'integer',
         'tunjangan_lainnya' => 'integer',
@@ -113,6 +114,16 @@ class DataKaryawan extends Model
     public function jabatans(): BelongsTo
     {
         return $this->belongsTo(Jabatan::class, 'jabatan_id', 'id');
+    }
+
+    /**
+     * Get the spesialisasis that owns the DataKaryawan
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function spesialisasis(): BelongsTo
+    {
+        return $this->belongsTo(Spesialisasi::class, 'spesialisasi_id', 'id');
     }
 
     /**
@@ -333,5 +344,15 @@ class DataKaryawan extends Model
     public function tagihan_potongans(): HasMany
     {
         return $this->hasMany(TagihanPotongan::class, 'data_karyawan_id', 'id');
+    }
+
+    /**
+     * Get all of the hak_cutis for the DataKaryawan
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function hak_cutis(): HasMany
+    {
+        return $this->hasMany(HakCuti::class, 'data_karyawan_id', 'id');
     }
 }

@@ -89,7 +89,7 @@ return [
             'handler_with' => [
                 'host' => env('PAPERTRAIL_URL'),
                 'port' => env('PAPERTRAIL_PORT'),
-                'connectionString' => 'tls://'.env('PAPERTRAIL_URL').':'.env('PAPERTRAIL_PORT'),
+                'connectionString' => 'tls://' . env('PAPERTRAIL_URL') . ':' . env('PAPERTRAIL_PORT'),
             ],
             'processors' => [PsrLogMessageProcessor::class],
         ],
@@ -125,6 +125,35 @@ return [
 
         'emergency' => [
             'path' => storage_path('logs/laravel.log'),
+        ],
+
+        // Tambahan Log
+        'storage_server_log' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/storage_server/storage_server_log.log'),
+            'level' => env('LOG_LEVEL', 'debug'),
+            'replace_placeholders' => true,
+        ],
+
+        'reset_hak_cuti_tahunan' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/hak_cuti/reset_hak_cuti_tahunan.log'),
+            'level' => env('LOG_LEVEL', 'debug'),
+            'replace_placeholders' => true,
+        ],
+
+        'reset_hak_cuti_besar' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/hak_cuti/reset_hak_cuti_besar.log'),
+            'level' => env('LOG_LEVEL', 'debug'),
+            'replace_placeholders' => true,
+        ],
+
+        'reset_hak_cuti_lainnya' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/hak_cuti/reset_hak_cuti_lainnya.log'),
+            'level' => env('LOG_LEVEL', 'debug'),
+            'replace_placeholders' => true,
         ],
     ],
 

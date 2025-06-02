@@ -732,13 +732,13 @@ class PenggajianController extends Controller
             $excelPath = $this->generateExcelPenerimaanGajiUnit($months, $years);
 
             // **Generate PDF**
-            $pdfPathSheet_1 = $this->generatePDFPenerimaanGajiUnit($months, $years);
+            $pdfPathSheet_1 = $this->generatePDFPenerimaanGajiUnit_1($months, $years);
 
             // **Generate PDF dari Sheet penambah**
-            $pdfPathSheet_2 = $this->generatePDFPenerimaanGajiUnitPenambah($months, $years);
+            $pdfPathSheet_2 = $this->generatePDFPenerimaanGajiUnit_2($months, $years);
 
             // **Generate PDF dari Sheet pengurang**
-            $pdfPathSheet_3 = $this->generatePDFPenerimaanGajiUnitPengurang($months, $years);
+            $pdfPathSheet_3 = $this->generatePDFPenerimaanGajiUnit_3($months, $years);
 
             // **Gabungkan semua file**
             // $allFiles = array_merge([$excelPath, $pdfPathSheet_1], $pdfPathSheet_2, $pdfPathSheet_3);
@@ -1032,7 +1032,7 @@ class PenggajianController extends Controller
         return $filePath;
     }
 
-    private function generatePDFPenerimaanGajiUnit(array $months, array $years)
+    private function generatePDFPenerimaanGajiUnit_1(array $months, array $years)
     {
         $data = (new RekapGajiUnitExport($months, $years))->sheets()[0]->collection();
 
@@ -1051,16 +1051,14 @@ class PenggajianController extends Controller
             return $carry;
         }, []);
 
-        $premis = Premi::pluck('nama_premi', 'id')->toArray();
-        $pdf = Pdf::loadView('gajis.PenerimaanUnitKerja', [
+        $pdf = Pdf::loadView('gajis.PenerimaanUnitKerja_1', [
             'dataChunks' => $dataChunks,
             'months' => $months,
             'years' => $years,
             'totals' => $totals,
-            'premis' => $premis,
         ])->setPaper('F4', 'landscape');
 
-        $fileName = 'rekap-penerimaan-gaji-unit.pdf';
+        $fileName = 'rekapitulasi-gaji.pdf';
         $filePath = storage_path('app/public/' . $fileName);
 
         Storage::put('public/' . $fileName, $pdf->output());
@@ -1068,7 +1066,42 @@ class PenggajianController extends Controller
         return $filePath;
     }
 
-    private function generatePDFPenerimaanGajiUnitPenambah(array $months, array $years)
+    private function generatePDFPenerimaanGajiUnit_2(array $months, array $years)
+    {
+        $data = (new RekapGajiUnitExport($months, $years))->sheets()[1]->collection();
+
+        $filteredData = $data->filter(function ($row) {
+            return $row['No'] !== 'Total';
+        });
+
+        $dataChunks = $filteredData->chunk(15);
+
+        $totals = $filteredData->reduce(function ($carry, $item) {
+            foreach ($item as $key => $value) {
+                if (is_numeric($value)) {
+                    $carry[$key] = ($carry[$key] ?? 0) + $value;
+                }
+            }
+            return $carry;
+        }, []);
+
+        // Penambah
+        $pdf = Pdf::loadView('gajis.PenerimaanUnitKerja_2', [
+            'dataChunks' => $dataChunks,
+            'months' => $months,
+            'years' => $years,
+            'totals' => $totals,
+        ])->setPaper('F4', 'landscape');
+
+        $fileName = 'rekap-laporan-gaji-penambah.pdf';
+        $filePath = storage_path('app/public/' . $fileName);
+
+        Storage::put('public/' . $fileName, $pdf->output());
+
+        return [$filePath];
+    }
+
+    private function generatePDFPenerimaanGajiUnit_3(array $months, array $years)
     {
         $data = (new RekapGajiUnitExport($months, $years))->sheets()[2]->collection();
 
@@ -1089,7 +1122,8 @@ class PenggajianController extends Controller
 
         $premis = Premi::pluck('nama_premi', 'id')->toArray();
 
-        $pdf = Pdf::loadView('gajis.PenerimaanUnitKerjaPenambah', [
+        // Pengurang
+        $pdf = Pdf::loadView('gajis.PenerimaanUnitKerja_3', [
             'dataChunks' => $dataChunks,
             'months' => $months,
             'years' => $years,
@@ -1097,44 +1131,7 @@ class PenggajianController extends Controller
             'premis' => $premis,
         ])->setPaper('F4', 'landscape');
 
-        $fileName = 'rekap-penerimaan-gaji-unit-penambah.pdf';
-        $filePath = storage_path('app/public/' . $fileName);
-
-        Storage::put('public/' . $fileName, $pdf->output());
-
-        return [$filePath];
-    }
-
-    private function generatePDFPenerimaanGajiUnitPengurang(array $months, array $years)
-    {
-        $data = (new RekapGajiUnitExport($months, $years))->sheets()[1]->collection();
-
-        $filteredData = $data->filter(function ($row) {
-            return $row['No'] !== 'Total';
-        });
-
-        $dataChunks = $filteredData->chunk(15);
-
-        $totals = $filteredData->reduce(function ($carry, $item) {
-            foreach ($item as $key => $value) {
-                if (is_numeric($value)) {
-                    $carry[$key] = ($carry[$key] ?? 0) + $value;
-                }
-            }
-            return $carry;
-        }, []);
-
-        $premis = Premi::pluck('nama_premi', 'id')->toArray();
-
-        $pdf = Pdf::loadView('gajis.PenerimaanUnitKerjaPengurang', [
-            'dataChunks' => $dataChunks,
-            'months' => $months,
-            'years' => $years,
-            'totals' => $totals,
-            'premis' => $premis,
-        ])->setPaper('F4', 'landscape');
-
-        $fileName = 'rekap-penerimaan-gaji-unit-pengurang.pdf';
+        $fileName = 'rekap-laporan-gaji-pengurang.pdf';
         $filePath = storage_path('app/public/' . $fileName);
 
         Storage::put('public/' . $fileName, $pdf->output());

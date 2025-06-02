@@ -63,16 +63,11 @@ class StoreDiklatExternalRequest extends FormRequest
 
     public function failedValidation(Validator $validator)
     {
+        $messages = implode(' ', $validator->errors()->all());
         $response = [
             'status' => Response::HTTP_BAD_REQUEST,
-            'message' => $validator->errors()
+            'message' => $messages,
         ];
-
-        // $messages = implode(' ', $validator->errors()->all());
-        // $response = [
-        //     'status' => Response::HTTP_BAD_REQUEST,
-        //     'message' => $messages,
-        // ];
 
         throw new HttpResponseException(response()->json($response, Response::HTTP_BAD_REQUEST));
     }

@@ -18,6 +18,7 @@ class Jadwal extends Model
         'id' => 'integer',
         'user_id' => 'integer',
         'shift_id' => 'integer',
+        'ex_libur' => 'integer',
     ];
 
     /**

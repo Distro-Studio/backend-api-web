@@ -2,6 +2,9 @@
 
 namespace App\Exports\Keuangan\LaporanPenggajian;
 
+use App\Exports\Sheet\PenggajianKusyati\RekapGaji_1_Sheet;
+use App\Exports\Sheet\PenggajianKusyati\RekapGaji_2_Sheet;
+use App\Exports\Sheet\PenggajianKusyati\RekapGaji_3_Sheet;
 use App\Exports\Sheet\RekapGajiUnitPenambahSheet;
 use App\Exports\Sheet\RekapGajiUnitPengurangSheet;
 use App\Models\UnitKerja;
@@ -40,19 +43,31 @@ class RekapGajiUnitExport implements FromCollection, WithMultipleSheets
                 })
                     ->get();
 
-                // Tambahkan sheet gabungan
+                // if ($unitKerjas->isNotEmpty()) {
+                //     $sheets[] = new RekapGajiUnitSheet('Rekap Gaji Unit Kerja', $unitKerjas, $month, $year);
+                // }
+
+                // if ($unitKerjas->isNotEmpty()) {
+                //     $sheets[] = new RekapGajiUnitPengurangSheet('Pengurang', $unitKerjas, $month, $year);
+                // }
+
+                // if ($unitKerjas->isNotEmpty()) {
+                //     $sheets[] = new RekapGajiUnitPenambahSheet('Penerimaan', $unitKerjas, $month, $year);
+                // }
+
+                // Rekapitulasi
                 if ($unitKerjas->isNotEmpty()) {
-                    $sheets[] = new RekapGajiUnitSheet('Rekap Gaji Unit Kerja', $unitKerjas, $month, $year);
+                    $sheets[] = new RekapGaji_1_Sheet('Rekapitulasi Gaji', $month, $year);
                 }
 
-                // Add Shift sheet
+                // Laporan khusus Penambah
                 if ($unitKerjas->isNotEmpty()) {
-                    $sheets[] = new RekapGajiUnitPengurangSheet('Pengurang', $unitKerjas, $month, $year);
+                    $sheets[] = new RekapGaji_2_Sheet('Laporan Gaji Penambah', $unitKerjas, $month, $year);
                 }
 
-                // Add Non-Shift sheet
+                // Laporan khusus Pengurang
                 if ($unitKerjas->isNotEmpty()) {
-                    $sheets[] = new RekapGajiUnitPenambahSheet('Penerimaan', $unitKerjas, $month, $year);
+                    $sheets[] = new RekapGaji_3_Sheet('Laporan Gaji Pengurang', $unitKerjas, $month, $year);
                 }
 
                 if ($unitKerjas->isEmpty()) {

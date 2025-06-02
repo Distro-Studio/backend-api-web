@@ -26,10 +26,41 @@ class DataRiwayatPerizinanController extends Controller
                 return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
             }
 
+            $user = auth()->user();
+            $userId = $user->id;
+
+            // Periksa apakah user adalah Super Admin
+            $isSuperAdmin = $user->hasRole('Super Admin');
+
+            // Jika bukan super admin, cek apakah dia verifikator untuk modul izin
+            $userDivVerifiedIds = [];
+            if (!$isSuperAdmin) {
+                $relasi = RelasiVerifikasi::where('verifikator', $userId)
+                    ->where('modul_verifikasi', 4)
+                    ->first();
+
+                if ($relasi) {
+                    // Ambil array user_diverifikasi dari relasi_verifikasis
+                    $userDivVerifiedIds = $relasi->user_diverifikasi ?? [];
+                }
+            }
+
             // Per page
             $limit = $request->input('limit', 10); // Default per page is 10
 
             $riwayat_izin = RiwayatIzin::query()->orderBy('created_at', 'desc');
+
+            // Terapkan filter data berdasarkan role/verifikator
+            if (!$isSuperAdmin) {
+                if (empty($userDivVerifiedIds)) {
+                    // Bukan super admin dan bukan verifikator => kosongkan hasil
+                    // Jadi, query dibuat WHERE 0=1 agar kosong
+                    $riwayat_izin->whereRaw('0=1');
+                } else {
+                    // Filter hanya user_id yang termasuk dalam user_diverifikasi
+                    $riwayat_izin->whereIn('user_id', $userDivVerifiedIds);
+                }
+            }
 
             // Ambil semua filter dari request body
             $filters = $request->all();
@@ -484,15 +515,59 @@ class DataRiwayatPerizinanController extends Controller
                     $data_karyawan = DB::table('data_karyawans')
                         ->where('user_id', $riwayat_izin->user_id)
                         ->first(['id', 'status_reward_presensi']);
+                    if ($data_karyawan) {
+                        $now = now('Asia/Jakarta');
 
-                    if ($data_karyawan && $data_karyawan->status_reward_presensi) {
                         DB::table('data_karyawans')
                             ->where('id', $data_karyawan->id)
                             ->update(['status_reward_presensi' => false]);
 
-                        Log::info("Status reward presensi karyawan ID {$data_karyawan->id} diubah menjadi false.");
+                        // $gajiBulanIni = DB::table('riwayat_penggajians')
+                        //     ->whereYear('periode', $now->year)
+                        //     ->whereMonth('periode', $now->month)
+                        //     ->exists();
+                        // if ($gajiBulanIni) {
+                        //     // Ada riwayat gaji bulan ini, update status_reward_presensi di data_karyawans
+                        //     $updated = DB::table('data_karyawans')
+                        //         ->where('id', $data_karyawan->id)
+                        //         ->update(['status_reward_presensi' => false]);
+
+                        //     if ($updated) {
+                        //         Log::info("Status reward bulan lalu karyawan ID {$data_karyawan->id} diubah menjadi false di data_karyawans.");
+                        //     } else {
+                        //         Log::warning("Tidak ditemukan record data_karyawans untuk data_karyawan_id {$data_karyawan->id}.");
+                        //     }
+                        // } else {
+                        //     // Tidak ada riwayat gaji bulan ini, update status_reward di reward_bulan_lalus
+                        //     $updated = DB::table('reward_bulan_lalus')
+                        //         ->where('data_karyawan_id', $data_karyawan->id)
+                        //         ->update(['status_reward' => false]);
+
+                        //     if ($updated) {
+                        //         Log::info("Status reward bulan lalu karyawan ID {$data_karyawan->id} diubah menjadi false di reward_bulan_lalus.");
+                        //     } else {
+                        //         Log::warning("Tidak ditemukan record reward_bulan_lalus untuk data_karyawan_id {$data_karyawan->id}.");
+                        //     }
+                        // }
+
+                        // Create riwayat pembatalan reward
+                        try {
+                            DB::table('riwayat_pembatalan_rewards')->insert([
+                                'data_karyawan_id' => $data_karyawan->id,
+                                'tipe_pembatalan' => 'izin',
+                                'tgl_pembatalan' => $now,
+                                'keterangan' => "Pembatalan reward presensi otomatis karena melakukan izin",
+                                'riwayat_izin_id' => $riwayat_izin->id,
+                                'verifikator_1' => $verifikatorId,
+                                'created_at' => $now,
+                                'updated_at' => $now,
+                            ]);
+                            Log::info("Riwayat pembatalan reward dibuat untuk karyawan ID {$data_karyawan->id} terkait izin ID {$riwayat_izin->id}.");
+                        } catch (\Exception $e) {
+                            Log::error("Gagal membuat riwayat pembatalan reward untuk karyawan ID {$data_karyawan->id}: " . $e->getMessage());
+                        }
                     } else {
-                        Log::info("Status reward presensi karyawan ID {$data_karyawan->id} sudah false, tidak dilakukan update.");
+                        Log::warning("Data karyawan dengan user_id {$riwayat_izin->user_id} tidak ditemukan.");
                     }
 
                     // Buat dan simpan notifikasi

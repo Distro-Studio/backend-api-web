@@ -17,9 +17,9 @@ return new class extends Migration
             $table->foreignId('data_keluarga_id')->nullable()->constrained('data_keluargas');
             $table->string('nama_keluarga');
             $table->enum('hubungan', ['Suami', 'Istri', 'Anak Ke-1', 'Anak Ke-2', 'Anak Ke-3', 'Anak Ke-4', 'Anak Ke-5', 'Bapak', 'Ibu', 'Bapak Mertua', 'Ibu Mertua']);
-            $table->string('tgl_lahir');
-
+            
             // Tambahan baru
+            $table->string('tgl_lahir');
             $table->string('tempat_lahir')->nullable();
             $table->boolean('jenis_kelamin')->nullable();
             $table->foreignId('kategori_agama_id')->nullable()->constrained('kategori_agamas');

@@ -46,9 +46,10 @@ class StorePengumumanRequest extends FormRequest
 
     public function failedValidation(Validator $validator)
     {
+        $messages = implode(' ', $validator->errors()->all());
         $reponse = [
             'status' => Response::HTTP_BAD_REQUEST,
-            'message' => $validator->errors()
+            'message' => $messages
         ];
 
         throw new HttpResponseException(response()->json($reponse, Response::HTTP_BAD_REQUEST));
