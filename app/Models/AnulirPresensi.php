@@ -46,6 +46,6 @@ class AnulirPresensi extends Model
      */
     public function dokumen_anulir(): BelongsTo
     {
-        return $this->belongsTo(Berkas::class, 'dokumen_anulir', 'id');
+        return $this->belongsTo(Berkas::class, 'dokumen_anulir_id', 'id');
     }
 }

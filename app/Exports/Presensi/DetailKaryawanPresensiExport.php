@@ -62,6 +62,7 @@ class DetailKaryawanPresensiExport implements FromCollection, WithHeadings, With
             'lat_keluar',
             'long_keluar',
             'kategori',
+            'pembatalan_reward',
             'created_at',
             'updated_at'
         ];
@@ -107,6 +108,7 @@ class DetailKaryawanPresensiExport implements FromCollection, WithHeadings, With
             $presensi->latkeluar,
             $presensi->longkeluar,
             optional($presensi->kategori_presensis)->label,
+            $presensi->is_pembatalan_reward ? 'Ya' : 'Tidak',
             Carbon::parse($presensi->created_at)->format('d-m-Y H:i:s'),
             Carbon::parse($presensi->updated_at)->format('d-m-Y H:i:s')
         ];

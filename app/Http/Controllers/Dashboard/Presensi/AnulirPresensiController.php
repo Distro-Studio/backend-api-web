@@ -96,7 +96,7 @@ class AnulirPresensiController extends Controller
 
             if (isset($filters['status_aktif'])) {
                 $statusAktif = $filters['status_aktif'];
-                $presensiAnulir->whereHas('users', function ($query) use ($statusAktif) {
+                $presensiAnulir->whereHas('data_karyawans.users', function ($query) use ($statusAktif) {
                     if (is_array($statusAktif)) {
                         $query->whereIn('status_aktif', $statusAktif);
                     } else {
