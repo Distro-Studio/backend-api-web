@@ -680,7 +680,7 @@ class DataKaryawanController extends Controller
               Log::warning("Gagal hapus foto_profil lama dari server (file_id: {$berkasLama->file_id}): " . $e->getMessage());
             }
 
-            // Set hubungan ke NULL dulu sebelum hapus
+            // Set foto_profil ke NULL dulu sebelum hapus
             $user->foto_profil = null;
             $user->save();
 
@@ -1109,6 +1109,7 @@ class DataKaryawanController extends Controller
       $requestedRoleId = $request->input('role_id');
       $premis = $request->input('premi_id', []); // Mengambil daftar premi yang dipilih
       $tipe_cuti = $request->input('tipe_cuti_id', []); // Mengambil daftar tipe cuti yang dipilih
+      $pjUnitKerja = $request->input('pj_unit_kerja', []); // ini sudah array, bisa kosong
 
       DB::beginTransaction();
       $generatedUsername = RandomHelper::generateUsername($data['nama']);
@@ -1139,6 +1140,7 @@ class DataKaryawanController extends Controller
           'nik' => $data['nik'],
           'tgl_masuk' => $data['tgl_masuk'],
           'tgl_berakhir_pks' => $data['tgl_berakhir_pks'],
+          'pj_unit_kerja' => $pjUnitKerja,
           'unit_kerja_id' => $data['unit_kerja_id'],
           'jabatan_id' => $data['jabatan_id'],
           'kompetensi_id' => $data['kompetensi_id'] ?? null,
@@ -1308,6 +1310,24 @@ class DataKaryawanController extends Controller
         ->get()
         ->sum(fn($pd) => $pd->diklats?->durasi ?? 0);
 
+      // Ambil nilai pj_unit_kerja
+      $pjUnitKerjaValue = $karyawan->pj_unit_kerja;
+
+      if (is_array($pjUnitKerjaValue)) {
+        $pjUnitKerjaArray = array_map('intval', $pjUnitKerjaValue);
+      } elseif (is_string($pjUnitKerjaValue)) {
+        $pjUnitKerjaArray = explode(',', trim($pjUnitKerjaValue, '[]'));
+        $pjUnitKerjaArray = array_map('intval', $pjUnitKerjaArray);
+      } else {
+        $pjUnitKerjaArray = [];
+      }
+
+      // Query data lengkap unit kerja
+      $unitKerjaList = [];
+      if (!empty($pjUnitKerjaArray)) {
+        $unitKerjaList = UnitKerja::whereIn('id', $pjUnitKerjaArray)->get();
+      }
+
       // Format the karyawan data
       $baseUrl = env('STORAGE_SERVER_DOMAIN');
       $formattedData = [
@@ -1348,6 +1368,7 @@ class DataKaryawanController extends Controller
         'no_manulife' => $karyawan->no_manulife,
         'tgl_masuk' => $karyawan->tgl_masuk,
         'unit_kerja' => $karyawan->unit_kerjas,
+        'pj_unit_kerja' => $unitKerjaList,
         'jabatan' => $karyawan->jabatans,
         'kompetensi' => $karyawan->kompetensis,
         'spesialisasi' => $karyawan->spesialisasis,
@@ -1550,6 +1571,24 @@ class DataKaryawanController extends Controller
       //   }
       // }
 
+      // Ambil nilai pj_unit_kerja
+      $pjUnitKerjaValue = $karyawan->pj_unit_kerja;
+
+      if (is_array($pjUnitKerjaValue)) {
+        $pjUnitKerjaArray = array_map('intval', $pjUnitKerjaValue);
+      } elseif (is_string($pjUnitKerjaValue)) {
+        $pjUnitKerjaArray = explode(',', trim($pjUnitKerjaValue, '[]'));
+        $pjUnitKerjaArray = array_map('intval', $pjUnitKerjaArray);
+      } else {
+        $pjUnitKerjaArray = [];
+      }
+
+      // Query data lengkap unit kerja
+      $unitKerjaList = [];
+      if (!empty($pjUnitKerjaArray)) {
+        $unitKerjaList = UnitKerja::whereIn('id', $pjUnitKerjaArray)->get();
+      }
+
       // Format the karyawan data
       $baseUrl = env('STORAGE_SERVER_DOMAIN');
       $formattedData = [
@@ -1606,6 +1645,7 @@ class DataKaryawanController extends Controller
         'no_manulife' => $karyawan->no_manulife,
         'tgl_masuk' => $karyawan->tgl_masuk,
         'unit_kerja' => $karyawan->unit_kerjas, // unit_kerja_id
+        'pj_unit_kerja' => $unitKerjaList,
         'jabatan' => $karyawan->jabatans, // jabatan_id
         'kompetensi' => $karyawan->kompetensis, // kompetensi_id
         'spesialisasi' => $karyawan->spesialisasis, // spesialisasi_id
@@ -1722,6 +1762,11 @@ class DataKaryawanController extends Controller
         // Update role di tabel users
         if (isset($data['role_id'])) {
           $user->roles()->sync([$data['role_id']]);
+        }
+
+        $pjUnitKerja = $request->input('pj_unit_kerja', []);
+        if (is_array($pjUnitKerja)) {
+          $data['pj_unit_kerja'] = $pjUnitKerja;
         }
 
         $karyawan->update($data);

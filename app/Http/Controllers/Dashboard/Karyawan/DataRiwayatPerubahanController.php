@@ -17,11 +17,13 @@ use App\Models\RiwayatPerubahan;
 use App\Models\PerubahanKeluarga;
 use App\Models\KategoriPendidikan;
 use App\Helpers\CalculateBMIHelper;
+use App\Helpers\StorageServerHelper;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
+use App\Models\Berkas;
 use Illuminate\Support\Facades\DB;
 
 class DataRiwayatPerubahanController extends Controller
@@ -331,7 +333,7 @@ class DataRiwayatPerubahanController extends Controller
             }
 
             if ($data_perubahan->jenis_perubahan === 'Personal') {
-                if (in_array($data_perubahan->kolom, ['agama', 'golongan_darah', 'pendidikan_terakhir'])) {
+                if (in_array($data_perubahan->kolom, ['agama', 'golongan_darah', 'pendidikan_terakhir', 'foto_profil'])) {
                     if ($data_perubahan->kolom === 'agama') {
                         $originalData = KategoriAgama::find($originalData) ?? $originalData;
                         $updatedData = KategoriAgama::find($updatedData) ?? $updatedData;
@@ -341,6 +343,34 @@ class DataRiwayatPerubahanController extends Controller
                     } elseif ($data_perubahan->kolom === 'pendidikan_terakhir') {
                         $originalData = KategoriPendidikan::find($originalData) ?? $originalData;
                         $updatedData = KategoriPendidikan::find($updatedData) ?? $updatedData;
+                    } elseif ($data_perubahan->kolom === 'foto_profil') {
+                        $originalBerkas = Berkas::find($originalData);
+                        $updatedBerkas = Berkas::find($updatedData);
+
+                        $originalData = $this->formatFotoProfil($originalBerkas ?? null, $baseUrl);
+                        $updatedData = $this->formatFotoProfil($updatedBerkas ?? null, $baseUrl);
+
+                        // $originalData = $originalBerkas ? [
+                        //     'id' => $originalBerkas->id,
+                        //     'user_id' => $originalBerkas->user_id,
+                        //     'file_id' => $originalBerkas->file_id,
+                        //     'nama' => $originalBerkas->nama,
+                        //     'nama_file' => $originalBerkas->nama_file,
+                        //     'path' => $baseUrl . $originalBerkas->path,
+                        //     'ext' => $originalBerkas->ext,
+                        //     'size' => $originalBerkas->size,
+                        // ] : $originalData;
+
+                        // $updatedData = $updatedBerkas ? [
+                        //     'id' => $updatedBerkas->id,
+                        //     'user_id' => $updatedBerkas->user_id,
+                        //     'file_id' => $updatedBerkas->file_id,
+                        //     'nama' => $updatedBerkas->nama,
+                        //     'nama_file' => $updatedBerkas->nama_file,
+                        //     'path' => $baseUrl . $updatedBerkas->path,
+                        //     'ext' => $updatedBerkas->ext,
+                        //     'size' => $updatedBerkas->size,
+                        // ] : $updatedData;
                     }
                 }
             }
@@ -407,6 +437,7 @@ class DataRiwayatPerubahanController extends Controller
                     'username' => $relasiUser->username,
                     'email_verified_at' => $relasiUser->email_verified_at,
                     'data_karyawan_id' => $relasiUser->data_karyawan_id,
+                    // 'foto_profil' => $this->formatFotoProfil($relasiUser->foto_profiles ?? null, $baseUrl),
                     'foto_profil' => $relasiUser->foto_profiles ? [
                         'id' => $relasiUser->foto_profiles->id,
                         'user_id' => $relasiUser->foto_profiles->user_id,
@@ -541,6 +572,22 @@ class DataRiwayatPerubahanController extends Controller
                 $riwayat->alasan = $request->input('alasan');
                 $riwayat->save();
 
+                if ($riwayat->jenis_perubahan === 'Personal' && $riwayat->kolom === 'foto_profil') {
+                    $berkasId = $riwayat->updated_data;
+                    if ($berkasId) {
+                        $berkasLama = Berkas::find($berkasId);
+                        if ($berkasLama) {
+                            try {
+                                StorageServerHelper::deleteFromServer($berkasLama->file_id);
+                            } catch (\Exception $e) {
+                                Log::warning("Gagal hapus foto_profil 'Perubahan Data' dari server (file_id: {$berkasLama->file_id}): " . $e->getMessage());
+                            }
+
+                            $berkasLama->delete();
+                        }
+                    }
+                }
+
                 Log::info('Riwayat perubahan berhasil ditolak', $riwayat->toArray());
 
                 DB::commit();
@@ -567,7 +614,7 @@ class DataRiwayatPerubahanController extends Controller
                 if ($dataKaryawan) {
                     // Jika kolom yang diubah adalah tinggi_badan, ambil berat_badan dari data asli
                     $bmiResult = null;
-                    if ($riwayat->kolom == 'tinggi_badan') {
+                    if ($riwayat->kolom === 'tinggi_badan') {
                         $updatedTinggiBadan = $riwayat->updated_data;
                         $beratBadan = $dataKaryawan->berat_badan; // Ambil berat_badan dari data asli
                         if ($beratBadan) {
@@ -575,7 +622,7 @@ class DataRiwayatPerubahanController extends Controller
                         }
                     }
                     // Jika kolom yang diubah adalah berat_badan, ambil tinggi_badan dari data asli
-                    elseif ($riwayat->kolom == 'berat_badan') {
+                    elseif ($riwayat->kolom === 'berat_badan') {
                         $updatedBeratBadan = $riwayat->updated_data;
                         $tinggiBadan = $dataKaryawan->tinggi_badan; // Ambil tinggi_badan dari data asli
                         if ($tinggiBadan) {
@@ -583,9 +630,9 @@ class DataRiwayatPerubahanController extends Controller
                         }
                     }
 
-                    if ($riwayat->kolom == 'agama') {
+                    if ($riwayat->kolom === 'agama') {
                         $riwayat->kolom = 'kategori_agama_id';
-                    } elseif ($riwayat->kolom == 'golongan_darah') {
+                    } elseif ($riwayat->kolom === 'golongan_darah') {
                         $riwayat->kolom = 'kategori_darah_id';
                     }
                     // Update data sesuai dengan kolom yang diubah
@@ -595,6 +642,36 @@ class DataRiwayatPerubahanController extends Controller
                         $dataKaryawan->bmi_ket = $bmiResult['bmi_ket'];
                     }
                     $dataKaryawan->save();
+
+                    // Update foto_profil di tabel users
+                    if ($riwayat->kolom === 'foto_profil') {
+                        $user = $dataKaryawan->users;
+                        if ($user) {
+                            if ($riwayat->updated_data === null) {
+                                if ($user->foto_profil) {
+                                    // Hapus foto profil lama jika ada
+                                    $berkasLama = Berkas::find($user->foto_profil);
+                                    if ($berkasLama) {
+                                        try {
+                                            StorageServerHelper::deleteFromServer($berkasLama->file_id);
+                                        } catch (\Exception $e) {
+                                            Log::warning("Gagal hapus foto_profil lama dari server (file_id: {$berkasLama->file_id}): " . $e->getMessage());
+                                        }
+
+                                        // Set foto_profil ke NULL sebelum hapus berkas
+                                        $user->foto_profil = null;
+                                        $user->save();
+
+                                        $berkasLama->delete();
+                                    }
+                                }
+                            } else {
+                                // Update foto_profil ke id berkas baru
+                                $user->foto_profil = $riwayat->updated_data;
+                                $user->save();
+                            }
+                        }
+                    }
                 }
                 break;
 
@@ -640,6 +717,24 @@ class DataRiwayatPerubahanController extends Controller
                 Log::warning('No action taken for jenis_perubahan: ' . $riwayat->jenis_perubahan);
                 break;
         }
+    }
+
+    protected function formatFotoProfil($fotoProfil, $baseUrl)
+    {
+        if (!$fotoProfil) {
+            return null;
+        }
+
+        return [
+            'id' => $fotoProfil->id,
+            'user_id' => $fotoProfil->user_id,
+            'file_id' => $fotoProfil->file_id,
+            'nama' => $fotoProfil->nama,
+            'nama_file' => $fotoProfil->nama_file,
+            'path' => $baseUrl . $fotoProfil->path,
+            'ext' => $fotoProfil->ext,
+            'size' => $fotoProfil->size,
+        ];
     }
 
     private function createNotifikasiPerubahan($riwayat, $status)

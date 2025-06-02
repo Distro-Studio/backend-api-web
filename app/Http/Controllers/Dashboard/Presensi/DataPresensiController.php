@@ -355,6 +355,7 @@ class DataPresensiController extends Controller
                 'durasi' => $presensi->durasi,
                 'kategori_presensi' => $presensi->kategori_presensis,
                 'pembatalan_reward' => $presensi->is_pembatalan_reward,
+                'presensi_anulir' => $presensi->is_anulir_presensi,
                 'created_at' => $presensi->created_at,
                 'updated_at' => $presensi->updated_at
             ];
@@ -502,6 +503,7 @@ class DataPresensiController extends Controller
                     ] : null,
                     'kategori_presensi' => $presensiHariIni->kategori_presensis,
                     'pembatalan_reward' => $presensiHariIni->is_pembatalan_reward,
+                    'presensi_anulir' => $presensiHariIni->is_anulir_presensi,
                     'created_at' => $presensiHariIni->created_at,
                     'updated_at' => $presensiHariIni->updated_at
                 ]

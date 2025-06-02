@@ -422,7 +422,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
             // ! Non-Shift ===========>
             // Route::post('/non-shift/restore/{id}', [NonShiftController::class, 'restore']);
-            // Route::apiResource('/non-shift', NonShift::class);
+            // Route::apiResource('/non-shift', NonShiftController::class);
             Route::post('/non-shift/{non_shift}', [NonShiftController::class, 'edit']);
             Route::get('/non-shift/{non_shift}', [NonShiftController::class, 'show']);
 

@@ -197,7 +197,9 @@ class AnulirPresensiController extends Controller
                 $presensiAnulir->where(function ($query) use ($searchTerm) {
                     $query->whereHas('data_karyawans.users', function ($query) use ($searchTerm) {
                         $query->where('nama', 'like', $searchTerm);
-                    })->orWhere('nik', 'like', $searchTerm);
+                    })->orWhereHas('data_karyawans', function ($query) use ($searchTerm) {
+                        $query->where('nik', 'like', $searchTerm);
+                    });
                 });
             }
 
@@ -237,7 +239,7 @@ class AnulirPresensiController extends Controller
                 $cariBerkasAnulir = Berkas::where('id', $karyawanAnulir->dokumen_anulir_id)->first();
                 $berkasAnulir = $cariBerkasAnulir ? $baseUrl . $cariBerkasAnulir->path : null;
                 $role = $karyawanAnulir->data_karyawans->users->roles->first();
-                $jadwalShifts = $karyawanAnulir->presensis->jadwals;
+                $jadwalShifts = $karyawanAnulir->presensis ? $karyawanAnulir->presensis->jadwals : null;
                 // Ambil data jadwal non-shift jika jenis_karyawan = false
                 $jadwalNonShift = null;
                 $jenisKaryawan = $karyawanAnulir->data_karyawans->unit_kerjas->jenis_karyawan ?? null;
@@ -381,6 +383,13 @@ class AnulirPresensiController extends Controller
                 ], Response::HTTP_NOT_FOUND);
             }
 
+            if (is_null($presensi->jadwal_id)) {
+                return response()->json([
+                    'status' => Response::HTTP_BAD_REQUEST,
+                    'message' => "Data presensi tidak valid untuk anulir karena jadwal kosong. Karena dipengaruhi oleh perubahan data jadwal saat absensi sudah dilakukan."
+                ], Response::HTTP_BAD_REQUEST);
+            }
+
             $karyawanAnulir = DataKaryawan::find($presensi->data_karyawan_id);
             if (!$karyawanAnulir) {
                 return response()->json([
@@ -472,6 +481,10 @@ class AnulirPresensiController extends Controller
                 ->where('data_karyawan_id', $presensi->data_karyawan_id)
                 ->where('presensi_id', $presensi->id)
                 ->update(['is_anulir_presensi' => true]);
+
+            // Update is_anulir_presensi pada presensi yang sesuai
+            $presensi->is_anulir_presensi = true;
+            $presensi->save();
 
             // Jika hanya 1 data pembatalan (data yang sedang dibuat), update riwayat_pembatalan_rewards terkait
             if ($totalPembatalanPresensiIni === 1) {

@@ -40,6 +40,8 @@ class StoreDataKaryawanRequest extends FormRequest
             'spesialisasi_id' => 'nullable|integer|exists:spesialisasis,id',
             'premi_id' => 'array|nullable',
             'premi_id.*' => 'integer|exists:premis,id',
+            'pj_unit_kerja' => 'array|nullable',
+            'pj_unit_kerja.*' => 'integer|exists:unit_kerjas,id',
             'tipe_cuti_id' => 'nullable|array|min:1',
             'tipe_cuti_id.*' => 'nullable|exists:tipe_cutis,id',
 
@@ -94,6 +96,8 @@ class StoreDataKaryawanRequest extends FormRequest
             // 'premi_id.required' => 'Silahkan pilih potongan penggajian karyawan terlebih dahulu.',
             'premi_id.array' => 'Potongan penggajian harus berupa array.',
             'premi_id.*.exists' => 'Maaf potongan penggajian yang dipilih tidak valid.',
+            'pj_unit_kerja.array' => 'Penanggung jawab penggajian harus berupa array.',
+            'pj_unit_kerja.*.exists' => 'Maaf unit kerja penanggung jawab yang dipilih tidak valid.',
             'tipe_cuti_id.required' => 'Hak cuti tidak boleh kosong.',
             'tipe_cuti_id.array' => 'Hak cuti harus berupa array.',
             'tipe_cuti_id.*.required' => 'Hak cuti tidak boleh kosong.',

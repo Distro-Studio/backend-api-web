@@ -21,7 +21,8 @@ class Presensi extends Model
         'foto_masuk' => 'integer',
         'foto_keluar' => 'integer',
         'kategori_presensi_id' => 'integer',
-        'is_pembatalan_reward' => 'integer'
+        'is_pembatalan_reward' => 'integer',
+        'is_anulir_presensi' => 'integer',
     ];
 
     /**
