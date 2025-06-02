@@ -19,6 +19,7 @@ return new class extends Migration
             $table->string('no_manulife')->nullable();
             $table->string('tgl_masuk')->nullable();
             $table->string('tgl_keluar')->nullable();
+            $table->text('pj_unit_kerja')->nullable();
             $table->foreignId('unit_kerja_id')->nullable()->constrained('unit_kerjas');
             $table->foreignId('jabatan_id')->nullable()->constrained('jabatans');
             $table->foreignId('kompetensi_id')->nullable()->constrained('kompetensis');
