@@ -27,6 +27,7 @@ use App\Http\Requests\StoreJadwalKaryawanRequest;
 use App\Http\Requests\StoreJadwalShiftKaryawanRequest;
 use App\Http\Requests\Excel_Import\ImportJadwalKaryawan;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
+use App\Models\Presensi;
 
 class DataJadwalController extends Controller
 {
@@ -59,7 +60,7 @@ class DataJadwalController extends Controller
             $pjUnitKerjaLogin = optional($currentUser->data_karyawans)->pj_unit_kerja;
 
             // $usersQuery = User::where('nama', '!=', 'Super Admin')->where('status_aktif', 2);
-            if ($currentUser->nama === 'Super Admin' || is_null($pjUnitKerjaLogin) || empty($pjUnitKerjaLogin)) {
+            if ($currentUser->hasRole('Super Admin') || is_null($pjUnitKerjaLogin) || empty($pjUnitKerjaLogin)) {
                 // Super Admin atau pj_unit_kerja null -> tampilkan semua user aktif kecuali Super Admin
                 $usersQuery = User::where('nama', '!=', 'Super Admin')
                     ->where('status_aktif', 2);
@@ -1281,6 +1282,23 @@ class DataJadwalController extends Controller
                                     ), Response::HTTP_BAD_REQUEST);
                                 }
                             }
+                        }
+                    }
+
+                    if ($existingShift->shift_id != $shiftId) {
+                        // Cek apakah ada presensi dengan jadwal_id yang sama
+                        $presensiExists = Presensi::where('jadwal_id', $existingShift->id)
+                            ->where('user_id', $userId)
+                            ->exists();
+
+                        if ($presensiExists) {
+                            // Jika ada, ubah jadwal_id menjadi null
+                            Presensi::where('jadwal_id', $existingShift->id)
+                                ->where('user_id', $userId)
+                                ->update(['jadwal_id' => null]);
+                            Log::info("| Jadwal Delete Presensi | - Jadwal shift karyawan ID '{$user->data_karyawan_id}' berhasil diperbarui dan menghapus presensi lama.");
+                        } else {
+                            Log::info("| Jadwal Delete Presensi | - Tidak ditemukan presensi dengan jadwal_id '{$existingShift->id}' untuk karyawan ID '{$user->data_karyawan_id}'. Tidak ada update yang dilakukan.");
                         }
                     }
 
