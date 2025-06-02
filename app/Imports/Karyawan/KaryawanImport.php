@@ -197,9 +197,9 @@ class KaryawanImport implements ToModel, WithHeadingRow, WithValidation
 
       // Mail::to($row['email'])->send(new SendAccoundUsersMail($row['email'], $generatedPassword, $row['nama']));
       // AccountEmailJob::dispatch($row['email'], $generatedPassword, $row['nama']);
-      if (!empty($row['email'])) {
-        Mail::to($row['email'])->send(new SendAccoundUsersMail($row['email'], $generatedPassword, $row['nama']));
-      }
+      // if (!empty($row['email'])) {
+      //   Mail::to($row['email'])->send(new SendAccoundUsersMail($row['email'], $generatedPassword, $row['nama']));
+      // }
 
       $user_id = $createUser->id;
     }

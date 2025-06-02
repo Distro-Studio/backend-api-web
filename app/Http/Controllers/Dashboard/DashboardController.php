@@ -244,6 +244,7 @@ class DashboardController extends Controller
 
         // Retrieve all statuses
         $statuses = StatusKaryawan::whereNotNull('kategori_status_id')->get();
+
         if ($statuses->isEmpty()) {
             return response()->json([
                 'status' => Response::HTTP_NOT_FOUND,
@@ -256,12 +257,9 @@ class DashboardController extends Controller
 
         // Iterate over each status and count the number of employees with that status
         foreach ($statuses as $status) {
-            $countKaryawan = DataKaryawan::where('id', '!=', 1)
-                ->whereHas('users', function ($query) {
-                    $query->where('status_aktif', 2);
-                })
-                ->where('status_karyawan_id', $status->id)
-                ->count();
+            $countKaryawan = DataKaryawan::whereHas('users', function ($query) {
+                $query->where('status_aktif', 2);
+            })->where('status_karyawan_id', $status->id)->count();
             $result[] = [
                 'status_karyawan' => [
                     'id' => $status->id,

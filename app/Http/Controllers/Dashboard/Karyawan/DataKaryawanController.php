@@ -1293,8 +1293,6 @@ class DataKaryawanController extends Controller
       $total_durasi_internal = PesertaDiklat::where('peserta', $karyawan->users->id)
         ->whereHas('diklats', function ($query) use ($currentYear) {
           $query->where('kategori_diklat_id', 1) // Internal
-            ->where('status_diklat_id', 4)
-            ->where('certificate_published', 1)
             ->whereRaw("YEAR(STR_TO_DATE(tgl_mulai, '%d-%m-%Y')) = ?", [$currentYear]);
         })
         ->with('diklats')
@@ -1304,7 +1302,6 @@ class DataKaryawanController extends Controller
       $total_durasi_eksternal = PesertaDiklat::where('peserta', $karyawan->users->id)
         ->whereHas('diklats', function ($query) use ($currentYear) {
           $query->where('kategori_diklat_id', 2) // Eksternal
-            ->where('status_diklat_id', 4)
             ->whereRaw("YEAR(STR_TO_DATE(tgl_mulai, '%d-%m-%Y')) = ?", [$currentYear]);
         })
         ->with('diklats')
@@ -1540,7 +1537,7 @@ class DataKaryawanController extends Controller
       //   'file_sertifikat' => $karyawan->file_sertifikat ?? null,
       // ];
 
-      // $baseUrl = "https://192.168.0.20/RskiSistem24/file-storage/public";
+      // $baseUrl = env('STORAGE_SERVER_DOMAIN');
 
       // $formattedPaths = [];
       // foreach ($berkasFields as $field => $berkasId) {
@@ -1698,11 +1695,14 @@ class DataKaryawanController extends Controller
       $oldEmail = $karyawan->email;
       $newEmail = $data['email'] ?? null;
 
+      // Memeriksa apakah email telah berubah
+      if ($oldEmail !== $newEmail) {
       // Cek apakah email baru valid dan berbeda dari yang lama
       if (!empty($newEmail) && $oldEmail !== $newEmail) {
         $generatedPassword = RandomHelper::generatePassword();
         $karyawan->email = $newEmail;
-        $user->password = Hash::make($generatedPassword);
+        // TODO: Kembalikan jika smtp sudah online
+        // $user->password = Hash::make($generatedPassword);
 
         $karyawan->save();
         $user->save();
@@ -1711,7 +1711,7 @@ class DataKaryawanController extends Controller
         $user->tokens()->delete();
 
         // Kirim email dengan password baru
-        Mail::to($newEmail)->send(new SendUpdateAccoundUsersMail($newEmail, $generatedPassword, $data['nama']));
+        AccountEmailJob::dispatch($newEmail, $generatedPassword, $data['nama']);
       }
 
       try {
