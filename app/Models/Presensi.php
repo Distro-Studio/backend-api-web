@@ -20,7 +20,8 @@ class Presensi extends Model
         'durasi' => 'integer',
         'foto_masuk' => 'integer',
         'foto_keluar' => 'integer',
-        'kategori_presensi_id' => 'integer'
+        'kategori_presensi_id' => 'integer',
+        'is_pembatalan_reward' => 'integer'
     ];
 
     /**

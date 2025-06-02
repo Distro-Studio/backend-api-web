@@ -15,6 +15,7 @@ class DataKaryawan extends Model
     protected $casts = [
         'id' => 'integer',
         'user_id' => 'integer',
+        'pj_unit_kerja' => 'array',
         'unit_kerja_id' => 'integer',
         'jabatan_id' => 'integer',
         'kompetensi_id' => 'integer',

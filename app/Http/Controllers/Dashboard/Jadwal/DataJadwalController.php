@@ -55,7 +55,22 @@ class DataJadwalController extends Controller
 
             $filters = $request->all();
 
-            $usersQuery = User::where('nama', '!=', 'Super Admin')->where('status_aktif', 2);
+            $currentUser = $request->user();
+            $pjUnitKerjaLogin = optional($currentUser->data_karyawans)->pj_unit_kerja;
+
+            // $usersQuery = User::where('nama', '!=', 'Super Admin')->where('status_aktif', 2);
+            if ($currentUser->nama === 'Super Admin' || is_null($pjUnitKerjaLogin) || empty($pjUnitKerjaLogin)) {
+                // Super Admin atau pj_unit_kerja null -> tampilkan semua user aktif kecuali Super Admin
+                $usersQuery = User::where('nama', '!=', 'Super Admin')
+                    ->where('status_aktif', 2);
+            } else {
+                // Bukan super admin dan pj_unit_kerja ada isinya -> filter berdasarkan pj_unit_kerja
+                $usersQuery = User::where('nama', '!=', 'Super Admin')
+                    ->where('status_aktif', 2)
+                    ->whereHas('data_karyawans', function ($q) use ($pjUnitKerjaLogin) {
+                        $q->whereIn('unit_kerja_id', $pjUnitKerjaLogin);
+                    });
+            }
 
             // Filter berdasarkan filter yang diberikan
             if (isset($filters['unit_kerja'])) {

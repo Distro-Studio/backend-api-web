@@ -98,7 +98,10 @@ class UpdateAutoAlfaPresensi extends Command
             }
 
             if ($updateAlfa) {
-                $presensi->update(['kategori_presensi_id' => 4]);
+                $presensi->update([
+                    'kategori_presensi_id' => 4,
+                    'is_pembatalan_reward' => true
+                ]);
             }
         }
 

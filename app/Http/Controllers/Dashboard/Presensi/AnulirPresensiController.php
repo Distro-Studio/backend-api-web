@@ -21,6 +21,7 @@ use Illuminate\Support\Facades\Gate;
 use App\Http\Requests\StoreAnulirPresensiRequest;
 use App\Http\Requests\UpdateAnulirPresensiRequest;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
+use App\Models\NonShift;
 use Exception;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -96,7 +97,7 @@ class AnulirPresensiController extends Controller
 
             if (isset($filters['status_aktif'])) {
                 $statusAktif = $filters['status_aktif'];
-                $presensiAnulir->whereHas('users', function ($query) use ($statusAktif) {
+                $presensiAnulir->whereHas('data_karyawans.users', function ($query) use ($statusAktif) {
                     if (is_array($statusAktif)) {
                         $query->whereIn('status_aktif', $statusAktif);
                     } else {
@@ -236,6 +237,23 @@ class AnulirPresensiController extends Controller
                 $cariBerkasAnulir = Berkas::where('id', $karyawanAnulir->dokumen_anulir_id)->first();
                 $berkasAnulir = $cariBerkasAnulir ? $baseUrl . $cariBerkasAnulir->path : null;
                 $role = $karyawanAnulir->data_karyawans->users->roles->first();
+                $jadwalShifts = $karyawanAnulir->presensis->jadwals;
+                // Ambil data jadwal non-shift jika jenis_karyawan = false
+                $jadwalNonShift = null;
+                $jenisKaryawan = $karyawanAnulir->data_karyawans->unit_kerjas->jenis_karyawan ?? null;
+                if ($jenisKaryawan === 0) {
+                    $jamMasukDate = Carbon::parse($karyawanAnulir->presensis->jam_masuk)->format('l');
+                    $hariNamaIndonesia = [
+                        'Monday' => 'Senin',
+                        'Tuesday' => 'Selasa',
+                        'Wednesday' => 'Rabu',
+                        'Thursday' => 'Kamis',
+                        'Friday' => 'Jumat',
+                        'Saturday' => 'Sabtu',
+                        'Sunday' => 'Minggu'
+                    ][$jamMasukDate] ?? 'Senin';
+                    $jadwalNonShift = NonShift::where('nama', $hariNamaIndonesia)->first();
+                }
 
                 return [
                     'id' => $karyawanAnulir->id,
@@ -291,12 +309,21 @@ class AnulirPresensiController extends Controller
                         'id' => $karyawanAnulir->presensis->id,
                         'user' => $karyawanAnulir->presensis->users,
                         'unit_kerja' => $karyawanAnulir->presensis->data_karyawans->unit_kerjas,
-                        'jadwal' => [
-                            'id' => $karyawanAnulir->presensis->jadwals->id ?? null,
-                            'tgl_mulai' => $karyawanAnulir->presensis->jadwals->tgl_mulai ?? null,
-                            'tgl_selesai' => $karyawanAnulir->presensis->jadwals->tgl_selesai ?? null,
-                            'shift' => $karyawanAnulir->presensis->jadwals->shifts ?? null,
-                        ],
+                        'jadwal_shift' => $jadwalShifts ? [
+                            'id' => $jadwalShifts->id,
+                            'tgl_mulai' => $jadwalShifts->tgl_mulai,
+                            'tgl_selesai' => $jadwalShifts->tgl_selesai,
+                            'shift' => $jadwalShifts->shifts,
+                        ] : null,
+                        'jadwal_non_shift' => $jadwalNonShift ? [
+                            'id' => $jadwalNonShift->id,
+                            'nama' => $jadwalNonShift->nama,
+                            'jam_from' => $jadwalNonShift->jam_from,
+                            'jam_to' => $jadwalNonShift->jam_to,
+                            'deleted_at' => $jadwalNonShift->deleted_at,
+                            'created_at' => $jadwalNonShift->created_at,
+                            'updated_at' => $jadwalNonShift->updated_at,
+                        ] : null,
                         'jam_masuk' => $karyawanAnulir->presensis->jam_masuk,
                         'jam_keluar' => $karyawanAnulir->presensis->jam_keluar,
                         'durasi' => $karyawanAnulir->presensis->durasi,
@@ -362,6 +389,13 @@ class AnulirPresensiController extends Controller
                 ], Response::HTTP_NOT_FOUND);
             }
 
+            if ($presensi->kategori_presensi_id === 1) {
+                return response()->json([
+                    'status' => Response::HTTP_BAD_REQUEST,
+                    'message' => "Pembuatan data anulir karyawan '{$karyawanAnulir->users->nama}' dibatalkan, karena data presensi saat ini tidak valid untuk dilakukan anulir."
+                ], Response::HTTP_BAD_REQUEST);
+            }
+
             // Ambil bulan dan tahun dari jam_masuk presensi
             $bulanPresensi = Carbon::parse($presensi->jam_masuk)->format('m');
             $tahunPresensi = Carbon::parse($presensi->jam_masuk)->format('Y');
@@ -386,15 +420,12 @@ class AnulirPresensiController extends Controller
                 Log::info("Jumlah riwayat pembatalan reward di bulan ini: '{$totalPembatalanBulanIni}'. Tidak mengubah status reward presensi.");
                 $message = "Data anulir dari karyawan '{$karyawanAnulir->users->nama}' berhasil ditambahkan. Namun tidak mengubah reward presensi karena ada beberapa riwayat pembatalan di bulan tersebut.";
                 $keterangan = "Data anulir berhasil ditambahkan. Namun tidak mengubah reward presensi karena ada beberapa riwayat pembatalan di bulan tersebut.";
-            } elseif ($totalPembatalanPresensiIni === 1) {
+            }
+
+            if ($totalPembatalanPresensiIni === 1) {
                 Log::info("Pembatalan presensi tunggal di bulan ini, status reward presensi dapat diperbarui.");
                 $message = "Data anulir dari karyawan '{$karyawanAnulir->users->nama}' berhasil ditambahkan dan reward presensi berhasil diperbarui.";
                 $keterangan = "Data anulir berhasil ditambahkan dan reward presensi berhasil diperbarui.";
-            } else {
-                // Kasus lain, misal tidak ada pembatalan presensi sama sekali (jarang terjadi)
-                Log::info("Pembatalan presensi tidak ditemukan meskipun total pembatalan kurang dari 2. Status reward tidak berubah.");
-                $message = "Data anulir dari karyawan '{$karyawanAnulir->users->nama}' berhasil ditambahkan, namun reward presensi tidak diubah.";
-                $keterangan = "Data anulir berhasil ditambahkan, namun reward presensi tidak diubah.";
             }
 
             DB::beginTransaction();
@@ -431,7 +462,7 @@ class AnulirPresensiController extends Controller
                 'presensi_id' => $presensi->id,
                 'alasan' => $data['alasan'],
                 'keterangan' => $keterangan,
-                'dokumen_anulir_id' => $berkas->id,
+                'dokumen_anulir_id' => $berkas->id ?? null,
                 'created_at' => now('Asia/Jakarta'),
                 'updated_at' => now('Asia/Jakarta'),
             ]);

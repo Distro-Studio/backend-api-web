@@ -82,6 +82,7 @@ class Karyawan_DetailController extends Controller
                     'jam_keluar' => $presensi->jam_keluar,
                     'durasi' => $presensi->durasi,
                     'kategori_presensi' => $presensi->kategori_presensis,
+                    'pembatalan_reward' => $presensi->is_pembatalan_reward,
                     'created_at' => $presensi->created_at,
                     'updated_at' => $presensi->updated_at,
                 ];

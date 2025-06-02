@@ -86,7 +86,7 @@ class PembatalanRewardController extends Controller
 
             if (isset($filters['status_aktif'])) {
                 $statusAktif = $filters['status_aktif'];
-                $pembatalanReward->whereHas('users', function ($query) use ($statusAktif) {
+                $pembatalanReward->whereHas('data_karyawans.users', function ($query) use ($statusAktif) {
                     if (is_array($statusAktif)) {
                         $query->whereIn('status_aktif', $statusAktif);
                     } else {
