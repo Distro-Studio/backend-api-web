@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Dashboard\Karyawan;
 use App\Exports\Karyawan\RewardPembatalanExport;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
+use App\Models\NonShift;
 use App\Models\RiwayatPembatalanReward;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -25,7 +26,7 @@ class PembatalanRewardController extends Controller
             // Per page
             $limit = $request->input('limit', 10);
 
-            $pembatalanReward = RiwayatPembatalanReward::with(['data_karyawans.users', 'cutis', 'presensis', 'riwayat_izins', 'verifikators'])
+            $pembatalanReward = RiwayatPembatalanReward::with(['data_karyawans.users', 'cuti', 'presensi', 'riwayat_izin', 'verifikators'])
                 ->join('data_karyawans', 'riwayat_pembatalan_rewards.data_karyawan_id', '=', 'data_karyawans.id')
                 ->orderBy('data_karyawans.nik', 'asc')
                 ->select('riwayat_pembatalan_rewards.*');
@@ -228,9 +229,26 @@ class PembatalanRewardController extends Controller
                 $nik = $pembatalanReward->data_karyawans;
                 $dataUsers = $pembatalanReward->data_karyawans->users;
                 $dataVerifikator = $pembatalanReward->verifikators;
-                $dataCutis = $pembatalanReward->cutis;
-                $dataPresensi = $pembatalanReward->presensis;
-                $dataRiwayatIzin = $pembatalanReward->riwayat_izins;
+                $dataCutis = $pembatalanReward->cuti;
+                $dataPresensi = $pembatalanReward->presensi;
+                $dataRiwayatIzin = $pembatalanReward->riwayat_izin;
+                $jadwalShifts = $pembatalanReward->presensi ? $pembatalanReward->presensi->jadwals : null;
+                // Ambil data jadwal non-shift jika jenis_karyawan = false
+                $jadwalNonShift = null;
+                $jenisKaryawan = $karyawanAnulir->data_karyawans->unit_kerjas->jenis_karyawan ?? null;
+                if ($jenisKaryawan === 0) {
+                    $jamMasukDate = Carbon::parse($pembatalanReward->presensi->jam_masuk)->format('l');
+                    $hariNamaIndonesia = [
+                        'Monday' => 'Senin',
+                        'Tuesday' => 'Selasa',
+                        'Wednesday' => 'Rabu',
+                        'Thursday' => 'Kamis',
+                        'Friday' => 'Jumat',
+                        'Saturday' => 'Sabtu',
+                        'Sunday' => 'Minggu'
+                    ][$jamMasukDate] ?? 'Senin';
+                    $jadwalNonShift = NonShift::where('nama', $hariNamaIndonesia)->first();
+                }
 
                 return [
                     'id' => $pembatalanReward->id,
@@ -280,16 +298,27 @@ class PembatalanRewardController extends Controller
                     ] : null,
                     'data_presensi' => $dataPresensi ? [
                         'id' => $dataPresensi->id,
-                        'jadwal' => $dataPresensi->jadwals ? [
-                            'id' => $dataPresensi->jadwals->id,
-                            'tgl_mulai' => $dataPresensi->jadwals->tgl_mulai,
-                            'tgl_selesai' => $dataPresensi->jadwals->tgl_selesai,
-                            'shift' => $dataPresensi->jadwals->shifts,
+                        'jadwal_shift' => $jadwalShifts ? [
+                            'id' => $jadwalShifts->id,
+                            'tgl_mulai' => $jadwalShifts->tgl_mulai,
+                            'tgl_selesai' => $jadwalShifts->tgl_selesai,
+                            'shift' => $jadwalShifts->shifts,
+                        ] : null,
+                        'jadwal_non_shift' => $jadwalNonShift ? [
+                            'id' => $jadwalNonShift->id,
+                            'nama' => $jadwalNonShift->nama,
+                            'jam_from' => $jadwalNonShift->jam_from,
+                            'jam_to' => $jadwalNonShift->jam_to,
+                            'deleted_at' => $jadwalNonShift->deleted_at,
+                            'created_at' => $jadwalNonShift->created_at,
+                            'updated_at' => $jadwalNonShift->updated_at,
                         ] : null,
                         'jam_masuk' => $dataPresensi->jam_masuk,
                         'jam_keluar' => $dataPresensi->jam_keluar,
                         'durasi' => $dataPresensi->durasi,
                         'kategori_presensi' => $dataPresensi->kategori_presensis,
+                        'pembatalan_reward' => $dataPresensi->is_pembatalan_reward,
+                        'presensi_anulir' => $dataPresensi->is_anulir_presensi,
                         'created_at' => $dataPresensi->created_at,
                         'updated_at' => $dataPresensi->updated_at,
                     ] : null,

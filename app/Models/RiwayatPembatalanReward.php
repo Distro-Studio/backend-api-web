@@ -31,32 +31,17 @@ class RiwayatPembatalanReward extends Model
         return $this->belongsTo(DataKaryawan::class, 'data_karyawan_id', 'id');
     }
 
-    /**
-     * Get the cutis that owns the RiwayatPembatalanReward
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
-     */
-    public function cutis(): BelongsTo
+    public function cuti()
     {
         return $this->belongsTo(Cuti::class, 'cuti_id', 'id');
     }
 
-    /**
-     * Get the presensis that owns the RiwayatPembatalanReward
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
-     */
-    public function presensis(): BelongsTo
+    public function presensi()
     {
         return $this->belongsTo(Presensi::class, 'presensi_id', 'id');
     }
 
-    /**
-     * Get the riwayat_izins that owns the RiwayatPembatalanReward
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
-     */
-    public function riwayat_izins(): BelongsTo
+    public function riwayat_izin()
     {
         return $this->belongsTo(RiwayatIzin::class, 'riwayat_izin_id', 'id');
     }
