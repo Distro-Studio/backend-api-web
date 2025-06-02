@@ -28,6 +28,7 @@ return new class extends Migration
             $table->foreignId('kategori_presensi_id')->constrained('kategori_presensis'); //1 = 'Tepat Waktu', 2. 'Terlambat', 3 = 'Cuti', 4 = 'Alfa'
             $table->string('note')->nullable();
             $table->boolean('is_pembatalan_reward')->default(0);
+            $table->boolean('is_anulir_presensi')->default(0);
             $table->softDeletes();
             $table->timestamps();
         });

@@ -216,6 +216,7 @@ class PresensiSheet implements FromCollection, WithHeadings, WithMapping, WithTi
             'long_keluar',
             'kategori',
             'pembatalan_reward',
+            'presensi_anulir',
             'created_at',
             'updated_at'
         ];
@@ -261,6 +262,7 @@ class PresensiSheet implements FromCollection, WithHeadings, WithMapping, WithTi
             $presensi->longkeluar,
             optional($presensi->kategori_presensis)->label,
             $presensi->is_pembatalan_reward ? 'Ya' : 'Tidak',
+            $presensi->is_anulir_presensi ? 'Ya' : 'Tidak',
             Carbon::parse($presensi->created_at)->format('d-m-Y H:i:s'),
             Carbon::parse($presensi->updated_at)->format('d-m-Y H:i:s')
         ];

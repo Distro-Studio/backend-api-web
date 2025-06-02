@@ -237,7 +237,7 @@ class AnulirPresensiController extends Controller
                 $cariBerkasAnulir = Berkas::where('id', $karyawanAnulir->dokumen_anulir_id)->first();
                 $berkasAnulir = $cariBerkasAnulir ? $baseUrl . $cariBerkasAnulir->path : null;
                 $role = $karyawanAnulir->data_karyawans->users->roles->first();
-                $jadwalShifts = $karyawanAnulir->presensis->jadwals;
+                $jadwalShifts = $karyawanAnulir->presensis ? $karyawanAnulir->presensis->jadwals : null;
                 // Ambil data jadwal non-shift jika jenis_karyawan = false
                 $jadwalNonShift = null;
                 $jenisKaryawan = $karyawanAnulir->data_karyawans->unit_kerjas->jenis_karyawan ?? null;
@@ -472,6 +472,10 @@ class AnulirPresensiController extends Controller
                 ->where('data_karyawan_id', $presensi->data_karyawan_id)
                 ->where('presensi_id', $presensi->id)
                 ->update(['is_anulir_presensi' => true]);
+
+            // Update is_anulir_presensi pada presensi yang sesuai
+            $presensi->is_anulir_presensi = true;
+            $presensi->save();
 
             // Jika hanya 1 data pembatalan (data yang sedang dibuat), update riwayat_pembatalan_rewards terkait
             if ($totalPembatalanPresensiIni === 1) {
