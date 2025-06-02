@@ -680,7 +680,7 @@ class DataKaryawanController extends Controller
               Log::warning("Gagal hapus foto_profil lama dari server (file_id: {$berkasLama->file_id}): " . $e->getMessage());
             }
 
-            // Set hubungan ke NULL dulu sebelum hapus
+            // Set foto_profil ke NULL dulu sebelum hapus
             $user->foto_profil = null;
             $user->save();
 
