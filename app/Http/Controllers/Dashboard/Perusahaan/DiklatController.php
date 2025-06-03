@@ -358,7 +358,9 @@ class DiklatController extends Controller
                 ];
             });
 
-            $path_berkas = env('STORAGE_SERVER_DOMAIN') . $diklat->berkas_dokumen_eksternals->path;
+            $path_berkas = $diklat->berkas_dokumen_eksternals
+                ? $baseUrl . $diklat->berkas_dokumen_eksternals->path
+                : null;
 
             $userId = $diklat->peserta_diklat->pluck('users.id')->first() ?? null;
             $relasiVerifikasi = $userId ? RelasiVerifikasi::whereJsonContains('user_diverifikasi', (int) $userId)
