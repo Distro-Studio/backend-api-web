@@ -243,8 +243,8 @@ class AnulirPresensiController extends Controller
 
                 $jadwalNonShift = null;
                 $jenisKaryawan = $karyawanAnulir->data_karyawans->unit_kerjas->jenis_karyawan ?? null;
-                if ($jenisKaryawan === 0) {
-                    $jamMasukDate = Carbon::parse($karyawanAnulir->presensis->jam_masuk)->format('l');
+                if ($jenisKaryawan === 0 && $presensi && $presensi->jam_masuk) {
+                    $jamMasukDate = Carbon::parse($presensi->jam_masuk)->format('l');
                     $hariNamaIndonesia = [
                         'Monday' => 'Senin',
                         'Tuesday' => 'Selasa',
