@@ -350,7 +350,7 @@ class DiklatController extends Controller
         }
 
         // Format data untuk output
-        $baseUrl = env('STORAGE_SERVER_DOMAIN');
+        $baseUrl = "https://192.168.0.20/RskiSistem24/file-storage/public";
         $formattedData = $dataDiklat->map(function ($diklat) use ($baseUrl) {
             $pesertaList = $diklat->peserta_diklat->map(function ($peserta) {
                 return [
@@ -358,7 +358,9 @@ class DiklatController extends Controller
                 ];
             });
 
-            $path_berkas = "https://192.168.0.20/RskiSistem24/file-storage/public" . $diklat->berkas_dokumen_eksternals->path;
+            $path_berkas = $diklat->berkas_dokumen_eksternals
+                ? $baseUrl . $diklat->berkas_dokumen_eksternals->path
+                : null;
 
             $userId = $diklat->peserta_diklat->pluck('users.id')->first() ?? null;
             $relasiVerifikasi = $userId ? RelasiVerifikasi::whereJsonContains('user_diverifikasi', (int) $userId)
