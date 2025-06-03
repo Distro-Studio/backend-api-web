@@ -1759,54 +1759,54 @@ class DataKaryawanController extends Controller
         $user->nama = $data['nama'];
         $user->save();
 
-        // Update role di tabel users
-        if (isset($data['role_id'])) {
-          $user->roles()->sync([$data['role_id']]);
+      // Update role di tabel users
+      if (isset($data['role_id'])) {
+        $user->roles()->sync([$data['role_id']]);
+      }
+
+      $pjUnitKerja = $request->input('pj_unit_kerja', []);
+      if (is_array($pjUnitKerja)) {
+        $data['pj_unit_kerja'] = $pjUnitKerja;
+      }
+
+      $karyawan->update($data);
+
+      // Itung BMI berat dan tinggi badan kalo ada
+      if (!empty($data['berat_badan']) && !empty($data['tinggi_badan'])) {
+        $bmi_calculated = CalculateBMIHelper::calculateBMI($data['berat_badan'], $data['tinggi_badan']);
+        $karyawan->bmi_value = $bmi_calculated['bmi_value'];
+        $karyawan->bmi_ket = $bmi_calculated['bmi_ket'];
+        $karyawan->save();
+      }
+
+      // Update potongan gaji (premi)
+      $premis = $request->input('premi_id', []);
+      DB::table('pengurang_gajis')->where('data_karyawan_id', $karyawan->id)->delete(); // Hapus potongan gaji yang lama
+
+      if (!empty($premis)) {
+        $premisData = DB::table('premis')->whereIn('id', $premis)->get();
+        if ($premisData->isEmpty()) {
+          return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Potongan yang dipilih tidak valid.'), Response::HTTP_NOT_FOUND);
         }
 
-        $pjUnitKerja = $request->input('pj_unit_kerja', []);
-        if (is_array($pjUnitKerja)) {
-          $data['pj_unit_kerja'] = $pjUnitKerja;
+        foreach ($premisData as $premi) {
+          DB::table('pengurang_gajis')->insert([
+            'data_karyawan_id' => $karyawan->id,
+            'premi_id' => $premi->id,
+            'created_at' => now('Asia/Jakarta'),
+            'updated_at' => now('Asia/Jakarta'),
+          ]);
         }
+      }
 
-        $karyawan->update($data);
+      DB::commit();
 
-        // Itung BMI berat dan tinggi badan kalo ada
-        if (!empty($data['berat_badan']) && !empty($data['tinggi_badan'])) {
-          $bmi_calculated = CalculateBMIHelper::calculateBMI($data['berat_badan'], $data['tinggi_badan']);
-          $karyawan->bmi_value = $bmi_calculated['bmi_value'];
-          $karyawan->bmi_ket = $bmi_calculated['bmi_ket'];
-          $karyawan->save();
-        }
+      LogHelper::logAction('Karyawan', 'update', $karyawan->id);
 
-        // Update potongan gaji (premi)
-        $premis = $request->input('premi_id', []);
-        DB::table('pengurang_gajis')->where('data_karyawan_id', $karyawan->id)->delete(); // Hapus potongan gaji yang lama
-
-        if (!empty($premis)) {
-          $premisData = DB::table('premis')->whereIn('id', $premis)->get();
-          if ($premisData->isEmpty()) {
-            return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Potongan yang dipilih tidak valid.'), Response::HTTP_NOT_FOUND);
-          }
-
-          foreach ($premisData as $premi) {
-            DB::table('pengurang_gajis')->insert([
-              'data_karyawan_id' => $karyawan->id,
-              'premi_id' => $premi->id,
-              'created_at' => now('Asia/Jakarta'),
-              'updated_at' => now('Asia/Jakarta'),
-            ]);
-          }
-        }
-
-        DB::commit();
-
-        LogHelper::logAction('Karyawan', 'update', $karyawan->id);
-
-        return response()->json([
-          'status' => Response::HTTP_OK,
-          'message' => "Data karyawan '{$karyawan->users->nama}' berhasil diperbarui."
-        ], Response::HTTP_OK);
+      return response()->json([
+        'status' => Response::HTTP_OK,
+        'message' => "Data karyawan '{$karyawan->users->nama}' berhasil diperbarui."
+      ], Response::HTTP_OK);
       // } catch (\Exception $e) {
       //   return response()->json(new WithoutDataResource(Response::HTTP_INTERNAL_SERVER_ERROR, 'Error: ' . $e->getMessage()), Response::HTTP_INTERNAL_SERVER_ERROR);
       // }
