@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources\Dashboard\Karyawan;
 
+use App\Models\UnitKerja;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -58,6 +59,23 @@ class KaryawanResource extends JsonResource
         return $collection->transform(function ($karyawan) {
             $role = $karyawan->users->roles->first(); // Mengambil role pertama jika ada
 
+            $pjUnitKerjaValue = $karyawan->pj_unit_kerja;
+
+            if (is_array($pjUnitKerjaValue)) {
+                $pjUnitKerjaArray = array_map('intval', $pjUnitKerjaValue);
+            } elseif (is_string($pjUnitKerjaValue)) {
+                $pjUnitKerjaArray = explode(',', trim($pjUnitKerjaValue, '[]'));
+                $pjUnitKerjaArray = array_map('intval', $pjUnitKerjaArray);
+            } else {
+                $pjUnitKerjaArray = [];
+            }
+
+            // Query data lengkap unit kerja
+            $unitKerjaList = [];
+            if (!empty($pjUnitKerjaArray)) {
+                $unitKerjaList = UnitKerja::whereIn('id', $pjUnitKerjaArray)->get();
+            }
+
             return [
                 'id' => $karyawan->id,
                 'user' => [
@@ -106,6 +124,7 @@ class KaryawanResource extends JsonResource
                     ->get(),
                 'email' => $karyawan->email,
                 'nik' => $karyawan->nik,
+                'pj_unit_kerja' => $unitKerjaList,
                 'no_rm' => $karyawan->no_rm,
                 'no_sip' => $karyawan->no_sip,
                 'created_sip' => $karyawan->created_sip,

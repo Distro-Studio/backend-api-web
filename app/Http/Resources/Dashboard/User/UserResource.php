@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources\Dashboard\User;
 
+use App\Models\UnitKerja;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
@@ -46,6 +47,23 @@ class UserResource extends JsonResource
             )
             ->get();
 
+        $pjUnitKerjaValue = $data_karyawan->pj_unit_kerja;
+
+        if (is_array($pjUnitKerjaValue)) {
+            $pjUnitKerjaArray = array_map('intval', $pjUnitKerjaValue);
+        } elseif (is_string($pjUnitKerjaValue)) {
+            $pjUnitKerjaArray = explode(',', trim($pjUnitKerjaValue, '[]'));
+            $pjUnitKerjaArray = array_map('intval', $pjUnitKerjaArray);
+        } else {
+            $pjUnitKerjaArray = [];
+        }
+
+        // Query data lengkap unit kerja
+        $unitKerjaList = [];
+        if (!empty($pjUnitKerjaArray)) {
+            $unitKerjaList = UnitKerja::whereIn('id', $pjUnitKerjaArray)->get();
+        }
+
         return [
             'status' => $this->status,
             'message' => $this->message,
@@ -78,6 +96,7 @@ class UserResource extends JsonResource
                     'masa_berlaku_sip' => $data_karyawan->masa_berlaku_sip ?? null,
                     'no_manulife' => $data_karyawan->no_manulife ?? null,
                     'tgl_masuk' => $data_karyawan->tgl_masuk ?? null,
+                    'pj_unit_kerja' => $unitKerjaList,
                     'unit_kerja' => $data_karyawan->unit_kerjas ?? null, // unit_kerja_id
                     'jabatan' => $data_karyawan->jabatans ?? null, // jabatan_id
                     'kompetensi' => $data_karyawan->kompetensis ?? null, // kompetensi_id
