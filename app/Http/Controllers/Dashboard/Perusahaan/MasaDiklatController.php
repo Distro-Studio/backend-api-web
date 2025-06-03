@@ -86,6 +86,9 @@ class MasaDiklatController extends Controller
                 $joinedDiklat = PesertaDiklat::with('diklats')
                     ->where('peserta', $karyawan->user_id)
                     ->get()
+                    ->filter(function ($peserta) {
+                        return $peserta->diklats !== null;
+                    })
                     ->map(function ($peserta) {
                         return [
                             'id' => $peserta->diklats->id,
@@ -129,7 +132,7 @@ class MasaDiklatController extends Controller
                         'created_at' => $karyawan->users->created_at,
                         'updated_at' => $karyawan->users->updated_at
                     ],
-                    'role' => $isSuperAdmin ? [
+                    'role' => $isSuperAdmin && $role ? [
                         'id' => $role->id,
                         'name' => $role->name,
                         'deskripsi' => $role->deskripsi,
