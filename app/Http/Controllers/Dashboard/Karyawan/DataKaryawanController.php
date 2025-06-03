@@ -1807,7 +1807,7 @@ class DataKaryawanController extends Controller
           'status' => Response::HTTP_OK,
           'message' => "Data karyawan '{$karyawan->users->nama}' berhasil diperbarui."
         ], Response::HTTP_OK);
-      } catch (Exception $e) {
+      } catch (\Exception $e) {
         DB::rollBack();
         return response()->json(new WithoutDataResource(Response::HTTP_INTERNAL_SERVER_ERROR, 'Error: ' . $e->getMessage()), Response::HTTP_INTERNAL_SERVER_ERROR);
       }
