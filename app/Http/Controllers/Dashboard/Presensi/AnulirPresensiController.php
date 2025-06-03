@@ -235,12 +235,12 @@ class AnulirPresensiController extends Controller
 
             $baseUrl = env('STORAGE_SERVER_DOMAIN');
             $formattedData = $dataKaryawanAnulir->map(function ($karyawanAnulir) use ($isSuperAdmin, $baseUrl) {
-                $baseUrl = env('STORAGE_SERVER_DOMAIN');
                 $cariBerkasAnulir = Berkas::where('id', $karyawanAnulir->dokumen_anulir_id)->first();
                 $berkasAnulir = $cariBerkasAnulir ? $baseUrl . $cariBerkasAnulir->path : null;
                 $role = $karyawanAnulir->data_karyawans->users->roles->first();
-                $jadwalShifts = $karyawanAnulir->presensis ? $karyawanAnulir->presensis->jadwals : null;
-                // Ambil data jadwal non-shift jika jenis_karyawan = false
+                $presensi = $karyawanAnulir->presensis;
+                $jadwalShifts = $presensi ? $presensi->jadwals : null;
+
                 $jadwalNonShift = null;
                 $jenisKaryawan = $karyawanAnulir->data_karyawans->unit_kerjas->jenis_karyawan ?? null;
                 if ($jenisKaryawan === 0) {
@@ -326,10 +326,10 @@ class AnulirPresensiController extends Controller
                             'created_at' => $jadwalNonShift->created_at,
                             'updated_at' => $jadwalNonShift->updated_at,
                         ] : null,
-                        'jam_masuk' => $karyawanAnulir->presensis->jam_masuk,
-                        'jam_keluar' => $karyawanAnulir->presensis->jam_keluar,
-                        'durasi' => $karyawanAnulir->presensis->durasi,
-                        'kategori_presensi' => $karyawanAnulir->presensis->kategori_presensis,
+                        'jam_masuk' => $karyawanAnulir->presensis->jam_masuk ?? null,
+                        'jam_keluar' => $karyawanAnulir->presensis->jam_keluar ?? null,
+                        'durasi' => $karyawanAnulir->presensis->durasi ?? null,
+                        'kategori_presensi' => $karyawanAnulir->presensis->kategori_presensis ?? null,
                         'created_at' => $karyawanAnulir->presensis->created_at,
                         'updated_at' => $karyawanAnulir->presensis->updated_at
                     ] : null,
