@@ -1295,6 +1295,8 @@ class DataKaryawanController extends Controller
       $total_durasi_internal = PesertaDiklat::where('peserta', $karyawan->users->id)
         ->whereHas('diklats', function ($query) use ($currentYear) {
           $query->where('kategori_diklat_id', 1) // Internal
+            ->where('status_diklat_id', 4)
+            ->where('certificate_published', 1)
             ->whereRaw("YEAR(STR_TO_DATE(tgl_mulai, '%d-%m-%Y')) = ?", [$currentYear]);
         })
         ->with('diklats')
@@ -1304,6 +1306,7 @@ class DataKaryawanController extends Controller
       $total_durasi_eksternal = PesertaDiklat::where('peserta', $karyawan->users->id)
         ->whereHas('diklats', function ($query) use ($currentYear) {
           $query->where('kategori_diklat_id', 2) // Eksternal
+            ->where('status_diklat_id', 4)
             ->whereRaw("YEAR(STR_TO_DATE(tgl_mulai, '%d-%m-%Y')) = ?", [$currentYear]);
         })
         ->with('diklats')
@@ -1735,14 +1738,11 @@ class DataKaryawanController extends Controller
       $oldEmail = $karyawan->email;
       $newEmail = $data['email'] ?? null;
 
-      // Memeriksa apakah email telah berubah
-      if ($oldEmail !== $newEmail) {
       // Cek apakah email baru valid dan berbeda dari yang lama
       if (!empty($newEmail) && $oldEmail !== $newEmail) {
         $generatedPassword = RandomHelper::generatePassword();
         $karyawan->email = $newEmail;
-        // TODO: Kembalikan jika smtp sudah online
-        // $user->password = Hash::make($generatedPassword);
+        $user->password = Hash::make($generatedPassword);
 
         $karyawan->save();
         $user->save();
@@ -1751,10 +1751,10 @@ class DataKaryawanController extends Controller
         $user->tokens()->delete();
 
         // Kirim email dengan password baru
-        AccountEmailJob::dispatch($newEmail, $generatedPassword, $data['nama']);
+        Mail::to($newEmail)->send(new SendUpdateAccoundUsersMail($newEmail, $generatedPassword, $data['nama']));
       }
 
-      try {
+      // try {
         // Update nama di tabel users
         $user->nama = $data['nama'];
         $user->save();
@@ -1807,11 +1807,11 @@ class DataKaryawanController extends Controller
           'status' => Response::HTTP_OK,
           'message' => "Data karyawan '{$karyawan->users->nama}' berhasil diperbarui."
         ], Response::HTTP_OK);
-      } catch (\Exception $e) {
-        DB::rollBack();
-        return response()->json(new WithoutDataResource(Response::HTTP_INTERNAL_SERVER_ERROR, 'Error: ' . $e->getMessage()), Response::HTTP_INTERNAL_SERVER_ERROR);
-      }
+      // } catch (\Exception $e) {
+      //   return response()->json(new WithoutDataResource(Response::HTTP_INTERNAL_SERVER_ERROR, 'Error: ' . $e->getMessage()), Response::HTTP_INTERNAL_SERVER_ERROR);
+      // }
     } catch (\Exception $e) {
+      DB::rollBack();
       Log::error('| Karyawan | - Error function update: ' . $e->getMessage());
       return response()->json([
         'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
