@@ -64,8 +64,8 @@ class Kernel extends ConsoleKernel
 
         // Rest hak cuti
         $schedule->command('app:reset-hak-cuti')
-            ->monthlyOn(1, '00:00')
-            ->timezone('Asia/Jakarta');
+            ->timezone('Asia/Jakarta')
+            ->dailyAt('01:00');
 
         // Notification SIP
         $schedule->command('app:notification-warning-sip')

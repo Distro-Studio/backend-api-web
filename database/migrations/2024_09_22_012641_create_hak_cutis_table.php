@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('data_karyawan_id')->constrained('data_karyawans')->onUpdate('cascade')->onDelete('cascade');
             $table->foreignId('tipe_cuti_id')->constrained('tipe_cutis')->onUpdate('cascade')->onDelete('cascade');
-            $table->integer('kuota');
+            $table->integer('kuota'); // sisa kuota
             $table->integer('used_kuota')->default(0);
             $table->timestamp('last_reset')->nullable();
             $table->softDeletes();
