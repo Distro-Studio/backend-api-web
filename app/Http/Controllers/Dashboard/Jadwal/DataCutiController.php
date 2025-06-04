@@ -867,12 +867,12 @@ class DataCutiController extends Controller
             $idsCuti = $request->input('ids_cuti');
 
             // Cek cuti yang sudah disetujui tahap 2 (status_cuti_id == 4)
-            $countDisetujuiTahap2 = Cuti::whereIn('id', $idsCuti)
-                ->where('status_cuti_id', 4)
-                ->count();
-            if ($countDisetujuiTahap2 > 0) {
-                return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Cuti yang sudah disetujui tahap 2 tidak diperbolehkan untuk dihapus.'), Response::HTTP_BAD_REQUEST);
-            }
+            // $countDisetujuiTahap2 = Cuti::whereIn('id', $idsCuti)
+            //     ->where('status_cuti_id', 4)
+            //     ->count();
+            // if ($countDisetujuiTahap2 > 0) {
+            //     return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Cuti yang sudah disetujui tahap 2 tidak diperbolehkan untuk dihapus.'), Response::HTTP_BAD_REQUEST);
+            // }
 
             DB::beginTransaction();
 
