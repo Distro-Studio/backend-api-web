@@ -418,8 +418,8 @@ class AnulirPresensiController extends Controller
 
             DB::beginTransaction();
 
-            // 1. Jika totalPembatalanBulanIni < 1, update reward presensi
-            if ($totalPembatalanBulanIni < 1) {
+            // 1. Jika totalPembatalanBulanIni > 1, tidak bisa update reward presensi
+            if ($totalPembatalanBulanIni > 1) {
                 Log::info("Jumlah riwayat pembatalan reward di bulan ini: '{$totalPembatalanBulanIni}'. Tidak mengubah status reward presensi.");
                 $message = "Data anulir dari karyawan '{$karyawanAnulir->users->nama}' berhasil ditambahkan. Namun tidak mengubah reward presensi karena ada beberapa riwayat pembatalan di bulan tersebut.";
                 $keterangan = "Data anulir berhasil ditambahkan. Namun tidak mengubah reward presensi karena ada beberapa riwayat pembatalan di bulan tersebut.";
