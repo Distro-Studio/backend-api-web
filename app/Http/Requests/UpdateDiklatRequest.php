@@ -20,20 +20,25 @@ class UpdateDiklatRequest extends FormRequest
     public function rules(): array
     {
         return [
-            // 'dokumen' => 'nullable|image|max:10240|mimes:jpeg,png,jpg,svg',
+            'dokumen' => 'nullable|image|max:10240|mimes:jpeg,png,jpg,svg',
             'nama' => 'required|string|max:255',
             // 'kategori_diklat_id' => 'required|integer|exists:kategori_diklats,id',
             'deskripsi' => 'required|string|max:225',
             // 'user_id' => 'nullable|array', // Penerima notifikasi
             // 'user_id.*' => 'integer|exists:users,id',
-            // 'dokumen_diklat_1' => 'nullable|file|max:10240|mimes:pdf,pptx,docx',
-            // 'dokumen_diklat_2' => 'nullable|file|max:10240|mimes:pdf,pptx,docx',
-            // 'dokumen_diklat_3' => 'nullable|file|max:10240|mimes:pdf,pptx,docx',
-            // 'dokumen_diklat_4' => 'nullable|file|max:10240|mimes:pdf,pptx,docx',
-            // 'dokumen_diklat_5' => 'nullable|file|max:10240|mimes:pdf,pptx,docx',
-            // 'kuota' => 'nullable|integer|min:1',
+            'dokumen_diklat_1' => 'nullable|file|max:10240|mimes:pdf,pptx,docx',
+            'dokumen_diklat_2' => 'nullable|file|max:10240|mimes:pdf,pptx,docx',
+            'dokumen_diklat_3' => 'nullable|file|max:10240|mimes:pdf,pptx,docx',
+            'dokumen_diklat_4' => 'nullable|file|max:10240|mimes:pdf,pptx,docx',
+            'dokumen_diklat_5' => 'nullable|file|max:10240|mimes:pdf,pptx,docx',
+            'kuota' => 'nullable|integer|min:1',
+            'tgl_mulai' => 'required|string',
+            'tgl_selesai' => 'required|string',
+            'jam_mulai' => 'required|string',
+            'jam_selesai' => 'required|string',
             'lokasi' => 'required|string',
             'skp' => 'nullable|string',
+            // TODO: Tambahkan tgl_mulai, tgl_selesai, jam_mulai, dan jam_selesai. Dan pikirkan gimana cara menambah/mengurangi masa diklat di data karyawan
         ];
     }
 
@@ -73,6 +78,7 @@ class UpdateDiklatRequest extends FormRequest
 
             'kuota.required' => 'Kuota peserta diklat tidak diperbolehkan kosong.',
             'kuota.integer' => 'Kuota peserta diklat harus berupa angka.',
+            'kuota.min' => 'Kuota peserta diklat tidak boleh kurang dari satu.',
             'tgl_mulai.required' => 'Tanggal mulai diklat tidak diperbolehkan kosong.',
             'tgl_mulai.string' => 'Tanggal mulai diklat harus berupa angka dan teks.',
             'tgl_selesai.required' => 'Tanggal selesai diklat tidak diperbolehkan kosong.',
