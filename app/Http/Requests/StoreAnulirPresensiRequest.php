@@ -28,7 +28,7 @@ class StoreAnulirPresensiRequest extends FormRequest
             'data_karyawan_id' => 'required|integer|exists:data_karyawans,id',
             'presensi_id' => 'required|integer|exists:presensis,id',
             'alasan' => 'required',
-            'dokumen' => 'nullable|max:10240|mimes:jpeg,png,jpg,pdf',
+            'dokumen' => 'nullable|max:10240|mimes:jpeg,png,jpg,pdf,doc,docx',
         ];
     }
 
@@ -47,7 +47,7 @@ class StoreAnulirPresensiRequest extends FormRequest
             'alasan.required' => 'Alasan tidak diperbolehkan kosong.',
             'dokumen.file' => 'Dokumen anulir harus berupa file.',
             'dokumen.max' => 'Dokumen anulir tidak boleh lebih dari 10 MB.',
-            'dokumen.mimes' => 'Dokumen anulir harus berupa file PDF, JPEG, PNG, atau JPG.',
+            'dokumen.mimes' => 'Dokumen anulir harus berupa file PDF, DOC, DOCX, JPEG, PNG, atau JPG.',
         ];
     }
 
