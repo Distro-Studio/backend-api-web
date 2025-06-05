@@ -854,6 +854,11 @@ class DataCutiController extends Controller
     public function deleteCuti(Request $request)
     {
         try {
+            $superAdmin = $request->user();
+            if (!$superAdmin->hasRole('Super Admin')) {
+                return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+            }
+
             if (!Gate::allows('delete cutiKaryawan')) {
                 return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
             }
