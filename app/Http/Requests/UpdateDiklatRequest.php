@@ -38,7 +38,6 @@ class UpdateDiklatRequest extends FormRequest
             'jam_selesai' => 'required|string',
             'lokasi' => 'required|string',
             'skp' => 'nullable|string',
-            // TODO: Tambahkan tgl_mulai, tgl_selesai, jam_mulai, dan jam_selesai. Dan pikirkan gimana cara menambah/mengurangi masa diklat di data karyawan
         ];
     }
 
