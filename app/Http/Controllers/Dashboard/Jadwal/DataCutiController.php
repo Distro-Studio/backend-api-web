@@ -970,8 +970,23 @@ class DataCutiController extends Controller
                 return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Tidak ada data cuti karyawan yang tersedia untuk diekspor.'), Response::HTTP_NOT_FOUND);
             }
 
+            // Mendapatkan filter rentang tanggal
+            $tgl_mulai = $request->input('tgl_mulai');
+            $tgl_selesai = $request->input('tgl_selesai');
+            $tipe_cuti = $request->input('tipe_cuti', []);
+            if (empty($tgl_mulai) || empty($tgl_selesai)) {
+                return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Periode tanggal mulai dan tanggal selesai tidak boleh kosong.'), Response::HTTP_BAD_REQUEST);
+            }
+
             try {
-                return Excel::download(new CutiExport($request->all()), 'cuti-karyawan.xls');
+                $startDate = Carbon::createFromFormat('d-m-Y', $tgl_mulai)->startOfDay();
+                $endDate = Carbon::createFromFormat('d-m-Y', $tgl_selesai)->endOfDay();
+            } catch (\Exception $e) {
+                return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Tanggal yang dimasukkan tidak valid.'), Response::HTTP_BAD_REQUEST);
+            }
+
+            try {
+                return Excel::download(new CutiExport($startDate, $endDate, $tipe_cuti), 'cuti-karyawan.xls');
                 // return Excel::download(new CutiJadwalExport($request->all()), 'cuti-karyawan.xls');
             } catch (\Throwable $e) {
                 return response()->json(new WithoutDataResource(Response::HTTP_INTERNAL_SERVER_ERROR, 'Maaf sepertinya terjadi error. Pesan: ' . $e->getMessage()), Response::HTTP_INTERNAL_SERVER_ERROR);

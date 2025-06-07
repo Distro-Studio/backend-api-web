@@ -11,25 +11,37 @@ class CutiExport implements WithMultipleSheets
 {
     use Exportable;
 
-    // private $startDate;
-    // private $endDate;
-    private $filters;
+    private $startDate;
+    private $endDate;
+    private $tipeCutiFilter;
 
-    public function __construct($filters = [])
+    public function __construct($startDate, $endDate, $tipeCutiFilter = null)
     {
-        // $this->startDate = $startDate;
-        // $this->endDate = $endDate;
-        $this->filters = $filters;
+        $this->startDate = $startDate;
+        $this->endDate = $endDate;
+        $this->tipeCutiFilter = is_array($tipeCutiFilter) ? $tipeCutiFilter : [$tipeCutiFilter]; // pastikan array
     }
 
     public function sheets(): array
     {
         $sheets = [];
 
+        if (in_array(1, $this->tipeCutiFilter)) {
+            $sheets[] = new CutiTahunanSheet($this->startDate, $this->endDate, 'Cuti Tahunan', 1);
+        }
+
+        if (in_array(5, $this->tipeCutiFilter)) {
+            $sheets[] = new CutiBesarSheet($this->startDate, $this->endDate, 'Cuti Besar', 5);
+        }
+
         // Menambahkan sheet untuk setiap kategori presensi
-        $tipeCutis = TipeCuti::all();
+        $tipeCutis = TipeCuti::whereNotIn('id', [1, 5])
+            ->when(!empty($this->tipeCutiFilter), function ($query) {
+                $query->whereIn('id', $this->tipeCutiFilter);
+            })
+            ->get();
         foreach ($tipeCutis as $tipeCuti) {
-            $sheets[] = new CutiSheet($this->filters, $tipeCuti->nama, $tipeCuti->id);
+            $sheets[] = new CutiSheet($this->startDate, $this->endDate, $tipeCuti->nama, $tipeCuti->id);
         }
 
         return $sheets;
