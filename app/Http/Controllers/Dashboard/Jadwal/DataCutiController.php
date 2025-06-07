@@ -497,6 +497,17 @@ class DataCutiController extends Controller
                 return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data karyawan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
             }
 
+            // Validasi masa kerja harus minimal 1 tahun = 365 hari
+            $now = now('Asia/Jakarta');
+            $tglMasuk = Carbon::createFromFormat('d-m-Y', $dataKaryawan->tgl_masuk);
+            $masaKerjaHari = $tglMasuk->diffInDays($now);
+            if ($masaKerjaHari < 365) {
+                return response()->json(new WithoutDataResource(
+                    Response::HTTP_BAD_REQUEST,
+                    'Karyawan belum memenuhi masa kerja minimal 1 tahun untuk pengajuan cuti. Saat ini baru bekerja selama ' . $masaKerjaHari . ' hari.'
+                ), Response::HTTP_BAD_REQUEST);
+            }
+
             // Ambil hak cuti dari tabel hak_cutis berdasarkan data_karyawan_id dan tipe_cuti_id
             $hakCuti = HakCuti::with('tipe_cutis')
                 ->where('data_karyawan_id', $dataKaryawan->id)
