@@ -27,11 +27,11 @@ class CutiExport implements WithMultipleSheets
         $sheets = [];
 
         if (in_array(1, $this->tipeCutiFilter)) {
-            $sheets[] = new CutiTahunanSheet($this->startDate, $this->endDate, 'Cuti Tahunan', 1);
+            $sheets[] = new CutiTahunanSheet('Cuti Tahunan', $this->startDate, $this->endDate, 1);
         }
 
         if (in_array(5, $this->tipeCutiFilter)) {
-            $sheets[] = new CutiBesarSheet($this->startDate, $this->endDate, 'Cuti Besar', 5);
+            $sheets[] = new CutiBesarSheet('Cuti Besar', $this->startDate, $this->endDate, 5);
         }
 
         // Menambahkan sheet untuk setiap kategori presensi
@@ -41,7 +41,7 @@ class CutiExport implements WithMultipleSheets
             })
             ->get();
         foreach ($tipeCutis as $tipeCuti) {
-            $sheets[] = new CutiSheet($this->startDate, $this->endDate, $tipeCuti->nama, $tipeCuti->id);
+            $sheets[] = new CutiSheet($tipeCuti->nama, $this->startDate, $this->endDate, $tipeCuti->id);
         }
 
         return $sheets;
