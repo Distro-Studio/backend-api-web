@@ -4,10 +4,9 @@ namespace App\Exports\Jadwal\CutiNew;
 
 use App\Models\TipeCuti;
 use Maatwebsite\Excel\Concerns\Exportable;
-use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithMultipleSheets;
 
-class CutiExport implements WithMultipleSheets
+class CutiBesarTahunanExport implements WithMultipleSheets
 {
     use Exportable;
 
@@ -28,14 +27,12 @@ class CutiExport implements WithMultipleSheets
     {
         $sheets = [];
 
-        // Menambahkan sheet untuk setiap kategori presensi
-        $tipeCutis = TipeCuti::whereNotIn('id', [1, 5])
-            ->when(!empty($this->tipeCutiFilter), function ($query) {
-                $query->whereIn('id', $this->tipeCutiFilter);
-            })
-            ->get();
-        foreach ($tipeCutis as $tipeCuti) {
-            $sheets[] = new CutiSheet($this->filters, $tipeCuti->nama, $this->startDate, $this->endDate, $tipeCuti->id);
+        if (in_array(1, $this->tipeCutiFilter)) {
+            $sheets[] = new CutiTahunanSheet($this->filters, 'Cuti Tahunan', $this->startDate, $this->endDate, 1);
+        }
+
+        if (in_array(5, $this->tipeCutiFilter)) {
+            $sheets[] = new CutiBesarSheet($this->filters, 'Cuti Besar', $this->startDate, $this->endDate, 5);
         }
 
         return $sheets;
