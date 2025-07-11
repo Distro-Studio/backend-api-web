@@ -34,11 +34,11 @@ class MasaDiklatController extends Controller
             $filters = $request->all();
 
             if (isset($filters['less_than'])) {
-                $karyawan->where('masa_diklat', '>=', $filters['less_than']);
+                $karyawan->where('masa_diklat', '<=', $filters['less_than']);
             }
 
             if (isset($filters['more_than'])) {
-                $karyawan->where('masa_diklat', '<=', $filters['more_than']);
+                $karyawan->where('masa_diklat', '>', $filters['more_than']);
             }
 
             if (isset($filters['search'])) {
