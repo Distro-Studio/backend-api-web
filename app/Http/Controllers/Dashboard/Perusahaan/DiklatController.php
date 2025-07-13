@@ -978,12 +978,12 @@ class DiklatController extends Controller
         $berkas = null;
 
         $diklat = Diklat::findOrFail($diklatId);
-        if ($diklat->status_diklat_id !== 1) {
-            return response()->json(new WithoutDataResource(
-                Response::HTTP_FORBIDDEN,
-                "Hanya diklat yang memiliki status 'Menunggu Verifikasi' yang dapat dilakukan perubahan."
-            ), Response::HTTP_FORBIDDEN);
-        }
+        // if ($diklat->status_diklat_id !== 1) {
+        //     return response()->json(new WithoutDataResource(
+        //         Response::HTTP_FORBIDDEN,
+        //         "Hanya diklat yang memiliki status 'Menunggu Verifikasi' yang dapat dilakukan perubahan."
+        //     ), Response::HTTP_FORBIDDEN);
+        // }
 
         DB::beginTransaction();
         try {
