@@ -71,10 +71,10 @@ class ResetHakCuti extends Command
             }
 
             // Hitung selisih bulan masa kerja
-            $diffMonths = $now->diffInMonths($tglMasuk);
+            $diffDays = $now->diffInDays($tglMasuk);
 
-            // Cek sudah minimal 12 bulan
-            if ($diffMonths < 12) {
+            // Cek sudah minimal 1 tahun = 12 bulan = 365 hari
+            if ($diffDays < 365) {
                 $this->info("| Hak Cuti Tahunan | - karyawan ID {$karyawan->id} belum 1 tahun kerja, belum dapat cuti tahunan.");
                 $loggerTahunan->info("| Hak Cuti Tahunan | - karyawan ID {$karyawan->id} belum 1 tahun kerja, belum dapat cuti tahunan.");
                 continue;
@@ -82,7 +82,7 @@ class ResetHakCuti extends Command
 
             // Cek last_reset
             $lastReset = $hakCuti->last_reset ? Carbon::parse($hakCuti->last_reset) : null;
-            if ($lastReset && $lastReset->diffInMonths($now) < 12) {
+            if ($lastReset && $lastReset->diffInDays($now) < 365) {
                 $this->info("| Hak Cuti Tahunan | - ID {$hakCuti->id} untuk karyawan ID {$karyawan->id} sudah direset kurang dari 1 tahun yang lalu. Skip.");
                 $loggerTahunan->info("| Hak Cuti Tahunan | - ID {$hakCuti->id} untuk karyawan ID {$karyawan->id} sudah direset kurang dari 1 tahun yang lalu. Skip.");
                 continue;
@@ -120,10 +120,10 @@ class ResetHakCuti extends Command
                 continue;
             }
 
-            $diffMonths = $now->diffInMonths($tglMasuk);
+            $diffDays = $now->diffInDays($tglMasuk);
 
-            // Syarat minimal 7 tahun = 84 bulan
-            if ($diffMonths < 84) {
+            // Syarat minimal 7 tahun = 84 bulan = 2555 hari
+            if ($diffDays < 2555) {
                 $this->info("| Hak Cuti Besar | - karyawan ID {$karyawan->id} belum 7 tahun kerja, belum dapat cuti besar.");
                 $loggerBesar->info("| Hak Cuti Besar | - karyawan ID {$karyawan->id} belum 7 tahun kerja, belum dapat cuti besar.");
                 continue;
@@ -131,7 +131,7 @@ class ResetHakCuti extends Command
 
             // Cek last_reset
             $lastReset = $hakCuti->last_reset ? Carbon::parse($hakCuti->last_reset) : null;
-            if ($lastReset && $lastReset->diffInMonths($now) < 12) {
+            if ($lastReset && $lastReset->diffInDays($now) < 365) {
                 $this->info("| Hak Cuti Besar | - ID {$hakCuti->id} untuk karyawan ID {$karyawan->id} sudah direset kurang dari 1 tahun yang lalu. Skip.");
                 $loggerBesar->info("| Hak Cuti Besar | - ID {$hakCuti->id} untuk karyawan ID {$karyawan->id} sudah direset kurang dari 1 tahun yang lalu. Skip.");
                 continue;
@@ -156,7 +156,7 @@ class ResetHakCuti extends Command
             foreach ($hakCutis as $hakCuti) {
                 // Cek last_reset
                 $lastReset = $hakCuti->last_reset ? Carbon::parse($hakCuti->last_reset) : null;
-                if ($lastReset && $lastReset->diffInMonths($now) < 12) {
+                if ($lastReset && $lastReset->diffInDays($now) < 365) {
                     $this->info("| Hak Cuti '{$tipeCuti->nama}' | - ID {$hakCuti->id} untuk karyawan ID {$hakCuti->data_karyawans->id} sudah direset kurang dari 1 tahun yang lalu. Skip.");
                     $loggerLainnya->info("| Hak Cuti '{$tipeCuti->nama}' | - ID {$hakCuti->id} untuk karyawan ID {$hakCuti->data_karyawans->id} sudah direset kurang dari 1 tahun yang lalu. Skip.");
                     continue;

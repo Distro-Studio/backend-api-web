@@ -497,6 +497,17 @@ class DataCutiController extends Controller
                 return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data karyawan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
             }
 
+            // Validasi masa kerja harus minimal 1 tahun = 365 hari
+            $now = now('Asia/Jakarta');
+            $tglMasuk = Carbon::createFromFormat('d-m-Y', $dataKaryawan->tgl_masuk);
+            $masaKerjaHari = $tglMasuk->diffInDays($now);
+            if ($masaKerjaHari < 365) {
+                return response()->json(new WithoutDataResource(
+                    Response::HTTP_BAD_REQUEST,
+                    'Karyawan belum memenuhi masa kerja minimal 1 tahun untuk pengajuan cuti. Saat ini baru bekerja selama ' . $masaKerjaHari . ' hari.'
+                ), Response::HTTP_BAD_REQUEST);
+            }
+
             // Ambil hak cuti dari tabel hak_cutis berdasarkan data_karyawan_id dan tipe_cuti_id
             $hakCuti = HakCuti::with('tipe_cutis')
                 ->where('data_karyawan_id', $dataKaryawan->id)
@@ -854,6 +865,11 @@ class DataCutiController extends Controller
     public function deleteCuti(Request $request)
     {
         try {
+            $superAdmin = $request->user();
+            if (!$superAdmin->hasRole('Super Admin')) {
+                return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+            }
+
             if (!Gate::allows('delete cutiKaryawan')) {
                 return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
             }
@@ -867,12 +883,12 @@ class DataCutiController extends Controller
             $idsCuti = $request->input('ids_cuti');
 
             // Cek cuti yang sudah disetujui tahap 2 (status_cuti_id == 4)
-            $countDisetujuiTahap2 = Cuti::whereIn('id', $idsCuti)
-                ->where('status_cuti_id', 4)
-                ->count();
-            if ($countDisetujuiTahap2 > 0) {
-                return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Cuti yang sudah disetujui tahap 2 tidak diperbolehkan untuk dihapus.'), Response::HTTP_BAD_REQUEST);
-            }
+            // $countDisetujuiTahap2 = Cuti::whereIn('id', $idsCuti)
+            //     ->where('status_cuti_id', 4)
+            //     ->count();
+            // if ($countDisetujuiTahap2 > 0) {
+            //     return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Cuti yang sudah disetujui tahap 2 tidak diperbolehkan untuk dihapus.'), Response::HTTP_BAD_REQUEST);
+            // }
 
             DB::beginTransaction();
 
@@ -954,8 +970,23 @@ class DataCutiController extends Controller
                 return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Tidak ada data cuti karyawan yang tersedia untuk diekspor.'), Response::HTTP_NOT_FOUND);
             }
 
+            // Mendapatkan filter rentang tanggal
+            $tgl_mulai = $request->input('tgl_mulai');
+            $tgl_selesai = $request->input('tgl_selesai');
+            $tipe_cuti = $request->input('tipe_cuti', []);
+            if (empty($tgl_mulai) || empty($tgl_selesai)) {
+                return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Periode tanggal mulai dan tanggal selesai tidak boleh kosong.'), Response::HTTP_BAD_REQUEST);
+            }
+
             try {
-                return Excel::download(new CutiExport($request->all()), 'cuti-karyawan.xls');
+                $startDate = Carbon::createFromFormat('d-m-Y', $tgl_mulai)->startOfDay();
+                $endDate = Carbon::createFromFormat('d-m-Y', $tgl_selesai)->endOfDay();
+            } catch (\Exception $e) {
+                return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Tanggal yang dimasukkan tidak valid.'), Response::HTTP_BAD_REQUEST);
+            }
+
+            try {
+                return Excel::download(new CutiExport($request->all(),$startDate, $endDate, $tipe_cuti), 'cuti-karyawan.xls');
                 // return Excel::download(new CutiJadwalExport($request->all()), 'cuti-karyawan.xls');
             } catch (\Throwable $e) {
                 return response()->json(new WithoutDataResource(Response::HTTP_INTERNAL_SERVER_ERROR, 'Maaf sepertinya terjadi error. Pesan: ' . $e->getMessage()), Response::HTTP_INTERNAL_SERVER_ERROR);

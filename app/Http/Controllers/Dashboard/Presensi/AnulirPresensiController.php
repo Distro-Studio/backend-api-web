@@ -416,28 +416,35 @@ class AnulirPresensiController extends Controller
                 ->whereMonth('tgl_pembatalan', $bulanPresensi)
                 ->count();
 
-            // Hitung total pembatalan tipe 'presensi' dengan presensi_id yang sama
-            $totalPembatalanPresensiIni = DB::table('riwayat_pembatalan_rewards')
-                ->where('data_karyawan_id', $presensi->data_karyawan_id)
-                ->where('tipe_pembatalan', 'presensi')
-                ->where('presensi_id', $presensi->id)
-                ->whereYear('tgl_pembatalan', $tahunPresensi)
-                ->whereMonth('tgl_pembatalan', $bulanPresensi)
-                ->count();
+            DB::beginTransaction();
 
-            if ($totalPembatalanBulanIni >= 1 && $totalPembatalanPresensiIni >= 2) {
+            // 1. Jika totalPembatalanBulanIni > 1, tidak bisa update reward presensi
+            if ($totalPembatalanBulanIni > 1) {
                 Log::info("Jumlah riwayat pembatalan reward di bulan ini: '{$totalPembatalanBulanIni}'. Tidak mengubah status reward presensi.");
                 $message = "Data anulir dari karyawan '{$karyawanAnulir->users->nama}' berhasil ditambahkan. Namun tidak mengubah reward presensi karena ada beberapa riwayat pembatalan di bulan tersebut.";
                 $keterangan = "Data anulir berhasil ditambahkan. Namun tidak mengubah reward presensi karena ada beberapa riwayat pembatalan di bulan tersebut.";
             }
 
-            if ($totalPembatalanPresensiIni === 1) {
-                Log::info("Pembatalan presensi tunggal di bulan ini, status reward presensi dapat diperbarui.");
-                $message = "Data anulir dari karyawan '{$karyawanAnulir->users->nama}' berhasil ditambahkan dan reward presensi berhasil diperbarui.";
-                $keterangan = "Data anulir berhasil ditambahkan dan reward presensi berhasil diperbarui.";
-            }
+            // 2. Jika totalPembatalanBulanIni == 1, tapi tipe_pembatalan is not 'presensi'
+            elseif ($totalPembatalanBulanIni == 1) {
+                $tipePembatalan = DB::table('riwayat_pembatalan_rewards')
+                    ->where('data_karyawan_id', $presensi->data_karyawan_id)
+                    ->where('presensi_id', $presensi->id)
+                    ->value('tipe_pembatalan');
 
-            DB::beginTransaction();
+                if ($tipePembatalan !== 'presensi') {
+                    Log::info("Jumlah riwayat pembatalan reward di bulan ini: '{$totalPembatalanBulanIni}'. Tidak mengubah status reward presensi.");
+                    $message = "Data anulir dari karyawan '{$karyawanAnulir->users->nama}' berhasil ditambahkan. Namun tidak mengubah reward presensi karena ada beberapa riwayat pembatalan selain presensi di bulan tersebut.";
+                    $keterangan = "Data anulir berhasil ditambahkan. Namun tidak mengubah reward presensi karena ada beberapa riwayat pembatalan selain presensi di bulan tersebut.";
+                }
+
+                // 3. If totalPembatalanBulanIni == 1, dan tipe_pembatalan  is 'presensi' dan presensi_id sama dengan $presensi->id
+                else {
+                    Log::info("Pembatalan presensi tunggal di bulan ini, status reward presensi dapat diperbarui.");
+                    $message = "Data anulir dari karyawan '{$karyawanAnulir->users->nama}' berhasil ditambahkan dan reward presensi berhasil diperbarui.";
+                    $keterangan = "Data anulir berhasil ditambahkan dan reward presensi berhasil diperbarui.";
+                }
+            }
 
             if ($request->hasFile('dokumen')) {
                 StorageServerHelper::login();
@@ -487,24 +494,32 @@ class AnulirPresensiController extends Controller
             $presensi->save();
 
             // Jika hanya 1 data pembatalan (data yang sedang dibuat), update riwayat_pembatalan_rewards terkait
-            if ($totalPembatalanPresensiIni === 1) {
-                // Cek ada tidaknya riwayat penggajian bulan ini untuk karyawan ini
-                $gajiBulanIni = DB::table('riwayat_penggajians')
-                    ->whereYear('periode', $tahunPresensi)
-                    ->whereMonth('periode', $bulanPresensi)
-                    ->exists();
-                if ($gajiBulanIni) {
-                    // Jika ada gaji bulan ini, update di data_karyawans
-                    DB::table('data_karyawans')
-                        ->where('id', $presensi->data_karyawan_id)
-                        ->update(['status_reward_presensi' => true]);
-                    Log::info("Status reward presensi karyawan ID {$presensi->data_karyawan_id} diperbarui menjadi false di data_karyawans.");
-                } else {
-                    // Jika tidak ada, update di reward_bulan_lalus
-                    DB::table('reward_bulan_lalus')
-                        ->where('data_karyawan_id', $presensi->data_karyawan_id)
-                        ->update(['status_reward' => true]);
-                    Log::info("Status reward bulan lalu karyawan ID {$presensi->data_karyawan_id} diperbarui menjadi false di reward_bulan_lalus.");
+            if ($totalPembatalanBulanIni == 1) {
+                $tipePembatalan = DB::table('riwayat_pembatalan_rewards')
+                    ->where('data_karyawan_id', $presensi->data_karyawan_id)
+                    ->where('presensi_id', $presensi->id)
+                    ->value('tipe_pembatalan');
+
+                // If tipe_pembatalan is 'presensi' and presensi_id matches, proceed to update reward
+                if ($tipePembatalan === 'presensi') {
+                    // Cek ada tidaknya riwayat penggajian bulan ini untuk karyawan ini
+                    $gajiBulanIni = DB::table('riwayat_penggajians')
+                        ->whereYear('periode', $tahunPresensi)
+                        ->whereMonth('periode', $bulanPresensi)
+                        ->exists();
+                    if ($gajiBulanIni) {
+                        // Jika ada gaji bulan ini, update di data_karyawans
+                        DB::table('data_karyawans')
+                            ->where('id', $presensi->data_karyawan_id)
+                            ->update(['status_reward_presensi' => true]);
+                        Log::info("Status reward presensi karyawan ID {$presensi->data_karyawan_id} diperbarui menjadi false di data_karyawans.");
+                    } else {
+                        // Jika tidak ada, update di reward_bulan_lalus
+                        DB::table('reward_bulan_lalus')
+                            ->where('data_karyawan_id', $presensi->data_karyawan_id)
+                            ->update(['status_reward' => true]);
+                        Log::info("Status reward bulan lalu karyawan ID {$presensi->data_karyawan_id} diperbarui menjadi false di reward_bulan_lalus.");
+                    }
                 }
             }
 
@@ -565,37 +580,63 @@ class AnulirPresensiController extends Controller
                 $berkasLama->delete();
             }
 
-            $data_anulir->delete();
-
             // Update is_anulir_presensi pada pembatalan yang sesuai presensi_id
             DB::table('riwayat_pembatalan_rewards')
                 ->where('data_karyawan_id', $data_anulir->data_karyawan_id)
                 ->where('presensi_id', $data_anulir->presensi_id)
                 ->update(['is_anulir_presensi' => false]);
 
-            // Cek ada tidaknya riwayat penggajian bulan ini untuk karyawan ini
-            $gajiBulanIni = DB::table('riwayat_penggajians')
-                ->whereYear('periode', $tahunPresensi)
-                ->whereMonth('periode', $bulanPresensi)
+            // Rollback is_anulir_presensi pada presensi yang sesuai
+            $presensi->is_anulir_presensi = false;
+            $presensi->save();
+
+            // Hitung total pembatalan di bulan dan tahun (semua tipe)
+            $totalPembatalanBulanIni = DB::table('riwayat_pembatalan_rewards')
                 ->where('data_karyawan_id', $presensi->data_karyawan_id)
-                ->exists();
-            if ($gajiBulanIni) {
-                // Jika ada gaji bulan ini, update di data_karyawans
-                DB::table('data_karyawans')
-                    ->where('id', $presensi->data_karyawan_id)
-                    ->update(['status_reward_presensi' => false]);
-                Log::info("Status reward presensi karyawan ID {$presensi->data_karyawan_id} diperbarui menjadi false di data_karyawans.");
-            } else {
-                // Jika tidak ada, update di reward_bulan_lalus
-                DB::table('reward_bulan_lalus')
+                ->whereYear('tgl_pembatalan', $tahunPresensi)
+                ->whereMonth('tgl_pembatalan', $bulanPresensi)
+                ->count();
+
+            if ($totalPembatalanBulanIni == 1) {
+                $tipePembatalan = DB::table('riwayat_pembatalan_rewards')
                     ->where('data_karyawan_id', $presensi->data_karyawan_id)
-                    ->update(['status_reward' => false]);
-                Log::info("Status reward bulan lalu karyawan ID {$presensi->data_karyawan_id} diperbarui menjadi false di reward_bulan_lalus.");
+                    ->where('presensi_id', $presensi->id)
+                    ->value('tipe_pembatalan');
+
+                // If tipe_pembatalan is 'presensi' and presensi_id matches, proceed to update reward
+                if ($tipePembatalan === 'presensi') {
+                    // Cek ada tidaknya riwayat penggajian bulan ini untuk karyawan ini
+                    $gajiBulanIni = DB::table('riwayat_penggajians')
+                        ->whereYear('periode', $tahunPresensi)
+                        ->whereMonth('periode', $bulanPresensi)
+                        ->where('data_karyawan_id', $presensi->data_karyawan_id)
+                        ->exists();
+                    if ($gajiBulanIni) {
+                        // Jika ada gaji bulan ini, update di data_karyawans
+                        DB::table('data_karyawans')
+                            ->where('id', $presensi->data_karyawan_id)
+                            ->update(['status_reward_presensi' => false]);
+                        Log::info("Status reward presensi karyawan ID {$presensi->data_karyawan_id} diperbarui menjadi false di data_karyawans.");
+                    } else {
+                        // Jika tidak ada, update di reward_bulan_lalus
+                        DB::table('reward_bulan_lalus')
+                            ->where('data_karyawan_id', $presensi->data_karyawan_id)
+                            ->update(['status_reward' => false]);
+                        Log::info("Status reward bulan lalu karyawan ID {$presensi->data_karyawan_id} diperbarui menjadi false di reward_bulan_lalus.");
+                    }
+                }
             }
+
+            $data_anulir->delete();
 
             DB::commit();
 
             LogHelper::logAction('Anulir Presensi', 'delete', $data_anulir->data_karyawan_id);
+
+            return response()->json([
+                'status' => Response::HTTP_OK,
+                'message' => "Data anulir berhasil dihapus dan reward presensi berhasil diperbarui."
+            ], Response::HTTP_OK);
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('| Anulir Presensi | - Error function destroy: ' . $e->getMessage());

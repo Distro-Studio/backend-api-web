@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Dashboard\DashboardController;
 use App\Http\Controllers\Dashboard\InboxController;
+use App\Http\Controllers\Dashboard\Jadwal\DataCutiBesarTahunanController;
 use App\Http\Controllers\Dashboard\Jadwal\DataCutiController;
 use App\Http\Controllers\Dashboard\Jadwal\DataHakCutiController;
 use App\Http\Controllers\Dashboard\Jadwal\DataJadwalController;
@@ -242,7 +243,9 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::post('/get-cuti', [DataCutiController::class, 'index']);
             Route::post('/delete-cuti', [DataCutiController::class, 'deleteCuti']);
             Route::post('/cuti/export', [DataCutiController::class, 'exportJadwalCuti']);
+            Route::post('/cuti-besar-tahunan/export', [DataCutiBesarTahunanController::class, 'exportCutiBesarTahunan']);
             Route::apiResource('/cuti', DataCutiController::class);
+            Route::apiResource('/cuti-besar-tahunan', DataCutiBesarTahunanController::class);
 
             // ! Izin ===========>
             Route::post('/get-perizinan', [DataRiwayatPerizinanController::class, 'index']);

@@ -815,6 +815,11 @@ class DiklatController extends Controller
 
     public function updateInternal(UpdateDiklatRequest $request, $diklatId)
     {
+        $superAdmin = $request->user();
+        if (!$superAdmin->hasRole('Super Admin')) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
+
         if (!Gate::allows('edit diklat')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
@@ -822,102 +827,124 @@ class DiklatController extends Controller
         $data = $request->validated();
 
         $diklat = Diklat::findOrFail($diklatId);
-        if ($diklat->status_diklat_id !== 1) {
-            return response()->json(new WithoutDataResource(
-                Response::HTTP_FORBIDDEN,
-                "Hanya diklat yang memiliki status 'Menunggu Verifikasi' yang dapat dilakukan perubahan."
-            ), Response::HTTP_FORBIDDEN);
+        $currentParticipantsCount = $diklat->peserta_diklat()->count();
+        if (isset($data['kuota']) && $data['kuota'] < $currentParticipantsCount) {
+            return response()->json([
+                'status' => Response::HTTP_BAD_REQUEST,
+                'message' => "Kuota harus melebihi atau sama dengan jumlah peserta yang terdaftar, saat ini berjumlah {$currentParticipantsCount} peserta."
+            ], Response::HTTP_BAD_REQUEST);
         }
 
         DB::beginTransaction();
         try {
-            // StorageServerHelper::login();
-            // $berkasIds = [
-            //     'dokumen' => null,
-            //     'dokumen_diklat_1' => null,
-            //     'dokumen_diklat_2' => null,
-            //     'dokumen_diklat_3' => null,
-            //     'dokumen_diklat_4' => null,
-            //     'dokumen_diklat_5' => null,
-            // ];
+            StorageServerHelper::login();
+            $berkasIds = [
+                'dokumen' => null,
+                'dokumen_diklat_1' => null,
+                'dokumen_diklat_2' => null,
+                'dokumen_diklat_3' => null,
+                'dokumen_diklat_4' => null,
+                'dokumen_diklat_5' => null,
+            ];
 
             // Upload dokumen_diklat_1 s.d. dokumen_diklat_5 (sebagian boleh kosong)
-            // $authUser = Auth::user();
-            // foreach ($berkasIds as $field => $value) {
-            //     if ($request->hasFile($field)) {
-            //         $file = $request->file($field);
-            //         $random_filename = Str::random(20);
-            //         $dataupload = StorageServerHelper::multipleUploadToServer($file, $random_filename);
+            $authUser = Auth::user();
+            foreach ($berkasIds as $field => $value) {
+                if ($request->hasFile($field)) {
+                    // Delete old file if new file is uploaded
+                    if ($diklat->{$field}) {
+                        $berkasLama = Berkas::find($diklat->{$field});
+                        if ($berkasLama) {
+                            try {
+                                StorageServerHelper::deleteFromServer($berkasLama->file_id);
+                            } catch (\Exception $e) {
+                                Log::warning("Gagal hapus berkas lama (diklat internal update) dari server (file_id: {$berkasLama->file_id}): " . $e->getMessage());
+                            }
 
-            //         // Simpan data berkas ke tabel berkas
-            //         $berkas = Berkas::create([
-            //             'user_id' => $authUser->id,
-            //             'file_id' => $dataupload['id_file']['id'],
-            //             'nama' => $random_filename,
-            //             'kategori_berkas_id' => 2,
-            //             'status_berkas_id' => 2,
-            //             'path' => $dataupload['path'],
-            //             'tgl_upload' => now('Asia/Jakarta'),
-            //             'nama_file' => $dataupload['nama_file'],
-            //             'ext' => $dataupload['ext'],
-            //             'size' => $dataupload['size'],
-            //         ]);
+                            $diklat->{$field} = null;
+                            $diklat->save();
+                            $berkasLama->delete();
+                        }
+                    }
 
-            //         // Simpan ID berkas ke urutan yang sesuai
-            //         $berkasIds[$field] = $berkas->id;
-            //         Log::info("Berkas dokumen pada kolom {$field} berhasil diupload.");
-            //     }
-            // }
+                    // Upload the new file
+                    $file = $request->file($field);
+                    $random_filename = Str::random(20);
+                    $dataupload = StorageServerHelper::multipleUploadToServer($file, $random_filename);
 
-            // StorageServerHelper::logout();
+                    // Simpan data berkas ke tabel berkas
+                    $berkas = Berkas::create([
+                        'user_id' => $authUser->id,
+                        'file_id' => $dataupload['id_file']['id'],
+                        'nama' => $random_filename,
+                        'kategori_berkas_id' => 2,
+                        'status_berkas_id' => 2,
+                        'path' => $dataupload['path'],
+                        'tgl_upload' => now('Asia/Jakarta'),
+                        'nama_file' => $dataupload['nama_file'],
+                        'ext' => $dataupload['ext'],
+                        'size' => $dataupload['size'],
+                    ]);
+
+                    // Simpan ID berkas ke urutan yang sesuai
+                    $berkasIds[$field] = $berkas->id;
+                    Log::info("Berkas dokumen pada kolom {$field} berhasil diupload.");
+                }
+            }
+
+            StorageServerHelper::logout();
+
+            if (isset($data['tgl_mulai'], $data['tgl_selesai'], $data['jam_mulai'], $data['jam_selesai'])) {
+                $jamMulai = Carbon::createFromFormat('H:i:s', $data['jam_mulai'], 'Asia/Jakarta');
+                $jamSelesai = Carbon::createFromFormat('H:i:s', $data['jam_selesai'], 'Asia/Jakarta');
+
+                // Cek apakah jam selesai lebih kecil dari jam mulai (berarti selesai keesokan hari)
+                if ($jamSelesai->lessThan($jamMulai)) {
+                    $jamSelesai->addDay(); // Tambahkan 1 hari ke jam selesai
+                }
+
+                // Hitung selisih jam (dalam detik)
+                $selisihJam = $jamMulai->diffInSeconds($jamSelesai);
+
+                // Hitung total hari (selisih tanggal)
+                $tglMulai = Carbon::createFromFormat('d-m-Y', $data['tgl_mulai'], 'Asia/Jakarta');
+                $tglSelesai = Carbon::createFromFormat('d-m-Y', $data['tgl_selesai'], 'Asia/Jakarta');
+                $totalHari = $tglMulai->diffInDays($tglSelesai) + 1; // +1 untuk menghitung hari mulai
+
+                $durasi = $selisihJam * $totalHari;
+
+                // Loop through each participant and adjust their masa_diklat
+                $pesertaDiklats = $diklat->peserta_diklat;
+                foreach ($pesertaDiklats as $peserta) {
+                    $dataKaryawan = DataKaryawan::where('user_id', $peserta->peserta)->first();
+                    if ($dataKaryawan) {
+                        $currentMasaDiklat = $dataKaryawan->masa_diklat ?? 0;
+                        $dataKaryawan->masa_diklat = max(0, $currentMasaDiklat - $diklat->durasi) + $durasi;
+                        $dataKaryawan->save();
+                    }
+                }
+
+                // Update diklat's duration
+                $diklat->durasi = $durasi;
+            }
 
             $diklat->update([
-                // 'gambar' => $berkasIds['dokumen'] ?? $diklat->gambar,
-                // 'dokumen_diklat_1' => $berkasIds['dokumen_diklat_1'] ?? $diklat->dokumen_diklat_1,
-                // 'dokumen_diklat_2' => $berkasIds['dokumen_diklat_2'] ?? $diklat->dokumen_diklat_2,
-                // 'dokumen_diklat_3' => $berkasIds['dokumen_diklat_3'] ?? $diklat->dokumen_diklat_3,
-                // 'dokumen_diklat_4' => $berkasIds['dokumen_diklat_4'] ?? $diklat->dokumen_diklat_4,
-                // 'dokumen_diklat_5' => $berkasIds['dokumen_diklat_5'] ?? $diklat->dokumen_diklat_5,
-                'nama' => $data['nama'],
-                'deskripsi' => $data['deskripsi'],
-                // 'kuota' => $data['kuota'] ?? $diklat->kuota,
-                'skp' => $data['skp'],
-                'lokasi' => $data['lokasi']
+                'gambar' => $berkasIds['dokumen'] ?? $diklat->gambar,
+                'dokumen_diklat_1' => $berkasIds['dokumen_diklat_1'] ?? $diklat->dokumen_diklat_1,
+                'dokumen_diklat_2' => $berkasIds['dokumen_diklat_2'] ?? $diklat->dokumen_diklat_2,
+                'dokumen_diklat_3' => $berkasIds['dokumen_diklat_3'] ?? $diklat->dokumen_diklat_3,
+                'dokumen_diklat_4' => $berkasIds['dokumen_diklat_4'] ?? $diklat->dokumen_diklat_4,
+                'dokumen_diklat_5' => $berkasIds['dokumen_diklat_5'] ?? $diklat->dokumen_diklat_5,
+                'nama' => $data['nama'] ?? $diklat->nama,
+                'deskripsi' => $data['deskripsi'] ?? $diklat->deskripsi,
+                'kuota' => $data['kuota'] ?? $diklat->kuota,
+                'tgl_mulai' => $data['tgl_mulai'] ?? $diklat->tgl_mulai,
+                'tgl_selesai' => $data['tgl_selesai'] ?? $diklat->tgl_selesai,
+                'jam_mulai' => $data['jam_mulai'] ?? $diklat->jam_mulai,
+                'jam_selesai' => $data['jam_selesai'] ?? $diklat->jam_selesai,
+                'lokasi' => $data['lokasi'] ?? $diklat->lokasi,
+                'skp' => $data['skp'] ?? $diklat->skp,
             ]);
-
-            // $userIds = $data['user_id'] ?? [];
-            // $existingUserIds = DB::table('peserta_diklats')
-            //     ->where('diklat_id', $diklat->id)
-            //     ->pluck('peserta')
-            //     ->toArray();
-
-            // Bandingkan array user_id lama dan baru (tanpa memperhatikan urutan)
-            // $hasUserChanged = array_diff($userIds, $existingUserIds) || array_diff($existingUserIds, $userIds);
-            // if ($hasUserChanged) {
-            //     DB::table('peserta_diklats')->where('diklat_id', $diklat->id)->delete();
-
-            //     // Menyimpan peserta diklat dan menentukan is_whitelist
-            //     if ($userIds) {
-            //         foreach ($userIds as $userId) {
-            //             DB::table('peserta_diklats')->insert([
-            //                 'diklat_id' => $diklat->id,
-            //                 'peserta' => $userId,
-            //             ]);
-            //         }
-
-            //         $diklat->update([
-            //             'is_whitelist' => 1,
-            //             'total_peserta' => count($userIds),
-            //             'kuota' => count($userIds),
-            //         ]);
-            //     } else {
-            //         $diklat->update([
-            //             'is_whitelist' => 0,
-            //             'total_peserta' => 0,
-            //             'kuota' => $data['kuota'] ?? 0,
-            //         ]);
-            //     }
-            // }
 
             DB::commit();
 
@@ -937,13 +964,18 @@ class DiklatController extends Controller
 
     public function updateExternal(UpdateDiklatExternalRequest $request, $diklatId)
     {
+        $superAdmin = $request->user();
+        if (!$superAdmin->hasRole('Super Admin')) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
+
         if (!Gate::allows('edit diklat')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
         $data = $request->validated();
         $verifikatorId = Auth::id();
-        // $berkas = null;
+        $berkas = null;
 
         $diklat = Diklat::findOrFail($diklatId);
         if ($diklat->status_diklat_id !== 1) {
@@ -955,46 +987,95 @@ class DiklatController extends Controller
 
         DB::beginTransaction();
         try {
-            // if ($request->hasFile('dokumen')) {
-            //     $authUser = Auth::user();
+            if ($request->hasFile('dokumen')) {
+                $authUser = Auth::user();
 
-            //     // Login to the storage server
-            //     StorageServerHelper::login();
+                // Login to the storage server
+                StorageServerHelper::login();
 
-            //     $file = $request->file('dokumen');
+                // Hapus berkas lama
+                $berkasLama = Berkas::find($diklat->dokumen_eksternal);
+                if ($berkasLama) {
+                    try {
+                        StorageServerHelper::deleteFromServer($berkasLama->file_id);
+                    } catch (\Exception $e) {
+                        Log::warning("Gagal hapus berkas lama (diklat eksternal update) dari server (file_id: {$berkasLama->file_id}): " . $e->getMessage());
+                    }
 
-            //     // Upload file using helper
-            //     $random_filename = Str::random(20);
-            //     $dataupload = StorageServerHelper::uploadToServer($request, $random_filename);
-            //     // $gambarUrl = $dataupload['path'];
+                    $diklat->dokumen_eksternal = null;
+                    $diklat->save();
+                    $berkasLama->delete();
+                }
 
-            //     $berkas = Berkas::create([
-            //         'user_id' => $authUser->id,
-            //         'file_id' => $dataupload['id_file']['id'],
-            //         'nama' => $random_filename,
-            //         'kategori_berkas_id' => 2, // umum
-            //         'status_berkas_id' => 2,
-            //         'path' => $dataupload['path'],
-            //         'tgl_upload' => now(),
-            //         'nama_file' => $dataupload['nama_file'],
-            //         'ext' => $dataupload['ext'],
-            //         'size' => $dataupload['size'],
-            //     ]);
-            //     if (!$berkas) {
-            //         throw new Exception('Berkas gagal di upload.');
-            //     }
+                // Upload berkas baru
+                $file = $request->file('dokumen');
+                $random_filename = Str::random(20);
+                $dataupload = StorageServerHelper::uploadToServer($request, $random_filename);
+                // $gambarUrl = $dataupload['path'];
 
-            //     $gambarId = $berkas->id;
+                $berkas = Berkas::create([
+                    'user_id' => $authUser->id,
+                    'file_id' => $dataupload['id_file']['id'],
+                    'nama' => $random_filename,
+                    'kategori_berkas_id' => 2, // umum
+                    'status_berkas_id' => 2,
+                    'path' => $dataupload['path'],
+                    'tgl_upload' => now('Asia/Jakarta'),
+                    'nama_file' => $dataupload['nama_file'],
+                    'ext' => $dataupload['ext'],
+                    'size' => $dataupload['size'],
+                ]);
+                if (!$berkas) {
+                    throw new Exception('Berkas gagal di upload.');
+                }
 
-            //     StorageServerHelper::logout();
-            // }
+                $gambarId = $berkas->id;
 
-            // $durasi = $diklat->durasi;
+                StorageServerHelper::logout();
+            }
+
+            if (isset($data['tgl_mulai'], $data['tgl_selesai'], $data['jam_mulai'], $data['jam_selesai'])) {
+                $jamMulai = Carbon::createFromFormat('H:i:s', $data['jam_mulai'], 'Asia/Jakarta');
+                $jamSelesai = Carbon::createFromFormat('H:i:s', $data['jam_selesai'], 'Asia/Jakarta');
+
+                // Cek apakah jam selesai lebih kecil dari jam mulai (berarti selesai keesokan hari)
+                if ($jamSelesai->lessThan($jamMulai)) {
+                    $jamSelesai->addDay(); // Tambahkan 1 hari ke jam selesai
+                }
+
+                // Hitung selisih jam (dalam detik)
+                $selisihJam = $jamMulai->diffInSeconds($jamSelesai);
+
+                // Hitung total hari (selisih tanggal)
+                $tglMulai = Carbon::createFromFormat('d-m-Y', $data['tgl_mulai'], 'Asia/Jakarta');
+                $tglSelesai = Carbon::createFromFormat('d-m-Y', $data['tgl_selesai'], 'Asia/Jakarta');
+                $totalHari = $tglMulai->diffInDays($tglSelesai) + 1; // +1 untuk menghitung hari mulai
+
+                $durasi = $selisihJam * $totalHari;
+
+                // Loop through each participant and adjust their masa_diklat
+                $pesertaDiklats = $diklat->peserta_diklat;
+                foreach ($pesertaDiklats as $peserta) {
+                    $dataKaryawan = DataKaryawan::where('user_id', $peserta->peserta)->first();
+                    if ($dataKaryawan) {
+                        $currentMasaDiklat = $dataKaryawan->masa_diklat ?? 0;
+                        $dataKaryawan->masa_diklat = max(0, $currentMasaDiklat - $diklat->durasi) + $durasi;
+                        $dataKaryawan->save();
+                    }
+                }
+
+                // Update diklat's duration
+                $diklat->durasi = $durasi;
+            }
 
             $diklat->update([
-                // 'dokumen_eksternal' => $gambarId ?? $diklat->dokumen_eksternal,
+                'dokumen_eksternal' => $gambarId ?? $diklat->dokumen_eksternal,
                 'nama'              => $data['nama'],
                 'deskripsi'         => $data['deskripsi'],
+                'tgl_mulai'         => $data['tgl_mulai'] ?? $diklat->tgl_mulai,
+                'tgl_selesai'       => $data['tgl_selesai'] ?? $diklat->tgl_selesai,
+                'jam_mulai'         => $data['jam_mulai'] ?? $diklat->jam_mulai,
+                'jam_selesai'       => $data['jam_selesai'] ?? $diklat->jam_selesai,
                 'lokasi'            => $data['lokasi'],
                 'skp'               => $data['skp'],
                 'verifikator_1'     => $verifikatorId,
@@ -1029,7 +1110,7 @@ class DiklatController extends Controller
             ], Response::HTTP_OK);
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('| Diklat Internal | - Error function updateExternal: ' . $e->getMessage());
+            Log::error('| Diklat External | - Error function updateExternal: ' . $e->getMessage());
             return response()->json([
                 'status'  => Response::HTTP_INTERNAL_SERVER_ERROR,
                 'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',

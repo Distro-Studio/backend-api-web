@@ -112,34 +112,46 @@ class DashboardController extends Controller
         // Retrieve all employees excluding the super admin
         $totalEmployees = DataKaryawan::whereHas('users', function ($query) {
             $query->where('status_aktif', 2);
-        })->where('id', '!=', 1)->count();;
-
+        })->where('id', '!=', 1)->count();
         if ($totalEmployees == 0) {
             return response()->json([
                 'status' => Response::HTTP_NOT_FOUND,
                 'message' => "Tidak ada data karyawan yang tersedia.",
                 'data' => [
-                    'persen_laki_laki' => 0,
-                    'persen_perempuan' => 0,
+                    'akumulatif_karyawan' => [
+                        [
+                            'persen_laki_laki' => 0,
+                            'persen_perempuan' => 0,
+                        ],
+                        [
+                            'jumlah_laki_laki' => 0,
+                            'jumlah_perempuan' => 0,
+                        ]
+                    ],
+                    'status_karyawan' => [
+                        'label' => null,
+                        'jumlah_laki_laki' => 0,
+                        'jumlah_perempuan' => 0,
+                    ]
                 ]
             ], Response::HTTP_NOT_FOUND);
         }
 
-        // Retrieve the count of male and female employees
+        // Prepare the akumulatif karyawan data (total percentages)
         $countMale = DataKaryawan::whereHas('users', function ($query) {
             $query->where('status_aktif', 2);
         })
-            ->where('jenis_kelamin', true)
-            ->where('id', '!=', 1)
-            ->count();
-        $countFemale = DataKaryawan::whereHas('users', function ($query) {
-            $query->where('status_aktif', 2);
-        })
-            ->where('jenis_kelamin', false)
+            ->where('jenis_kelamin', 1)
             ->where('id', '!=', 1)
             ->count();
 
-        // Calculate the percentage
+        $countFemale = DataKaryawan::whereHas('users', function ($query) {
+            $query->where('status_aktif', 2);
+        })
+            ->where('jenis_kelamin', 0)
+            ->where('id', '!=', 1)
+            ->count();
+
         $percentMale = ($countMale / $totalEmployees) * 100;
         $percentFemale = ($countFemale / $totalEmployees) * 100;
 
@@ -152,12 +164,57 @@ class DashboardController extends Controller
             }
         }
 
+        // Retrieve all statuses where kategori_status_id is not null
+        $statuses = StatusKaryawan::whereNotNull('kategori_status_id')->get();
+        if ($statuses->isEmpty()) {
+            return response()->json([
+                'status' => Response::HTTP_NOT_FOUND,
+                'message' => "Tidak ada data status karyawan yang tersedia.",
+            ], Response::HTTP_NOT_FOUND);
+        }
+
+        $statusData = [];
+
+        // Iterate over each status and count the number of employees with that status
+        foreach ($statuses as $status) {
+            $countLakiLaki = DataKaryawan::whereHas('users', function ($query) {
+                $query->where('status_aktif', 2);
+            })
+                ->where('id', '!=', 1)
+                ->where('status_karyawan_id', $status->id)
+                ->where('jenis_kelamin', 1)
+                ->count();
+
+            $countPerempuan = DataKaryawan::whereHas('users', function ($query) {
+                $query->where('status_aktif', 2);
+            })
+                ->where('id', '!=', 1)
+                ->where('status_karyawan_id', $status->id)
+                ->where('jenis_kelamin', 0)
+                ->count();
+
+            $statusData[] = [
+                'label' => $status->label,
+                'jumlah_laki_laki' => $countLakiLaki,
+                'jumlah_perempuan' => $countPerempuan,
+            ];
+        }
+
         return response()->json([
             'status' => Response::HTTP_OK,
-            'message' => "Kalkulasi jenis kelamin berhasil.",
+            'message' => "Kalkulasi jumlah jenis kelamin berdasarkan status karyawan berhasil.",
             'data' => [
-                'persen_laki_laki' => round($percentMale, 0),
-                'persen_perempuan' => round($percentFemale, 0),
+                'akumulatif_karyawan' => [
+                    [
+                        'persen_laki_laki' => round($percentMale, 0),
+                        'persen_perempuan' => round($percentFemale, 0),
+                    ],
+                    [
+                        'jumlah_laki_laki' => $countMale,
+                        'jumlah_perempuan' => $countFemale,
+                    ]
+                ],
+                'status_karyawan' => $statusData
             ]
         ], Response::HTTP_OK);
     }
@@ -257,6 +314,12 @@ class DashboardController extends Controller
 
         // Iterate over each status and count the number of employees with that status
         foreach ($statuses as $status) {
+            $countKaryawan = DataKaryawan::whereHas('users', function ($query) {
+                $query->where('status_aktif', 2);
+            })
+                ->where('id', '!=', 1)
+                ->where('status_karyawan_id', $status->id)
+                ->count();
             $countKaryawan = DataKaryawan::whereHas('users', function ($query) {
                 $query->where('status_aktif', 2);
             })->where('status_karyawan_id', $status->id)->count();
