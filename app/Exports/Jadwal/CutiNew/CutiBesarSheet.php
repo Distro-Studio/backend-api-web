@@ -134,7 +134,7 @@ class CutiBesarSheet implements FromCollection, WithHeadings, WithMapping, WithT
 
         // Tambahkan kolom tanggal cuti sesuai max kuota
         for ($i = 0; $i < $maxKuota; $i++) {
-            $row[] = $tanggalCutiDipakai[$i] ?? 'N/A';
+            $row[] = $tanggalCutiDipakai[$i] ?? '-';
         }
 
         return $row;

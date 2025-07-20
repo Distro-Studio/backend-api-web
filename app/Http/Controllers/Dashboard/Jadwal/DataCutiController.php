@@ -24,6 +24,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\Jadwal\CutiJadwalExport;
+use App\Exports\Jadwal\CutiNew\CutiBesarTahunanExport;
 use App\Exports\Jadwal\CutiNew\CutiExport;
 use App\Http\Requests\StoreCutiJadwalRequest;
 use App\Http\Requests\UpdateCutiJadwalRequest;
@@ -986,8 +987,14 @@ class DataCutiController extends Controller
             }
 
             try {
-                return Excel::download(new CutiExport($request->all(),$startDate, $endDate, $tipe_cuti), 'cuti-karyawan.xls');
-                // return Excel::download(new CutiJadwalExport($request->all()), 'cuti-karyawan.xls');
+                // Cek apakah semua tipe cuti adalah 1 atau 5
+                $useCutiBesarTahunan = collect($tipe_cuti)->every(fn($tipe) => in_array($tipe, [1, 5]));
+
+                if ($useCutiBesarTahunan) {
+                    return Excel::download(new CutiBesarTahunanExport($request->all(), $startDate, $endDate, $tipe_cuti), 'cuti-karyawan.xls');
+                } else {
+                    return Excel::download(new CutiExport($request->all(), $startDate, $endDate, $tipe_cuti), 'cuti-karyawan.xls');
+                }
             } catch (\Throwable $e) {
                 return response()->json(new WithoutDataResource(Response::HTTP_INTERNAL_SERVER_ERROR, 'Maaf sepertinya terjadi error. Pesan: ' . $e->getMessage()), Response::HTTP_INTERNAL_SERVER_ERROR);
             }
