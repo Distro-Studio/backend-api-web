@@ -200,7 +200,7 @@ class HakCutiExport implements FromCollection, WithHeadings, WithMapping
 
         return [
             $no++,
-            $hakCuti->users->nama ?? 'N/A',
+            optional($hakCuti->data_karyawans->users)->nama ?? 'N/A',
             $hakCuti->data_karyawans->nik ?? 'N/A',
             $hakCuti->kuota ?? 0, // Jatah kuota yang tersedia
             $hakCuti->tipe_cutis->nama ?? 'N/A',
