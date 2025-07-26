@@ -35,20 +35,38 @@ class DataKaryawanMedisController extends Controller
                 ->orderBy('nik', 'asc');
             $filters = $request->all();
 
+            // TODO: Msih belum bisa filter
+            // Fungsi untuk memfilter berdasarkan masa berlaku
+            $filterByMasaBerlaku = function ($query, $field, $masaBerlaku) {
+                if ($masaBerlaku && is_numeric($masaBerlaku)) {
+                    Log::info("Filtering by $field with masa berlaku: $masaBerlaku months.");
+                    $tanggalTarget = now('Asia/Jakarta')->addMonths((int) $masaBerlaku); // Menambahkan masa sesuai dengan filter
+                    Log::info("Target date for $field: " . $tanggalTarget->endOfMonth()->format('d-m-Y'));
+
+                    $query->where(function ($subQuery) use ($field, $tanggalTarget) {
+                        $subQuery->whereNotNull($field)  // Pastikan field tidak null
+                            ->whereRaw("STR_TO_DATE($field, '%d-%m-%Y') >= ?", [now('Asia/Jakarta')->format('d-m-Y')]) // Lebih besar dari hari ini
+                            ->whereRaw("STR_TO_DATE($field, '%d-%m-%Y') <= ?", [$tanggalTarget->endOfMonth()->format('d-m-Y')]); // Kurang dari target bulan
+                    });
+                }
+            };
+
+            // Memfilter berdasarkan masa berlaku SIP jika ada di filter
             if (isset($filters['masa_sip']) && is_numeric($filters['masa_sip'])) {
                 $masaSip = (int) $filters['masa_sip'];
-                $tanggalTargetSip = now('Asia/Jakarta')->addMonths($masaSip)->startOfDay();
-
-                $karyawan->whereDate('masa_berlaku_sip', '>=', now('Asia/Jakarta')->startOfDay())
-                    ->whereDate('masa_berlaku_sip', '<=', $tanggalTargetSip->endOfMonth());
+                Log::info("Applying SIP filter with masa_sip: $masaSip");
+                $karyawan->where(function ($query) use ($masaSip, $filterByMasaBerlaku) {
+                    $filterByMasaBerlaku($query, 'masa_berlaku_sip', $masaSip); // Panggil fungsi filter untuk SIP
+                });
             }
 
+            // Memfilter berdasarkan masa berlaku STR jika ada di filter
             if (isset($filters['masa_str']) && is_numeric($filters['masa_str'])) {
                 $masaStr = (int) $filters['masa_str'];
-                $tanggalTargetStr = now('Asia/Jakarta')->addMonths($masaStr)->startOfDay();
-
-                $karyawan->whereDate('masa_berlaku_str', '>=', now('Asia/Jakarta')->startOfDay())
-                    ->whereDate('masa_berlaku_str', '<=', $tanggalTargetStr->endOfMonth());
+                Log::info("Applying STR filter with masa_str: $masaStr");
+                $karyawan->where(function ($query) use ($masaStr, $filterByMasaBerlaku) {
+                    $filterByMasaBerlaku($query, 'masa_berlaku_str', $masaStr); // Panggil fungsi filter untuk STR
+                });
             }
 
             if (isset($filters['search'])) {

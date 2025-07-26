@@ -301,6 +301,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
             // ! Diklat ===========>
             Route::post('/get-diklat-internal', [DiklatController::class, 'indexInternal']);
             Route::post('/get-diklat-eksternal', [DiklatController::class, 'indexEksternal']);
+            Route::delete('/delete-diklat-eksternal/{diklatId}', [DiklatController::class, 'deleteExternal']);
+            Route::delete('/delete-diklat-internal/{diklatId}', [DiklatController::class, 'deleteInternal']);
             Route::post('/diklat', [DiklatController::class, 'store']);
             Route::post('/update-diklat/{diklatId}', [DiklatController::class, 'updateInternal']);
             Route::post('/diklat-eksternal-user', [DiklatController::class, 'storeExternal']);

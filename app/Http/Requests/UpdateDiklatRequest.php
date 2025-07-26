@@ -24,8 +24,8 @@ class UpdateDiklatRequest extends FormRequest
             'nama' => 'required|string|max:255',
             // 'kategori_diklat_id' => 'required|integer|exists:kategori_diklats,id',
             'deskripsi' => 'required|string|max:225',
-            // 'user_id' => 'nullable|array', // Penerima notifikasi
-            // 'user_id.*' => 'integer|exists:users,id',
+            'user_id' => 'nullable|array', // Penerima notifikasi
+            'user_id.*' => 'integer|exists:users,id',
             'dokumen_diklat_1' => 'nullable|file|max:10240|mimes:pdf,pptx,docx',
             'dokumen_diklat_2' => 'nullable|file|max:10240|mimes:pdf,pptx,docx',
             'dokumen_diklat_3' => 'nullable|file|max:10240|mimes:pdf,pptx,docx',

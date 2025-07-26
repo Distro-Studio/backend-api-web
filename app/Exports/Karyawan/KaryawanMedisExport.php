@@ -31,24 +31,27 @@ class KaryawanMedisExport implements FromCollection, WithHeadings, WithMapping
             'kompetensis',
         ])->where('id', '!=', 1)
             ->whereHas('kompetensis', function ($query) {
-                $query->where('jenis_kompetensi', 1); // Khusus karyawan medis
+                $query->where('jenis_kompetensi', 1);
+            })
+            ->whereHas('users', function ($query) {
+                $query->where('status_aktif', 2);
             })
             ->orderBy('nik', 'asc');
 
         if (isset($this->filters['masa_sip']) && is_numeric($this->filters['masa_sip'])) {
             $masaSip = (int) $this->filters['masa_sip'];
-            $tanggalTargetSip = now('Asia/Jakarta')->addMonths($masaSip)->startOfDay();
+            $tanggalTargetSip = now('Asia/Jakarta')->addMonths($masaSip);
 
-            $karyawan->whereDate('masa_berlaku_sip', '>=', now('Asia/Jakarta')->startOfDay())
-                ->whereDate('masa_berlaku_sip', '<=', $tanggalTargetSip->endOfMonth());
+            $karyawan->whereRaw("STR_TO_DATE(masa_berlaku_sip, '%d-%m-%Y') > ?", [now('Asia/Jakarta')->format('d-m-Y')])
+                ->whereRaw("STR_TO_DATE(masa_berlaku_sip, '%d-%m-%Y') <= ?", [$tanggalTargetSip->endOfMonth()->format('d-m-Y')]);
         }
 
         if (isset($this->filters['masa_str']) && is_numeric($this->filters['masa_str'])) {
             $masaStr = (int) $this->filters['masa_str'];
-            $tanggalTargetStr = now('Asia/Jakarta')->addMonths($masaStr)->startOfDay();
+            $tanggalTargetStr = now('Asia/Jakarta')->addMonths($masaStr);
 
-            $karyawan->whereDate('masa_berlaku_str', '>=', now('Asia/Jakarta')->startOfDay())
-                ->whereDate('masa_berlaku_str', '<=', $tanggalTargetStr->endOfMonth());
+            $karyawan->whereRaw("STR_TO_DATE(masa_berlaku_str, '%d-%m-%Y') > ?", [now('Asia/Jakarta')->format('d-m-Y')])
+                ->whereRaw("STR_TO_DATE(masa_berlaku_str, '%d-%m-%Y') <= ?", [$tanggalTargetStr->endOfMonth()->format('d-m-Y')]);
         }
 
         return $karyawan->get();
@@ -60,27 +63,28 @@ class KaryawanMedisExport implements FromCollection, WithHeadings, WithMapping
             'no',
             'nik',
             'nama',
-            'username',
-            'status_aktif',
-            'role',
-            'email',
+            // 'username',
+            // 'status_aktif',
+            // 'role',
+            // 'email',
             'nik_ktp',
             'status_karyawan',
-            'tempat_lahir',
-            'tgl_lahir',
-            'no_kk',
-            'alamat',
+            // 'tempat_lahir',
+            // 'tgl_lahir',
+            // 'no_kk',
+            // 'alamat',
             'gelar_depan',
             'gelar_belakang',
             'no_hp',
-            'masa_kerja',
-            'jenis_kelamin',
+            // 'masa_kerja',
+            // 'jenis_kelamin',
             'no_str',
             'tgl_dibuat_str',
             'tgl_kadaluarsa_str',
             'no_sip',
             'tgl_dibuat_sip',
             'tgl_kadaluarsa_sip',
+            'kompetensi_profesi',
             'created_at',
             'updated_at',
         ];
@@ -90,39 +94,40 @@ class KaryawanMedisExport implements FromCollection, WithHeadings, WithMapping
     {
         self::$number++;
 
-        $roles = $karyawan->users->roles->map(function ($role) {
-            return $role->name;
-        })->toArray();
+        // $roles = $karyawan->users->roles->map(function ($role) {
+        //     return $role->name;
+        // })->toArray();
 
         $formatDate = fn($date) => $date ? Carbon::parse($date)->format('d-m-Y') : 'N/A';
 
-        $masaKerja = $this->calculateMasaKerja($karyawan->tgl_masuk, $karyawan->tgl_keluar);
+        // $masaKerja = $this->calculateMasaKerja($karyawan->tgl_masuk, $karyawan->tgl_keluar);
 
         return [
             self::$number,
             $karyawan->nik,
             $karyawan->users->nama,
-            $karyawan->users->username,
-            $karyawan->users->user_status_aktif->label,
-            implode(', ', $roles),
-            $karyawan->email ?? 'N/A',
+            // $karyawan->users->username,
+            // $karyawan->users->user_status_aktif->label,
+            // implode(', ', $roles),
+            // $karyawan->email ?? 'N/A',
             $karyawan->nik_ktp ?? 'N/A',
             optional($karyawan->status_karyawans)->label,
-            $karyawan->tempat_lahir ?? 'N/A',
-            $formatDate($karyawan->tgl_lahir),
-            $karyawan->no_kk ?? 'N/A',
-            $karyawan->alamat ?? 'N/A',
+            // $karyawan->tempat_lahir ?? 'N/A',
+            // $formatDate($karyawan->tgl_lahir),
+            // $karyawan->no_kk ?? 'N/A',
+            // $karyawan->alamat ?? 'N/A',
             $karyawan->gelar_depan ?? 'N/A',
             $karyawan->gelar_belakang ?? 'N/A',
             $karyawan->no_hp ?? 'N/A',
-            $masaKerja,
-            $karyawan->jenis_kelamin ? 'Laki-laki' : 'Perempuan',
+            // $masaKerja,
+            // $karyawan->jenis_kelamin ? 'Laki-laki' : 'Perempuan',
             $karyawan->no_str ?? 'N/A',
             $formatDate($karyawan->created_str),
             $formatDate($karyawan->masa_berlaku_str),
             $karyawan->no_sip ?? 'N/A',
             $formatDate($karyawan->created_sip),
             $formatDate($karyawan->masa_berlaku_sip),
+            $karyawan->kompetensis->nama_kompetensi ?? 'N/A',
             Carbon::parse($karyawan->created_at)->format('d-m-Y H:i:s'),
             Carbon::parse($karyawan->updated_at)->format('d-m-Y H:i:s')
         ];
