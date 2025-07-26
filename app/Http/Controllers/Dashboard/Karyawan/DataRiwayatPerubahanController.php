@@ -635,13 +635,6 @@ class DataRiwayatPerubahanController extends Controller
                     } elseif ($riwayat->kolom === 'golongan_darah') {
                         $riwayat->kolom = 'kategori_darah_id';
                     }
-                    // Update data sesuai dengan kolom yang diubah
-                    $dataKaryawan->{$riwayat->kolom} = $riwayat->updated_data;
-                    if ($bmiResult) {
-                        $dataKaryawan->bmi_value = $bmiResult['bmi_value'];
-                        $dataKaryawan->bmi_ket = $bmiResult['bmi_ket'];
-                    }
-                    $dataKaryawan->save();
 
                     // Update foto_profil di tabel users
                     if ($riwayat->kolom === 'foto_profil') {
@@ -671,7 +664,17 @@ class DataRiwayatPerubahanController extends Controller
                                 $user->save();
                             }
                         }
+
+                        return;
                     }
+
+                    // Update data sesuai dengan kolom yang diubah
+                    $dataKaryawan->{$riwayat->kolom} = $riwayat->updated_data;
+                    if ($bmiResult) {
+                        $dataKaryawan->bmi_value = $bmiResult['bmi_value'];
+                        $dataKaryawan->bmi_ket = $bmiResult['bmi_ket'];
+                    }
+                    $dataKaryawan->save();
                 }
                 break;
 
