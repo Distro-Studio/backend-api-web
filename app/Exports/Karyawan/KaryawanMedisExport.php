@@ -38,20 +38,18 @@ class KaryawanMedisExport implements FromCollection, WithHeadings, WithMapping
             })
             ->orderBy('nik', 'asc');
 
-        if (isset($this->filters['masa_sip']) && is_numeric($this->filters['masa_sip'])) {
-            $masaSip = (int) $this->filters['masa_sip'];
-            $tanggalTargetSip = now('Asia/Jakarta')->addMonths($masaSip);
+        if (isset($this->filters['masa_sip']) || isset($this->filters['masa_str'])) {
+            $karyawan->where(function ($query) {
+                if (isset($this->filters['masa_sip']) && is_numeric($this->filters['masa_sip'])) {
+                    $targetDateSip = now('Asia/Jakarta')->addMonths((int) $this->filters['masa_sip'])->startOfDay();
+                    $query->orWhereRaw("STR_TO_DATE(masa_berlaku_sip, '%d-%m-%Y') <= ?", [$targetDateSip->format('Y-m-d')]);
+                }
 
-            $karyawan->whereRaw("STR_TO_DATE(masa_berlaku_sip, '%d-%m-%Y') > ?", [now('Asia/Jakarta')->format('d-m-Y')])
-                ->whereRaw("STR_TO_DATE(masa_berlaku_sip, '%d-%m-%Y') <= ?", [$tanggalTargetSip->endOfMonth()->format('d-m-Y')]);
-        }
-
-        if (isset($this->filters['masa_str']) && is_numeric($this->filters['masa_str'])) {
-            $masaStr = (int) $this->filters['masa_str'];
-            $tanggalTargetStr = now('Asia/Jakarta')->addMonths($masaStr);
-
-            $karyawan->whereRaw("STR_TO_DATE(masa_berlaku_str, '%d-%m-%Y') > ?", [now('Asia/Jakarta')->format('d-m-Y')])
-                ->whereRaw("STR_TO_DATE(masa_berlaku_str, '%d-%m-%Y') <= ?", [$tanggalTargetStr->endOfMonth()->format('d-m-Y')]);
+                if (isset($this->filters['masa_str']) && is_numeric($this->filters['masa_str'])) {
+                    $targetDateStr = now('Asia/Jakarta')->addMonths((int) $this->filters['masa_str'])->startOfDay();
+                    $query->orWhereRaw("STR_TO_DATE(masa_berlaku_str, '%d-%m-%Y') <= ?", [$targetDateStr->format('Y-m-d')]);
+                }
+            });
         }
 
         return $karyawan->get();
