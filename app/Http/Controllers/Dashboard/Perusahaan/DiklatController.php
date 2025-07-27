@@ -596,6 +596,7 @@ class DiklatController extends Controller
         $verifikatorId = Auth::id();
         $data = $request->validated();
 
+        // TODO: upload berkas lebih dr 3mb ngebug
         DB::beginTransaction();
         try {
             $berkas = null;
@@ -827,13 +828,13 @@ class DiklatController extends Controller
         $data = $request->validated();
 
         $diklat = Diklat::findOrFail($diklatId);
-        $currentParticipantsCount = $diklat->peserta_diklat()->count();
-        if (isset($data['kuota']) && $data['kuota'] < $currentParticipantsCount) {
-            return response()->json([
-                'status' => Response::HTTP_BAD_REQUEST,
-                'message' => "Kuota harus melebihi atau sama dengan jumlah peserta yang terdaftar, saat ini berjumlah {$currentParticipantsCount} peserta."
-            ], Response::HTTP_BAD_REQUEST);
-        }
+        // $currentParticipantsCount = $diklat->peserta_diklat()->count();
+        // if (isset($data['kuota']) && $data['kuota'] < $currentParticipantsCount) {
+        //     return response()->json([
+        //         'status' => Response::HTTP_BAD_REQUEST,
+        //         'message' => "Kuota harus melebihi atau sama dengan jumlah peserta yang terdaftar, saat ini berjumlah {$currentParticipantsCount} peserta."
+        //     ], Response::HTTP_BAD_REQUEST);
+        // }
 
         DB::beginTransaction();
         try {
@@ -926,6 +927,34 @@ class DiklatController extends Controller
 
                 // Update diklat's duration
                 $diklat->durasi = $durasi;
+            }
+
+            // Fitur untuk menambah dan menghapus peserta
+            // Ambil semua peserta yang sudah terdaftar
+            $existingPesertaIds = PesertaDiklat::where('diklat_id', $diklat->id)->pluck('peserta')->toArray();
+            $newUserIds = $data['user_id'] ?? [];
+
+            // Periksa apakah ada tambahan peserta baru dan peserta yang harus dihapus
+            $newUsers = array_diff($newUserIds, $existingPesertaIds); // Peserta yang ditambahkan
+            $removedUsers = array_diff($existingPesertaIds, $newUserIds); // Peserta yang dihapus
+
+            // Menghapus peserta yang tidak ada dalam array baru
+            if (!empty($removedUsers)) {
+                $this->decreaseDiklatDurationForRemovedUsers($diklat->id, $newUsers, $diklat->durasi);
+                PesertaDiklat::where('diklat_id', $diklat->id)
+                    ->whereIn('peserta', $removedUsers)
+                    ->delete();
+            }
+
+            // Menambahkan peserta yang baru
+            foreach ($newUsers as $userId) {
+                PesertaDiklat::create([
+                    'diklat_id' => $diklat->id,
+                    'peserta'   => $userId,
+                ]);
+
+                // Menambahkan masa diklat untuk peserta baru
+                $this->increaseMasaDiklat($userId, $diklat->durasi);
             }
 
             $diklat->update([
@@ -1111,6 +1140,126 @@ class DiklatController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('| Diklat External | - Error function updateExternal: ' . $e->getMessage());
+            return response()->json([
+                'status'  => Response::HTTP_INTERNAL_SERVER_ERROR,
+                'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    public function deleteInternal(Request $request, $diklatId)
+    {
+        $superAdmin = $request->user();
+        if (!$superAdmin->hasRole('Super Admin')) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
+
+        if (!Gate::allows('edit diklat')) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
+
+        DB::beginTransaction();
+        try {
+            // 1. Mendapatkan diklat berdasarkan ID
+            $diklat = Diklat::findOrFail($diklatId);
+            if (!$diklat) {
+                return response()->json(new WithoutDataResource(
+                    Response::HTTP_NOT_FOUND,
+                    "Diklat dengan ID {$diklatId} tidak ditemukanini."
+                ), Response::HTTP_NOT_FOUND);
+            }
+
+            // 2. Mendapatkan peserta diklat yang terdaftar
+            $pesertaDiklats = $diklat->peserta_diklat;
+
+            // 3. Hapus peserta dari diklat dan kurangi masa diklat mereka
+            foreach ($pesertaDiklats as $peserta) {
+                $dataKaryawan = DataKaryawan::where('user_id', $peserta->peserta)->first();
+                if ($dataKaryawan) {
+                    // Mengurangi masa diklat peserta
+                    $currentMasaDiklat = $dataKaryawan->masa_diklat ?? 0;
+                    $dataKaryawan->masa_diklat = max(0, $currentMasaDiklat - $diklat->durasi);
+                    $dataKaryawan->save();
+                }
+            }
+
+            // 4. Hapus peserta dari diklat
+            PesertaDiklat::where('diklat_id', $diklat->id)
+                ->whereIn('peserta', $pesertaDiklats->pluck('peserta')->toArray())
+                ->delete();
+
+            // 5. Hapus diklat
+            $diklat->delete();
+
+            DB::commit();
+
+            return response()->json([
+                'status' => Response::HTTP_OK,
+                'message' => "Diklat Internal tersebut berhasil dihapus."
+            ], Response::HTTP_OK);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('| Diklat Internal | - Error function deleteInternal: ' . $e->getMessage());
+            return response()->json([
+                'status'  => Response::HTTP_INTERNAL_SERVER_ERROR,
+                'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    public function deleteExternal(Request $request, $diklatId)
+    {
+        $superAdmin = $request->user();
+        if (!$superAdmin->hasRole('Super Admin')) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
+
+        if (!Gate::allows('edit diklat')) {
+            return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
+        }
+
+        DB::beginTransaction();
+        try {
+            // 1. Mendapatkan diklat berdasarkan ID
+            $diklat = Diklat::findOrFail($diklatId);
+            if (!$diklat) {
+                return response()->json(new WithoutDataResource(
+                    Response::HTTP_NOT_FOUND,
+                    "Diklat dengan ID {$diklatId} tidak ditemukanini."
+                ), Response::HTTP_NOT_FOUND);
+            }
+
+            // 2. Mendapatkan peserta diklat yang terdaftar
+            $pesertaDiklats = $diklat->peserta_diklat;
+
+            // 3. Hapus peserta dari diklat dan kurangi masa diklat mereka
+            foreach ($pesertaDiklats as $peserta) {
+                $dataKaryawan = DataKaryawan::where('user_id', $peserta->peserta)->first();
+                if ($dataKaryawan) {
+                    // Mengurangi masa diklat peserta
+                    $currentMasaDiklat = $dataKaryawan->masa_diklat ?? 0;
+                    $dataKaryawan->masa_diklat = max(0, $currentMasaDiklat - $diklat->durasi);
+                    $dataKaryawan->save();
+                }
+            }
+
+            // 4. Hapus peserta dari diklat
+            PesertaDiklat::where('diklat_id', $diklat->id)
+                ->whereIn('peserta', $pesertaDiklats->pluck('peserta')->toArray())
+                ->delete();
+
+            // 5. Hapus diklat
+            $diklat->delete();
+
+            DB::commit();
+
+            return response()->json([
+                'status' => Response::HTTP_OK,
+                'message' => "Diklat Eksternal tersebut berhasil dihapus."
+            ], Response::HTTP_OK);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('| Diklat Eksternal | - Error function deleteExternal: ' . $e->getMessage());
             return response()->json([
                 'status'  => Response::HTTP_INTERNAL_SERVER_ERROR,
                 'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
@@ -1447,14 +1596,10 @@ class DiklatController extends Controller
                             // Refactored: update masa_diklat saat generate sertifikat
                             $diklatIds = PesertaDiklat::where('peserta', $userId)->pluck('diklat_id');
                             if ($diklatIds->isNotEmpty()) {
-                                $totalDurasi = Diklat::whereIn('id', $diklatIds)
-                                    ->where('status_diklat_id', 4)
-                                    ->sum('durasi');
-
-                                $dataKaryawan->masa_diklat = $totalDurasi;
+                                $dataKaryawan->masa_diklat = ($dataKaryawan->masa_diklat ?? 0) + $diklat->durasi;
                                 $dataKaryawan->save();
 
-                                Log::info("Masa diklat user_id {$userId} diupdate menjadi {$totalDurasi} jam.");
+                                Log::info("Masa diklat user_id {$userId} ditambahkan {$diklat->durasi} jam, total sekarang: {$dataKaryawan->masa_diklat} jam.");
                             }
                         }
                     }

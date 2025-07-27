@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Gate;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\Karyawan\KaryawanMedisExport;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
+use Carbon\Carbon;
 
 class DataKaryawanMedisController extends Controller
 {
@@ -33,22 +34,20 @@ class DataKaryawanMedisController extends Controller
                     $query->where('jenis_kompetensi', 1); // Khusus karyawan medis
                 })
                 ->orderBy('nik', 'asc');
+
             $filters = $request->all();
+            if (isset($filters['masa_sip']) || isset($filters['masa_str'])) {
+                $karyawan->where(function ($query) use ($filters) {
+                    if (isset($filters['masa_sip'])) {
+                        $targetDateSip = Carbon::now('Asia/Jakarta')->addMonths((int) $filters['masa_sip'])->startOfDay();
+                        $query->orWhereRaw("STR_TO_DATE(masa_berlaku_sip, '%d-%m-%Y') <= ?", [$targetDateSip->format('Y-m-d')]);
+                    }
 
-            if (isset($filters['masa_sip']) && is_numeric($filters['masa_sip'])) {
-                $masaSip = (int) $filters['masa_sip'];
-                $tanggalTargetSip = now('Asia/Jakarta')->addMonths($masaSip)->startOfDay();
-
-                $karyawan->whereDate('masa_berlaku_sip', '>=', now('Asia/Jakarta')->startOfDay())
-                    ->whereDate('masa_berlaku_sip', '<=', $tanggalTargetSip->endOfMonth());
-            }
-
-            if (isset($filters['masa_str']) && is_numeric($filters['masa_str'])) {
-                $masaStr = (int) $filters['masa_str'];
-                $tanggalTargetStr = now('Asia/Jakarta')->addMonths($masaStr)->startOfDay();
-
-                $karyawan->whereDate('masa_berlaku_str', '>=', now('Asia/Jakarta')->startOfDay())
-                    ->whereDate('masa_berlaku_str', '<=', $tanggalTargetStr->endOfMonth());
+                    if (isset($filters['masa_str'])) {
+                        $targetDateStr = Carbon::now('Asia/Jakarta')->addMonths((int) $filters['masa_str'])->startOfDay();
+                        $query->orWhereRaw("STR_TO_DATE(masa_berlaku_str, '%d-%m-%Y') <= ?", [$targetDateStr->format('Y-m-d')]);
+                    }
+                });
             }
 
             if (isset($filters['search'])) {

@@ -25,7 +25,7 @@ return new class extends Migration
             $table->foreignId('role_tujuan')->nullable();
             $table->foreignId('kategori_transfer_id')->constrained('kategori_transfer_karyawans');
             $table->text('alasan');
-            $table->string('dokumen');
+            $table->string('dokumen')->nullable();
             $table->boolean('is_processed')->default(false);
             $table->timestamps();
         });
