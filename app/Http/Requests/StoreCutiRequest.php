@@ -26,7 +26,7 @@ class StoreCutiRequest extends FormRequest
     {
         return [
             'nama' => 'required|string|max:255|unique:tipe_cutis,nama',
-            'kuota' => 'required|integer',
+            'kuota' => 'integer',
             'is_need_requirement' => 'required|boolean',
             'keterangan' => 'required|string|max:255',
             'cuti_administratif' => 'required|boolean',
@@ -41,7 +41,6 @@ class StoreCutiRequest extends FormRequest
             'nama.string' => 'Nama cuti tidak diperbolehkan mengandung karakter selain huruf.',
             'nama.max' => 'Nama cuti melebihi batas maksimum panjang karakter.',
             'nama.unique' => 'Nama cuti tersebut sudah pernah dibuat.',
-            'kuota.required' => 'Kuota cuti tidak diperbolehkan kosong.',
             'kuota.integer' => 'Kuota cuti tidak diperbolehkan mengandung karakter selain angka.',
             'is_need_requirement.required' => 'Persyaratan cuti tidak diperbolehkan kosong.',
             'is_need_requirement.boolean' => 'Persyaratan cuti harus berupa boolean.',
