@@ -323,9 +323,9 @@ class DataTransferKaryawanController extends Controller
         $tgl_mulai = Carbon::createFromFormat('d-m-Y', $data['tgl_mulai'])->startOfDay();
         $today = Carbon::today('Asia/Jakarta');
 
-        if ($tgl_mulai->lte($today->addDay(2))) {
-            return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Tanggal mulai hanya diperbolehkan untuk 2 hari kedepan.'), Response::HTTP_BAD_REQUEST);
-        }
+        // if ($tgl_mulai->lte($today->addDay(2))) {
+        //     return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Tanggal mulai hanya diperbolehkan untuk 2 hari kedepan.'), Response::HTTP_BAD_REQUEST);
+        // }
 
         // with server
         DB::beginTransaction();
