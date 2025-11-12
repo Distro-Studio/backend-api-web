@@ -33,6 +33,7 @@ use App\Http\Controllers\Dashboard\Pengaturan\Finance\PremiController;
 use App\Http\Controllers\Dashboard\Pengaturan\Finance\PTKPController;
 use App\Http\Controllers\Dashboard\Pengaturan\Finance\TER21Controller;
 use App\Http\Controllers\Dashboard\Pengaturan\Karyawan\JabatanController;
+use App\Http\Controllers\Dashboard\Pengaturan\Karyawan\KategoriUnitKerjaController;
 use App\Http\Controllers\Dashboard\Pengaturan\Karyawan\KelompokGajiController;
 use App\Http\Controllers\Dashboard\Pengaturan\Karyawan\KompetensiController;
 use App\Http\Controllers\Dashboard\Pengaturan\Karyawan\MateriPelatihanController;
@@ -381,6 +382,9 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::apiResource('/kompetensi', KompetensiController::class);
 
             // ! Unit Kerja ===========>
+            Route::post('/kategori-unit-kerja/restore/{id}', [KategoriUnitKerjaController::class, 'restore']);
+            Route::apiResource('/kategori-unit-kerja', KategoriUnitKerjaController::class);
+
             Route::post('/unit-kerja/restore/{id}', [UnitKerjaController::class, 'restore']);
             Route::apiResource('/unit-kerja', UnitKerjaController::class);
 
