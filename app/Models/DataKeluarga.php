@@ -18,6 +18,7 @@ class DataKeluarga extends Model
         'status_hidup' => 'integer',
         'status_keluarga_id' => 'integer',
         'is_bpjs' => 'integer',
+        'is_menikah' => 'integer',
         'verifikator_1' => 'integer',
         'pendidikan_terakhir' => 'integer',
         'jenis_kelamin' => 'integer',
