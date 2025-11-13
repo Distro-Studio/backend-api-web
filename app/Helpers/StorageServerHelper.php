@@ -86,17 +86,17 @@ class StorageServerHelper
 		]);
 
 		$uploadinfo = $responseupload->json();
-		if (!isset($uploadinfo['data'])) {
+		if (!$responseupload->successful() || !isset($uploadinfo['data'])) {
 			Log::channel('storage_server_log')->error("Single Upload Failed - response tidak berisi data", [
-				'status_code' => $responseupload->status(),
+				'status_code'  => $responseupload->status(),
 				'response_body' => $responseupload->body(),
-				'headers' => $responseupload->headers(),
+				'headers'      => $responseupload->headers(),
 			]);
-			// throw new \Exception('Error: ' . $responseupload->body());
-		}
-		$dataupload = $uploadinfo['data'];
 
-		return $dataupload;
+			throw new \Exception('Upload file (single) ke storage server gagal. Silahkan hubungi admin.');
+		}
+
+		return $uploadinfo['data'];
 	}
 
 	// Multi upload
@@ -132,18 +132,28 @@ class StorageServerHelper
 			]);
 		}
 
-		$uploadinfo = $responseupload->json();
+		$statusCode = $responseupload->status();
+		$body       = $responseupload->body();
 
-		if (!isset($uploadinfo['data'])) {
-			Log::channel('storage_server_log')->error("Multiple Upload Failed - response tidak berisi data", [
-				'status_code' => $responseupload->status(),
-				'response_body' => $responseupload->body(),
-				'headers' => $responseupload->headers(),
-			]);
+		$uploadinfo = null;
+		try {
+			$uploadinfo = $responseupload->json();
+		} catch (\Throwable $e) {
+			$uploadinfo = null;
 		}
-		$dataupload = $uploadinfo['data'];
 
-		return $dataupload;
+		if (!$responseupload->successful() || !is_array($uploadinfo) || !isset($uploadinfo['data'])) {
+			Log::channel('storage_server_log')->error("Multiple Upload Failed - response tidak berisi data", [
+				'status_code'   => $statusCode,
+				'response_body' => $body,
+				'parsed_json'   => $uploadinfo,
+				'headers'       => $responseupload->headers(),
+			]);
+
+			throw new \Exception('Upload file (multi) ke storage server gagal. Silahkan hubungi admin.');
+		}
+
+		return $uploadinfo['data'];
 	}
 
 	// Delete Berkas
@@ -161,26 +171,46 @@ class StorageServerHelper
 			'file_id' => $file_id,
 		]);
 
-		$uploadinfo = $responseupload->json();
-		if (!isset($uploadinfo['data'])) {
-			Log::channel('storage_server_log')->error("Delete Failed - response tidak berisi data", [
-				'status_code' => $responseupload->status(),
-				'response_body' => $responseupload->body(),
-				'headers' => $responseupload->headers(),
-			]);
-			// throw new \Exception('Error: ' . $responseupload->body());
-		}
-		$dataupload = $uploadinfo['data'];
+		$statusCode = $responseupload->status();
+		$body       = $responseupload->body();
 
-		return $dataupload;
-	}
+		if ($statusCode === 404) {
+			Log::channel('storage_server_log')->warning(
+				"Delete file di storage server: file tidak ditemukan, dianggap sudah terhapus",
+				[
+					'file_id'       => $file_id,
+					'status_code'   => $statusCode,
+					'response_body' => $body,
+				]
+			);
 
-	private static function getFileNameFromHeader($header)
-	{
-		if (preg_match('/filename="(.+)"/', $header, $matches)) {
-			return $matches[1];
+			return false;
 		}
-		return 'downloaded_file';
+
+		if (!$responseupload->successful()) {
+			Log::channel('storage_server_log')->error(
+				"Delete Failed - response error dari storage server",
+				[
+					'file_id'       => $file_id,
+					'status_code'   => $statusCode,
+					'response_body' => $body,
+					'headers'       => $responseupload->headers(),
+				]
+			);
+
+			return false;
+		}
+
+		Log::channel('storage_server_log')->info(
+			"Delete file di storage server berhasil",
+			[
+				'file_id'       => $file_id,
+				'status_code'   => $statusCode,
+				'response_body' => $body,
+			]
+		);
+
+		return true;
 	}
 
 	public static function getExtensionFromMimeType($mimeType)

@@ -171,11 +171,7 @@ class MateriPelatihanController extends Controller
 
                 DB::commit();
 
-                return response()->json([
-                    'status' => Response::HTTP_CREATED,
-                    'message' => "Materi pelatihan '{$materiPelatihan->judul}' berhasil dibuat.",
-                    'data' => $materiPelatihan,
-                ], Response::HTTP_CREATED);
+                return response()->json(new WithoutDataResource(Response::HTTP_CREATED, "Materi pelatihan '{$materiPelatihan->judul}' berhasil dibuat."), Response::HTTP_CREATED);
             } catch (\Exception $e) {
                 DB::rollBack();
                 Log::error('| Materi Pelatihan | - Error function store: ' . $e->getMessage());
@@ -360,7 +356,7 @@ class MateriPelatihanController extends Controller
                 Log::error('| Materi Pelatihan | - Error function update: ' . $e->getMessage());
                 return response()->json([
                     'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
-                    'message' => 'Terjadi kesalahan pada server: ' . $e->getMessage() . ', Line:' . $e->getLine(),
+                    'message' => 'Terjadi kesalahan pada server: ' . $e->getMessage(),
                 ], Response::HTTP_INTERNAL_SERVER_ERROR);
             }
         } catch (\Exception $e) {
