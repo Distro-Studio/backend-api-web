@@ -551,15 +551,15 @@ class DataTransferKaryawanController extends Controller
             // if ($request->has('beri_tahu_manajer_direktur') && $request->beri_tahu_manajer_direktur == 1) {
             //     TransferEmailJob::dispatch('manager@example.com', ['direktur@example.com'], $details);
             // }
-            if ($request->has('beri_tahu_karyawan') && $request->beri_tahu_karyawan == 1) {
-                $karyawanEmail = $users->data_karyawans->email;
-                if (!is_null($karyawanEmail)) {
-                    TransferEmailJob::dispatch($karyawanEmail, [], $details);
-                    Log::info("Email pemberitahuan dikirim ke karyawan dengan email: {$karyawanEmail}");
-                } else {
-                    Log::warning("Email pemberitahuan tidak dikirim karena email karyawan null untuk user_id: {$users->id}");
-                }
-            }
+            // if ($request->has('beri_tahu_karyawan') && $request->beri_tahu_karyawan == 1) {
+            //     $karyawanEmail = $users->data_karyawans->email;
+            //     if (!is_null($karyawanEmail)) {
+            //         TransferEmailJob::dispatch($karyawanEmail, [], $details);
+            //         Log::info("Email pemberitahuan dikirim ke karyawan dengan email: {$karyawanEmail}");
+            //     } else {
+            //         Log::warning("Email pemberitahuan tidak dikirim karena email karyawan null untuk user_id: {$users->id}");
+            //     }
+            // }
 
             DB::commit();
 
