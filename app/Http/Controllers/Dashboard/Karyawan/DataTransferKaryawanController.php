@@ -297,7 +297,9 @@ class DataTransferKaryawanController extends Controller
                 'role_asal' => $transfer->role_asals,
                 'role_tujuan' => $transfer->role_tujuans,
                 'alasan' => $transfer->alasan,
-                'dokumen' => env('STORAGE_SERVER_DOMAIN') . $transfer->dokumen,
+                'dokumen' => !empty($transfer->dokumen)
+                    ? $baseUrl . $transfer->dokumen
+                    : null,
                 'created_at' => $transfer->created_at,
                 'updated_at' => $transfer->updated_at
             ];
