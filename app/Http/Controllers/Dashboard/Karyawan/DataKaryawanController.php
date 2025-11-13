@@ -749,13 +749,13 @@ class DataKaryawanController extends Controller
       }
 
       $validated = $request->validate([
-        'status_reward' => 'required|boolean',
+        'reward' => 'required|boolean',
       ]);
 
       DB::beginTransaction();
 
       $statusReward = DataKaryawan::where('id', $data_karyawan_id)
-        ->update(['status_reward_presensi' => $validated['status_reward']]);
+        ->update(['status_reward_presensi' => $validated['reward']]);
       if (!$statusReward) {
         DB::rollBack();
         return response()->json([
