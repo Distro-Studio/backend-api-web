@@ -323,7 +323,7 @@ class DataTransferKaryawanController extends Controller
 
         // Validasi tanggal mulai tidak boleh hari ini, H+1, atau hari yang sudah terlewat
         $tgl_mulai = Carbon::createFromFormat('d-m-Y', $data['tgl_mulai'])->startOfDay();
-        $today = Carbon::today('Asia/Jakarta');
+        // $today = Carbon::today('Asia/Jakarta');
 
         // if ($tgl_mulai->lte($today->addDay(2))) {
         //     return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Tanggal mulai hanya diperbolehkan untuk 2 hari kedepan.'), Response::HTTP_BAD_REQUEST);
@@ -418,6 +418,8 @@ class DataTransferKaryawanController extends Controller
             if ($request->has('beri_tahu_karyawan') && $request->beri_tahu_karyawan == 1) {
                 TransferEmailJob::dispatch($users->data_karyawans->email, [], $details);
             }
+
+            $this->applyTransferIfEffectiveToday($transfer);
 
             DB::commit();
 
@@ -586,6 +588,57 @@ class DataTransferKaryawanController extends Controller
         } catch (\Throwable $e) {
             return response()->json(new WithoutDataResource(Response::HTTP_INTERNAL_SERVER_ERROR, 'Maaf sepertinya terjadi error. Pesan: ' . $e->getMessage()), Response::HTTP_INTERNAL_SERVER_ERROR);
         }
+    }
+
+    private function applyTransferIfEffectiveToday(TransferKaryawan $transfer)
+    {
+        // tgl_mulai disimpan sebagai string format 'd-m-Y'
+        $todayString = Carbon::today('Asia/Jakarta')->format('d-m-Y');
+
+        // Kalau bukan hari ini, langsung keluar (tidak ada update apa-apa)
+        if ($transfer->tgl_mulai !== $todayString) {
+            return;
+        }
+
+        // Ambil user + data_karyawans
+        $user = $transfer->users()->with('data_karyawans')->first();
+
+        if (!$user || !$user->data_karyawans) {
+            // Kalau tidak ada data_karyawans, tidak bisa update
+            return;
+        }
+
+        $dataKaryawan = $user->data_karyawans;
+
+        // Siapkan field yang mau diupdate di data_karyawans
+        $updateDataKaryawan = [];
+
+        if (!empty($transfer->unit_kerja_tujuan)) {
+            $updateDataKaryawan['unit_kerja_id'] = $transfer->unit_kerja_tujuan;
+        }
+
+        if (!empty($transfer->jabatan_tujuan)) {
+            $updateDataKaryawan['jabatan_id'] = $transfer->jabatan_tujuan;
+        }
+
+        if (!empty($transfer->kelompok_gaji_tujuan)) {
+            $updateDataKaryawan['kelompok_gaji_id'] = $transfer->kelompok_gaji_tujuan;
+        }
+
+        // Jika ada perubahan pada data_karyawans, simpan
+        if (!empty($updateDataKaryawan)) {
+            $dataKaryawan->update($updateDataKaryawan);
+        }
+
+        // Update role di tabel users kalau role_tujuan ada
+        if (!empty($transfer->role_tujuan)) {
+            $user->role_id = $transfer->role_tujuan;
+            $user->save();
+        }
+
+        // Tandai transfer ini sudah diproses
+        $transfer->is_processed = true;
+        $transfer->save();
     }
 
     // private function updateTukarRelasiTransfer($request, $transferKaryawanId)
