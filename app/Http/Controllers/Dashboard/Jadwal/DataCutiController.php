@@ -974,7 +974,7 @@ class DataCutiController extends Controller
             // Mendapatkan filter rentang tanggal
             $tgl_mulai = $request->input('tgl_mulai');
             $tgl_selesai = $request->input('tgl_selesai');
-            $tipe_cuti = $request->input('tipe_cuti', []);
+            $rawTipeCuti = $request->input('tipe_cuti', []);
             if (empty($tgl_mulai) || empty($tgl_selesai)) {
                 return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Periode tanggal mulai dan tanggal selesai tidak boleh kosong.'), Response::HTTP_BAD_REQUEST);
             }
@@ -987,14 +987,45 @@ class DataCutiController extends Controller
             }
 
             try {
-                // Cek apakah semua tipe cuti adalah 1 atau 5
-                $useCutiBesarTahunan = collect($tipe_cuti)->every(fn($tipe) => in_array($tipe, [1, 5]));
+                $tipe_cuti = is_array($rawTipeCuti) ? $rawTipeCuti : [$rawTipeCuti];
+
+                // Jika user tidak memilih tipe cuti apa pun → pakai semua tipe cuti yang ada
+                if (empty($tipe_cuti)) {
+                    $tipe_cuti = TipeCuti::pluck('id')->toArray();
+
+                    // Kalau bahkan di DB tidak ada tipe cuti sama sekali
+                    if (empty($tipe_cuti)) {
+                        return response()->json(
+                            new WithoutDataResource(
+                                Response::HTTP_NOT_FOUND,
+                                'Belum terdapat tipe cuti yang terdaftar.'
+                            ),
+                            Response::HTTP_NOT_FOUND
+                        );
+                    }
+                }
+
+                $tipe_cuti = array_map('intval', $tipe_cuti);
+
+                // Cek apakah SEMUA tipe cuti yang diminta merupakan 1 atau 5
+                // (khusus untuk export rekap tahunan & besar)
+                $useCutiBesarTahunan = !empty($tipe_cuti) &&
+                    collect($tipe_cuti)->every(fn($tipe) => in_array($tipe, [1, 5], true));
 
                 if ($useCutiBesarTahunan) {
-                    return Excel::download(new CutiBesarTahunanExport($request->all(), $startDate, $endDate, $tipe_cuti), 'cuti-karyawan.xls');
-                } else {
-                    return Excel::download(new CutiExport($request->all(), $startDate, $endDate, $tipe_cuti), 'cuti-karyawan.xls');
+                    // Hanya tipe 1 &/atau 5 → pakai rekap tahunan/besar
+                    return Excel::download(
+                        new CutiBesarTahunanExport($request->all(), $startDate, $endDate, $tipe_cuti),
+                        'cuti-karyawan.xls'
+                    );
                 }
+
+                // Selain itu → pakai export cuti detail per tipe (kecuali 1 & 5 yang memang
+                // sudah punya mekanisme khusus di CutiBesarTahunanExport)
+                return Excel::download(
+                    new CutiExport($request->all(), $startDate, $endDate, $tipe_cuti),
+                    'cuti-karyawan.xls'
+                );
             } catch (\Throwable $e) {
                 return response()->json(new WithoutDataResource(Response::HTTP_INTERNAL_SERVER_ERROR, 'Maaf sepertinya terjadi error. Pesan: ' . $e->getMessage()), Response::HTTP_INTERNAL_SERVER_ERROR);
             }

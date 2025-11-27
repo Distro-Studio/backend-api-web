@@ -91,6 +91,21 @@ class CutiSheet implements FromCollection, WithHeadings, WithMapping, WithTitle
         $tgl_from = Carbon::parse($convertTgl_From)->format('d-m-Y');
         $tgl_to = Carbon::parse($convertTgl_To)->format('d-m-Y');
 
+        // Cek apakah tipe cutinya unlimited
+        $isUnlimited = (bool) optional($cuti->tipe_cutis)->is_unlimited;
+
+        if ($isUnlimited) {
+            // Untuk tipe cuti unlimited, sisa_kuota ditampilkan 'N/A'
+            $sisaKuotaDisplay = 'N/A';
+        } else {
+            // Untuk tipe cuti biasa, pakai kuota dari hak_cuti (kalau ada), default 0 Hari
+            $kuota = ($cuti->hak_cutis && $cuti->hak_cutis->kuota !== null)
+                ? $cuti->hak_cutis->kuota
+                : 0;
+
+            $sisaKuotaDisplay = $kuota . ' Hari';
+        }
+
         return [
             $this->number,
             $cuti->users->nama,
@@ -101,7 +116,7 @@ class CutiSheet implements FromCollection, WithHeadings, WithMapping, WithTitle
             $tgl_to,
             $cuti->catatan ?? 'N/A',
             $cuti->durasi . ' Hari',
-            ($cuti->hak_cutis && $cuti->hak_cutis->kuota !== null ? $cuti->hak_cutis->kuota : 0) . ' Hari',
+            $sisaKuotaDisplay,
             $cuti->status_cutis->label,
             Carbon::parse($cuti->created_at)->format('d-m-Y H:i:s'),
             Carbon::parse($cuti->updated_at)->format('d-m-Y H:i:s')
