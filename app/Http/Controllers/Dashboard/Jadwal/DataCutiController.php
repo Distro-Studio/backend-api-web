@@ -23,7 +23,6 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Maatwebsite\Excel\Facades\Excel;
-use App\Exports\Jadwal\CutiJadwalExport;
 use App\Exports\Jadwal\CutiNew\CutiBesarTahunanExport;
 use App\Exports\Jadwal\CutiNew\CutiExport;
 use App\Http\Requests\StoreCutiJadwalRequest;
