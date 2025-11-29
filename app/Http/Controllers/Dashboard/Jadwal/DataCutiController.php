@@ -440,7 +440,8 @@ class DataCutiController extends Controller
                     'catatan' => $dataCuti->catatan,
                     'durasi' => $dataCuti->durasi,
                     'total_kuota' => $quotaTipeCuti,
-                    'sisa_kuota' => $dataCuti->status_cuti_id === 4 ? $quotaHakCuti : $sisaKuota,
+                    // 'sisa_kuota' => $dataCuti->status_cuti_id === 4 ? $quotaHakCuti : $sisaKuota,
+                    'sisa_kuota' => $dataCuti->sisa_kuota,
                     'status_cuti' => $dataCuti->status_cutis,
                     'alasan' => $dataCuti->alasan ?? null,
                     'relasi_verifikasi' => $formattedRelasiVerifikasi,
@@ -523,7 +524,6 @@ class DataCutiController extends Controller
             $durasi = Carbon::parse($tglFrom)->diffInDays($tglTo) + 1;
 
             if (!$hakCuti->tipe_cutis->is_unlimited) {
-                // Validasi durasi cuti tidak boleh melebihi kuota di hak_cuti
                 if ($durasi > $hakCuti->kuota) {
                     $message = "Durasi cuti ({$durasi} hari) melebihi kuota yang diizinkan untuk tipe cuti '{$hakCuti->tipe_cutis->nama}'. Kuota maksimal: {$hakCuti->kuota} hari.";
                     return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, $message), Response::HTTP_BAD_REQUEST);
@@ -553,6 +553,10 @@ class DataCutiController extends Controller
                     $message = "Durasi cuti melebihi kuota yang diizinkan untuk tipe cuti '{$hakCuti->tipe_cutis->nama}'. Sisa kuota cuti tahun ini: {$sisaKuota} hari. Durasi cuti yang diajukan: {$durasi} hari.";
                     return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, $message), Response::HTTP_BAD_REQUEST);
                 }
+
+                $data['sisa_kuota'] = $sisaSetelahPengajuan;
+            } else {
+                $data['sisa_kuota'] = 0;
             }
 
             // Menambahkan durasi ke data sebelum menyimpan
@@ -818,6 +822,10 @@ class DataCutiController extends Controller
                     $hakCutiBaru->kuota -= $durasiBaru;
                     $hakCutiBaru->used_kuota += $durasiBaru;
                     $hakCutiBaru->save();
+
+                    $dataCuti->sisa_kuota = max(0, $hakCutiBaru->kuota);
+                } else {
+                    $dataCuti->sisa_kuota = 0;
                 }
             } else {
                 // Jika hanya tanggal yang berubah
@@ -838,12 +846,17 @@ class DataCutiController extends Controller
                     $hakCutiBaru->kuota -= $selisihDurasi;
                     $hakCutiBaru->used_kuota += $selisihDurasi;
                     $hakCutiBaru->save();
+
+                    $dataCuti->sisa_kuota = max(0, $hakCutiBaru->kuota);
+                } elseif ($selisihDurasi != 0 && $hakCutiBaru->tipe_cutis->is_unlimited) {
+                    // kalau unlimited dan durasi berubah → tetap 0
+                    $dataCuti->sisa_kuota = 0;
                 }
             }
 
             // Update data cuti
             $data['durasi'] = $durasiBaru;
-            $data['status_cuti_id'] = 2; // misal status "diupdate"
+            $data['status_cuti_id'] = 2;
 
             $dataCuti->update($data);
 
@@ -1238,9 +1251,12 @@ class DataCutiController extends Controller
                             $hakCuti->kuota = max(0, $hakCuti->kuota - $durasi);
                             $hakCuti->used_kuota = $hakCuti->used_kuota + $durasi;
                             $hakCuti->save();
+                            $cuti->sisa_kuota = max(0, $hakCuti->kuota);
                         } else {
+                            $cuti->sisa_kuota = 0;
                             Log::info("Kuota tidak dikurangi karena tipe cuti '{$hakCuti->tipe_cutis->nama}' bersifat unlimited.");
                         }
+                        $cuti->save();
                     } else {
                         Log::warning("Hak cuti ID {$cuti->hak_cuti_id} tidak ditemukan saat verifikasi tahap 2 cuti ID {$cutiId}.");
                     }

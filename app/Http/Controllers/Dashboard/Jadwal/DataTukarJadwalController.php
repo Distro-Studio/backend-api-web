@@ -13,14 +13,12 @@ use App\Helpers\RandomHelper;
 use Illuminate\Http\Response;
 use App\Models\ModulVerifikasi;
 use App\Models\RelasiVerifikasi;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\Jadwal\TukarJadwalExport;
-use App\Http\Requests\StoreTukarJadwalRequest;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
 
 class DataTukarJadwalController extends Controller
