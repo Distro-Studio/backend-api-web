@@ -710,6 +710,7 @@ class DataRiwayatPerubahanController extends Controller
                             'email' => $update['email'],
                             'status_keluarga_id' => 2,
                             'is_bpjs' => $update['is_bpjs'],
+                            'is_menikah' => $update['is_menikah'],
                             'verifikator_1' => Auth::user()->id,
                         ]);
                     }

@@ -18,6 +18,7 @@ class Cuti extends Model
         'hak_cuti_id' => 'integer',
         'durasi' => 'integer',
         'status_cuti_id' => 'integer',
+        'sisa_kuota' => 'integer',
         'verifikator_1' => 'integer',
         'verifikator_2' => 'integer',
         'presensi_id' => 'integer',
