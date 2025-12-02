@@ -338,7 +338,7 @@ class PenggajianController extends Controller
             // Rollback transaksi jika terjadi kesalahan
             DB::rollBack();
             Log::error('| Penggajian | - Error function store: ' . $e->getMessage());
-            return response()->json(new WithoutDataResource(Response::HTTP_INTERNAL_SERVER_ERROR, 'Terjadi kesalahan saat menyimpan riwayat penggajian. Silahkan coba lagi atau hubungi SIM RS.'), Response::HTTP_INTERNAL_SERVER_ERROR);
+            return response()->json(new WithoutDataResource(Response::HTTP_INTERNAL_SERVER_ERROR, 'Terjadi kesalahan pada sistem. Silakan coba lagi nanti atau hubungi SIM RS.'), Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 

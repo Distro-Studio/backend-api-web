@@ -404,7 +404,7 @@ class MateriPelatihanController extends Controller
                 Log::error('| Materi Pelatihan | - Error pada function destroy: ' . $e->getMessage());
                 return response()->json([
                     'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
-                    'message' => 'Terjadi kesalahan saat menghapus data. Silakan coba lagi nanti.' . $e->getMessage(),
+                    'message' => 'Terjadi kesalahan pada sistem. Silakan coba lagi nanti atau hubungi SIM RS.',
                 ], Response::HTTP_INTERNAL_SERVER_ERROR);
             }
         } catch (\Exception $e) {

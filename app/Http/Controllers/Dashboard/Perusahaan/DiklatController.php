@@ -571,7 +571,7 @@ class DiklatController extends Controller
             DB::rollBack();
             return response()->json([
                 'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
-                'message' => "Terjadi kesalahan saat menyimpan data diklat, Error: {$e->getMessage()}"
+                'message' => 'Terjadi kesalahan pada sistem. Silakan coba lagi nanti atau hubungi SIM RS.'
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
@@ -688,7 +688,7 @@ class DiklatController extends Controller
             DB::rollBack();
             return response()->json([
                 'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
-                'message' => "Terjadi kesalahan saat menyimpan data diklat, Error: {$e->getMessage()}"
+                'message' => 'Terjadi kesalahan pada sistem. Silakan coba lagi nanti atau hubungi SIM RS.'
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
