@@ -246,8 +246,6 @@ class Karyawan_BerkasController extends Controller
                 DB::commit(); // ← SUKSES, COMMIT
 
                 Log::info('Berkas ' . $karyawan->users->nama . ' berhasil di upload.');
-
-                StorageServerHelper::logout();
             }
 
             return response()->json(new WithoutDataResource(Response::HTTP_CREATED, 'Berkas dari karyawan ' . $karyawan->users->nama . ' berhasil diupload.'), Response::HTTP_CREATED);

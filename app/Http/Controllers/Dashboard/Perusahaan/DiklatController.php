@@ -1603,7 +1603,6 @@ class DiklatController extends Controller
                             }
                         }
                     }
-                    StorageServerHelper::logout();
                     $diklat->certificate_published = 1;
                     $diklat->certificate_verified_by = Auth::id();
                     $diklat->save();
