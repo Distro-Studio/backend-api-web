@@ -975,7 +975,7 @@ class DiklatController extends Controller
             Log::error('| Diklat Internal | - Error function updateInternal: ' . $e->getMessage());
             return response()->json([
                 'status'  => Response::HTTP_INTERNAL_SERVER_ERROR,
-                'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
+                'message' => 'Terjadi kesalahan pada sistem. Silakan coba lagi nanti atau hubungi SIM RS.',
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
@@ -1126,7 +1126,7 @@ class DiklatController extends Controller
             Log::error('| Diklat External | - Error function updateExternal: ' . $e->getMessage());
             return response()->json([
                 'status'  => Response::HTTP_INTERNAL_SERVER_ERROR,
-                'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
+                'message' => 'Terjadi kesalahan pada sistem. Silakan coba lagi nanti atau hubungi SIM RS.',
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
@@ -1186,7 +1186,7 @@ class DiklatController extends Controller
             Log::error('| Diklat Internal | - Error function deleteInternal: ' . $e->getMessage());
             return response()->json([
                 'status'  => Response::HTTP_INTERNAL_SERVER_ERROR,
-                'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
+                'message' => 'Terjadi kesalahan pada sistem. Silakan coba lagi nanti atau hubungi SIM RS.',
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
@@ -1246,7 +1246,7 @@ class DiklatController extends Controller
             Log::error('| Diklat Eksternal | - Error function deleteExternal: ' . $e->getMessage());
             return response()->json([
                 'status'  => Response::HTTP_INTERNAL_SERVER_ERROR,
-                'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
+                'message' => 'Terjadi kesalahan pada sistem. Silakan coba lagi nanti atau hubungi SIM RS.',
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
@@ -2000,7 +2000,7 @@ class DiklatController extends Controller
             Log::error('| Diklat Internal | - Error function assignDiklat: ' . $e->getMessage());
             return response()->json([
                 'status'  => Response::HTTP_INTERNAL_SERVER_ERROR,
-                'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
+                'message' => 'Terjadi kesalahan pada sistem. Silakan coba lagi nanti atau hubungi SIM RS.',
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }

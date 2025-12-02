@@ -368,7 +368,7 @@ class PembatalanRewardController extends Controller
             Log::error('| Pembatalan Reward | - Error function index: ' . $e->getMessage());
             return response()->json([
                 'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
-                'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
+                'message' => 'Terjadi kesalahan pada sistem. Silakan coba lagi nanti atau hubungi SIM RS.',
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
@@ -394,7 +394,7 @@ class PembatalanRewardController extends Controller
             Log::error('| Pembatalan Reward | - Error function export: ' . $e->getMessage());
             return response()->json([
                 'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
-                'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
+                'message' => 'Terjadi kesalahan pada sistem. Silakan coba lagi nanti atau hubungi SIM RS.',
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }

@@ -361,7 +361,7 @@ class AnulirPresensiController extends Controller
             Log::error('| Anulir Presensi | - Error function index: ' . $e->getMessage());
             return response()->json([
                 'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
-                'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
+                'message' => 'Terjadi kesalahan pada sistem. Silakan coba lagi nanti atau hubungi SIM RS.',
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
@@ -533,7 +533,7 @@ class AnulirPresensiController extends Controller
             Log::error('| Anulir Presensi | - Error function store: ' . $e->getMessage());
             return response()->json([
                 'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
-                'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
+                'message' => 'Terjadi kesalahan pada sistem. Silakan coba lagi nanti atau hubungi SIM RS.',
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
@@ -639,7 +639,7 @@ class AnulirPresensiController extends Controller
             Log::error('| Anulir Presensi | - Error function destroy: ' . $e->getMessage());
             return response()->json([
                 'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
-                'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
+                'message' => 'Terjadi kesalahan pada sistem. Silakan coba lagi nanti atau hubungi SIM RS.',
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
@@ -665,7 +665,7 @@ class AnulirPresensiController extends Controller
             Log::error('| Anulir Presensi | - Error function exportAnulir: ' . $e->getMessage());
             return response()->json([
                 'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
-                'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
+                'message' => 'Terjadi kesalahan pada sistem. Silakan coba lagi nanti atau hubungi SIM RS.',
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }

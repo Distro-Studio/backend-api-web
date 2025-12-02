@@ -106,7 +106,7 @@ class MateriPelatihanController extends Controller
             Log::error('| Materi Pelatihan | - Error pada function index: ' . $e->getMessage());
             return response()->json([
                 'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
-                'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
+                'message' => 'Terjadi kesalahan pada sistem. Silakan coba lagi nanti atau hubungi SIM RS.',
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
@@ -181,7 +181,7 @@ class MateriPelatihanController extends Controller
             Log::error('| Materi Pelatihan | - Error pada function store: ' . $e->getMessage());
             return response()->json([
                 'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
-                'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
+                'message' => 'Terjadi kesalahan pada sistem. Silakan coba lagi nanti atau hubungi SIM RS.',
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
@@ -270,7 +270,7 @@ class MateriPelatihanController extends Controller
             Log::error('| Materi Pelatihan | - Error pada function show: ' . $e->getMessage());
             return response()->json([
                 'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
-                'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
+                'message' => 'Terjadi kesalahan pada sistem. Silakan coba lagi nanti atau hubungi SIM RS.',
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
@@ -357,7 +357,7 @@ class MateriPelatihanController extends Controller
             Log::error('| Materi Pelatihan | - Error pada function update: ' . $e->getMessage());
             return response()->json([
                 'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
-                'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
+                'message' => 'Terjadi kesalahan pada sistem. Silakan coba lagi nanti atau hubungi SIM RS.',
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
@@ -411,7 +411,7 @@ class MateriPelatihanController extends Controller
             Log::error('| Materi Pelatihan | - Error pada function destroy: ' . $e->getMessage());
             return response()->json([
                 'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
-                'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
+                'message' => 'Terjadi kesalahan pada sistem. Silakan coba lagi nanti atau hubungi SIM RS.',
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }

@@ -602,7 +602,7 @@ class DataCutiController extends Controller
             Log::error('| Cuti | - Error saat menyimpan data cuti karyawan: ' . $e->getMessage());
             return response()->json([
                 'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
-                'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
+                'message' => 'Terjadi kesalahan pada sistem. Silakan coba lagi nanti atau hubungi SIM RS.',
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
@@ -747,7 +747,7 @@ class DataCutiController extends Controller
             Log::error('| Cuti | - Error saat menampilkan detail data cuti karyawan: ' . $e->getMessage());
             return response()->json([
                 'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
-                'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
+                'message' => 'Terjadi kesalahan pada sistem. Silakan coba lagi nanti atau hubungi SIM RS.',
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
@@ -862,7 +862,7 @@ class DataCutiController extends Controller
             Log::error('| Cuti | - Error function update: ' . $e->getMessage());
             return response()->json([
                 'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
-                'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
+                'message' => 'Terjadi kesalahan pada sistem. Silakan coba lagi nanti atau hubungi SIM RS.',
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
@@ -958,7 +958,7 @@ class DataCutiController extends Controller
             Log::error('| Cuti | - Error saat restore data cuti karyawan: ' . $e->getMessage());
             return response()->json([
                 'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
-                'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
+                'message' => 'Terjadi kesalahan pada sistem. Silakan coba lagi nanti atau hubungi SIM RS.',
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
@@ -1037,7 +1037,7 @@ class DataCutiController extends Controller
             Log::error('| Cuti | - Error saat export cuti karyawan: ' . $e->getMessage());
             return response()->json([
                 'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
-                'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
+                'message' => 'Terjadi kesalahan pada sistem. Silakan coba lagi nanti atau hubungi SIM RS.',
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
@@ -1146,7 +1146,7 @@ class DataCutiController extends Controller
             Log::error('| Cuti | - Error saat verif 1 cuti karyawan: ' . $e->getMessage());
             return response()->json([
                 'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
-                'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
+                'message' => 'Terjadi kesalahan pada sistem. Silakan coba lagi nanti atau hubungi SIM RS.',
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
@@ -1329,7 +1329,7 @@ class DataCutiController extends Controller
             Log::error('| Cuti | - Error function verifikasiTahap2: ' . $e->getMessage());
             return response()->json([
                 'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
-                'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
+                'message' => 'Terjadi kesalahan pada sistem. Silakan coba lagi nanti atau hubungi SIM RS.',
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
@@ -1516,7 +1516,7 @@ class DataCutiController extends Controller
             Log::error('| Cuti | - Error saat notifikasi tahap 1 data cuti karyawan: ' . $e->getMessage());
             return response()->json([
                 'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
-                'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
+                'message' => 'Terjadi kesalahan pada sistem. Silakan coba lagi nanti atau hubungi SIM RS.',
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
@@ -1546,7 +1546,7 @@ class DataCutiController extends Controller
             Log::error('| Cuti | - Error saat membuat notifikasi tahap 2: ' . $e->getMessage());
             return response()->json([
                 'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
-                'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
+                'message' => 'Terjadi kesalahan pada sistem. Silakan coba lagi nanti atau hubungi SIM RS.',
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
@@ -1582,7 +1582,7 @@ class DataCutiController extends Controller
             Log::error('| Jadwal | - Error saat membuat notifikasi pengembalian jadwal: ' . $e->getMessage());
             return response()->json([
                 'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
-                'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
+                'message' => 'Terjadi kesalahan pada sistem. Silakan coba lagi nanti atau hubungi SIM RS.',
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
