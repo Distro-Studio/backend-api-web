@@ -167,7 +167,7 @@ class PenggajianKemenkeuController extends Controller
             // return response()->download($zipFilePath)->deleteFileAfterSend(true);
             return response()->download($zipFilePath);
         } catch (\Throwable $e) {
-            return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya terjadi error. Pesan: ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
+            return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Terjadi kesalahan pada sistem. Silakan coba lagi nanti atau hubungi SIM RS.'), Response::HTTP_NOT_ACCEPTABLE);
         }
     }
 

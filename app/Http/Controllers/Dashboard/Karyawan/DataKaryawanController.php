@@ -1805,7 +1805,7 @@ class DataKaryawanController extends Controller
         'message' => "Data karyawan '{$karyawan->users->nama}' berhasil diperbarui."
       ], Response::HTTP_OK);
       // } catch (\Exception $e) {
-      //   return response()->json(new WithoutDataResource(Response::HTTP_INTERNAL_SERVER_ERROR, 'Error: ' . $e->getMessage()), Response::HTTP_INTERNAL_SERVER_ERROR);
+      //   return response()->json(new WithoutDataResource(Response::HTTP_INTERNAL_SERVER_ERROR, 'Terjadi kesalahan pada sistem. Silakan coba lagi nanti atau hubungi SIM RS.'), Response::HTTP_INTERNAL_SERVER_ERROR);
       // }
     } catch (\Exception $e) {
       DB::rollBack();
@@ -1832,7 +1832,7 @@ class DataKaryawanController extends Controller
       try {
         return Excel::download(new KaryawanExport($request->all()), 'karyawan-data.xls');
       } catch (\Throwable $e) {
-        return response()->json(new WithoutDataResource(Response::HTTP_INTERNAL_SERVER_ERROR, 'Maaf sepertinya terjadi error. Pesan: ' . $e->getMessage()), Response::HTTP_INTERNAL_SERVER_ERROR);
+        return response()->json(new WithoutDataResource(Response::HTTP_INTERNAL_SERVER_ERROR, 'Terjadi kesalahan pada sistem. Silakan coba lagi nanti atau hubungi SIM RS.'), Response::HTTP_INTERNAL_SERVER_ERROR);
       }
     } catch (\Exception $e) {
       Log::error('| Karyawan | - Error function exportKaryawan: ' . $e->getMessage());

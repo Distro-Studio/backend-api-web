@@ -138,7 +138,7 @@ class Karyawan_DetailController extends Controller
             try {
                 return Excel::download(new DetailKaryawanPresensiExport($start_date, $end_date, $data_karyawan_id), 'presensi-detail-karyawan.xls');
             } catch (\Throwable $e) {
-                return response()->json(new WithoutDataResource(Response::HTTP_INTERNAL_SERVER_ERROR, 'Maaf sepertinya terjadi error. Pesan: ' . $e->getMessage() . $e->getLine()), Response::HTTP_INTERNAL_SERVER_ERROR);
+                return response()->json(new WithoutDataResource(Response::HTTP_INTERNAL_SERVER_ERROR, 'Terjadi kesalahan pada sistem. Silakan coba lagi nanti atau hubungi SIM RS.' . $e->getLine()), Response::HTTP_INTERNAL_SERVER_ERROR);
             }
         } catch (\Exception $e) {
             Log::error('| Karyawan | - Error function exportDataPresensi: ' . $e->getMessage());

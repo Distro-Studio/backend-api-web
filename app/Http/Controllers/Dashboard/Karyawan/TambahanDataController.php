@@ -654,7 +654,7 @@ class TambahanDataController extends Controller
             } catch (\Throwable $e) {
                 DB::rollBack();
                 return response()->json([
-                    'errors' => 'Terjadi kesalahan saat menyimpan data: ' . $e->getMessage()
+                    'errors' => 'Terjadi kesalahan pada sistem. Silakan coba lagi nanti atau hubungi SIM RS.'
                 ]);
             }
 
