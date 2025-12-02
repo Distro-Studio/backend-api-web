@@ -70,7 +70,7 @@ class DataTukarJadwalController extends Controller
             Log::error('| Tukar Jadwal | - Error saat get jadwal pengajuan karyawan: ' . $e->getMessage());
             return response()->json([
                 'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
-                'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
+                'message' => 'Terjadi kesalahan pada sistem. Silakan coba lagi nanti atau hubungi SIM RS.',
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
@@ -146,7 +146,7 @@ class DataTukarJadwalController extends Controller
             Log::error('| Tukar Jadwal | - Error saat get karyawan ditukar: ' . $e->getMessage());
             return response()->json([
                 'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
-                'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
+                'message' => 'Terjadi kesalahan pada sistem. Silakan coba lagi nanti atau hubungi SIM RS.',
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
@@ -197,7 +197,7 @@ class DataTukarJadwalController extends Controller
             Log::error('| Tukar Jadwal | - Error saat get jadwal karyawan ditukar: ' . $e->getMessage());
             return response()->json([
                 'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
-                'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
+                'message' => 'Terjadi kesalahan pada sistem. Silakan coba lagi nanti atau hubungi SIM RS.',
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
@@ -641,7 +641,7 @@ class DataTukarJadwalController extends Controller
             Log::error('| Tukar Jadwal | - Error saat menampilkan index tukar jadwal: ' . $e->getMessage());
             return response()->json([
                 'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
-                'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
+                'message' => 'Terjadi kesalahan pada sistem. Silakan coba lagi nanti atau hubungi SIM RS.',
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
@@ -829,7 +829,7 @@ class DataTukarJadwalController extends Controller
     //         Log::error('| Tukar Jadwal | - Error saat menyimpan data tukar jadwal: ' . $e->getMessage());
     //         return response()->json([
     //             'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
-    //             'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
+    //             'message' => 'Terjadi kesalahan pada sistem. Silakan coba lagi nanti atau hubungi SIM RS.',
     //         ], Response::HTTP_INTERNAL_SERVER_ERROR);
     //     }
     // }
@@ -974,7 +974,7 @@ class DataTukarJadwalController extends Controller
             Log::error('| Tukar Jadwal | - Error saat menampilkan detail data tukar jadwal: ' . $e->getMessage());
             return response()->json([
                 'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
-                'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
+                'message' => 'Terjadi kesalahan pada sistem. Silakan coba lagi nanti atau hubungi SIM RS.',
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
@@ -1000,7 +1000,7 @@ class DataTukarJadwalController extends Controller
             Log::error('| Tukar Jadwal | - Error saat export data tukar jadwal: ' . $e->getMessage());
             return response()->json([
                 'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
-                'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
+                'message' => 'Terjadi kesalahan pada sistem. Silakan coba lagi nanti atau hubungi SIM RS.',
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
@@ -1093,7 +1093,7 @@ class DataTukarJadwalController extends Controller
             Log::error('| Tukar Jadwal | - Error saat melakukan verifikasi tahap 1: ' . $e->getMessage());
             return response()->json([
                 'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
-                'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
+                'message' => 'Terjadi kesalahan pada sistem. Silakan coba lagi nanti atau hubungi SIM RS.',
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
@@ -1215,7 +1215,7 @@ class DataTukarJadwalController extends Controller
             Log::error('| Tukar Jadwal | - Error saat melakukan verifikasi tahap 2: ' . $e->getMessage());
             return response()->json([
                 'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
-                'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
+                'message' => 'Terjadi kesalahan pada sistem. Silakan coba lagi nanti atau hubungi SIM RS.',
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
@@ -1237,7 +1237,7 @@ class DataTukarJadwalController extends Controller
             Log::error('| Tukar Jadwal | - Error saat membuat date range: ' . $e->getMessage());
             return response()->json([
                 'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
-                'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
+                'message' => 'Terjadi kesalahan pada sistem. Silakan coba lagi nanti atau hubungi SIM RS.',
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
@@ -1296,7 +1296,7 @@ class DataTukarJadwalController extends Controller
             Log::error('| Tukar Jadwal | - Error pada function formatSchedules: ' . $e->getMessage());
             return response()->json([
                 'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
-                'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
+                'message' => 'Terjadi kesalahan pada sistem. Silakan coba lagi nanti atau hubungi SIM RS.',
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
@@ -1346,7 +1346,7 @@ class DataTukarJadwalController extends Controller
     //         Log::error('| Tukar Jadwal | - Error saat menampilkan detail data tukar jadwal: ' . $e->getMessage());
     //         return response()->json([
     //             'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
-    //             'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
+    //             'message' => 'Terjadi kesalahan pada sistem. Silakan coba lagi nanti atau hubungi SIM RS.',
     //         ], Response::HTTP_INTERNAL_SERVER_ERROR);
     //     }
     // }
@@ -1406,7 +1406,7 @@ class DataTukarJadwalController extends Controller
             Log::error('| Tukar Jadwal | - Error function createNotifikasiVerifikasiTahap1: ' . $e->getMessage());
             return response()->json([
                 'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
-                'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
+                'message' => 'Terjadi kesalahan pada sistem. Silakan coba lagi nanti atau hubungi SIM RS.',
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
@@ -1464,7 +1464,7 @@ class DataTukarJadwalController extends Controller
             Log::error('| Tukar Jadwal | - Error function createNotifikasiVerifikasiTahap2: ' . $e->getMessage());
             return response()->json([
                 'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
-                'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
+                'message' => 'Terjadi kesalahan pada sistem. Silakan coba lagi nanti atau hubungi SIM RS.',
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }

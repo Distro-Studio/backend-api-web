@@ -110,7 +110,7 @@ class Karyawan_BerkasController extends Controller
             Log::error('| Karyawan | - Error function getDataDokumen: ' . $e->getMessage());
             return response()->json([
                 'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
-                'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
+                'message' => 'Terjadi kesalahan pada sistem. Silakan coba lagi nanti atau hubungi SIM RS.',
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
@@ -173,7 +173,7 @@ class Karyawan_BerkasController extends Controller
     //         Log::error('| Karyawan | - Error function verifikasiBerkas: ' . $e->getMessage());
     //         return response()->json([
     //             'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
-    //             'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
+    //             'message' => 'Terjadi kesalahan pada sistem. Silakan coba lagi nanti atau hubungi SIM RS.',
     //         ], Response::HTTP_INTERNAL_SERVER_ERROR);
     //     }
     // }
@@ -251,7 +251,7 @@ class Karyawan_BerkasController extends Controller
             Log::error('| Karyawan | - Error function createPersonalFile: ' . $e->getMessage());
             return response()->json([
                 'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
-                'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
+                'message' => 'Terjadi kesalahan pada sistem. Silakan coba lagi nanti atau hubungi SIM RS.',
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
@@ -323,7 +323,7 @@ class Karyawan_BerkasController extends Controller
             Log::error('| Karyawan | - Error function deletePersonalFile: ' . $e->getMessage());
             return response()->json([
                 'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
-                'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
+                'message' => 'Terjadi kesalahan pada sistem. Silakan coba lagi nanti atau hubungi SIM RS.',
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
@@ -393,7 +393,7 @@ class Karyawan_BerkasController extends Controller
             Log::error('| Karyawan | - Error function verifikasiBerkas: ' . $e->getMessage());
             return response()->json([
                 'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
-                'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
+                'message' => 'Terjadi kesalahan pada sistem. Silakan coba lagi nanti atau hubungi SIM RS.',
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
@@ -426,7 +426,7 @@ class Karyawan_BerkasController extends Controller
             Log::error('| Karyawan | - Error function createNotifikasiBerkas: ' . $e->getMessage());
             return response()->json([
                 'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
-                'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
+                'message' => 'Terjadi kesalahan pada sistem. Silakan coba lagi nanti atau hubungi SIM RS.',
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }

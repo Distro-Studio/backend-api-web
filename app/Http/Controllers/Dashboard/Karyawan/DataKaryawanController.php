@@ -86,7 +86,7 @@ class DataKaryawanController extends Controller
       Log::error('| Karyawan | - Error function resetCredentials: ' . $e->getMessage());
       return response()->json([
         'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
-        'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
+        'message' => 'Terjadi kesalahan pada sistem. Silakan coba lagi nanti atau hubungi SIM RS.',
       ], Response::HTTP_INTERNAL_SERVER_ERROR);
     }
   }
@@ -149,7 +149,7 @@ class DataKaryawanController extends Controller
       Log::error('| Karyawan | - Error function getAllDataUserNonShift: ' . $e->getMessage());
       return response()->json([
         'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
-        'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
+        'message' => 'Terjadi kesalahan pada sistem. Silakan coba lagi nanti atau hubungi SIM RS.',
       ], Response::HTTP_INTERNAL_SERVER_ERROR);
     }
   }
@@ -212,7 +212,7 @@ class DataKaryawanController extends Controller
       Log::error('| Karyawan | - Error function getAllDataUserShift: ' . $e->getMessage());
       return response()->json([
         'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
-        'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
+        'message' => 'Terjadi kesalahan pada sistem. Silakan coba lagi nanti atau hubungi SIM RS.',
       ], Response::HTTP_INTERNAL_SERVER_ERROR);
     }
   }
@@ -277,7 +277,7 @@ class DataKaryawanController extends Controller
       Log::error('| Karyawan | - Error function getAllDataUser: ' . $e->getMessage());
       return response()->json([
         'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
-        'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
+        'message' => 'Terjadi kesalahan pada sistem. Silakan coba lagi nanti atau hubungi SIM RS.',
       ], Response::HTTP_INTERNAL_SERVER_ERROR);
     }
   }
@@ -302,7 +302,7 @@ class DataKaryawanController extends Controller
       Log::error('| Karyawan | - Error function getAllDataKategoriUnitKerja: ' . $e->getMessage());
       return response()->json([
         'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
-        'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
+        'message' => 'Terjadi kesalahan pada sistem. Silakan coba lagi nanti atau hubungi SIM RS.',
       ], Response::HTTP_INTERNAL_SERVER_ERROR);
     }
   }
@@ -327,7 +327,7 @@ class DataKaryawanController extends Controller
       Log::error('| Karyawan | - Error function getAllDataUnitKerja: ' . $e->getMessage());
       return response()->json([
         'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
-        'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
+        'message' => 'Terjadi kesalahan pada sistem. Silakan coba lagi nanti atau hubungi SIM RS.',
       ], Response::HTTP_INTERNAL_SERVER_ERROR);
     }
   }
@@ -352,7 +352,7 @@ class DataKaryawanController extends Controller
       Log::error('| Karyawan | - Error function getAllDataSpesialisasi: ' . $e->getMessage());
       return response()->json([
         'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
-        'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
+        'message' => 'Terjadi kesalahan pada sistem. Silakan coba lagi nanti atau hubungi SIM RS.',
       ], Response::HTTP_INTERNAL_SERVER_ERROR);
     }
   }
@@ -377,7 +377,7 @@ class DataKaryawanController extends Controller
       Log::error('| Karyawan | - Error function getAllDataJabatan: ' . $e->getMessage());
       return response()->json([
         'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
-        'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
+        'message' => 'Terjadi kesalahan pada sistem. Silakan coba lagi nanti atau hubungi SIM RS.',
       ], Response::HTTP_INTERNAL_SERVER_ERROR);
     }
   }
@@ -402,7 +402,7 @@ class DataKaryawanController extends Controller
       Log::error('| Karyawan | - Error function getAllDataKategoriStatusKaryawan: ' . $e->getMessage());
       return response()->json([
         'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
-        'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
+        'message' => 'Terjadi kesalahan pada sistem. Silakan coba lagi nanti atau hubungi SIM RS.',
       ], Response::HTTP_INTERNAL_SERVER_ERROR);
     }
   }
@@ -427,7 +427,7 @@ class DataKaryawanController extends Controller
       Log::error('| Karyawan | - Error function getAllDataStatusKaryawan: ' . $e->getMessage());
       return response()->json([
         'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
-        'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
+        'message' => 'Terjadi kesalahan pada sistem. Silakan coba lagi nanti atau hubungi SIM RS.',
       ], Response::HTTP_INTERNAL_SERVER_ERROR);
     }
   }
@@ -452,7 +452,7 @@ class DataKaryawanController extends Controller
       Log::error('| Karyawan | - Error function getAllDataKompetensi: ' . $e->getMessage());
       return response()->json([
         'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
-        'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
+        'message' => 'Terjadi kesalahan pada sistem. Silakan coba lagi nanti atau hubungi SIM RS.',
       ], Response::HTTP_INTERNAL_SERVER_ERROR);
     }
   }
@@ -484,7 +484,7 @@ class DataKaryawanController extends Controller
       Log::error('| Karyawan | - Error function getAllDataRole: ' . $e->getMessage());
       return response()->json([
         'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
-        'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
+        'message' => 'Terjadi kesalahan pada sistem. Silakan coba lagi nanti atau hubungi SIM RS.',
       ], Response::HTTP_INTERNAL_SERVER_ERROR);
     }
   }
@@ -509,7 +509,7 @@ class DataKaryawanController extends Controller
       Log::error('| Karyawan | - Error function getAllDataKelompokGaji: ' . $e->getMessage());
       return response()->json([
         'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
-        'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
+        'message' => 'Terjadi kesalahan pada sistem. Silakan coba lagi nanti atau hubungi SIM RS.',
       ], Response::HTTP_INTERNAL_SERVER_ERROR);
     }
   }
@@ -534,7 +534,7 @@ class DataKaryawanController extends Controller
       Log::error('| Karyawan | - Error function getAllDataPTKP: ' . $e->getMessage());
       return response()->json([
         'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
-        'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
+        'message' => 'Terjadi kesalahan pada sistem. Silakan coba lagi nanti atau hubungi SIM RS.',
       ], Response::HTTP_INTERNAL_SERVER_ERROR);
     }
   }
@@ -559,7 +559,7 @@ class DataKaryawanController extends Controller
       Log::error('| Karyawan | - Error function getAllDataPremi: ' . $e->getMessage());
       return response()->json([
         'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
-        'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
+        'message' => 'Terjadi kesalahan pada sistem. Silakan coba lagi nanti atau hubungi SIM RS.',
       ], Response::HTTP_INTERNAL_SERVER_ERROR);
     }
   }
@@ -584,7 +584,7 @@ class DataKaryawanController extends Controller
       Log::error('| Karyawan | - Error function getAllDataKaryawan: ' . $e->getMessage());
       return response()->json([
         'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
-        'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
+        'message' => 'Terjadi kesalahan pada sistem. Silakan coba lagi nanti atau hubungi SIM RS.',
       ], Response::HTTP_INTERNAL_SERVER_ERROR);
     }
   }
@@ -609,7 +609,7 @@ class DataKaryawanController extends Controller
       Log::error('| Karyawan | - Error function getAllPendidikan: ' . $e->getMessage());
       return response()->json([
         'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
-        'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
+        'message' => 'Terjadi kesalahan pada sistem. Silakan coba lagi nanti atau hubungi SIM RS.',
       ], Response::HTTP_INTERNAL_SERVER_ERROR);
     }
   }
@@ -634,7 +634,7 @@ class DataKaryawanController extends Controller
       Log::error('| Karyawan | - Error function getAllDataTagihanPotongan: ' . $e->getMessage());
       return response()->json([
         'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
-        'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
+        'message' => 'Terjadi kesalahan pada sistem. Silakan coba lagi nanti atau hubungi SIM RS.',
       ], Response::HTTP_INTERNAL_SERVER_ERROR);
     }
   }
@@ -733,7 +733,7 @@ class DataKaryawanController extends Controller
       Log::error('| Karyawan | - Error function uploadPhoto: ' . $e->getMessage());
       return response()->json([
         'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
-        'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
+        'message' => 'Terjadi kesalahan pada sistem. Silakan coba lagi nanti atau hubungi SIM RS.',
       ], Response::HTTP_INTERNAL_SERVER_ERROR);
     }
   }
@@ -776,7 +776,7 @@ class DataKaryawanController extends Controller
       Log::error('| Karyawan | - Error function updateRewardPresensi: ' . $e->getMessage());
       return response()->json([
         'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
-        'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
+        'message' => 'Terjadi kesalahan pada sistem. Silakan coba lagi nanti atau hubungi SIM RS.',
       ], Response::HTTP_INTERNAL_SERVER_ERROR);
     }
   }
@@ -1090,7 +1090,7 @@ class DataKaryawanController extends Controller
       Log::error('| Karyawan | - Error function index: ' . $e->getMessage());
       return response()->json([
         'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
-        'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
+        'message' => 'Terjadi kesalahan pada sistem. Silakan coba lagi nanti atau hubungi SIM RS.',
       ], Response::HTTP_INTERNAL_SERVER_ERROR);
     }
   }
@@ -1212,7 +1212,7 @@ class DataKaryawanController extends Controller
       Log::error('| Karyawan | - Error function store: ' . $e->getMessage());
       return response()->json([
         'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
-        'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
+        'message' => 'Terjadi kesalahan pada sistem. Silakan coba lagi nanti atau hubungi SIM RS.',
       ], Response::HTTP_INTERNAL_SERVER_ERROR);
     }
   }
@@ -1463,7 +1463,7 @@ class DataKaryawanController extends Controller
       Log::error('| Karyawan | - Error function showByUserId: ' . $e->getMessage());
       return response()->json([
         'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
-        'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.' . $e->getMessage(),
+        'message' => 'Terjadi kesalahan pada sistem. Silakan coba lagi nanti atau hubungi SIM RS.' . $e->getMessage(),
       ], Response::HTTP_INTERNAL_SERVER_ERROR);
     }
   }
@@ -1711,7 +1711,7 @@ class DataKaryawanController extends Controller
       Log::error('| Karyawan | - Error function showByDataKaryawanId: ' . $e->getMessage());
       return response()->json([
         'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
-        'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.' . $e->getMessage(),
+        'message' => 'Terjadi kesalahan pada sistem. Silakan coba lagi nanti atau hubungi SIM RS.' . $e->getMessage(),
       ], Response::HTTP_INTERNAL_SERVER_ERROR);
     }
   }
@@ -1812,7 +1812,7 @@ class DataKaryawanController extends Controller
       Log::error('| Karyawan | - Error function update: ' . $e->getMessage());
       return response()->json([
         'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
-        'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
+        'message' => 'Terjadi kesalahan pada sistem. Silakan coba lagi nanti atau hubungi SIM RS.',
       ], Response::HTTP_INTERNAL_SERVER_ERROR);
     }
   }
@@ -1838,7 +1838,7 @@ class DataKaryawanController extends Controller
       Log::error('| Karyawan | - Error function exportKaryawan: ' . $e->getMessage());
       return response()->json([
         'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
-        'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
+        'message' => 'Terjadi kesalahan pada sistem. Silakan coba lagi nanti atau hubungi SIM RS.',
       ], Response::HTTP_INTERNAL_SERVER_ERROR);
     }
   }
@@ -1865,7 +1865,7 @@ class DataKaryawanController extends Controller
       Log::error('| Karyawan | - Error function importKaryawan: ' . $e->getMessage());
       return response()->json([
         'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
-        'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
+        'message' => 'Terjadi kesalahan pada sistem. Silakan coba lagi nanti atau hubungi SIM RS.',
       ], Response::HTTP_INTERNAL_SERVER_ERROR);
     }
   }
@@ -1936,7 +1936,7 @@ class DataKaryawanController extends Controller
       Log::error('| Karyawan | - Error function toggleStatusUser: ' . $e->getMessage());
       return response()->json([
         'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
-        'message' => 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
+        'message' => 'Terjadi kesalahan pada sistem. Silakan coba lagi nanti atau hubungi SIM RS.',
       ], Response::HTTP_INTERNAL_SERVER_ERROR);
     }
   }
