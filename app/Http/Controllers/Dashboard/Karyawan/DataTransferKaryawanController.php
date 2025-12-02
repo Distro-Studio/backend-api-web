@@ -349,8 +349,6 @@ class DataTransferKaryawanController extends Controller
             }
 
             if ($request->hasFile('dokumen')) {
-                StorageServerHelper::login();
-
                 $file = $request->file('dokumen');
                 $random_filename = Str::random(20);
                 $dataupload = StorageServerHelper::uploadToServer($request, $random_filename);
@@ -369,7 +367,6 @@ class DataTransferKaryawanController extends Controller
                     'size' => $dataupload['size'],
                 ]);
                 Log::info('Berkas Transfer ' . $user->nama . ' berhasil di upload.');
-                StorageServerHelper::logout();
 
                 if (!$berkas) {
                     throw new Exception('Berkas gagal di upload');
@@ -480,9 +477,6 @@ class DataTransferKaryawanController extends Controller
             }
 
             if ($request->hasFile('dokumen')) {
-                // Upload file using helper
-                StorageServerHelper::login();
-
                 $file = $request->file('dokumen');
                 $random_filename = Str::random(20);
                 $dataupload = StorageServerHelper::uploadToServer($request, $random_filename);
@@ -503,8 +497,6 @@ class DataTransferKaryawanController extends Controller
                     ]
                 );
                 Log::info('Berkas Transfer ' . $user->nama . ' berhasil di diperbarui.');
-
-                StorageServerHelper::logout();
 
                 if (!$berkas) {
                     throw new Exception('Berkas gagal di diperbarui');

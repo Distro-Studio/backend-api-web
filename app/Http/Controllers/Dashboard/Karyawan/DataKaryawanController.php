@@ -668,7 +668,6 @@ class DataKaryawanController extends Controller
 
       if ($request->hasFile('dokumen')) {
         $authUser = Auth::user();
-        StorageServerHelper::login();
 
         // ✅ Jika ada foto profil lama, hapus dulu
         if ($user->foto_profil) {
@@ -714,8 +713,6 @@ class DataKaryawanController extends Controller
 
         $user->foto_profil = $berkas->id;
         $user->save();
-
-        StorageServerHelper::logout();
       } else {
         return response()->json([
           'status' => Response::HTTP_BAD_REQUEST,

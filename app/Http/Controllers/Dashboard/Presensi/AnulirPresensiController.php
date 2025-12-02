@@ -447,8 +447,6 @@ class AnulirPresensiController extends Controller
             }
 
             if ($request->hasFile('dokumen')) {
-                StorageServerHelper::login();
-
                 $random_filename = Str::random(20);
                 $dataupload = StorageServerHelper::uploadToServer($request, $random_filename);
                 $data['dokumen'] = $dataupload['path'];
@@ -466,7 +464,6 @@ class AnulirPresensiController extends Controller
                     'size' => $dataupload['size'],
                 ]);
                 Log::info('Berkas anulir ' . $karyawanAnulir->users->nama . ' berhasil di upload.');
-                StorageServerHelper::logout();
 
                 if (!$berkas) {
                     throw new Exception('Berkas gagal di upload');
