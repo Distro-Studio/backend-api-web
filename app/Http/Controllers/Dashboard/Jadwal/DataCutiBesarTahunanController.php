@@ -51,7 +51,7 @@ class DataCutiBesarTahunanController extends Controller
                 return Excel::download(new CutiBesarTahunanExport($request->all(), $startDate, $endDate, $tipe_cuti), 'cuti-karyawan.xls');
                 // return Excel::download(new CutiJadwalExport($request->all()), 'cuti-karyawan.xls');
             } catch (\Throwable $e) {
-                return response()->json(new WithoutDataResource(Response::HTTP_INTERNAL_SERVER_ERROR, 'Maaf sepertinya terjadi error. Pesan: ' . $e->getMessage()), Response::HTTP_INTERNAL_SERVER_ERROR);
+                return response()->json(new WithoutDataResource(Response::HTTP_INTERNAL_SERVER_ERROR, 'Terjadi kesalahan pada sistem. Silakan coba lagi nanti atau hubungi SIM RS.'), Response::HTTP_INTERNAL_SERVER_ERROR);
             }
         } catch (\Exception $e) {
             Log::error('| Cuti Besar Tahunan | - Error function export: ' . $e->getMessage());
