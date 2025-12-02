@@ -122,7 +122,6 @@ class MateriPelatihanController extends Controller
 
             DB::beginTransaction();
             try {
-                StorageServerHelper::login();
                 $berkasIds = [
                     'dokumen_materi_1' => null,
                     'dokumen_materi_2' => null,
@@ -155,8 +154,6 @@ class MateriPelatihanController extends Controller
                         Log::info("Berkas dokumen pada kolom {$field} berhasil diupload.");
                     }
                 }
-
-                StorageServerHelper::logout();
 
                 // Simpan materi pelatihan beserta dokumen yang ter-upload
                 $materiPelatihan = MateriPelatihan::create([
@@ -295,7 +292,6 @@ class MateriPelatihanController extends Controller
 
             DB::beginTransaction();
             try {
-                StorageServerHelper::login();
                 $berkasIds = [$data_pelatihan->dokumen_materi_1, $data_pelatihan->dokumen_materi_2, $data_pelatihan->dokumen_materi_3];
 
                 // Iterasi untuk setiap field dokumen yang ada
@@ -333,8 +329,6 @@ class MateriPelatihanController extends Controller
                     //     unset($data[$field]);
                     // }
                 }
-
-                StorageServerHelper::logout();
 
                 $data_pelatihan->update([
                     'judul' => $data['judul'],
@@ -382,8 +376,6 @@ class MateriPelatihanController extends Controller
 
             DB::beginTransaction();
             try {
-                StorageServerHelper::login();
-
                 $dokumenIds = [
                     $data_pelatihan->dokumen_materi_1,
                     $data_pelatihan->dokumen_materi_2,
@@ -414,8 +406,6 @@ class MateriPelatihanController extends Controller
                     'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
                     'message' => 'Terjadi kesalahan saat menghapus data. Silakan coba lagi nanti.' . $e->getMessage(),
                 ], Response::HTTP_INTERNAL_SERVER_ERROR);
-            } finally {
-                StorageServerHelper::logout();
             }
         } catch (\Exception $e) {
             Log::error('| Materi Pelatihan | - Error pada function destroy: ' . $e->getMessage());

@@ -459,7 +459,6 @@ class DiklatController extends Controller
 
         DB::beginTransaction();
         try {
-            StorageServerHelper::login();
             $berkasIds = [
                 'dokumen' => null,
                 'dokumen_diklat_1' => null,
@@ -496,8 +495,6 @@ class DiklatController extends Controller
                     Log::info("Berkas dokumen pada kolom {$field} berhasil diupload.");
                 }
             }
-
-            StorageServerHelper::logout();
 
             $jamMulai = Carbon::createFromFormat('H:i:s', $data['jam_mulai'], 'Asia/Jakarta');
             $jamSelesai = Carbon::createFromFormat('H:i:s', $data['jam_selesai'], 'Asia/Jakarta');
@@ -604,9 +601,6 @@ class DiklatController extends Controller
             if ($request->hasFile('dokumen')) {
                 $authUser = Auth::user();
 
-                // Login to the storage server
-                StorageServerHelper::login();
-
                 $file = $request->file('dokumen');
 
                 // Upload file using helper
@@ -631,8 +625,6 @@ class DiklatController extends Controller
                 }
 
                 $gambarId = $berkas->id;
-
-                StorageServerHelper::logout();
             }
 
             $jamMulai = Carbon::createFromFormat('H:i:s', $data['jam_mulai'], 'Asia/Jakarta');
@@ -838,7 +830,6 @@ class DiklatController extends Controller
 
         DB::beginTransaction();
         try {
-            StorageServerHelper::login();
             $berkasIds = [
                 'dokumen' => null,
                 'dokumen_diklat_1' => null,
@@ -892,8 +883,6 @@ class DiklatController extends Controller
                     Log::info("Berkas dokumen pada kolom {$field} berhasil diupload.");
                 }
             }
-
-            StorageServerHelper::logout();
 
             if (isset($data['tgl_mulai'], $data['tgl_selesai'], $data['jam_mulai'], $data['jam_selesai'])) {
                 $jamMulai = Carbon::createFromFormat('H:i:s', $data['jam_mulai'], 'Asia/Jakarta');
@@ -1019,9 +1008,6 @@ class DiklatController extends Controller
             if ($request->hasFile('dokumen')) {
                 $authUser = Auth::user();
 
-                // Login to the storage server
-                StorageServerHelper::login();
-
                 // Hapus berkas lama
                 $berkasLama = Berkas::find($diklat->dokumen_eksternal);
                 if ($berkasLama) {
@@ -1059,8 +1045,6 @@ class DiklatController extends Controller
                 }
 
                 $gambarId = $berkas->id;
-
-                StorageServerHelper::logout();
             }
 
             if (isset($data['tgl_mulai'], $data['tgl_selesai'], $data['jam_mulai'], $data['jam_selesai'])) {
@@ -1584,7 +1568,6 @@ class DiklatController extends Controller
             if ($diklat->kategori_diklat_id == 1) {
                 $pesertaDiklat = PesertaDiklat::where('diklat_id', $diklatId)->pluck('peserta');
                 if ($pesertaDiklat->isNotEmpty()) {
-                    StorageServerHelper::login();
                     foreach ($pesertaDiklat as $userId) {
                         $dataKaryawan = DataKaryawan::where('user_id', $userId)->first();
                         if ($dataKaryawan) {

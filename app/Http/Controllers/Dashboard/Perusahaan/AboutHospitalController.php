@@ -121,7 +121,6 @@ class AboutHospitalController extends Controller
 
             DB::beginTransaction();
             try {
-                StorageServerHelper::login();
                 $berkasIds = [$hospital->about_hospital_1, $hospital->about_hospital_2, $hospital->about_hospital_3];
 
                 foreach ($berkasFields as $index => $field) {
@@ -157,8 +156,6 @@ class AboutHospitalController extends Controller
                         unset($data[$field]);
                     }
                 }
-
-                StorageServerHelper::logout();
 
                 $hospital->update([
                     'konten' => $data['konten'],

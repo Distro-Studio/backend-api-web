@@ -209,8 +209,6 @@ class Karyawan_BerkasController extends Controller
             }
 
             if ($request->hasFile('dokumen')) {
-                StorageServerHelper::login();
-
                 $file = $request->file('dokumen');
                 $random_filename = Str::random(20);
 
