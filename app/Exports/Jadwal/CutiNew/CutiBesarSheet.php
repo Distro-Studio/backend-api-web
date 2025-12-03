@@ -95,8 +95,6 @@ class CutiBesarSheet implements FromCollection, WithHeadings, WithMapping, WithT
         $dataKaryawan = $user->data_karyawans;
         $hakCuti = $dataKaryawan ? $dataKaryawan->hak_cutis->first() : null;
         $kuota = $hakCuti->kuota ?? 0;
-        $usedKuota = $hakCuti->used_kuota ?? 0;
-        $sisaKuota = max(0, $kuota - $usedKuota);
         $nik = $dataKaryawan->nik ?? 'N/A';
 
         // Ambil data cuti user ini dengan tipe cuti yang sama
@@ -129,7 +127,7 @@ class CutiBesarSheet implements FromCollection, WithHeadings, WithMapping, WithT
             $this->number,
             $user->nama,
             $nik,
-            $sisaKuota,
+            $kuota,
         ];
 
         // Tambahkan kolom tanggal cuti sesuai max kuota
