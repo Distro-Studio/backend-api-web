@@ -908,31 +908,112 @@ class DataCutiController extends Controller
             $now = Carbon::now('Asia/Jakarta');
 
             // Looping untuk mendapatkan ID yang perlu di-restore sebelum menghapus cuti
+            // foreach ($idsCuti as $cutiId) {
+            //     $cuti = Cuti::find($cutiId);
+            //     if ($cuti) {
+            //         $hakCuti = HakCuti::find($cuti->hak_cuti_id);
+            //         if ($hakCuti) {
+            //             $isUnlimited = $hakCuti->tipe_cutis?->is_unlimited ?? false;
+            //             Log::info("Cuti ID {$cuti->id} tidak memulihkan kuota karena tipe cuti unlimited.");
+
+            //             if (!$isUnlimited) {
+            //                 $tglFrom = Carbon::createFromFormat('d-m-Y', $cuti->tgl_from)->startOfDay();
+            //                 $tglTo = Carbon::createFromFormat('d-m-Y', $cuti->tgl_to)->endOfDay();
+
+            //                 if ($now->between($tglFrom, $tglTo)) {
+            //                     // 1. Cuti masih berjalan
+            //                     $sisaHari = $now->diffInDays($tglTo) + 1;
+            //                     $hakCuti->kuota += $sisaHari;
+            //                     $hakCuti->used_kuota -= $sisaHari;
+            //                 } elseif ($now->lt($tglFrom)) {
+            //                     // 2. Cuti belum berjalan
+            //                     $hakCuti->kuota += $cuti->durasi;
+            //                     $hakCuti->used_kuota -= $cuti->durasi;
+            //                 }
+
+            //                 // 3. Cuti selesai → tidak perlu kembalikan kuota
+            //                 $hakCuti->save();
+            //             }
+            //         } else {
+            //             Log::warning("Hak cuti dengan ID {$cuti->hak_cuti_id} tidak ditemukan saat delete cuti ID {$cutiId}.");
+            //         }
+
+            //         // Restore data presensi, jadwal, izin, lembur sesuai kode lama
+            //         $restoreData = [
+            //             Presensi::class => json_decode($cuti->presensi_ids, true) ?? [],
+            //             Jadwal::class => json_decode($cuti->jadwal_ids, true) ?? [],
+            //             RiwayatIzin::class => json_decode($cuti->izin_ids, true) ?? [],
+            //             Lembur::class => json_decode($cuti->lembur_ids, true) ?? []
+            //         ];
+
+            //         // Loop untuk restore semua entitas
+            //         foreach ($restoreData as $model => $ids) {
+            //             $this->restoreEntities($model, $ids);
+            //         }
+            //     }
+            // }
+
             foreach ($idsCuti as $cutiId) {
                 $cuti = Cuti::find($cutiId);
                 if ($cuti) {
-                    $hakCuti = HakCuti::find($cuti->hak_cuti_id);
+                    $hakCuti = HakCuti::with('tipe_cutis')->find($cuti->hak_cuti_id);
                     if ($hakCuti) {
                         $isUnlimited = $hakCuti->tipe_cutis?->is_unlimited ?? false;
-                        Log::info("Cuti ID {$cuti->id} tidak memulihkan kuota karena tipe cuti unlimited.");
 
                         if (!$isUnlimited) {
                             $tglFrom = Carbon::createFromFormat('d-m-Y', $cuti->tgl_from)->startOfDay();
-                            $tglTo = Carbon::createFromFormat('d-m-Y', $cuti->tgl_to)->endOfDay();
+                            $tglTo   = Carbon::createFromFormat('d-m-Y', $cuti->tgl_to)->endOfDay();
+
+                            // Berapa hari yang perlu dikembalikan?
+                            $restoreHari = 0;
 
                             if ($now->between($tglFrom, $tglTo)) {
-                                // 1. Cuti masih berjalan
-                                $sisaHari = $now->diffInDays($tglTo) + 1;
-                                $hakCuti->kuota += $sisaHari;
-                                $hakCuti->used_kuota -= $sisaHari;
+                                // 1. Cuti sedang berjalan → kembalikan sisa hari dari hari ini sampai tgl_to
+                                $restoreHari = $now->diffInDays($tglTo) + 1;
                             } elseif ($now->lt($tglFrom)) {
-                                // 2. Cuti belum berjalan
-                                $hakCuti->kuota += $cuti->durasi;
-                                $hakCuti->used_kuota -= $cuti->durasi;
+                                // 2. Cuti belum berjalan → kembalikan full durasi
+                                $restoreHari = $cuti->durasi;
                             }
+                            // 3. Cuti sudah selesai (now > tgl_to) → restoreHari tetap 0 (tidak dikembalikan)
 
-                            // 3. Cuti selesai → tidak perlu kembalikan kuota
-                            $hakCuti->save();
+                            if ($restoreHari > 0) {
+                                // Tentukan batas maksimum kuota berdasarkan tipe_cuti_id
+                                $maxKuota = null;
+                                switch ($hakCuti->tipe_cuti_id) {
+                                    case 1:
+                                    case 5:
+                                        $maxKuota = 12;
+                                        break;
+                                    case 2:
+                                        $maxKuota = 92; // 3 bulan
+                                        break;
+                                    case 4:
+                                        $maxKuota = 30;
+                                        break;
+                                    case 6:
+                                        $maxKuota = 3;
+                                        break;
+                                    case 7:
+                                    case 8:
+                                        $maxKuota = 2;
+                                        break;
+                                }
+
+                                // Kembalikan kuota dengan batas maksimum
+                                if ($maxKuota !== null) {
+                                    $hakCuti->kuota = min($maxKuota, $hakCuti->kuota + $restoreHari);
+                                } else {
+                                    // Jika tipe lain yang belum di-mapping, biarkan seperti behavior awal
+                                    $hakCuti->kuota = $hakCuti->kuota + $restoreHari;
+                                }
+
+                                // Pastikan used_kuota tidak pernah minus
+                                $hakCuti->used_kuota = max(0, $hakCuti->used_kuota - $restoreHari);
+
+                                $hakCuti->save();
+                            }
+                        } else {
+                            Log::info("Kuota tidak dipulihkan karena tipe cuti '{$hakCuti->tipe_cutis->nama}' bersifat unlimited untuk cuti ID {$cuti->id}.");
                         }
                     } else {
                         Log::warning("Hak cuti dengan ID {$cuti->hak_cuti_id} tidak ditemukan saat delete cuti ID {$cutiId}.");
@@ -940,13 +1021,12 @@ class DataCutiController extends Controller
 
                     // Restore data presensi, jadwal, izin, lembur sesuai kode lama
                     $restoreData = [
-                        Presensi::class => json_decode($cuti->presensi_ids, true) ?? [],
-                        Jadwal::class => json_decode($cuti->jadwal_ids, true) ?? [],
+                        Presensi::class    => json_decode($cuti->presensi_ids, true) ?? [],
+                        Jadwal::class      => json_decode($cuti->jadwal_ids, true) ?? [],
                         RiwayatIzin::class => json_decode($cuti->izin_ids, true) ?? [],
-                        Lembur::class => json_decode($cuti->lembur_ids, true) ?? []
+                        Lembur::class      => json_decode($cuti->lembur_ids, true) ?? [],
                     ];
 
-                    // Loop untuk restore semua entitas
                     foreach ($restoreData as $model => $ids) {
                         $this->restoreEntities($model, $ids);
                     }
