@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -100,5 +101,17 @@ class RiwayatPerubahan extends Model
     public function perubahan_personals(): HasMany
     {
         return $this->hasMany(PerubahanPersonal::class, 'riwayat_perubahan_id', 'id');
+    }
+
+    public function getCreatedAtAttribute($value)
+    {
+        return Carbon::parse($value, config('app.timezone') ?? 'Asia/Jakarta')
+            ->setTimezone('UTC');
+    }
+
+    public function getUpdatedAtAttribute($value)
+    {
+        return Carbon::parse($value, config('app.timezone') ?? 'Asia/Jakarta')
+            ->setTimezone('UTC');
     }
 }
