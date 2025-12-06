@@ -19,8 +19,8 @@ return new class extends Migration
             $table->string('jam_masuk'); // Y-m-d H:i:s
             $table->string('jam_keluar')->nullable(); // Y-m-d H:i:s
             $table->integer('durasi')->nullable();
-            $table->string('lat');
-            $table->string('long');
+            $table->string('lat')->nullable();
+            $table->string('long')->nullable();
             $table->string('latkeluar')->nullable();
             $table->string('longkeluar')->nullable();
             $table->foreignId('foto_masuk')->nullable()->constrained('berkas')->onDelete('cascade');
