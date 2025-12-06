@@ -21,9 +21,9 @@ use Illuminate\Support\Facades\Gate;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Storage;
 use App\Exports\Presensi\PresensiExport;
-use App\Imports\Presensi\PresensiImport;
 use App\Http\Requests\Excel_Import\ImportPresensiRequest;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
+use App\Imports\Presensi\PresensiImportNew;
 
 class DataPresensiController extends Controller
 {
@@ -574,7 +574,7 @@ class DataPresensiController extends Controller
         $file = $request->validated();
 
         try {
-            Excel::import(new PresensiImport, $file['presensi_file']);
+            Excel::import(new PresensiImportNew, $file['presensi_file']);
         } catch (\Exception $e) {
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya terjadi kesalahan. Pesan: ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
         }
