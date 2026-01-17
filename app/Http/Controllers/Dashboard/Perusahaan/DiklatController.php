@@ -2522,7 +2522,7 @@ class DiklatController extends Controller
                 return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Diklat '{$diklat->nama}' bukan kategori diklat internal yang membutuhkan sertifikat dari RSKI."), Response::HTTP_BAD_REQUEST);
             }
         } else {
-            return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Diklat '{$diklat->nama}' belum mencapai status verifikasi tahap 2."), Response::HTTP_BAD_REQUEST);
+            return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Diklat '{$diklat->nama}' belum mencapai status verifikasi tahap 3."), Response::HTTP_BAD_REQUEST);
         }
     }
 
