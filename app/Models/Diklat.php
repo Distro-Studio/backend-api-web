@@ -29,6 +29,7 @@ class Diklat extends Model
         'durasi' => 'integer',
         'verifikator_1' => 'integer',
         'verifikator_2' => 'integer',
+        'verifikator_3' => 'integer',
         'certificate_published' => 'integer',
         'certificate_verified_by' => 'integer',
     ];
@@ -151,6 +152,16 @@ class Diklat extends Model
     public function verifikator_2_diklats(): BelongsTo
     {
         return $this->belongsTo(User::class, 'verifikator_2', 'id');
+    }
+
+    /**
+     * Get the verifikator_3_diklats that owns the Cuti
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function verifikator_3_diklats(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'verifikator_3', 'id');
     }
 
     /**
