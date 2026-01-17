@@ -314,9 +314,11 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::post('/diklat/{diklatId}/add-peserta-diklat', [DiklatController::class, 'assignDiklat']);
             Route::post('/diklat/{diklatId}/verifikasi-step-1', [DiklatController::class, 'verifikasiTahap1']);
             Route::post('/diklat/{diklatId}/verifikasi-step-2', [DiklatController::class, 'verifikasiTahap2']);
+            Route::post('/diklat/{diklatId}/verifikasi-step-3', [DiklatController::class, 'verifikasiTahap3']);
             Route::post('/diklat/{diklatId}/certificates', [DiklatController::class, 'generateCertificate']);
             Route::post('/diklat/{diklatId}/verifikasi-diklat-eksternal-step-1', [DiklatController::class, 'verifikasiDiklatExternal_t1']);
             Route::post('/diklat/{diklatId}/verifikasi-diklat-eksternal-step-2', [DiklatController::class, 'verifikasiDiklatExternal_t2']);
+            Route::post('/diklat/{diklatId}/verifikasi-diklat-eksternal-step-3', [DiklatController::class, 'verifikasiDiklatExternal_t3']);
 
             // ! Masa Diklat ===========>
             Route::post('/get-masa-diklat', [MasaDiklatController::class, 'index']);
