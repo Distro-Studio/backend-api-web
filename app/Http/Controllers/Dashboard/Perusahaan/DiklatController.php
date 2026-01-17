@@ -1925,7 +1925,7 @@ class DiklatController extends Controller
 
         $status_diklat_id = $diklat->status_diklat_id;
 
-        if ($request->has('verifikasi_kedua_disetujui') && $request->verifikasi_kedua_disetujui == 1) {
+        if ($request->has('verifikasi_ketiga_disetujui') && $request->verifikasi_ketiga_disetujui == 1) {
             if ($status_diklat_id == 2) {
                 $diklat->status_diklat_id = 4;
                 $diklat->verifikator_2 = $verifikatorId;
@@ -1979,7 +1979,7 @@ class DiklatController extends Controller
             } else {
                 return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, "Diklat Eksternal '{$diklat->nama}' tidak dalam status untuk disetujui pada tahap 3."), Response::HTTP_BAD_REQUEST);
             }
-        } elseif ($request->has('verifikasi_kedua_ditolak') && $request->verifikasi_kedua_ditolak == 1) {
+        } elseif ($request->has('verifikasi_ketiga_ditolak') && $request->verifikasi_ketiga_ditolak == 1) {
             // Jika status_diklat_id = 2, maka bisa ditolak
             if ($status_diklat_id == 2) {
                 $diklat->status_diklat_id = 5;
