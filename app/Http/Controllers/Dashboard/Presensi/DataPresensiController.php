@@ -395,7 +395,7 @@ class DataPresensiController extends Controller
         $fotoMasukBerkas = Berkas::where('id', $presensiHariIni->foto_masuk)->first();
         $fotoKeluarBerkas = Berkas::where('id', $presensiHariIni->foto_keluar)->first();
 
-        $baseUrl = "https://192.168.0.20/RskiSistem24/file-storage/public"; // Ganti dengan URL domain Anda
+        $baseUrl = env('STORAGE_SERVER_DOMAIN'); // Ganti dengan URL domain Anda
 
         $fotoMasukExt = $fotoMasukBerkas ? StorageServerHelper::getExtensionFromMimeType($fotoMasukBerkas->ext) : null;
         $fotoMasukUrl = $fotoMasukBerkas ? $baseUrl . $fotoMasukBerkas->path : null;
@@ -531,8 +531,8 @@ class DataPresensiController extends Controller
         }
 
         try {
-            $startDate = Carbon::createFromFormat('d-m-Y', $tgl_mulai)->startOfDay();
-            $endDate = Carbon::createFromFormat('d-m-Y', $tgl_selesai)->endOfDay();
+            $startDate = Carbon::createFromFormat('d-m-Y', $tgl_mulai, 'Asia/Jakarta')->startOfDay()->toDateTimeString();
+            $endDate = Carbon::createFromFormat('d-m-Y', $tgl_selesai, 'Asia/Jakarta')->endOfDay()->toDateTimeString();
         } catch (\Exception $e) {
             return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Tanggal yang dimasukkan tidak valid.'), Response::HTTP_BAD_REQUEST);
         }
