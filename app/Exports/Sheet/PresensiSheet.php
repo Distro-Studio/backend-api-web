@@ -24,13 +24,13 @@ class PresensiSheet implements FromCollection, WithHeadings, WithMapping, WithTi
     private $startDate;
     private $endDate;
 
-    public function __construct($filters = [], $title, $startDate, $endDate, $category = null)
+    public function __construct($category, $title, $startDate, $endDate, $filters = [])
     {
-        $this->filters = $filters;
+        $this->category = $category;
         $this->title = $title;
         $this->startDate = $startDate;
         $this->endDate = $endDate;
-        $this->category = $category;
+        $this->filters = $filters;
         $this->number = 0; // Reset numbering for each sheet
     }
 
