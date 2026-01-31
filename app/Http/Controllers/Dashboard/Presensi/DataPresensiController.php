@@ -531,8 +531,8 @@ class DataPresensiController extends Controller
         }
 
         try {
-            $startDate = Carbon::createFromFormat('d-m-Y', $tgl_mulai)->startOfDay();
-            $endDate = Carbon::createFromFormat('d-m-Y', $tgl_selesai)->endOfDay();
+            $startDate = Carbon::createFromFormat('d-m-Y', $tgl_mulai, 'Asia/Jakarta')->startOfDay()->toDateTimeString();
+            $endDate = Carbon::createFromFormat('d-m-Y', $tgl_selesai, 'Asia/Jakarta')->endOfDay()->toDateTimeString();
         } catch (\Exception $e) {
             return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Tanggal yang dimasukkan tidak valid.'), Response::HTTP_BAD_REQUEST);
         }
