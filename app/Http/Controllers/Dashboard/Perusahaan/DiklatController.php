@@ -1251,37 +1251,69 @@ class DiklatController extends Controller
         }
     }
 
-    public function exportDiklatInternal()
+    public function exportDiklatInternal(Request $request)
     {
         if (!Gate::allows('export diklat')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
-        $diklat_internal = Diklat::where('kategori_diklat_id', 1)->get();
-        if ($diklat_internal->isEmpty()) {
-            return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Tidak ada data diklat internal yang tersedia untuk diekspor.'), Response::HTTP_NOT_FOUND);
+        $tgl_mulai = $request->input('tgl_mulai');
+        $tgl_selesai = $request->input('tgl_selesai');
+        if (empty($tgl_mulai) || empty($tgl_selesai)) {
+            return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Periode tanggal mulai dan tanggal selesai tidak boleh kosong.'), Response::HTTP_BAD_REQUEST);
         }
 
         try {
-            return Excel::download(new DiklatInternalExport(), 'perusahaan-diklat-internal.xls');
+            $startDate = Carbon::createFromFormat('d-m-Y', $tgl_mulai, 'Asia/Jakarta')->startOfDay()->toDateTimeString();
+            $endDate = Carbon::createFromFormat('d-m-Y', $tgl_selesai, 'Asia/Jakarta')->endOfDay()->toDateTimeString();
+        } catch (\Exception $e) {
+            return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Tanggal yang dimasukkan tidak valid.'), Response::HTTP_BAD_REQUEST);
+        }
+
+        $diklatCount = Diklat::where('kategori_diklat_id', 1)
+            ->whereBetween('tgl_mulai', [$tgl_mulai, $tgl_selesai])
+            ->count();
+        
+        if ($diklatCount === 0) {
+            return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data diklat internal tidak ditemukan untuk periode yang diminta.'), Response::HTTP_NOT_FOUND);
+        }
+
+        try {
+            return Excel::download(new DiklatInternalExport($tgl_mulai, $tgl_selesai, $request->all()), 'perusahaan-diklat-internal.xls');
         } catch (\Throwable $e) {
             return response()->json(new WithoutDataResource(Response::HTTP_INTERNAL_SERVER_ERROR, 'Terjadi kesalahan pada sistem. Silakan coba lagi nanti atau hubungi SIM RS.'), Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 
-    public function exportDiklatEksternal()
+    public function exportDiklatEksternal(Request $request)
     {
         if (!Gate::allows('export diklat')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
-        $diklat_eksternal = Diklat::where('kategori_diklat_id', 2)->get();
-        if ($diklat_eksternal->isEmpty()) {
-            return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Tidak ada data diklat eksternal yang tersedia untuk diekspor.'), Response::HTTP_NOT_FOUND);
+        $tgl_mulai = $request->input('tgl_mulai');
+        $tgl_selesai = $request->input('tgl_selesai');
+        if (empty($tgl_mulai) || empty($tgl_selesai)) {
+            return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Periode tanggal mulai dan tanggal selesai tidak boleh kosong.'), Response::HTTP_BAD_REQUEST);
         }
 
         try {
-            return Excel::download(new DiklatEksternalExport(), 'perusahaan-diklat-eksternal.xls');
+            $startDate = Carbon::createFromFormat('d-m-Y', $tgl_mulai, 'Asia/Jakarta')->startOfDay()->toDateTimeString();
+            $endDate = Carbon::createFromFormat('d-m-Y', $tgl_selesai, 'Asia/Jakarta')->endOfDay()->toDateTimeString();
+        } catch (\Exception $e) {
+            return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Tanggal yang dimasukkan tidak valid.'), Response::HTTP_BAD_REQUEST);
+        }
+
+        $diklatCount = Diklat::where('kategori_diklat_id', 2)
+            ->whereBetween('tgl_mulai', [$tgl_mulai, $tgl_selesai])
+            ->count();
+        
+        if ($diklatCount === 0) {
+            return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data diklat eksternal tidak ditemukan untuk periode yang diminta.'), Response::HTTP_NOT_FOUND);
+        }
+
+        try {
+            return Excel::download(new DiklatEksternalExport($tgl_mulai, $tgl_selesai, $request->all()), 'perusahaan-diklat-eksternal.xls');
         } catch (\Throwable $e) {
             return response()->json(new WithoutDataResource(Response::HTTP_INTERNAL_SERVER_ERROR, 'Terjadi kesalahan pada sistem. Silakan coba lagi nanti atau hubungi SIM RS.'), Response::HTTP_INTERNAL_SERVER_ERROR);
         }
