@@ -21,7 +21,14 @@ class CutiExport implements WithMultipleSheets
         $this->filters = $filters;
         $this->startDate = $startDate;
         $this->endDate = $endDate;
-        $this->tipeCutiFilter = is_array($tipeCutiFilter) ? $tipeCutiFilter : [$tipeCutiFilter]; // pastikan array
+        // Pastikan jika null tidak menjadi [null] sehingga `when(!empty())` tidak terpanggil
+        if ($tipeCutiFilter === null) {
+            $this->tipeCutiFilter = [];
+        } else {
+            $this->tipeCutiFilter = is_array($tipeCutiFilter)
+                ? array_values(array_filter($tipeCutiFilter, function ($v) { return $v !== null; }))
+                : [$tipeCutiFilter];
+        }
     }
 
     public function sheets(): array
@@ -29,7 +36,7 @@ class CutiExport implements WithMultipleSheets
         $sheets = [];
 
         // Menambahkan sheet untuk setiap kategori presensi
-        $tipeCutis = TipeCuti::whereNotIn('id', [0, 5])
+        $tipeCutis = TipeCuti::whereNotIn('id', [1, 5])
             ->when(!empty($this->tipeCutiFilter), function ($query) {
                 $query->whereIn('id', $this->tipeCutiFilter);
             })
