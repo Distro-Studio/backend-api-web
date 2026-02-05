@@ -29,7 +29,7 @@ class CutiExport implements WithMultipleSheets
         $sheets = [];
 
         // Menambahkan sheet untuk setiap kategori presensi
-        $tipeCutis = TipeCuti::whereNotIn('id', [1, 5])
+        $tipeCutis = TipeCuti::whereNotIn('id', [0, 5])
             ->when(!empty($this->tipeCutiFilter), function ($query) {
                 $query->whereIn('id', $this->tipeCutiFilter);
             })
