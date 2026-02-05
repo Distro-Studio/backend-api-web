@@ -75,7 +75,7 @@ class CutiSheet implements FromCollection, WithHeadings, WithMapping, WithTitle
             'tgl_to',
             'catatan',
             'durasi',
-            'sisa_kuota',
+            // 'sisa_kuota',
             'status_cuti',
             'created_at',
             'updated_at',
@@ -101,29 +101,9 @@ class CutiSheet implements FromCollection, WithHeadings, WithMapping, WithTitle
             // Untuk tipe cuti biasa, pakai kuota dari hak_cuti (kalau ada), default 0 Hari
             $kuota = ($cuti->hak_cutis && $cuti->hak_cutis->kuota !== null)
                 ? $cuti->hak_cutis->kuota
-                : ($cuti->tipe_cutis->kuota ?? 0);
+                : 0;
 
-            // Hitung jumlah hari cuti yang sudah digunakan oleh user untuk tipe ini pada tahun berjalan
-            $userId = $cuti->users->id ?? null;
-            $usedDays = 0;
-            if ($userId) {
-                $usedDays = Cuti::where('tipe_cuti_id', $cuti->tipe_cuti_id)
-                    ->where('status_cuti_id', 4)
-                    ->where('user_id', $userId)
-                    ->whereYear('created_at', Carbon::now('Asia/Jakarta')->year)
-                    ->get()
-                    ->sum(function ($c) {
-                        if (!empty($c->durasi)) {
-                            return $c->durasi;
-                        }
-                        $from = Carbon::parse($c->tgl_from);
-                        $to = Carbon::parse($c->tgl_to);
-                        return $from->diffInDays($to) + 1;
-                    });
-            }
-
-            $sisa = max(0, $kuota - $usedDays);
-            $sisaKuotaDisplay = $sisa . ' Hari';
+            $sisaKuotaDisplay = $kuota . ' Hari';
         }
 
         return [
@@ -136,7 +116,7 @@ class CutiSheet implements FromCollection, WithHeadings, WithMapping, WithTitle
             $tgl_to,
             $cuti->catatan ?? 'N/A',
             $cuti->durasi . ' Hari',
-            $sisaKuotaDisplay,
+            // $sisaKuotaDisplay,
             $cuti->status_cutis->label,
             Carbon::parse($cuti->created_at)->format('d-m-Y H:i:s'),
             Carbon::parse($cuti->updated_at)->format('d-m-Y H:i:s')
