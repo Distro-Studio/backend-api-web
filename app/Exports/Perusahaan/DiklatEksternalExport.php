@@ -34,7 +34,9 @@ class DiklatEksternalExport implements FromCollection, WithHeadings, WithMapping
 
         // Filter by date range
         if (!empty($this->tglMulai) && !empty($this->tglSelesai)) {
-            $query->whereBetween('tgl_mulai', [$this->tglMulai, $this->tglSelesai]);
+            $tglMulai = Carbon::createFromFormat('d-m-Y', $this->tglMulai)->startOfDay()->format('Y-m-d');
+            $tglSelesai = Carbon::createFromFormat('d-m-Y', $this->tglSelesai)->endOfDay()->format('Y-m-d');
+            $query->whereBetween('tgl_mulai', [$tglMulai, $tglSelesai]);
         }
 
         // Filter by karyawan (user_id)
