@@ -645,6 +645,10 @@ class DiklatController extends Controller
 
             $durasi = $selisihJam * $totalHari;
 
+            // Convert tanggal ke format Y-m-d H:i:s dengan jam 00:00:00
+            $tglMulaiFormatted = $tglMulai->format('Y-m-d 00:00:00');
+            $tglSelesaiFormatted = $tglSelesai->format('Y-m-d 00:00:00');
+
             $diklat = Diklat::create([
                 'dokumen_eksternal' => $gambarId,
                 'nama' => $data['nama'],
@@ -653,8 +657,8 @@ class DiklatController extends Controller
                 'deskripsi' => $data['deskripsi'],
                 'kuota' => 1,
                 'total_peserta' => 1,
-                'tgl_mulai' => $data['tgl_mulai'],
-                'tgl_selesai' => $data['tgl_selesai'],
+                'tgl_mulai' => $tglMulaiFormatted,
+                'tgl_selesai' => $tglSelesaiFormatted,
                 'jam_mulai' => $data['jam_mulai'],
                 'jam_selesai' => $data['jam_selesai'],
                 'durasi' => $durasi,
