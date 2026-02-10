@@ -308,8 +308,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::post('/diklat-eksternal-user', [DiklatController::class, 'storeExternal']);
             Route::post('/update-diklat-eksternal-user/{diklatId}', [DiklatController::class, 'updateExternal']);
             Route::get('/diklat/{diklatId}', [DiklatController::class, 'show']);
-            Route::get('/diklat-internal/export', [DiklatController::class, 'exportDiklatInternal']);
-            Route::get('/diklat-eksternal/export', [DiklatController::class, 'exportDiklatEksternal']);
+            Route::post('/diklat-internal/export', [DiklatController::class, 'exportDiklatInternal']);
+            Route::post('/diklat-eksternal/export', [DiklatController::class, 'exportDiklatEksternal']);
             Route::delete('/diklat/{diklatId}/delete-peserta-diklat/{userId}', [DiklatController::class, 'fakeAssignDiklat']);
             Route::post('/diklat/{diklatId}/add-peserta-diklat', [DiklatController::class, 'assignDiklat']);
             Route::post('/diklat/{diklatId}/verifikasi-step-1', [DiklatController::class, 'verifikasiTahap1']);
