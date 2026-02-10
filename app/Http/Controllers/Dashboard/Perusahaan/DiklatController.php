@@ -514,6 +514,10 @@ class DiklatController extends Controller
 
             $durasi = $selisihJam * $totalHari;
 
+            // Convert tanggal ke format Y-m-d H:i:s dengan jam 00:00:00
+            $tglMulaiFormatted = $tglMulai->format('Y-m-d 00:00:00');
+            $tglSelesaiFormatted = $tglSelesai->format('Y-m-d 00:00:00');
+
             $diklat = Diklat::create([
                 'gambar' => $berkasIds['dokumen'],
                 'dokumen_diklat_1' => $berkasIds['dokumen_diklat_1'],
@@ -526,8 +530,8 @@ class DiklatController extends Controller
                 'status_diklat_id' => 1,
                 'deskripsi' => $data['deskripsi'],
                 'kuota' => $data['kuota'],
-                'tgl_mulai' => $data['tgl_mulai'],
-                'tgl_selesai' => $data['tgl_selesai'],
+                'tgl_mulai' => $tglMulaiFormatted,
+                'tgl_selesai' => $tglSelesaiFormatted,
                 'jam_mulai' => $data['jam_mulai'],
                 'jam_selesai' => $data['jam_selesai'],
                 'durasi' => $durasi,
@@ -907,6 +911,10 @@ class DiklatController extends Controller
 
                 $durasi = $selisihJam * $totalHari;
 
+                // Convert tanggal ke format Y-m-d H:i:s dengan jam 00:00:00
+                $tglMulaiFormatted = $tglMulai->format('Y-m-d 00:00:00');
+                $tglSelesaiFormatted = $tglSelesai->format('Y-m-d 00:00:00');
+
                 // Loop through each participant and adjust their masa_diklat
                 $pesertaDiklats = $diklat->peserta_diklat;
                 foreach ($pesertaDiklats as $peserta) {
@@ -960,8 +968,8 @@ class DiklatController extends Controller
                 'nama' => $data['nama'] ?? $diklat->nama,
                 'deskripsi' => $data['deskripsi'] ?? $diklat->deskripsi,
                 'kuota' => $data['kuota'] ?? $diklat->kuota,
-                'tgl_mulai' => $data['tgl_mulai'] ?? $diklat->tgl_mulai,
-                'tgl_selesai' => $data['tgl_selesai'] ?? $diklat->tgl_selesai,
+                'tgl_mulai' => $tglMulaiFormatted ?? $diklat->tgl_mulai,
+                'tgl_selesai' => $tglSelesaiFormatted ?? $diklat->tgl_selesai,
                 'jam_mulai' => $data['jam_mulai'] ?? $diklat->jam_mulai,
                 'jam_selesai' => $data['jam_selesai'] ?? $diklat->jam_selesai,
                 'lokasi' => $data['lokasi'] ?? $diklat->lokasi,
@@ -1070,6 +1078,10 @@ class DiklatController extends Controller
 
                 $durasi = $selisihJam * $totalHari;
 
+                // Convert tanggal ke format Y-m-d H:i:s dengan jam 00:00:00
+                $tglMulaiFormatted = $tglMulai->format('Y-m-d 00:00:00');
+                $tglSelesaiFormatted = $tglSelesai->format('Y-m-d 00:00:00');
+
                 // Loop through each participant and adjust their masa_diklat
                 $pesertaDiklats = $diklat->peserta_diklat;
                 foreach ($pesertaDiklats as $peserta) {
@@ -1089,8 +1101,8 @@ class DiklatController extends Controller
                 'dokumen_eksternal' => $gambarId ?? $diklat->dokumen_eksternal,
                 'nama'              => $data['nama'],
                 'deskripsi'         => $data['deskripsi'],
-                'tgl_mulai'         => $data['tgl_mulai'] ?? $diklat->tgl_mulai,
-                'tgl_selesai'       => $data['tgl_selesai'] ?? $diklat->tgl_selesai,
+                'tgl_mulai'         => $tglMulaiFormatted ?? $diklat->tgl_mulai,
+                'tgl_selesai'       => $tglSelesaiFormatted ?? $diklat->tgl_selesai,
                 'jam_mulai'         => $data['jam_mulai'] ?? $diklat->jam_mulai,
                 'jam_selesai'       => $data['jam_selesai'] ?? $diklat->jam_selesai,
                 'lokasi'            => $data['lokasi'],
