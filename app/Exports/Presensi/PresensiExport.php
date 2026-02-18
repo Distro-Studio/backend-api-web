@@ -28,9 +28,11 @@ class PresensiExport implements WithMultipleSheets
     public function sheets(): array
     {
         $sheets = [];
-        // Jika ada filter selain date range => buat sheet per karyawan
-        $hasFilters = is_array($this->filters) && count($this->filters) > 0;
-        if ($hasFilters) {
+        // Jika ada filter selain date range (tgl_mulai / tgl_selesai) => buat sheet per karyawan
+        $filterKeys = is_array($this->filters) ? array_keys($this->filters) : [];
+        $nonDateFilterKeys = array_diff($filterKeys, ['tgl_mulai', 'tgl_selesai']);
+        $hasOtherFilters = count($nonDateFilterKeys) > 0;
+        if ($hasOtherFilters) {
             // Jika filter mengandung explicit user_id gunakan itu
             if (isset($this->filters['user_id'])) {
                 $userFilter = $this->filters['user_id'];
