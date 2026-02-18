@@ -33,9 +33,13 @@ class DiklatInternalExport implements WithMultipleSheets
             'peserta_diklat.users',
         ])->where('kategori_diklat_id', 1)->orderBy('created_at', 'desc');
 
-        // Filter by date range
+        // Filter by date range (payload d-m-Y, db Y-m-d H:i:s)
         if (!empty($this->tglMulai) && !empty($this->tglSelesai)) {
-            $query->whereBetween('tgl_mulai', [$this->tglMulai, $this->tglSelesai]);
+            $start = \DateTime::createFromFormat('d-m-Y', $this->tglMulai)?->format('Y-m-d 00:00:00');
+            $end = \DateTime::createFromFormat('d-m-Y', $this->tglSelesai)?->format('Y-m-d 23:59:59');
+            if ($start && $end) {
+                $query->whereBetween('tgl_mulai', [$start, $end]);
+            }
         }
 
         $diklats = $query->get();
