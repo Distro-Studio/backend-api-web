@@ -23,11 +23,15 @@ class PesertaDiklatSheetExport implements FromCollection, WithHeadings, WithTitl
             return [
                 'no' => $idx + 1,
                 'nama' => $peserta->users->nama ?? '-',
-                'nip' => $peserta->users->nip ?? '-',
-                'unit_kerja' => $peserta->users->data_karyawans->unit_kerjas->nama ?? '-',
-                'jabatan' => $peserta->users->data_karyawans->jabatans->nama ?? '-',
-                'status_karyawan' => $peserta->users->data_karyawans->status_karyawans->nama ?? '-',
-                'jenis_kelamin' => $peserta->users->data_karyawans->jenis_kelamin ?? '-',
+                'nip' => $peserta->users->data_karyawans->nik ?? '-',
+                'unit_kerja' => $peserta->users->data_karyawans->unit_kerjas->nama_unit ?? '-',
+                'jabatan' => $peserta->users->data_karyawans->jabatans->nama_jabatan ?? '-',
+                'status_karyawan' => $peserta->users->data_karyawans->status_karyawans->label ?? '-',
+                'jenis_kelamin' => isset($peserta->users->data_karyawans->jenis_kelamin) ? (
+                    $peserta->users->data_karyawans->jenis_kelamin == 1 ? 'Laki - Laki' : (
+                        $peserta->users->data_karyawans->jenis_kelamin == 0 ? 'Perempuan' : '-'
+                    )
+                ) : '-',
             ];
         });
     }
