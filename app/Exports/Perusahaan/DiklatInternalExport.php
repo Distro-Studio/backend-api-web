@@ -6,6 +6,7 @@ use App\Models\Diklat;
 use Maatwebsite\Excel\Concerns\Exportable;
 use Maatwebsite\Excel\Concerns\WithMultipleSheets;
 use App\Exports\Perusahaan\PesertaDiklatSheetExport;
+use App\Exports\Perusahaan\ListDiklatSheetExport;
 
 class DiklatInternalExport implements WithMultipleSheets
 {
@@ -53,8 +54,10 @@ class DiklatInternalExport implements WithMultipleSheets
 
         $diklats = $query->get();
         $sheets = [];
+        // Sheet pertama: list diklat/event tanpa peserta
+        $sheets[] = new ListDiklatSheetExport($diklats);
+        // Sheet berikutnya: per diklat, berisi peserta
         foreach ($diklats as $diklat) {
-            // Filter peserta diklat sesuai filter
             $peserta = collect($diklat->peserta_diklat)->filter(function ($peserta) {
                 $user = $peserta->users;
                 $dataKaryawan = $user->data_karyawans ?? null;
