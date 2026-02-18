@@ -33,12 +33,21 @@ class DiklatInternalExport implements WithMultipleSheets
             'peserta_diklat.users',
         ])->where('kategori_diklat_id', 1)->orderBy('created_at', 'desc');
 
-        // Filter by date range (payload d-m-Y, db Y-m-d H:i:s)
+        // Filter by date range dinamis (payload d-m-Y, db bisa d-m-Y atau Y-m-d H:i:s)
         if (!empty($this->tglMulai) && !empty($this->tglSelesai)) {
             $start = \DateTime::createFromFormat('d-m-Y', $this->tglMulai)?->format('Y-m-d 00:00:00');
             $end = \DateTime::createFromFormat('d-m-Y', $this->tglSelesai)?->format('Y-m-d 23:59:59');
             if ($start && $end) {
-                $query->whereBetween('tgl_mulai', [$start, $end]);
+                $query->where(function($q) use ($start, $end) {
+                    // tgl_mulai format Y-m-d H:i:s
+                    $q->orWhere(function($sub) use ($start, $end) {
+                        $sub->whereRaw("STR_TO_DATE(tgl_mulai, '%Y-%m-%d %H:%i:%s') BETWEEN ? AND ?", [$start, $end]);
+                    });
+                    // tgl_mulai format d-m-Y
+                    $q->orWhere(function($sub) use ($start, $end) {
+                        $sub->whereRaw("STR_TO_DATE(tgl_mulai, '%d-%m-%Y') BETWEEN ? AND ?", [substr($start,0,10), substr($end,0,10)]);
+                    });
+                });
             }
         }
 
