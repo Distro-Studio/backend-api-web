@@ -34,6 +34,7 @@ class NotificationAnakBPJS extends Command
             $dataKeluargas = DataKeluarga::whereIn('hubungan', ['Anak Ke-1', 'Anak Ke-2', 'Anak Ke-3'])
                 ->where('status_hidup', 1)
                 ->where('is_menikah', 1)
+                ->where('is_notified', 0)
                 ->whereRaw("TIMESTAMPDIFF(YEAR, tgl_lahir, CURDATE()) > 21")
                 ->get();
             if ($dataKeluargas->isEmpty()) {
