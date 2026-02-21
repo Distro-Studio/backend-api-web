@@ -55,7 +55,8 @@ class NotificationAnakBPJS extends Command
 
                 // 4. Update fields pada data_keluargas
                 $keluarga->update([
-                    'is_bpjs' => 0
+                    'is_bpjs' => 0,
+                    'is_notified' => 1
                 ]);
 
                 // 5. Kirim notifikasi kepada user_id = 1 dan user_id karyawan tersebut
