@@ -1059,15 +1059,19 @@ class DataCutiController extends Controller
             $tgl_mulai = $request->input('tgl_mulai');
             $tgl_selesai = $request->input('tgl_selesai');
             $rawTipeCuti = $request->input('tipe_cuti', []);
-            if (empty($tgl_mulai) || empty($tgl_selesai)) {
-                return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Periode tanggal mulai dan tanggal selesai tidak boleh kosong.'), Response::HTTP_BAD_REQUEST);
-            }
 
-            try {
-                $startDate = Carbon::createFromFormat('d-m-Y', $tgl_mulai)->startOfDay();
-                $endDate = Carbon::createFromFormat('d-m-Y', $tgl_selesai)->endOfDay();
-            } catch (\Exception $e) {
-                return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Tanggal yang dimasukkan tidak valid.'), Response::HTTP_BAD_REQUEST);
+            // jika tidak ada payload, pakai tahun berjalan sebagai rentang default
+            if (empty($tgl_mulai) || empty($tgl_selesai)) {
+                $now = Carbon::now('Asia/Jakarta');
+                $startDate = $now->copy()->startOfYear();
+                $endDate   = $now->copy()->endOfYear();
+            } else {
+                try {
+                    $startDate = Carbon::createFromFormat('d-m-Y', $tgl_mulai)->startOfDay();
+                    $endDate   = Carbon::createFromFormat('d-m-Y', $tgl_selesai)->endOfDay();
+                } catch (\Exception $e) {
+                    return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Tanggal yang dimasukkan tidak valid.'), Response::HTTP_BAD_REQUEST);
+                }
             }
 
             try {
@@ -1095,7 +1099,7 @@ class DataCutiController extends Controller
                 // (khusus untuk export rekap tahunan & besar)
                 $useCutiBesarTahunan = !empty($tipe_cuti) &&
                     collect($tipe_cuti)->every(fn($tipe) => in_array($tipe, [1, 5], true));
-
+                return response()->json(new WithoutDataResource(Response::HTTP_INTERNAL_SERVER_ERROR, 'SDATE : ' . $startDate . ' - EDATE : ' . $endDate), Response::HTTP_INTERNAL_SERVER_ERROR);
                 if ($useCutiBesarTahunan) {
                     // Hanya tipe 1 &/atau 5 → pakai rekap tahunan/besar
                     return Excel::download(
