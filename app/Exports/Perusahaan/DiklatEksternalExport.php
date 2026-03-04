@@ -30,7 +30,7 @@ class DiklatEksternalExport implements FromCollection, WithHeadings, WithMapping
 
     public function collection()
     {
-        $query = Diklat::with(['kategori_diklats', 'status_diklats', 'peserta_diklat.users.data_karyawans.unit_kerjas', 'peserta_diklat.users.data_karyawans.jabatans', 'peserta_diklat.users.data_karyawans.status_karyawans'])
+        $query = Diklat::with(['kategori_diklats', 'status_diklats', 'peserta_diklat.users', 'peserta_diklat.users.data_karyawans', 'peserta_diklat.users.data_karyawans.unit_kerjas', 'peserta_diklat.users.data_karyawans.jabatans', 'peserta_diklat.users.data_karyawans.status_karyawans'])
             ->where('kategori_diklat_id', 2)
             ->orderBy('created_at', 'desc');
 
@@ -163,7 +163,7 @@ class DiklatEksternalExport implements FromCollection, WithHeadings, WithMapping
         return [
             self::$number,
             $diklat->peserta_diklat->map(function ($peserta) {
-                return $peserta->users->nik ?? 'N/A';
+                return $peserta->users->data_karyawans->nik ?? 'N/A';
             })->join(', '),
             $diklat->peserta_diklat->map(function ($peserta) {
                 return $peserta->users->nama ?? 'N/A';
