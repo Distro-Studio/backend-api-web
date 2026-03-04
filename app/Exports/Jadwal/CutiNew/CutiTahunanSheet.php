@@ -87,7 +87,7 @@ class CutiTahunanSheet implements FromCollection, WithHeadings, WithMapping, Wit
         $maxKuota = HakCuti::where('tipe_cuti_id', $this->tipeCutiId)
             ->max('kuota');
 
-        $headings = ['no', 'nama', 'nik', 'kuota', 'kuota_terpakai', 'sisa_kuota'];
+        $headings = ['no', 'nama', 'nik', 'total_cuti'];
 
         for ($i = 1; $i <= $maxKuota; $i++) {
             $headings[] = (string)$i;
@@ -146,9 +146,7 @@ class CutiTahunanSheet implements FromCollection, WithHeadings, WithMapping, Wit
             $this->number,
             $user->nama,
             $nik,
-            $kuota,
-            count($tanggalCutiDipakai),
-            max(0, $kuota - count($tanggalCutiDipakai)),
+            count($tanggalCutiDipakai)
         ];
 
         // Tambahkan kolom tanggal cuti sesuai max kuota
