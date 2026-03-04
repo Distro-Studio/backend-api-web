@@ -1103,7 +1103,7 @@ class DataCutiController extends Controller
                 if ($useCutiBesarTahunan) {
                     // Hanya tipe 1 &/atau 5 → pakai rekap tahunan/besar
                     return Excel::download(
-                        new CutiBesarTahunanExport($request->all(), $startDate->format('d-m-Y'), $endDate->format('d-m-Y'), $tipe_cuti),
+                        new CutiBesarTahunanExport($request->all(), $startDate, $endDate, $tipe_cuti),
                         'cuti-karyawan.xls'
                     );
                 }
@@ -1111,7 +1111,7 @@ class DataCutiController extends Controller
                 // Selain itu → pakai export cuti detail per tipe (kecuali 1 & 5 yang memang
                 // sudah punya mekanisme khusus di CutiBesarTahunanExport)
                 return Excel::download(
-                    new CutiExport($request->all(), $startDate->format('d-m-Y'), $endDate->format('d-m-Y'), $tipe_cuti),
+                    new CutiExport($request->all(), $startDate, $endDate, $tipe_cuti),
                     'cuti-karyawan.xls'
                 );
             } catch (\Throwable $e) {
