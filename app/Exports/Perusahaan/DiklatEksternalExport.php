@@ -2,21 +2,23 @@
 
 namespace App\Exports\Perusahaan;
 
-use Carbon\Carbon;
 use App\Models\Diklat;
-use App\Helpers\RandomHelper;
+use Carbon\Carbon;
 use Maatwebsite\Excel\Concerns\Exportable;
-use Maatwebsite\Excel\Concerns\WithMapping;
-use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\FromCollection;
+use Maatwebsite\Excel\Concerns\WithHeadings;
+use Maatwebsite\Excel\Concerns\WithMapping;
 
 class DiklatEksternalExport implements FromCollection, WithHeadings, WithMapping
 {
     use Exportable;
 
     private static $number = 0;
+
     private $tglMulai;
+
     private $tglSelesai;
+
     private $filters;
 
     public function __construct($tglMulai = null, $tglSelesai = null, $filters = [])
@@ -33,7 +35,7 @@ class DiklatEksternalExport implements FromCollection, WithHeadings, WithMapping
             ->orderBy('created_at', 'desc');
 
         // Filter by date range
-        if (!empty($this->tglMulai) && !empty($this->tglSelesai)) {
+        if (! empty($this->tglMulai) && ! empty($this->tglSelesai)) {
             $tglMulai = Carbon::createFromFormat('d-m-Y', $this->tglMulai)->startOfDay()->format('Y-m-d');
             $tglSelesai = Carbon::createFromFormat('d-m-Y', $this->tglSelesai)->endOfDay()->format('Y-m-d');
             $query->whereBetween('tgl_mulai', [$tglMulai, $tglSelesai]);
@@ -122,22 +124,31 @@ class DiklatEksternalExport implements FromCollection, WithHeadings, WithMapping
 
     public function headings(): array
     {
+        // return [
+        //     'no',
+        //     'nama_diklat',
+        //     'kategori_diklat',
+        //     'status_diklat',
+        //     'deskripsi',
+        //     'kuota',
+        //     'tgl_mulai',
+        //     'tgl_selesai',
+        //     'jam_mulai',
+        //     'jam_selesai',
+        //     'durasi',
+        //     'lokasi',
+        //     'karyawan_pengajuan',
+        //     'created_at',
+        //     'updated_at',
+        // ];
         return [
             'no',
-            'nama_diklat',
-            'kategori_diklat',
-            'status_diklat',
-            'deskripsi',
-            'kuota',
-            'tgl_mulai',
-            'tgl_selesai',
-            'jam_mulai',
-            'jam_selesai',
+            'nik',
+            'nama',
+            'unit_kerja',
+            'nama_pelatihan',
+            'tanggal_pelatihan',
             'durasi',
-            'lokasi',
-            'karyawan_pengajuan',
-            'created_at',
-            'updated_at',
         ];
     }
 
@@ -151,27 +162,44 @@ class DiklatEksternalExport implements FromCollection, WithHeadings, WithMapping
 
         return [
             self::$number,
+            $diklat->peserta_diklat->map(function ($peserta) {
+                return $peserta->users->nik ?? 'N/A';
+            })->join(', '),
+            $diklat->peserta_diklat->map(function ($peserta) {
+                return $peserta->users->nama ?? 'N/A';
+            })->join(', '),
+            $diklat->peserta_diklat->map(function ($peserta) {
+                return $peserta->users->data_karyawans->unit_kerjas->nama_unit ?? 'N/A';
+            })->join(', '),
             $diklat->nama,
-            $diklat->kategori_diklats->label,
-            $diklat->status_diklats->label,
-            $diklat->deskripsi,
-            $diklat->kuota . ' Peserta',
             $diklat->tgl_mulai,
-            $diklat->tgl_selesai,
-            $diklat->jam_mulai,
-            $diklat->jam_selesai,
             $this->formatDuration($diklat->durasi),
-            $diklat->lokasi,
-            $pesertaDiklat,
-            Carbon::parse($diklat->created_at)->format('d-m-Y H:i:s'),
-            Carbon::parse($diklat->updated_at)->format('d-m-Y H:i:s')
         ];
+
+        // return [
+        //     self::$number,
+        //     $diklat->nama,
+        //     $diklat->kategori_diklats->label,
+        //     $diklat->status_diklats->label,
+        //     $diklat->deskripsi,
+        //     $diklat->kuota.' Peserta',
+        //     $diklat->tgl_mulai,
+        //     $diklat->tgl_selesai,
+        //     $diklat->jam_mulai,
+        //     $diklat->jam_selesai,
+        //     $this->formatDuration($diklat->durasi),
+        //     $diklat->lokasi,
+        //     $pesertaDiklat,
+        //     Carbon::parse($diklat->created_at)->format('d-m-Y H:i:s'),
+        //     Carbon::parse($diklat->updated_at)->format('d-m-Y H:i:s'),
+        // ];
     }
 
     private function formatDuration($seconds)
     {
         $hours = floor($seconds / 3600);
         $minutes = floor(($seconds % 3600) / 60);
-        return sprintf("%d jam %d menit", $hours, $minutes);
+
+        return sprintf('%d jam %d menit', $hours, $minutes);
     }
 }
