@@ -116,7 +116,7 @@ class CutiTahunanSheet implements FromCollection, WithHeadings, WithMapping, Wit
                     STR_TO_DATE(tgl_from, '%d-%m-%Y') <= ?
                     AND STR_TO_DATE(tgl_to, '%d-%m-%Y') >= ?
                 ", [$end, $start]);
-            })->get();
+            })->where('users.id', $user->id)->get();
         // $cutiUserCollection = Cuti::where('user_id', $user->id)
         //     ->where('status_cuti_id', 4)
         //     ->where('tipe_cuti_id', $this->tipeCutiId)
