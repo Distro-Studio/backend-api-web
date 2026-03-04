@@ -2,6 +2,7 @@
 
 namespace App\Exports\Perusahaan;
 
+use App\Models\DataKaryawan;
 use App\Models\PesertaDiklat;
 use Carbon\Carbon;
 use Maatwebsite\Excel\Concerns\Exportable;
@@ -24,21 +25,21 @@ class MasaDiklatExport implements FromCollection, WithHeadings, WithMapping
 
     public function collection()
     {
-        $query = PesertaDiklat::with([
-            'diklats',
-            'users.data_karyawans.unit_kerjas',
-        ])->whereHas('diklats', function ($q) {
-            // Jika filter tgl_mulai dan tgl_selesai dikirim oleh frontend, gunakan date range tersebut
-            if (isset($this->filters['tgl_mulai']) && isset($this->filters['tgl_selesai'])) {
-                $q->whereDate('tgl_mulai', '>=', $this->filters['tgl_mulai'])
-                    ->whereDate('tgl_selesai', '<=', $this->filters['tgl_selesai']);
-            } else {
-                // Default: ambil diklat tahun ini
-                $q->whereYear('tgl_mulai', Carbon::now('Asia/Jakarta')->year);
-            }
-        });
+        $karyawan = DataKaryawan::with([
+            'users',
+            'unit_kerjas',
+        ])->where('id', '!=', 1)
+            ->orderBy('nik', 'asc');
 
-        return $query->get();
+        if (isset($this->filters['less_than'])) {
+            $karyawan->where('masa_diklat', '<=', $this->filters['less_than']);
+        }
+
+        if (isset($this->filters['more_than'])) {
+            $karyawan->where('masa_diklat', '>=', $this->filters['more_than']);
+        }
+
+        return $karyawan->get();
     }
 
     public function headings(): array
@@ -54,40 +55,62 @@ class MasaDiklatExport implements FromCollection, WithHeadings, WithMapping
         ];
     }
 
-    public function map($pesertaDiklat): array
+    public function map($karyawan): array
     {
         self::$number++;
 
-        $user = $pesertaDiklat->users;
-        $dataKaryawan = $user ? $user->data_karyawans : null;
-        $diklat = $pesertaDiklat->diklats;
+        // Ambil diklat yang diikuti karyawan
+        $pesertaDiklats = PesertaDiklat::with('diklats')
+            ->where('peserta', $karyawan->user_id)
+            ->get()
+            ->filter(function ($peserta) {
+                return $peserta->diklats !== null;
+            });
 
-        $nik = $dataKaryawan ? $dataKaryawan->nik : 'N/A';
-        $nama = $user ? $user->nama : 'N/A';
-        $unitKerja = $dataKaryawan && $dataKaryawan->unit_kerjas
-            ? $dataKaryawan->unit_kerjas->nama_unit
-            : 'N/A';
-        $namaPelatihan = $diklat ? $diklat->nama : 'N/A';
+        // Filter diklat berdasarkan date range atau tahun ini
+        if (isset($this->filters['tgl_mulai']) && isset($this->filters['tgl_selesai'])) {
+            $tglMulai = Carbon::parse($this->filters['tgl_mulai'])->startOfDay();
+            $tglSelesai = Carbon::parse($this->filters['tgl_selesai'])->endOfDay();
 
-        // Format tanggal pelatihan sebagai range tgl_mulai - tgl_selesai
-        $tanggalPelatihan = 'N/A';
-        if ($diklat) {
-            $mulai = Carbon::parse($diklat->tgl_mulai)->format('d-m-Y');
-            $selesai = Carbon::parse($diklat->tgl_selesai)->format('d-m-Y');
-            $tanggalPelatihan = $mulai === $selesai ? $mulai : "{$mulai} s/d {$selesai}";
+            $pesertaDiklats = $pesertaDiklats->filter(function ($peserta) use ($tglMulai, $tglSelesai) {
+                $diklatMulai = Carbon::parse($peserta->diklats->tgl_mulai);
+
+                return $diklatMulai->between($tglMulai, $tglSelesai);
+            });
+        } else {
+            // Default: hanya diklat tahun ini
+            $currentYear = Carbon::now('Asia/Jakarta')->year;
+            $pesertaDiklats = $pesertaDiklats->filter(function ($peserta) use ($currentYear) {
+                return Carbon::parse($peserta->diklats->tgl_mulai)->year === $currentYear;
+            });
         }
 
-        // Durasi dalam jam dan menit (field durasi dalam detik)
-        $durasi = $diklat ? $this->formatDuration($diklat->durasi) : 'N/A';
+        // Nama pelatihan (gabung semua nama diklat)
+        $namaPelatihan = $pesertaDiklats->map(function ($peserta) {
+            return $peserta->diklats->nama;
+        })->implode(', ');
+
+        // Tanggal pelatihan (gabung semua tanggal diklat)
+        $tanggalPelatihan = $pesertaDiklats->map(function ($peserta) {
+            $mulai = Carbon::parse($peserta->diklats->tgl_mulai)->format('d-m-Y');
+            $selesai = Carbon::parse($peserta->diklats->tgl_selesai)->format('d-m-Y');
+
+            return $mulai === $selesai ? $mulai : "{$mulai} s/d {$selesai}";
+        })->implode(', ');
+
+        // Durasi = jumlah total durasi semua diklat yang diikuti (dalam detik)
+        $totalDurasi = $pesertaDiklats->sum(function ($peserta) {
+            return $peserta->diklats->durasi ?? 0;
+        });
 
         return [
             self::$number,
-            $nik,
-            $nama,
-            $unitKerja,
-            $namaPelatihan,
-            $tanggalPelatihan,
-            $durasi,
+            $karyawan->nik,
+            $karyawan->users->nama ?? 'N/A',
+            optional($karyawan->unit_kerjas)->nama_unit ?? 'N/A',
+            $namaPelatihan ?: 'N/A',
+            $tanggalPelatihan ?: 'N/A',
+            $this->formatDuration($totalDurasi),
         ];
     }
 
