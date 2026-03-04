@@ -150,7 +150,7 @@ class CutiTahunanSheet implements FromCollection, WithHeadings, WithMapping, Wit
         ];
 
         // Tambahkan kolom tanggal cuti sesuai max kuota
-        for ($i = 0; $i < $maxKuota; $i++) {
+        for ($i = 0; $i < count($tanggalCutiDipakai); $i++) {
             $row[] = $tanggalCutiDipakai[$i] ?? '-';
         }
 
