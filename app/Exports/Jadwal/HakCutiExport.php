@@ -5,6 +5,7 @@ namespace App\Exports\Jadwal;
 use Carbon\Carbon;
 use App\Models\Cuti;
 use App\Models\HakCuti;
+use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Concerns\Exportable;
 use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\WithHeadings;
@@ -199,14 +200,45 @@ class HakCutiExport implements FromCollection, WithHeadings, WithMapping
     {
         static $no = 1;
 
+        // determine date range from filters or default to current year
+        $startDate = null;
+        $endDate = null;
+
+        if (!empty($this->filters['tgl_mulai']) && !empty($this->filters['tgl_selesai'])) {
+            try {
+                $startDate = Carbon::createFromFormat('d-m-Y', $this->filters['tgl_mulai'])->startOfDay();
+                $endDate   = Carbon::createFromFormat('d-m-Y', $this->filters['tgl_selesai'])->endOfDay();
+            } catch (\Exception $e) {
+                // if parsing fails just fall back to year boundaries
+                $startDate = Carbon::now()->startOfYear();
+                $endDate   = Carbon::now()->endOfYear();
+            }
+        } else {
+            $startDate = Carbon::now()->startOfYear();
+            $endDate   = Carbon::now()->endOfYear();
+        }
+
+        // compute used quota by summing durations of approved cuti within range
+        $usedQuota = Cuti::where('hak_cuti_id', $hakCuti->id)
+            ->where('verifikator_1', 1)
+            ->where('verifikator_2', 1)
+            ->where(function ($query) use ($startDate, $endDate) {
+                $query->whereBetween(DB::raw("STR_TO_DATE(tgl_from, '%d-%m-%Y')"), [$startDate, $endDate])
+                      ->orWhereBetween(DB::raw("STR_TO_DATE(tgl_to, '%d-%m-%Y')"), [$startDate, $endDate]);
+            })
+            ->sum('durasi');
+
+        $kuota = $hakCuti->tipe_cutis->kuota ?? 0;
+        $remaining = $kuota - $usedQuota;
+
         return [
             $no++,
             optional($hakCuti->data_karyawans->users)->nama ?? 'N/A',
             $hakCuti->data_karyawans->nik ?? 'N/A',
             // $hakCuti->tipe_cutis->nama ?? 'N/A',
-            $hakCuti->tipe_cutis->kuota ?? 'N/A',
-            $hakCuti->used_kuota ?? 0, // Kuota yang sudah digunakan
-            $hakCuti->kuota ?? 0, // Jatah kuota yang tersedia
+            $kuota,
+            $usedQuota,
+            $remaining,
             // $hakCuti->tipe_cutis->cuti_administratif ? 'Ya' : 'Tidak',
             // $hakCuti->tipe_cutis->is_unlimited ? 'Ya' : 'Tidak',
             Carbon::parse($hakCuti->created_at)->format('d-m-Y H:i:s'),
