@@ -1099,7 +1099,7 @@ class DataCutiController extends Controller
                 // (khusus untuk export rekap tahunan & besar)
                 $useCutiBesarTahunan = !empty($tipe_cuti) &&
                     collect($tipe_cuti)->every(fn($tipe) => in_array($tipe, [1, 5], true));
-                return response()->json(new WithoutDataResource(Response::HTTP_INTERNAL_SERVER_ERROR, 'SDATE : ' . $startDate . ' - EDATE : ' . $endDate), Response::HTTP_INTERNAL_SERVER_ERROR);
+                return response()->json(new WithoutDataResource(Response::HTTP_INTERNAL_SERVER_ERROR, 'SDATE : ' . $startDate->format('d-m-Y') . ' - EDATE : ' . $endDate->format('d-m-Y')), Response::HTTP_INTERNAL_SERVER_ERROR);
                 if ($useCutiBesarTahunan) {
                     // Hanya tipe 1 &/atau 5 → pakai rekap tahunan/besar
                     return Excel::download(
