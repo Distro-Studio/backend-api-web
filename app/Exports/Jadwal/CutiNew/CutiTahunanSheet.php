@@ -6,7 +6,6 @@ use App\Models\Cuti;
 use App\Models\HakCuti;
 use App\Models\User;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\Auth;
 use Maatwebsite\Excel\Concerns\Exportable;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
@@ -87,35 +86,10 @@ class CutiTahunanSheet implements FromCollection, WithHeadings, WithMapping, Wit
     {
         $maxKuota = HakCuti::where('tipe_cuti_id', $this->tipeCutiId)
             ->max('kuota');
-        
-        $start = Carbon::parse($this->startDate)->format('Y-m-d');
-        $end   = Carbon::parse($this->endDate)->format('Y-m-d');
-        // Ambil data cuti user ini dengan tipe cuti yang sama
-        $cutiUserCollection = Cuti::query()
-            ->where('tipe_cuti_id', $this->tipeCutiId)
-            ->join('users', 'cutis.user_id', '=', 'users.id')
-            ->join('data_karyawans', 'users.id', '=', 'data_karyawans.user_id')
-            ->when($start && $end, function ($q) use ($start, $end) {
-                $q->whereRaw("
-                    STR_TO_DATE(tgl_from, '%d-%m-%Y') <= ?
-                    AND STR_TO_DATE(tgl_to, '%d-%m-%Y') >= ?
-                ", [$end, $start]);
-            })->where('users.id', Auth::user()->id)->orderBy('tgl_from', 'asc')->get();
-
-        $tanggalCutiDipakai = [];
-        foreach ($cutiUserCollection as $cuti) {
-            $startDate = Carbon::parse($cuti->tgl_from);
-            $endDate = Carbon::parse($cuti->tgl_to);
-
-            for ($date = $startDate->copy(); $date->lte($endDate); $date->addDay()) {
-                $tanggalCutiDipakai[] = $date->format('d/m/Y');
-            }
-        }
-        $tanggalCutiDipakai = array_values(array_unique($tanggalCutiDipakai));
 
         $headings = ['no', 'nama', 'nik', 'total_cuti'];
 
-        for ($i = 1; $i <= count($tanggalCutiDipakai); $i++) {
+        for ($i = 1; $i <= $maxKuota; $i++) {
             $headings[] = (string)$i;
         }
 
