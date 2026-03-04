@@ -104,13 +104,24 @@ class CutiTahunanSheet implements FromCollection, WithHeadings, WithMapping, Wit
         $hakCuti = $dataKaryawan ? $dataKaryawan->hak_cutis->first() : null;
         $kuota = $hakCuti->kuota ?? 0;
         $nik = $dataKaryawan->nik ?? 'N/A';
-
+        $start = Carbon::parse($this->startDate)->format('Y-m-d');
+        $end   = Carbon::parse($this->endDate)->format('Y-m-d');
         // Ambil data cuti user ini dengan tipe cuti yang sama
-        $cutiUserCollection = Cuti::where('user_id', $user->id)
-            ->where('status_cuti_id', 4)
+        $cutiUserCollection = Cuti::query()
             ->where('tipe_cuti_id', $this->tipeCutiId)
-            ->orderBy('tgl_from', 'asc')
-            ->get();
+            ->join('users', 'cutis.user_id', '=', 'users.id')
+            ->join('data_karyawans', 'users.id', '=', 'data_karyawans.user_id')
+            ->when($start && $end, function ($q) use ($start, $end) {
+                $q->whereRaw("
+                    STR_TO_DATE(tgl_from, '%d-%m-%Y') <= ?
+                    AND STR_TO_DATE(tgl_to, '%d-%m-%Y') >= ?
+                ", [$end, $start]);
+            })->get();
+        // $cutiUserCollection = Cuti::where('user_id', $user->id)
+        //     ->where('status_cuti_id', 4)
+        //     ->where('tipe_cuti_id', $this->tipeCutiId)
+        //     ->orderBy('tgl_from', 'asc')
+        //     ->get();
 
         // Contoh ambil tanggal cuti dalam format d/m/Y, gabungkan dalam array
         $tanggalCutiDipakai = [];
