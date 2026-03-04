@@ -2,19 +2,19 @@
 
 namespace App\Exports\Perusahaan;
 
-use Carbon\Carbon;
-use App\Models\DataKaryawan;
 use App\Models\PesertaDiklat;
+use Carbon\Carbon;
 use Maatwebsite\Excel\Concerns\Exportable;
-use Maatwebsite\Excel\Concerns\WithMapping;
-use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\FromCollection;
+use Maatwebsite\Excel\Concerns\WithHeadings;
+use Maatwebsite\Excel\Concerns\WithMapping;
 
 class MasaDiklatExport implements FromCollection, WithHeadings, WithMapping
 {
     use Exportable;
 
     private $filters;
+
     private static $number = 0;
 
     public function __construct(array $filters)
@@ -24,22 +24,21 @@ class MasaDiklatExport implements FromCollection, WithHeadings, WithMapping
 
     public function collection()
     {
-        $karyawan = DataKaryawan::with([
-            'users',
-            'users.roles',
-            'status_karyawans',
-        ])->where('id', '!=', 1)
-            ->orderBy('nik', 'asc');
+        $query = PesertaDiklat::with([
+            'diklats',
+            'users.data_karyawans.unit_kerjas',
+        ])->whereHas('diklats', function ($q) {
+            // Jika filter tgl_mulai dan tgl_selesai dikirim oleh frontend, gunakan date range tersebut
+            if (isset($this->filters['tgl_mulai']) && isset($this->filters['tgl_selesai'])) {
+                $q->whereDate('tgl_mulai', '>=', $this->filters['tgl_mulai'])
+                    ->whereDate('tgl_selesai', '<=', $this->filters['tgl_selesai']);
+            } else {
+                // Default: ambil diklat tahun ini
+                $q->whereYear('tgl_mulai', Carbon::now('Asia/Jakarta')->year);
+            }
+        });
 
-        if (isset($this->filters['less_than'])) {
-            $karyawan->where('masa_diklat', '<=', $this->filters['less_than']);
-        }
-
-        if (isset($this->filters['more_than'])) {
-            $karyawan->where('masa_diklat', '>=', $this->filters['more_than']);
-        }
-
-        return $karyawan->get();
+        return $query->get();
     }
 
     public function headings(): array
@@ -48,67 +47,47 @@ class MasaDiklatExport implements FromCollection, WithHeadings, WithMapping
             'no',
             'nik',
             'nama',
-            'username',
-            'status_aktif',
-            'role',
-            'email',
-            'nik_ktp',
-            'status_karyawan',
-            'tempat_lahir',
-            'tgl_lahir',
-            'no_kk',
-            'alamat',
-            'gelar_depan',
-            'gelar_belakang',
-            'no_hp',
-            'masa_kerja',
-            'jenis_kelamin',
-            'masa_diklat',
-            'total_diklat',
-            'created_at',
-            'updated_at',
+            'unit_kerja',
+            'nama_pelatihan',
+            'tanggal_pelatihan',
+            'durasi',
         ];
     }
 
-    public function map($karyawan): array
+    public function map($pesertaDiklat): array
     {
         self::$number++;
 
-        $roles = $karyawan->users->roles->map(function ($role) {
-            return $role->name;
-        })->toArray();
+        $user = $pesertaDiklat->users;
+        $dataKaryawan = $user ? $user->data_karyawans : null;
+        $diklat = $pesertaDiklat->diklats;
 
-        $formatDate = fn($date) => $date ? Carbon::parse($date)->format('d-m-Y') : 'N/A';
+        $nik = $dataKaryawan ? $dataKaryawan->nik : 'N/A';
+        $nama = $user ? $user->nama : 'N/A';
+        $unitKerja = $dataKaryawan && $dataKaryawan->unit_kerjas
+            ? $dataKaryawan->unit_kerjas->nama_unit
+            : 'N/A';
+        $namaPelatihan = $diklat ? $diklat->nama : 'N/A';
 
-        $masaKerja = $this->calculateMasaKerja($karyawan->tgl_masuk, $karyawan->tgl_keluar);
+        // Format tanggal pelatihan sebagai range tgl_mulai - tgl_selesai
+        $tanggalPelatihan = 'N/A';
+        if ($diklat) {
+            $mulai = Carbon::parse($diklat->tgl_mulai)->format('d-m-Y');
+            $selesai = Carbon::parse($diklat->tgl_selesai)->format('d-m-Y');
+            $tanggalPelatihan = $mulai === $selesai ? $mulai : "{$mulai} s/d {$selesai}";
+        }
 
-        $joinedDiklat = PesertaDiklat::with('diklats')
-            ->where('peserta', $karyawan->user_id)
-            ->get();
+        // Durasi dalam jam dan menit (field durasi dalam detik)
+        $durasi = $diklat ? $this->formatDuration($diklat->durasi) : 'N/A';
 
         return [
             self::$number,
-            $karyawan->nik,
-            $karyawan->users->nama,
-            $karyawan->users->username,
-            $karyawan->users->user_status_aktif->label,
-            implode(', ', $roles),
-            $karyawan->email ?? 'N/A',
-            $karyawan->nik_ktp ?? 'N/A',
-            optional($karyawan->status_karyawans)->label,
-            $karyawan->tempat_lahir ?? 'N/A',
-            $formatDate($karyawan->tgl_lahir),
-            $karyawan->no_kk ?? 'N/A',
-            $karyawan->alamat ?? 'N/A',
-            $karyawan->gelar_depan ?? 'N/A',
-            $karyawan->gelar_belakang ?? 'N/A',
-            $karyawan->no_hp ?? 'N/A',
-            $masaKerja,
-            $karyawan->jenis_kelamin ? 'Laki-laki' : 'Perempuan',
-            $this->formatDuration($karyawan->masa_diklat),
-            $joinedDiklat->count(),
-            Carbon::parse($karyawan->created_at)->format('d-m-Y H:i:s'),
-            Carbon::parse($karyawan->updated_at)->format('d-m-Y H:i:s')
+            $nik,
+            $nama,
+            $unitKerja,
+            $namaPelatihan,
+            $tanggalPelatihan,
+            $durasi,
         ];
     }
 
@@ -116,16 +95,7 @@ class MasaDiklatExport implements FromCollection, WithHeadings, WithMapping
     {
         $hours = floor($seconds / 3600);
         $minutes = floor(($seconds % 3600) / 60);
-        return sprintf("%d jam %d menit", $hours, $minutes);
-    }
 
-    private function calculateMasaKerja($tgl_masuk, $tgl_keluar = null)
-    {
-        $start = Carbon::parse($tgl_masuk);
-        $end = $tgl_keluar ? Carbon::parse($tgl_keluar) : Carbon::now('Asia/Jakarta');
-
-        $difference = $start->diff($end);
-
-        return sprintf('%d Tahun %d Bulan %d Hari', $difference->y, $difference->m, $difference->d);
+        return sprintf('%d jam %d menit', $hours, $minutes);
     }
 }
