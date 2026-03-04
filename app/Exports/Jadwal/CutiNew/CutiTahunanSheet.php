@@ -35,15 +35,23 @@ class CutiTahunanSheet implements FromCollection, WithHeadings, WithMapping, Wit
 
     public function collection()
     {
+        // convert provided bounds into plain dates so they compare correctly
+        $start = null;
+        $end = null;
+        if ($this->startDate && $this->endDate) {
+            $start = Carbon::parse($this->startDate)->format('Y-m-d');
+            $end   = Carbon::parse($this->endDate)->format('Y-m-d');
+        }
+
         $query = Cuti::query()
             ->where('tipe_cuti_id', $this->tipeCutiId)
             ->join('users', 'cutis.user_id', '=', 'users.id')
             ->join('data_karyawans', 'users.id', '=', 'data_karyawans.user_id')
-            ->when($this->startDate && $this->endDate, function ($q) {
+            ->when($start && $end, function ($q) use ($start, $end) {
                 $q->whereRaw("
                     STR_TO_DATE(tgl_from, '%d-%m-%Y') <= ?
                     AND STR_TO_DATE(tgl_to, '%d-%m-%Y') >= ?
-                ", [$this->endDate, $this->startDate]);
+                ", [$end, $start]);
             })
             ->select('cutis.user_id')
             ->distinct();
