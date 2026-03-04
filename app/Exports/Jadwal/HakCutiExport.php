@@ -238,13 +238,14 @@ class HakCutiExport implements FromCollection, WithHeadings, WithMapping
             $hakCuti->data_karyawans->nik ?? 'N/A',
             $hakCuti->tipe_cutis->nama ?? 'N/A',
             // $hakCuti->tipe_cutis->nama ?? 'N/A',
-            $kuota ?? 0,
-            $usedQuota ?? 0,
-            $remaining ?? 0,
+            $kuota ?? '0',
+            $usedQuota ?? '0',
+            $remaining ?? '0',
             // $hakCuti->tipe_cutis->cuti_administratif ? 'Ya' : 'Tidak',
             // $hakCuti->tipe_cutis->is_unlimited ? 'Ya' : 'Tidak',
             Carbon::parse($hakCuti->created_at)->format('d-m-Y H:i:s'),
             Carbon::parse($hakCuti->updated_at)->format('d-m-Y H:i:s')
         ];
+        
     }
 }
