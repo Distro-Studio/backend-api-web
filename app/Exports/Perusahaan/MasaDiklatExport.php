@@ -103,6 +103,37 @@ class MasaDiklatExport implements FromCollection, WithHeadings, WithMapping
             return $peserta->diklats->durasi ?? 0;
         });
 
+        $moreThan = $this->filters['more_than'] ?? null;
+        $lessThan = $this->filters['less_than'] ?? null;
+
+        if ($moreThan !== null && $lessThan === null) {
+            // Jika hanya more_than yang diisi
+            if (! ($totalDurasi > $moreThan)) {
+                return [];
+            }
+        } elseif ($moreThan !== null && $lessThan !== null) {
+            // Jika keduanya diisi (Range)
+            if (! ($totalDurasi >= $moreThan && $totalDurasi <= $lessThan)) {
+                return [];
+            }
+        }
+        // Tambahan: Jika hanya less_than yang diisi (opsional)
+        elseif ($moreThan === null && $lessThan !== null) {
+            if (! ($totalDurasi < $lessThan)) {
+                return [];
+            }
+        }
+        // ---------------------------------
+
+        // Proses string nama dan tanggal pelatihan
+        $namaPelatihan = $pesertaDiklats->map(fn ($p) => $p->diklats->nama)->implode(', ');
+        $tanggalPelatihan = $pesertaDiklats->map(function ($peserta) {
+            $mulai = Carbon::parse($peserta->diklats->tgl_mulai)->format('d-m-Y');
+            $selesai = Carbon::parse($peserta->diklats->tgl_selesai)->format('d-m-Y');
+
+            return $mulai === $selesai ? $mulai : "{$mulai} s/d {$selesai}";
+        })->implode(', ');
+
         return [
             self::$number,
             $karyawan->nik,
