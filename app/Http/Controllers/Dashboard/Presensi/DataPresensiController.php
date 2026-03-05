@@ -2,48 +2,49 @@
 
 namespace App\Http\Controllers\Dashboard\Presensi;
 
-use Carbon\Carbon;
-use App\Models\Cuti;
-use App\Models\Berkas;
-use App\Models\Jadwal;
-use App\Models\NonShift;
-use App\Models\Presensi;
-use App\Models\HariLibur;
-use App\Models\DataKaryawan;
-use App\Models\LokasiKantor;
-use Illuminate\Http\Request;
-use Illuminate\Http\Response;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
+use App\Exports\Presensi\PresensiExport;
 use App\Helpers\StorageServerHelper;
 use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Gate;
-use Maatwebsite\Excel\Facades\Excel;
-use Illuminate\Support\Facades\Storage;
-use App\Exports\Presensi\PresensiExport;
 use App\Http\Requests\Excel_Import\ImportPresensiRequest;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
 use App\Imports\Presensi\PresensiImportNew;
+use App\Models\Berkas;
+use App\Models\Cuti;
+use App\Models\DataKaryawan;
+use App\Models\HariLibur;
+use App\Models\Jadwal;
+use App\Models\LokasiKantor;
+use App\Models\NonShift;
+use App\Models\Presensi;
+use Carbon\Carbon;
+use Illuminate\Http\Request;
+use Illuminate\Http\Response;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
+use Maatwebsite\Excel\Facades\Excel;
 
 class DataPresensiController extends Controller
 {
     public function getLokasiKantor()
     {
-        if (!Gate::allows('view presensiKaryawan')) {
+        if (! Gate::allows('view presensiKaryawan')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
         $lokasi_kantor = LokasiKantor::orderBy('updated_at', 'desc')->where('id', 1)->get();
+
         return response()->json([
             'status' => Response::HTTP_OK,
             'message' => 'Retrieve lokasi kantor successfully.',
-            'data' => $lokasi_kantor
+            'data' => $lokasi_kantor,
         ], Response::HTTP_OK);
     }
 
     public function calculatedPresensi()
     {
-        if (!Gate::allows('view presensiKaryawan')) {
+        if (! Gate::allows('view presensiKaryawan')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
@@ -129,7 +130,7 @@ class DataPresensiController extends Controller
 
     public function index(Request $request)
     {
-        if (!Gate::allows('view presensiKaryawan')) {
+        if (! Gate::allows('view presensiKaryawan')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
@@ -145,7 +146,7 @@ class DataPresensiController extends Controller
         if ($request->has('tgl_mulai') && $request->has('tgl_selesai')) {
             $start_date = Carbon::createFromFormat('d-m-Y', $request->input('tgl_mulai'))->format('Y-m-d');
             $end_date = Carbon::createFromFormat('d-m-Y', $request->input('tgl_selesai'))->format('Y-m-d');
-            $presensi->whereBetween(DB::raw("DATE(jam_masuk)"), [$start_date, $end_date]);
+            $presensi->whereBetween(DB::raw('DATE(jam_masuk)'), [$start_date, $end_date]);
         } else {
             return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Tanggal presensi mulai dan selesai tidak boleh kosong.'), Response::HTTP_BAD_REQUEST);
         }
@@ -301,7 +302,7 @@ class DataPresensiController extends Controller
 
         // Search
         if (isset($filters['search'])) {
-            $searchTerm = '%' . $filters['search'] . '%';
+            $searchTerm = '%'.$filters['search'].'%';
             $presensi->where(function ($query) use ($searchTerm) {
                 $query->whereHas('users', function ($query) use ($searchTerm) {
                     $query->where('nama', 'like', $searchTerm);
@@ -315,7 +316,7 @@ class DataPresensiController extends Controller
             $dataPresensi = $presensi->get();
             $paginationData = null;
         } else {
-            $limit = is_numeric($limit) ? (int)$limit : 10;
+            $limit = is_numeric($limit) ? (int) $limit : 10;
             $dataPresensi = $presensi->paginate($limit);
 
             $paginationData = [
@@ -330,7 +331,7 @@ class DataPresensiController extends Controller
                     'last_page' => $dataPresensi->lastPage(),
                     'per_page' => $dataPresensi->perPage(),
                     'total' => $dataPresensi->total(),
-                ]
+                ],
             ];
         }
 
@@ -357,21 +358,21 @@ class DataPresensiController extends Controller
                 'pembatalan_reward' => $presensi->is_pembatalan_reward,
                 'presensi_anulir' => $presensi->is_anulir_presensi,
                 'created_at' => $presensi->created_at,
-                'updated_at' => $presensi->updated_at
+                'updated_at' => $presensi->updated_at,
             ];
-        },);
+        }, );
 
         return response()->json([
             'status' => Response::HTTP_OK,
             'message' => 'Data presensi berhasil ditampilkan.',
             'data' => $formattedData,
-            'pagination' => $paginationData
+            'pagination' => $paginationData,
         ], Response::HTTP_OK);
     }
 
     public function show($id)
     {
-        if (!Gate::allows('view presensiKaryawan')) {
+        if (! Gate::allows('view presensiKaryawan')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
@@ -380,15 +381,15 @@ class DataPresensiController extends Controller
             'users',
             'jadwals.shifts',
             'data_karyawans.unit_kerjas',
-            'kategori_presensis'
+            'kategori_presensis',
         ])
             ->where('id', $id)
             ->first();
 
-        if (!$presensiHariIni) {
+        if (! $presensiHariIni) {
             return response()->json([
                 'status' => Response::HTTP_NOT_FOUND,
-                'message' => 'Data presensi karyawan tidak ditemukan.'
+                'message' => 'Data presensi karyawan tidak ditemukan.',
             ], Response::HTTP_NOT_FOUND);
         }
 
@@ -398,10 +399,10 @@ class DataPresensiController extends Controller
         $baseUrl = env('STORAGE_SERVER_DOMAIN'); // Ganti dengan URL domain Anda
 
         $fotoMasukExt = $fotoMasukBerkas ? StorageServerHelper::getExtensionFromMimeType($fotoMasukBerkas->ext) : null;
-        $fotoMasukUrl = $fotoMasukBerkas ? $baseUrl . $fotoMasukBerkas->path : null;
+        $fotoMasukUrl = $fotoMasukBerkas ? $baseUrl.$fotoMasukBerkas->path : null;
 
         $fotoKeluarExt = $fotoKeluarBerkas ? StorageServerHelper::getExtensionFromMimeType($fotoKeluarBerkas->ext) : null;
-        $fotoKeluarUrl = $fotoKeluarBerkas ? $baseUrl . $fotoKeluarBerkas->path : null;
+        $fotoKeluarUrl = $fotoKeluarBerkas ? $baseUrl.$fotoKeluarBerkas->path : null;
 
         // Ambil data lokasi kantor
         $lokasiKantor = LokasiKantor::find(1);
@@ -418,12 +419,13 @@ class DataPresensiController extends Controller
                 'Thursday' => 'Kamis',
                 'Friday' => 'Jumat',
                 'Saturday' => 'Sabtu',
-                'Sunday' => 'Minggu'
+                'Sunday' => 'Minggu',
             ][$jamMasukDate] ?? 'Senin';
             $jadwalNonShift = NonShift::where('nama', $hariNamaIndonesia)->first();
         }
 
         $baseUrl = env('STORAGE_SERVER_DOMAIN');
+
         return response()->json([
             'status' => Response::HTTP_OK,
             'message' => "Detail data presensi karyawan '{$presensiHariIni->users->nama}' berhasil ditampilkan.",
@@ -441,7 +443,7 @@ class DataPresensiController extends Controller
                         'file_id' => $presensiHariIni->users->foto_profiles->file_id,
                         'nama' => $presensiHariIni->users->foto_profiles->nama,
                         'nama_file' => $presensiHariIni->users->foto_profiles->nama_file,
-                        'path' => $baseUrl . $presensiHariIni->users->foto_profiles->path,
+                        'path' => $baseUrl.$presensiHariIni->users->foto_profiles->path,
                         'ext' => $presensiHariIni->users->foto_profiles->ext,
                         'size' => $presensiHariIni->users->foto_profiles->size,
                     ] : null,
@@ -505,15 +507,15 @@ class DataPresensiController extends Controller
                     'pembatalan_reward' => $presensiHariIni->is_pembatalan_reward,
                     'presensi_anulir' => $presensiHariIni->is_anulir_presensi,
                     'created_at' => $presensiHariIni->created_at,
-                    'updated_at' => $presensiHariIni->updated_at
-                ]
+                    'updated_at' => $presensiHariIni->updated_at,
+                ],
             ],
         ], Response::HTTP_OK);
     }
 
     public function exportPresensi(Request $request)
     {
-        if (!Gate::allows('export presensiKaryawan')) {
+        if (! Gate::allows('export presensiKaryawan')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
@@ -522,7 +524,7 @@ class DataPresensiController extends Controller
         // if (empty($month) || empty($year)) {
         //     return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Periode bulan dan tahun tidak boleh kosong.'), Response::HTTP_BAD_REQUEST);
         // }
-
+        set_time_limit(300);
         // NEW UPDATE
         $tgl_mulai = $request->input('tgl_mulai');
         $tgl_selesai = $request->input('tgl_selesai');
@@ -554,20 +556,21 @@ class DataPresensiController extends Controller
         try {
             $filePath = 'templates/template_import_presensi.xls';
 
-            if (!Storage::exists($filePath)) {
+            if (! Storage::exists($filePath)) {
                 return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'File template tidak ditemukan.'), Response::HTTP_NOT_FOUND);
             }
 
             return Storage::download($filePath, 'template_import_presensi.xls');
         } catch (\Throwable $e) {
-            Log::error('| Presensi | - Error saat download template presensi: ' . $e->getMessage() . ' Line: ' . $e->getLine());
+            Log::error('| Presensi | - Error saat download template presensi: '.$e->getMessage().' Line: '.$e->getLine());
+
             return response()->json(new WithoutDataResource(Response::HTTP_INTERNAL_SERVER_ERROR, 'Maaf sepertinya terjadi error.'), Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 
     public function importPresensi(ImportPresensiRequest $request)
     {
-        if (!Gate::allows('import presensiKaryawan')) {
+        if (! Gate::allows('import presensiKaryawan')) {
             return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
         }
 
@@ -576,7 +579,7 @@ class DataPresensiController extends Controller
         try {
             Excel::import(new PresensiImportNew, $file['presensi_file']);
         } catch (\Exception $e) {
-            return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya terjadi kesalahan. Pesan: ' . $e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
+            return response()->json(new WithoutDataResource(Response::HTTP_NOT_ACCEPTABLE, 'Maaf sepertinya terjadi kesalahan. Pesan: '.$e->getMessage()), Response::HTTP_NOT_ACCEPTABLE);
         }
 
         return response()->json(new WithoutDataResource(Response::HTTP_OK, 'Data presensi karyawan berhasil di import kedalam tabel.'), Response::HTTP_OK);

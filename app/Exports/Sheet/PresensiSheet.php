@@ -2,26 +2,30 @@
 
 namespace App\Exports\Sheet;
 
-use Carbon\Carbon;
+use App\Helpers\RandomHelper;
 use App\Models\NonShift;
 use App\Models\Presensi;
-use App\Helpers\RandomHelper;
-use Illuminate\Support\Facades\DB;
-use Maatwebsite\Excel\Concerns\WithTitle;
+use Carbon\Carbon;
 use Maatwebsite\Excel\Concerns\Exportable;
-use Maatwebsite\Excel\Concerns\WithMapping;
-use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\FromCollection;
+use Maatwebsite\Excel\Concerns\WithHeadings;
+use Maatwebsite\Excel\Concerns\WithMapping;
+use Maatwebsite\Excel\Concerns\WithTitle;
 
 class PresensiSheet implements FromCollection, WithHeadings, WithMapping, WithTitle
 {
     use Exportable;
 
     private $number;
+
     private $filters;
+
     private $category;
+
     private $title;
+
     private $startDate;
+
     private $endDate;
 
     public function __construct($category, $title, $startDate, $endDate, $filters = [])
@@ -40,12 +44,12 @@ class PresensiSheet implements FromCollection, WithHeadings, WithMapping, WithTi
             'users',
             'jadwals.shifts',
             'data_karyawans.unit_kerjas',
-            'kategori_presensis'
+            'kategori_presensis',
         ])->whereHas('kategori_presensis', function ($query) {
             $query->where('label', $this->category);
         });
 
-        if (!empty($this->startDate) && !empty($this->endDate)) {
+        if (! empty($this->startDate) && ! empty($this->endDate)) {
             $query->whereBetween('jam_masuk', [$this->startDate, $this->endDate]);
         }
 
@@ -335,7 +339,7 @@ class PresensiSheet implements FromCollection, WithHeadings, WithMapping, WithTi
             'no',
             'nama',
             'nik',
-            'nama_shift',
+            'kode__shift',
             'shift_masuk',
             'shift_keluar',
             'jadwal_mulai',
@@ -346,15 +350,15 @@ class PresensiSheet implements FromCollection, WithHeadings, WithMapping, WithTi
             'presensi_masuk',
             'presensi_keluar',
             'durasi',
-            'lat_masuk',
-            'long_masuk',
-            'lat_keluar',
-            'long_keluar',
+            // 'lat_masuk',
+            // 'long_masuk',
+            // 'lat_keluar',
+            // 'long_keluar',
             'kategori',
             'pembatalan_reward',
             'presensi_anulir',
-            'created_at',
-            'updated_at'
+            // 'created_at',
+            // 'updated_at'
         ];
     }
 
@@ -377,6 +381,7 @@ class PresensiSheet implements FromCollection, WithHeadings, WithMapping, WithTi
             $jamMasukNonShift = $nonShift ? $nonShift->jam_from : 'N/A';
             $jamKeluarNonShift = $nonShift ? $nonShift->jam_to : 'N/A';
         }
+
         return [
             $this->number,
             optional($presensi->users)->nama,
@@ -392,15 +397,15 @@ class PresensiSheet implements FromCollection, WithHeadings, WithMapping, WithTi
             $presensi->jam_masuk ? RandomHelper::convertToDateTimeString($presensi->jam_masuk) : 'N/A',
             $presensi->jam_keluar ? RandomHelper::convertToDateTimeString($presensi->jam_keluar) : 'N/A',
             $this->formatDuration($presensi->durasi),
-            $presensi->lat,
-            $presensi->long,
-            $presensi->latkeluar,
-            $presensi->longkeluar,
+            // $presensi->lat,
+            // $presensi->long,
+            // $presensi->latkeluar,
+            // $presensi->longkeluar,
             optional($presensi->kategori_presensis)->label,
             $presensi->is_pembatalan_reward ? 'Ya' : 'Tidak',
             $presensi->is_anulir_presensi ? 'Ya' : 'Tidak',
-            Carbon::parse($presensi->created_at)->format('d-m-Y H:i:s'),
-            Carbon::parse($presensi->updated_at)->format('d-m-Y H:i:s')
+            // Carbon::parse($presensi->created_at)->format('d-m-Y H:i:s'),
+            // Carbon::parse($presensi->updated_at)->format('d-m-Y H:i:s'),
         ];
     }
 
@@ -408,7 +413,8 @@ class PresensiSheet implements FromCollection, WithHeadings, WithMapping, WithTi
     {
         $hours = floor($seconds / 3600);
         $minutes = floor(($seconds % 3600) / 60);
-        return sprintf("%d jam %d menit", $hours, $minutes);
+
+        return sprintf('%d jam %d menit', $hours, $minutes);
     }
 
     public function title(): string
