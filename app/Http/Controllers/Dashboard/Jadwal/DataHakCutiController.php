@@ -261,12 +261,12 @@ class DataHakCutiController extends Controller
                     $startDate = Carbon::createFromFormat('d-m-Y', $filters['tgl_mulai'])->startOfDay();
                     $endDate = Carbon::createFromFormat('d-m-Y', $filters['tgl_selesai'])->endOfDay();
                 } catch (\Exception $e) {
-                    $startDate = Carbon::now('Asia/Jakarta')->startOfYear();
-                    $endDate = Carbon::now('Asia/Jakarta')->endOfYear();
+                    $startDate = Carbon::now()->startOfYear();
+                    $endDate = Carbon::now()->endOfYear();
                 }
             } else {
-                $startDate = Carbon::now('Asia/Jakarta')->startOfYear();
-                $endDate = Carbon::now('Asia/Jakarta')->endOfYear();
+                $startDate = Carbon::now()->startOfYear();
+                $endDate = Carbon::now()->endOfYear();
             }
 
             $groupedHakCuti = $dataHakCuti->groupBy('data_karyawan_id');
