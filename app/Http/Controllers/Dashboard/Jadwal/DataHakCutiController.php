@@ -306,7 +306,7 @@ class DataHakCutiController extends Controller
                         $usedKuota = Cuti::query()
                             ->where('tipe_cuti_id', $hakCuti->tipe_cuti_id)
                             ->where('user_id', $userId)
-                            ->where('verifikator_1', 1)
+                            // ->where('verifikator_1', 1)
                             ->where('verifikator_2', 1)
                             ->when($startDate && $endDate, function ($q) use ($startDate, $endDate) {
                                 $q->whereRaw("
@@ -314,13 +314,13 @@ class DataHakCutiController extends Controller
                                     AND STR_TO_DATE(tgl_to, '%d-%m-%Y') >= ?
                                 ", [$endDate, $startDate]);
                             })
-                            ->count();
+                            ->get();
 
                         return [
                             'id' => $hakCuti->tipe_cutis->id,
                             'nama' => $hakCuti->tipe_cutis->nama,
                             'kuota' => $hakCuti->kuota,
-                            'used_kuota' => $usedKuota,
+                            'used_kuota' => count($usedKuota),
                             'is_need_requirement' => $hakCuti->tipe_cutis->is_need_requirement,
                             'keterangan' => $hakCuti->tipe_cutis->keterangan,
                             'cuti_administratif' => $hakCuti->tipe_cutis->cuti_administratif,
