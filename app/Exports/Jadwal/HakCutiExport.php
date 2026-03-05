@@ -5,6 +5,7 @@ namespace App\Exports\Jadwal;
 use App\Models\Cuti;
 use App\Models\HakCuti;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Concerns\Exportable;
 use Maatwebsite\Excel\Concerns\FromCollection;
@@ -237,7 +238,7 @@ class HakCutiExport implements FromCollection, WithHeadings, WithMapping
                     STR_TO_DATE(tgl_from, '%d-%m-%Y') <= ?
                     AND STR_TO_DATE(tgl_to, '%d-%m-%Y') >= ?
                 ", [$endDate, $startDate]);
-            })->where('users.id', $user->id)->orderBy('tgl_from', 'asc')->get();
+            })->where('users.id', Auth::user()->id)->orderBy('tgl_from', 'asc')->get();
 
         // $usedQuota = Cuti::where('tipe_cuti_id', $hakcutiid)
         //     // ->where('verifikator_1', 1)
