@@ -3,19 +3,20 @@
 namespace App\Http\Controllers\Dashboard\Jadwal;
 
 use App\Exports\Jadwal\HakCutiExport;
-use Carbon\Carbon;
-use App\Models\HakCuti;
-use Illuminate\Http\Request;
-use Illuminate\Http\Response;
-use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Gate;
 use App\Http\Requests\StoreHakCutiRequest;
 use App\Http\Requests\UpdateHakCutiRequest;
 use App\Http\Resources\Publik\WithoutData\WithoutDataResource;
+use App\Models\Cuti;
+use App\Models\HakCuti;
 use App\Models\TipeCuti;
 use App\Models\User;
+use Carbon\Carbon;
+use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Facades\Excel;
 
 class DataHakCutiController extends Controller
@@ -23,12 +24,12 @@ class DataHakCutiController extends Controller
     public function index(Request $request)
     {
         try {
-            if (!Gate::allows('view hakCuti')) {
+            if (! Gate::allows('view hakCuti')) {
                 return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
             }
 
             $limit = $request->input('limit', 10);
-            $hakCuti =  HakCuti::join('data_karyawans', 'hak_cutis.data_karyawan_id', '=', 'data_karyawans.id')
+            $hakCuti = HakCuti::join('data_karyawans', 'hak_cutis.data_karyawan_id', '=', 'data_karyawans.id')
                 ->orderBy('data_karyawans.nik', 'asc')
                 ->select('hak_cutis.*');
             $filters = $request->all();
@@ -206,7 +207,7 @@ class DataHakCutiController extends Controller
 
             // Search
             if (isset($filters['search'])) {
-                $searchTerm = '%' . $filters['search'] . '%';
+                $searchTerm = '%'.$filters['search'].'%';
                 $hakCuti->where(function ($query) use ($searchTerm) {
                     $query->whereHas('data_karyawans.users', function ($query) use ($searchTerm) {
                         $query->where('nama', 'like', $searchTerm);
@@ -228,17 +229,17 @@ class DataHakCutiController extends Controller
                 $paginatedIds = $allDataKaryawanIds->slice(($page - 1) * $limit, $limit);
                 $paginationData = [
                     'links' => [
-                        'first' => url()->current() . '?page=1',
-                        'last' => url()->current() . '?page=' . ceil($allDataKaryawanIds->count() / $limit),
-                        'prev' => $page > 1 ? url()->current() . '?page=' . ($page - 1) : null,
-                        'next' => $page < ceil($allDataKaryawanIds->count() / $limit) ? url()->current() . '?page=' . ($page + 1) : null,
+                        'first' => url()->current().'?page=1',
+                        'last' => url()->current().'?page='.ceil($allDataKaryawanIds->count() / $limit),
+                        'prev' => $page > 1 ? url()->current().'?page='.($page - 1) : null,
+                        'next' => $page < ceil($allDataKaryawanIds->count() / $limit) ? url()->current().'?page='.($page + 1) : null,
                     ],
                     'meta' => [
                         'current_page' => $page,
                         'last_page' => ceil($allDataKaryawanIds->count() / $limit),
                         'per_page' => $limit,
                         'total' => $allDataKaryawanIds->count(),
-                    ]
+                    ],
                 ];
             }
 
@@ -253,8 +254,23 @@ class DataHakCutiController extends Controller
             }
 
             $baseUrl = env('STORAGE_SERVER_DOMAIN');
+
+            // Determine date range for used_kuota calculation
+            if (! empty($filters['tgl_mulai']) && ! empty($filters['tgl_selesai'])) {
+                try {
+                    $startDate = Carbon::createFromFormat('d-m-Y', $filters['tgl_mulai'])->startOfDay();
+                    $endDate = Carbon::createFromFormat('d-m-Y', $filters['tgl_selesai'])->endOfDay();
+                } catch (\Exception $e) {
+                    $startDate = Carbon::now('Asia/Jakarta')->startOfYear();
+                    $endDate = Carbon::now('Asia/Jakarta')->endOfYear();
+                }
+            } else {
+                $startDate = Carbon::now('Asia/Jakarta')->startOfYear();
+                $endDate = Carbon::now('Asia/Jakarta')->endOfYear();
+            }
+
             $groupedHakCuti = $dataHakCuti->groupBy('data_karyawan_id');
-            $formattedData = $groupedHakCuti->map(function ($group) use ($baseUrl) {
+            $formattedData = $groupedHakCuti->map(function ($group) use ($baseUrl, $startDate, $endDate) {
                 $first = $group->first(); // ambil salah satu untuk akses user dan karyawan
 
                 return [
@@ -272,35 +288,50 @@ class DataHakCutiController extends Controller
                             'file_id' => $first->data_karyawans->users->foto_profiles->file_id,
                             'nama' => $first->data_karyawans->users->foto_profiles->nama,
                             'nama_file' => $first->data_karyawans->users->foto_profiles->nama_file,
-                            'path' => $baseUrl . $first->data_karyawans->users->foto_profiles->path,
+                            'path' => $baseUrl.$first->data_karyawans->users->foto_profiles->path,
                             'ext' => $first->data_karyawans->users->foto_profiles->ext,
                             'size' => $first->data_karyawans->users->foto_profiles->size,
                         ] : null,
                         'data_completion_step' => $first->data_karyawans->users->data_completion_step,
                         'status_aktif' => $first->data_karyawans->users->status_aktif,
                         'created_at' => $first->data_karyawans->users->created_at,
-                        'updated_at' => $first->data_karyawans->users->updated_at
+                        'updated_at' => $first->data_karyawans->users->updated_at,
                     ],
                     'nik' => $first->data_karyawans->nik,
                     'hak_cuti' => $group->filter(function ($hakCuti) {
                         return $hakCuti->tipe_cutis !== null;
-                    })->map(function ($hakCuti) {
+                    })->map(function ($hakCuti) use ($startDate, $endDate) {
+                        $userId = $hakCuti->data_karyawans->user_id ?? null;
+
+                        $usedKuota = Cuti::query()
+                            ->where('tipe_cuti_id', $hakCuti->tipe_cuti_id)
+                            ->where('user_id', $userId)
+                            ->where('verifikator_1', 1)
+                            ->where('verifikator_2', 1)
+                            ->when($startDate && $endDate, function ($q) use ($startDate, $endDate) {
+                                $q->whereRaw("
+                                    STR_TO_DATE(tgl_from, '%d-%m-%Y') <= ?
+                                    AND STR_TO_DATE(tgl_to, '%d-%m-%Y') >= ?
+                                ", [$endDate, $startDate]);
+                            })
+                            ->count();
+
                         return [
                             'id' => $hakCuti->tipe_cutis->id,
                             'nama' => $hakCuti->tipe_cutis->nama,
                             'kuota' => $hakCuti->kuota,
-                            'used_kuota' => $hakCuti->used_kuota,
+                            'used_kuota' => $usedKuota,
                             'is_need_requirement' => $hakCuti->tipe_cutis->is_need_requirement,
                             'keterangan' => $hakCuti->tipe_cutis->keterangan,
                             'cuti_administratif' => $hakCuti->tipe_cutis->cuti_administratif,
                             'is_unlimited' => $hakCuti->tipe_cutis->is_unlimited,
                             'created_at' => $hakCuti->tipe_cutis->created_at,
-                            'updated_at' => $hakCuti->tipe_cutis->updated_at
+                            'updated_at' => $hakCuti->tipe_cutis->updated_at,
                         ];
                     })->values(),
                     'created_at' => $first->created_at,
                     'updated_at' => $first->updated_at,
-                    'deleted_at' => $first->deleted_at
+                    'deleted_at' => $first->deleted_at,
                 ];
             })->values();
 
@@ -308,10 +339,11 @@ class DataHakCutiController extends Controller
                 'status' => Response::HTTP_OK,
                 'message' => 'Data hak cuti karyawan berhasil ditampilkan.',
                 'data' => $formattedData,
-                'pagination' => $paginationData
+                'pagination' => $paginationData,
             ], Response::HTTP_OK);
         } catch (\Exception $e) {
-            Log::error('| Hak Cuti | - Error function index: ' . $e->getMessage());
+            Log::error('| Hak Cuti | - Error function index: '.$e->getMessage());
+
             return response()->json([
                 'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
                 'message' => 'Terjadi kesalahan pada sistem. Silakan coba lagi nanti atau hubungi SIM RS.',
@@ -324,7 +356,7 @@ class DataHakCutiController extends Controller
         DB::beginTransaction();
 
         try {
-            if (!Gate::allows('create hakCuti')) {
+            if (! Gate::allows('create hakCuti')) {
                 return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
             }
 
@@ -340,11 +372,12 @@ class DataHakCutiController extends Controller
                 ->whereIn('tipe_cuti_id', $tipeCutiIds)
                 ->pluck('tipe_cuti_id')
                 ->toArray();
-            if (!empty($existing)) {
+            if (! empty($existing)) {
                 DB::rollBack();
+
                 return response()->json([
                     'status' => Response::HTTP_CONFLICT,
-                    'message' => "TIpe cuti yang dipilih sudah pernah diberikan kepada karyawan '{$user->nama}', silahkan cek kembali dan pastikan tidak ada duplikasi data."
+                    'message' => "TIpe cuti yang dipilih sudah pernah diberikan kepada karyawan '{$user->nama}', silahkan cek kembali dan pastikan tidak ada duplikasi data.",
                 ], Response::HTTP_CONFLICT);
             }
 
@@ -374,7 +407,8 @@ class DataHakCutiController extends Controller
             ], Response::HTTP_CREATED);
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('| Hak Cuti | - Error function store: ' . $e->getMessage());
+            Log::error('| Hak Cuti | - Error function store: '.$e->getMessage());
+
             return response()->json([
                 'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
                 'message' => 'Terjadi kesalahan pada sistem. Silakan coba lagi nanti atau hubungi SIM RS.',
@@ -385,11 +419,11 @@ class DataHakCutiController extends Controller
     public function show($id)
     {
         try {
-            if (!Gate::allows('view hakCuti')) {
+            if (! Gate::allows('view hakCuti')) {
                 return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
             }
 
-            if (!$id) {
+            if (! $id) {
                 return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data hak cuti tidak ditemukan.'), Response::HTTP_NOT_FOUND);
             }
 
@@ -416,14 +450,14 @@ class DataHakCutiController extends Controller
                         'file_id' => $first->data_karyawans->users->foto_profiles->file_id,
                         'nama' => $first->data_karyawans->users->foto_profiles->nama,
                         'nama_file' => $first->data_karyawans->users->foto_profiles->nama_file,
-                        'path' => $baseUrl . $first->data_karyawans->users->foto_profiles->path,
+                        'path' => $baseUrl.$first->data_karyawans->users->foto_profiles->path,
                         'ext' => $first->data_karyawans->users->foto_profiles->ext,
                         'size' => $first->data_karyawans->users->foto_profiles->size,
                     ] : null,
                     'data_completion_step' => $first->data_karyawans->users->data_completion_step,
                     'status_aktif' => $first->data_karyawans->users->status_aktif,
                     'created_at' => $first->data_karyawans->users->created_at,
-                    'updated_at' => $first->data_karyawans->users->updated_at
+                    'updated_at' => $first->data_karyawans->users->updated_at,
                 ],
                 'nik' => $first->data_karyawans->nik,
                 'hak_cuti' => $hakCuti->map(function ($hakCuti) {
@@ -439,21 +473,22 @@ class DataHakCutiController extends Controller
                         'cuti_administratif' => $hakCuti->tipe_cutis->cuti_administratif,
                         'is_unlimited' => $hakCuti->tipe_cutis->is_unlimited,
                         'created_at' => $hakCuti->tipe_cutis->created_at,
-                        'updated_at' => $hakCuti->tipe_cutis->updated_at
+                        'updated_at' => $hakCuti->tipe_cutis->updated_at,
                     ];
                 })->values(),
                 'created_at' => $first->created_at,
                 'updated_at' => $first->updated_at,
-                'deleted_at' => $first->deleted_at
+                'deleted_at' => $first->deleted_at,
             ];
 
             return response()->json([
                 'status' => Response::HTTP_OK,
                 'message' => 'Data hak cuti karyawan berhasil ditampilkan.',
-                'data' => $data
+                'data' => $data,
             ], Response::HTTP_OK);
         } catch (\Exception $e) {
-            Log::error('| Hak Cuti | - Error function show: ' . $e->getMessage());
+            Log::error('| Hak Cuti | - Error function show: '.$e->getMessage());
+
             return response()->json([
                 'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
                 'message' => 'Terjadi kesalahan pada sistem. Silakan coba lagi nanti atau hubungi SIM RS.',
@@ -466,11 +501,11 @@ class DataHakCutiController extends Controller
         DB::beginTransaction();
 
         try {
-            if (!Gate::allows('edit hakCuti')) {
+            if (! Gate::allows('edit hakCuti')) {
                 return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
             }
 
-            if (!$id) {
+            if (! $id) {
                 return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data hak cuti tidak ditemukan.'), Response::HTTP_NOT_FOUND);
             }
 
@@ -478,10 +513,10 @@ class DataHakCutiController extends Controller
 
             // Validasi keberadaan user
             $user = User::where('data_karyawan_id', $dataKaryawanId)->first();
-            if (!$user) {
+            if (! $user) {
                 return response()->json([
                     'status' => Response::HTTP_NOT_FOUND,
-                    'message' => 'Data karyawan tidak ditemukan.'
+                    'message' => 'Data karyawan tidak ditemukan.',
                 ], Response::HTTP_NOT_FOUND);
             }
 
@@ -504,11 +539,12 @@ class DataHakCutiController extends Controller
 
             return response()->json([
                 'status' => Response::HTTP_OK,
-                'message' => "Data Hak cuti karyawan '{$user->nama}' berhasil diperbarui."
+                'message' => "Data Hak cuti karyawan '{$user->nama}' berhasil diperbarui.",
             ], Response::HTTP_OK);
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('| Hak Cuti | - Error function update: ' . $e->getMessage());
+            Log::error('| Hak Cuti | - Error function update: '.$e->getMessage());
+
             return response()->json([
                 'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
                 'message' => 'Terjadi kesalahan pada sistem. Silakan coba lagi nanti atau hubungi SIM RS.',
@@ -521,11 +557,11 @@ class DataHakCutiController extends Controller
         DB::beginTransaction();
 
         try {
-            if (!Gate::allows('delete hakCuti')) {
+            if (! Gate::allows('delete hakCuti')) {
                 return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
             }
 
-            if (!$id) {
+            if (! $id) {
                 return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data hak cuti tidak ditemukan.'), Response::HTTP_NOT_FOUND);
             }
 
@@ -543,11 +579,12 @@ class DataHakCutiController extends Controller
 
             return response()->json([
                 'status' => Response::HTTP_OK,
-                'message' => "Semua data hak cuti karyawan '{$user->nama}' berhasil dihapus."
+                'message' => "Semua data hak cuti karyawan '{$user->nama}' berhasil dihapus.",
             ], Response::HTTP_OK);
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('| Hak Cuti | - Error function destroy: ' . $e->getMessage());
+            Log::error('| Hak Cuti | - Error function destroy: '.$e->getMessage());
+
             return response()->json([
                 'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
                 'message' => 'Terjadi kesalahan pada sistem. Silakan coba lagi nanti atau hubungi SIM RS.',
@@ -560,11 +597,11 @@ class DataHakCutiController extends Controller
         DB::beginTransaction();
 
         try {
-            if (!Gate::allows('delete hakCuti')) {
+            if (! Gate::allows('delete hakCuti')) {
                 return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
             }
 
-            if (!$id) {
+            if (! $id) {
                 return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data hak cuti tidak ditemukan.'), Response::HTTP_NOT_FOUND);
             }
 
@@ -582,11 +619,12 @@ class DataHakCutiController extends Controller
 
             return response()->json([
                 'status' => Response::HTTP_OK,
-                'message' => "Semua data hak cuti karyawan '{$user->nama}' berhasil dipulihkan."
+                'message' => "Semua data hak cuti karyawan '{$user->nama}' berhasil dipulihkan.",
             ], Response::HTTP_OK);
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('| Hak Cuti | - Error function restore: ' . $e->getMessage());
+            Log::error('| Hak Cuti | - Error function restore: '.$e->getMessage());
+
             return response()->json([
                 'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
                 'message' => 'Terjadi kesalahan pada sistem. Silakan coba lagi nanti atau hubungi SIM RS.',
@@ -597,7 +635,7 @@ class DataHakCutiController extends Controller
     public function export(Request $request)
     {
         try {
-            if (!Gate::allows('export hakCuti')) {
+            if (! Gate::allows('export hakCuti')) {
                 return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
             }
 
@@ -612,7 +650,8 @@ class DataHakCutiController extends Controller
                 return response()->json(new WithoutDataResource(Response::HTTP_INTERNAL_SERVER_ERROR, 'Terjadi kesalahan pada sistem. Silakan coba lagi nanti atau hubungi SIM RS.'), Response::HTTP_INTERNAL_SERVER_ERROR);
             }
         } catch (\Exception $e) {
-            Log::error('| Hak Cuti | - Error function export: ' . $e->getMessage());
+            Log::error('| Hak Cuti | - Error function export: '.$e->getMessage());
+
             return response()->json([
                 'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
                 'message' => 'Terjadi kesalahan pada sistem. Silakan coba lagi nanti atau hubungi SIM RS.',
