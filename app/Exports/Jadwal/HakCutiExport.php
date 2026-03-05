@@ -5,7 +5,6 @@ namespace App\Exports\Jadwal;
 use App\Models\Cuti;
 use App\Models\HakCuti;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Concerns\Exportable;
 use Maatwebsite\Excel\Concerns\FromCollection;
@@ -229,16 +228,18 @@ class HakCutiExport implements FromCollection, WithHeadings, WithMapping
             $hakcutiid = $hakCuti->tipe_cuti_id;
         }
 
+        $userId = $hakCuti->data_karyawans->user_id ?? null;
+
         $usedQuota = Cuti::query()
             ->where('tipe_cuti_id', $hakcutiid)
             ->join('users', 'cutis.user_id', '=', 'users.id')
             ->join('data_karyawans', 'users.id', '=', 'data_karyawans.user_id')
-            ->when($startDate && $endDate, function ($q) {
+            ->when($startDate && $endDate, function ($q) use ($startDate, $endDate) {
                 $q->whereRaw("
                     STR_TO_DATE(tgl_from, '%d-%m-%Y') <= ?
                     AND STR_TO_DATE(tgl_to, '%d-%m-%Y') >= ?
                 ", [$endDate, $startDate]);
-            })->where('users.id', Auth::user()->id)->orderBy('tgl_from', 'asc')->get();
+            })->where('users.id', $userId)->orderBy('tgl_from', 'asc')->get();
 
         // $usedQuota = Cuti::where('tipe_cuti_id', $hakcutiid)
         //     // ->where('verifikator_1', 1)
