@@ -17,13 +17,18 @@ class CutiTahunanSheet implements FromCollection, WithHeadings, WithMapping, Wit
     use Exportable;
 
     private $number;
+
     private $filters;
+
     private $title;
+
     private $startDate;
+
     private $endDate;
+
     private $tipeCutiId;
 
-    public function __construct($filters = [], $title, $startDate, $endDate, $tipeCutiId)
+    public function __construct($filters, $title, $startDate, $endDate, $tipeCutiId)
     {
         $this->filters = $filters;
         $this->title = $title;
@@ -40,7 +45,7 @@ class CutiTahunanSheet implements FromCollection, WithHeadings, WithMapping, Wit
         $end = null;
         if ($this->startDate && $this->endDate) {
             $start = Carbon::parse($this->startDate)->format('Y-m-d');
-            $end   = Carbon::parse($this->endDate)->format('Y-m-d');
+            $end = Carbon::parse($this->endDate)->format('Y-m-d');
         }
 
         $query = Cuti::query()
@@ -90,7 +95,7 @@ class CutiTahunanSheet implements FromCollection, WithHeadings, WithMapping, Wit
         $headings = ['no', 'nama', 'nik', 'total_cuti'];
 
         for ($i = 1; $i <= $maxKuota; $i++) {
-            $headings[] = (string)$i;
+            $headings[] = (string) $i;
         }
 
         return $headings;
@@ -105,10 +110,11 @@ class CutiTahunanSheet implements FromCollection, WithHeadings, WithMapping, Wit
         $kuota = $hakCuti->kuota ?? 0;
         $nik = $dataKaryawan->nik ?? 'N/A';
         $start = Carbon::parse($this->startDate)->format('Y-m-d');
-        $end   = Carbon::parse($this->endDate)->format('Y-m-d');
+        $end = Carbon::parse($this->endDate)->format('Y-m-d');
         // Ambil data cuti user ini dengan tipe cuti yang sama
         $cutiUserCollection = Cuti::query()
             ->where('tipe_cuti_id', $this->tipeCutiId)
+            ->where('verifikator_2', 1)
             ->join('users', 'cutis.user_id', '=', 'users.id')
             ->join('data_karyawans', 'users.id', '=', 'data_karyawans.user_id')
             ->when($start && $end, function ($q) use ($start, $end) {
@@ -146,7 +152,7 @@ class CutiTahunanSheet implements FromCollection, WithHeadings, WithMapping, Wit
             $this->number,
             $user->nama,
             $nik,
-            count($tanggalCutiDipakai)
+            count($tanggalCutiDipakai),
         ];
 
         // Tambahkan kolom tanggal cuti sesuai max kuota
