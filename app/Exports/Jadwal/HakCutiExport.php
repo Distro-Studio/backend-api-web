@@ -236,7 +236,7 @@ class HakCutiExport implements FromCollection, WithHeadings, WithMapping
                 $q->whereRaw("
                     STR_TO_DATE(tgl_from, '%d-%m-%Y') <= ?
                     AND STR_TO_DATE(tgl_to, '%d-%m-%Y') >= ?
-                ", [$end, $start]);
+                ", [$endDate, $startDate]);
             })->where('users.id', $user->id)->orderBy('tgl_from', 'asc')->get();
 
         // $usedQuota = Cuti::where('tipe_cuti_id', $hakcutiid)
