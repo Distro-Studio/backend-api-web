@@ -232,6 +232,7 @@ class HakCutiExport implements FromCollection, WithHeadings, WithMapping
 
         $usedQuota = Cuti::query()
             ->where('tipe_cuti_id', $hakcutiid)
+            ->where('verifikator_2', 1)
             ->join('users', 'cutis.user_id', '=', 'users.id')
             ->join('data_karyawans', 'users.id', '=', 'data_karyawans.user_id')
             ->when($startDate && $endDate, function ($q) use ($startDate, $endDate) {
