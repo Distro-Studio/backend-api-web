@@ -3,11 +3,9 @@
 namespace App\Exports\Presensi;
 
 use App\Exports\Sheet\PresensiSheet;
-use App\Exports\Presensi\PresensiUserSheet;
-use App\Models\User;
 use App\Models\Presensi;
+use App\Models\User;
 use Maatwebsite\Excel\Concerns\Exportable;
-use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithMultipleSheets;
 
 class PresensiExport implements WithMultipleSheets
@@ -15,7 +13,9 @@ class PresensiExport implements WithMultipleSheets
     use Exportable;
 
     private $startDate;
+
     private $endDate;
+
     private $filters;
 
     public function __construct($startDate, $endDate, $filters = [])
@@ -30,7 +30,7 @@ class PresensiExport implements WithMultipleSheets
         $sheets = [];
         // Jika ada filter selain date range (tgl_mulai / tgl_selesai) => buat sheet per karyawan
         $filterKeys = is_array($this->filters) ? array_keys($this->filters) : [];
-        $nonDateFilterKeys = array_diff($filterKeys, ['tgl_mulai', 'tgl_selesai']);
+        $nonDateFilterKeys = array_diff($filterKeys, ['tgl_mulai', 'tgl_selesai', 'search']);
         $hasOtherFilters = count($nonDateFilterKeys) > 0;
         if ($hasOtherFilters) {
             // Jika filter mengandung explicit user_id gunakan itu
@@ -128,7 +128,7 @@ class PresensiExport implements WithMultipleSheets
         // Menambahkan sheet untuk setiap kategori presensi (default)
         $categories = ['Terlambat', 'Tepat Waktu', 'Alpha'];
         foreach ($categories as $category) {
-            $sheets[] = new PresensiSheet($category, 'Laporan ' . str_replace(' ', '', $category), $this->startDate, $this->endDate, $this->filters);
+            $sheets[] = new PresensiSheet($category, 'Laporan '.str_replace(' ', '', $category), $this->startDate, $this->endDate, $this->filters);
         }
 
         return $sheets;
