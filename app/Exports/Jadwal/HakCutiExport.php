@@ -220,12 +220,26 @@ class HakCutiExport implements FromCollection, WithHeadings, WithMapping
         }
 
         // compute used quota by summing durations of approved cuti within range
-        $usedQuota = Cuti::where('hak_cuti_id', $hakCuti->id)
+        $hakcutiid = null;
+
+        if (isset($this->filters['tipe_cuti'])) {
+            $hakcutiid = $this->filters['tipe_cuti'];
+        } else {
+            $hakcutiid = $hakCuti->tipe_cuti_id;
+        }
+
+        $usedQuota = Cuti::where('tipe_cuti_id', $hakcutiid)
             ->where('verifikator_1', 1)
             ->where('verifikator_2', 1)
-            ->where(function ($query) use ($startDate, $endDate) {
-                $query->whereBetween(DB::raw("STR_TO_DATE(tgl_from, '%d-%m-%Y')"), [$startDate, $endDate])
-                    ->orWhereBetween(DB::raw("STR_TO_DATE(tgl_to, '%d-%m-%Y')"), [$startDate, $endDate]);
+            // ->where(function ($query) use ($startDate, $endDate) {
+            //     $query->whereBetween(DB::raw("STR_TO_DATE(tgl_from, '%d-%m-%Y')"), [$startDate, $endDate])
+            //         ->orWhereBetween(DB::raw("STR_TO_DATE(tgl_to, '%d-%m-%Y')"), [$startDate, $endDate]);
+            // })
+            ->when($startDate && $endDate, function ($query) use ($startDate, $endDate) {
+                $query->whereRaw("
+                    STR_TO_DATE(tgl_from, '%d-%m-%Y') <= ?
+                    AND STR_TO_DATE(tgl_to, '%d-%m-%Y') >= ?
+                ", [$endDate, $startDate]);
             })
             ->sum('durasi');
 
@@ -238,10 +252,9 @@ class HakCutiExport implements FromCollection, WithHeadings, WithMapping
             $hakCuti->data_karyawans->nik ?? 'N/A',
             $hakCuti->tipe_cutis->nama ?? 'N/A',
             // $hakCuti->tipe_cutis->nama ?? 'N/A',
-            // $kuota ?? '0',
-            $hakCuti->kuota ?? '0',
-            $hakCuti->used_kuota ?? '0',
-            $hakCuti->kuota - $hakCuti->used_kuota ?? '0',
+            $kuota ?? '0',
+            $usedQuota ?? '0',
+            $remaining ?? '0',
             // $hakCuti->tipe_cutis->cuti_administratif ? 'Ya' : 'Tidak',
             // $hakCuti->tipe_cutis->is_unlimited ? 'Ya' : 'Tidak',
             Carbon::parse($hakCuti->created_at)->format('d-m-Y H:i:s'),
