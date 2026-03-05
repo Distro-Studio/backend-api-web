@@ -344,8 +344,9 @@ class PresensiSheet implements FromCollection, WithHeadings, WithMapping, WithTi
             'shift_keluar',
             'jadwal_mulai',
             'jadwal_selesai',
-            'jam_masuk_nShift',
-            'jam_selesai_nShift',
+            'hari',
+            // 'jam_masuk_nShift',
+            // 'jam_selesai_nShift',
             'unit_kerja',
             'presensi_masuk',
             'presensi_keluar',
@@ -382,17 +383,21 @@ class PresensiSheet implements FromCollection, WithHeadings, WithMapping, WithTi
             $jamKeluarNonShift = $nonShift ? $nonShift->jam_to : 'N/A';
         }
 
+        $createdAt = $presensi->created_at;
+        $createdAtFormat = Carbon::parse($createdAt)->format('Y-m-d');
+
         return [
             $this->number,
             optional($presensi->users)->nama,
             optional($presensi->users->data_karyawans)->nik,
-            $shift ? $shift->nama : 'N/A',
-            $shift && isset($shift->jam_from) ? $shift->jam_from : 'N/A',
-            $shift && isset($shift->jam_to) ? $shift->jam_to : 'N/A',
-            optional($presensi->jadwals)->tgl_mulai ? RandomHelper::convertToDateString($presensi->jadwals->tgl_mulai) : 'N/A',
-            optional($presensi->jadwals)->tgl_selesai ? RandomHelper::convertToDateString($presensi->jadwals->tgl_selesai) : 'N/A',
-            $jamMasukNonShift,
-            $jamKeluarNonShift,
+            $shift ? $shift->nama : 'Non Shift',
+            $shift && isset($shift->jam_from) ? $shift->jam_from : $jamMasukNonShift,
+            $shift && isset($shift->jam_to) ? $shift->jam_to : $jamKeluarNonShift,
+            optional($presensi->jadwals)->tgl_mulai ? RandomHelper::convertToDateString($presensi->jadwals->tgl_mulai) : $createdAtFormat,
+            optional($presensi->jadwals)->tgl_selesai ? RandomHelper::convertToDateString($presensi->jadwals->tgl_selesai) : $createdAtFormat,
+            $hari,
+            // $jamMasukNonShift,
+            // $jamKeluarNonShift,
             $unitKerja,
             $presensi->jam_masuk ? RandomHelper::convertToDateTimeString($presensi->jam_masuk) : 'N/A',
             $presensi->jam_keluar ? RandomHelper::convertToDateTimeString($presensi->jam_keluar) : 'N/A',
