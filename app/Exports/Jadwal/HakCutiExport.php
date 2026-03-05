@@ -228,23 +228,35 @@ class HakCutiExport implements FromCollection, WithHeadings, WithMapping
             $hakcutiid = $hakCuti->tipe_cuti_id;
         }
 
-        $usedQuota = Cuti::where('tipe_cuti_id', $hakcutiid)
-            ->where('verifikator_1', 1)
-            ->where('verifikator_2', 1)
-            // ->where(function ($query) use ($startDate, $endDate) {
-            //     $query->whereBetween(DB::raw("STR_TO_DATE(tgl_from, '%d-%m-%Y')"), [$startDate, $endDate])
-            //         ->orWhereBetween(DB::raw("STR_TO_DATE(tgl_to, '%d-%m-%Y')"), [$startDate, $endDate]);
-            // })
-            ->when($startDate && $endDate, function ($query) use ($startDate, $endDate) {
-                $query->whereRaw("
+        $usedQuota = Cuti::query()
+            ->where('tipe_cuti_id', $hakcutiid)
+            ->join('users', 'cutis.user_id', '=', 'users.id')
+            ->join('data_karyawans', 'users.id', '=', 'data_karyawans.user_id')
+            ->when($startDate && $endDate, function ($q) {
+                $q->whereRaw("
                     STR_TO_DATE(tgl_from, '%d-%m-%Y') <= ?
                     AND STR_TO_DATE(tgl_to, '%d-%m-%Y') >= ?
-                ", [$endDate, $startDate]);
-            })
-            ->sum('durasi');
+                ", [$end, $start]);
+            })->where('users.id', $user->id)->orderBy('tgl_from', 'asc')->get();
+
+        // $usedQuota = Cuti::where('tipe_cuti_id', $hakcutiid)
+        //     // ->where('verifikator_1', 1)
+        //     ->where('')
+        //     ->where('verifikator_2', 1)
+        //     // ->where(function ($query) use ($startDate, $endDate) {
+        //     //     $query->whereBetween(DB::raw("STR_TO_DATE(tgl_from, '%d-%m-%Y')"), [$startDate, $endDate])
+        //     //         ->orWhereBetween(DB::raw("STR_TO_DATE(tgl_to, '%d-%m-%Y')"), [$startDate, $endDate]);
+        //     // })
+        //     ->when($startDate && $endDate, function ($query) use ($startDate, $endDate) {
+        //         $query->whereRaw("
+        //             STR_TO_DATE(tgl_from, '%d-%m-%Y') <= ?
+        //             AND STR_TO_DATE(tgl_to, '%d-%m-%Y') >= ?
+        //         ", [$endDate, $startDate]);
+        //     })
+        //     ->sum('durasi');
 
         $kuota = $hakCuti->tipe_cutis->kuota ?? 0;
-        $remaining = $kuota - $usedQuota;
+        $remaining = $kuota - count($usedQuota);
 
         return [
             $no++,
@@ -253,7 +265,7 @@ class HakCutiExport implements FromCollection, WithHeadings, WithMapping
             $hakCuti->tipe_cutis->nama ?? 'N/A',
             // $hakCuti->tipe_cutis->nama ?? 'N/A',
             $kuota ?? '0',
-            $usedQuota ?? '0',
+            count($usedQuota) ?? '0',
             $remaining ?? '0',
             // $hakCuti->tipe_cutis->cuti_administratif ? 'Ya' : 'Tidak',
             // $hakCuti->tipe_cutis->is_unlimited ? 'Ya' : 'Tidak',
