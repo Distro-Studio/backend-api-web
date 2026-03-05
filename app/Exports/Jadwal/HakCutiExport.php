@@ -2,14 +2,14 @@
 
 namespace App\Exports\Jadwal;
 
-use Carbon\Carbon;
 use App\Models\Cuti;
 use App\Models\HakCuti;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Concerns\Exportable;
-use Maatwebsite\Excel\Concerns\WithMapping;
-use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\FromCollection;
+use Maatwebsite\Excel\Concerns\WithHeadings;
+use Maatwebsite\Excel\Concerns\WithMapping;
 
 class HakCutiExport implements FromCollection, WithHeadings, WithMapping
 {
@@ -205,18 +205,18 @@ class HakCutiExport implements FromCollection, WithHeadings, WithMapping
         $startDate = null;
         $endDate = null;
 
-        if (!empty($this->filters['tgl_mulai']) && !empty($this->filters['tgl_selesai'])) {
+        if (! empty($this->filters['tgl_mulai']) && ! empty($this->filters['tgl_selesai'])) {
             try {
                 $startDate = Carbon::createFromFormat('d-m-Y', $this->filters['tgl_mulai'])->startOfDay();
-                $endDate   = Carbon::createFromFormat('d-m-Y', $this->filters['tgl_selesai'])->endOfDay();
+                $endDate = Carbon::createFromFormat('d-m-Y', $this->filters['tgl_selesai'])->endOfDay();
             } catch (\Exception $e) {
                 // if parsing fails just fall back to year boundaries
                 $startDate = Carbon::now()->startOfYear();
-                $endDate   = Carbon::now()->endOfYear();
+                $endDate = Carbon::now()->endOfYear();
             }
         } else {
             $startDate = Carbon::now()->startOfYear();
-            $endDate   = Carbon::now()->endOfYear();
+            $endDate = Carbon::now()->endOfYear();
         }
 
         // compute used quota by summing durations of approved cuti within range
@@ -225,7 +225,7 @@ class HakCutiExport implements FromCollection, WithHeadings, WithMapping
             ->where('verifikator_2', 1)
             ->where(function ($query) use ($startDate, $endDate) {
                 $query->whereBetween(DB::raw("STR_TO_DATE(tgl_from, '%d-%m-%Y')"), [$startDate, $endDate])
-                      ->orWhereBetween(DB::raw("STR_TO_DATE(tgl_to, '%d-%m-%Y')"), [$startDate, $endDate]);
+                    ->orWhereBetween(DB::raw("STR_TO_DATE(tgl_to, '%d-%m-%Y')"), [$startDate, $endDate]);
             })
             ->sum('durasi');
 
@@ -238,14 +238,15 @@ class HakCutiExport implements FromCollection, WithHeadings, WithMapping
             $hakCuti->data_karyawans->nik ?? 'N/A',
             $hakCuti->tipe_cutis->nama ?? 'N/A',
             // $hakCuti->tipe_cutis->nama ?? 'N/A',
-            $kuota ?? '0',
-            $usedQuota ?? '0',
-            $remaining ?? '0',
+            // $kuota ?? '0',
+            $hakCuti->kuota ?? '0',
+            $hakCuti->used_kuota ?? '0',
+            $hakCuti->kuota - $hakCuti->used_kuota ?? '0',
             // $hakCuti->tipe_cutis->cuti_administratif ? 'Ya' : 'Tidak',
             // $hakCuti->tipe_cutis->is_unlimited ? 'Ya' : 'Tidak',
             Carbon::parse($hakCuti->created_at)->format('d-m-Y H:i:s'),
-            Carbon::parse($hakCuti->updated_at)->format('d-m-Y H:i:s')
+            Carbon::parse($hakCuti->updated_at)->format('d-m-Y H:i:s'),
         ];
-        
+
     }
 }
