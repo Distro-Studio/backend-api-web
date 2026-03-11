@@ -2,7 +2,6 @@
 
 namespace App\Exports\Presensi;
 
-use App\Helpers\RandomHelper;
 use App\Models\NonShift;
 use App\Models\Presensi;
 use Carbon\Carbon;
@@ -222,9 +221,9 @@ class PresensiUserSheet implements FromCollection, WithHeadings, WithMapping, Wi
             });
         }
 
-        // JOIN untuk bisa sort by nik
-        $query->join('data_karyawans', 'presensis.data_karyawan_id', '=', 'data_karyawans.id')
-            ->orderBy('data_karyawans.nik', 'asc')
+        // Gunakan tanggal jadwal sebagai urutan utama (paling awal ke paling akhir).
+        $query->leftJoin('jadwals', 'presensis.jadwal_id', '=', 'jadwals.id')
+            ->orderBy('jadwals.tgl_mulai', 'asc')
             ->select('presensis.*');
 
         return $query->get();
@@ -236,15 +235,15 @@ class PresensiUserSheet implements FromCollection, WithHeadings, WithMapping, Wi
             'no',
             'nama',
             'nik',
+            'unit_kerja',
+            'hari',
+            'jadwal_mulai',
+            'jadwal_selesai',
             'kode_shift',
             'shift_masuk',
             'shift_keluar',
-            'jadwal_mulai',
-            'jadwal_selesai',
             // 'jam_masuk_nShift',
             // 'jam_selesai_nShift',
-            'unit_kerja',
-            'hari',
             'presensi_masuk',
             'presensi_keluar',
             'durasi',
@@ -281,23 +280,23 @@ class PresensiUserSheet implements FromCollection, WithHeadings, WithMapping, Wi
         }
 
         $createdAt = $presensi->created_at;
-        $createdAtFormat = Carbon::parse($createdAt)->format('Y-m-d');
+        $createdAtFormat = Carbon::parse($createdAt)->format('d-m-Y');
 
         return [
             $this->number,
             optional($presensi->users)->nama,
             optional($presensi->users->data_karyawans)->nik,
+            $unitKerja,
+            $hari,
+            optional($presensi->jadwals)->tgl_mulai ? Carbon::parse($presensi->jadwals->tgl_mulai)->format('d-m-Y') : $createdAtFormat,
+            optional($presensi->jadwals)->tgl_selesai ? Carbon::parse($presensi->jadwals->tgl_selesai)->format('d-m-Y') : $createdAtFormat,
             $shift ? $shift->nama : 'Non Shift',
             $shift && isset($shift->jam_from) ? $shift->jam_from : $jamMasukNonShift,
             $shift && isset($shift->jam_to) ? $shift->jam_to : $jamKeluarNonShift,
-            optional($presensi->jadwals)->tgl_mulai ? RandomHelper::convertToDateString($presensi->jadwals->tgl_mulai) : $createdAtFormat,
-            optional($presensi->jadwals)->tgl_selesai ? RandomHelper::convertToDateString($presensi->jadwals->tgl_selesai) : $createdAtFormat,
             // $jamMasukNonShift,
             // $jamKeluarNonShift,
-            $unitKerja,
-            $hari,
-            $presensi->jam_masuk ? RandomHelper::convertToDateTimeString($presensi->jam_masuk) : 'N/A',
-            $presensi->jam_keluar ? RandomHelper::convertToDateTimeString($presensi->jam_keluar) : 'N/A',
+            $presensi->jam_masuk ? Carbon::parse($presensi->jam_masuk)->format('d-m-Y') : 'N/A',
+            $presensi->jam_keluar ? Carbon::parse($presensi->jam_keluar)->format('d-m-Y') : 'N/A',
             $this->formatDuration($presensi->durasi),
             // $presensi->lat,
             // $presensi->long,
