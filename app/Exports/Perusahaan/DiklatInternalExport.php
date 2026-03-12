@@ -5,8 +5,6 @@ namespace App\Exports\Perusahaan;
 use App\Models\Diklat;
 use Maatwebsite\Excel\Concerns\Exportable;
 use Maatwebsite\Excel\Concerns\WithMultipleSheets;
-use App\Exports\Perusahaan\PesertaDiklatSheetExport;
-use App\Exports\Perusahaan\ListDiklatSheetExport;
 
 class DiklatInternalExport implements WithMultipleSheets
 {
@@ -27,6 +25,7 @@ class DiklatInternalExport implements WithMultipleSheets
     public function sheets(): array
     {
         $query = Diklat::with([
+            'kategori_diklats',
             'peserta_diklat.users.data_karyawans.unit_kerjas',
             'peserta_diklat.users.data_karyawans.jabatans',
             'peserta_diklat.users.data_karyawans.status_karyawans',
@@ -54,9 +53,9 @@ class DiklatInternalExport implements WithMultipleSheets
 
         $diklats = $query->get();
         $sheets = [];
-        // Sheet pertama: list diklat/event tanpa peserta
-        $sheets[] = new ListDiklatSheetExport($diklats);
-        // Sheet berikutnya: per diklat, berisi peserta
+
+        $rowsByUnitKerja = [];
+
         foreach ($diklats as $diklat) {
             $peserta = collect($diklat->peserta_diklat)->filter(function ($peserta) {
                 $user = $peserta->users;
@@ -92,10 +91,61 @@ class DiklatInternalExport implements WithMultipleSheets
                 }
                 return $pass;
             });
-            $sheets[] = new PesertaDiklatSheetExport($diklat, $peserta);
+
+            foreach ($peserta as $pesertaDiklat) {
+                $user = $pesertaDiklat->users;
+                $dataKaryawan = $user->data_karyawans ?? null;
+                $unitKerja = $dataKaryawan->unit_kerjas->nama_unit ?? 'Tanpa Unit Kerja';
+
+                $rowsByUnitKerja[$unitKerja][] = [
+                    'nama' => $user->nama ?? '-',
+                    'nip' => $dataKaryawan->nik ?? '-',
+                    'unit_kerja' => $unitKerja,
+                    'nama_diklat' => $diklat->nama ?? '-',
+                    'kategori_diklat' => $diklat->kategori_diklats->label ?? '-',
+                    'kuota' => $diklat->kuota ?? '-',
+                    'tanggal_mulai' => $diklat->tgl_mulai,
+                    'tanggal_selesai' => $diklat->tgl_selesai,
+                    'jam_mulai' => $diklat->jam_mulai,
+                    'jam_selesai' => $diklat->jam_selesai,
+                    'durasi' => $diklat->durasi,
+                    'lokasi' => $diklat->lokasi ?? '-',
+                ];
+            }
         }
+
+        ksort($rowsByUnitKerja);
+
+        $usedSheetTitles = [];
+        foreach ($rowsByUnitKerja as $unitKerja => $rows) {
+            $sheetTitle = $this->makeSheetTitle($unitKerja, $usedSheetTitles);
+            $sheets[] = new DiklatInternalUnitKerjaSheetExport(collect($rows), $sheetTitle);
+        }
+
+        if (empty($sheets)) {
+            $sheets[] = new DiklatInternalUnitKerjaSheetExport(collect(), 'Data Diklat');
+        }
+
         return $sheets;
     }
 
-    // Tidak perlu headings/map/formatDuration lagi
+    private function makeSheetTitle(string $unitKerja, array &$usedSheetTitles): string
+    {
+        $sanitizedTitle = preg_replace('/[\\\\\/*?:\[\]]/', ' ', $unitKerja);
+        $sanitizedTitle = trim(preg_replace('/\s+/', ' ', $sanitizedTitle));
+        $baseTitle = $sanitizedTitle !== '' ? $sanitizedTitle : 'Tanpa Unit Kerja';
+        $baseTitle = mb_substr($baseTitle, 0, 31);
+        $candidate = $baseTitle;
+        $suffix = 1;
+
+        while (in_array($candidate, $usedSheetTitles, true)) {
+            $suffixLabel = ' ' . $suffix;
+            $candidate = mb_substr($baseTitle, 0, 31 - mb_strlen($suffixLabel)) . $suffixLabel;
+            $suffix++;
+        }
+
+        $usedSheetTitles[] = $candidate;
+
+        return $candidate;
+    }
 }
