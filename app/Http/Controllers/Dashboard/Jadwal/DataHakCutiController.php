@@ -334,6 +334,7 @@ class DataHakCutiController extends Controller
                             'keterangan' => $hakCuti->tipe_cutis->keterangan,
                             'cuti_administratif' => $hakCuti->tipe_cutis->cuti_administratif,
                             'is_unlimited' => $hakCuti->tipe_cutis->is_unlimited,
+                            'is_alltime' => $hakCuti->tipe_cutis->is_alltime,
                             'created_at' => $hakCuti->tipe_cutis->created_at,
                             'updated_at' => $hakCuti->tipe_cutis->updated_at,
                         ];
