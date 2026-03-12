@@ -303,18 +303,27 @@ class DataHakCutiController extends Controller
                     })->map(function ($hakCuti) use ($startDate, $endDate) {
                         $userId = $hakCuti->data_karyawans->user_id ?? null;
 
-                        $usedKuota = Cuti::query()
-                            ->where('tipe_cuti_id', $hakCuti->tipe_cuti_id)
-                            ->where('user_id', $userId)
-                            // ->where('verifikator_1', 1)
-                            ->where('verifikator_2', 1)
-                            ->when($startDate && $endDate, function ($q) use ($startDate, $endDate) {
-                                $q->whereRaw("
-                                    STR_TO_DATE(tgl_from, '%d-%m-%Y') <= ?
-                                    AND STR_TO_DATE(tgl_to, '%d-%m-%Y') >= ?
-                                ", [$endDate, $startDate]);
-                            })
-                            ->get();
+                        if($hakCuti->tipe_cutis->is_alltime) {
+                            $usedKuota = Cuti::query()
+                                ->where('tipe_cuti_id', $hakCuti->tipe_cuti_id)
+                                ->where('user_id', $userId)
+                                // ->where('verifikator_1', 1)
+                                ->where('verifikator_2', 1)
+                                ->get();
+                        } else {
+                            $usedKuota = Cuti::query()
+                                ->where('tipe_cuti_id', $hakCuti->tipe_cuti_id)
+                                ->where('user_id', $userId)
+                                // ->where('verifikator_1', 1)
+                                ->where('verifikator_2', 1)
+                                ->when($startDate && $endDate, function ($q) use ($startDate, $endDate) {
+                                    $q->whereRaw("
+                                        STR_TO_DATE(tgl_from, '%d-%m-%Y') <= ?
+                                        AND STR_TO_DATE(tgl_to, '%d-%m-%Y') >= ?
+                                    ", [$endDate, $startDate]);
+                                })
+                                ->get();
+                        }
 
                         return [
                             'id' => $hakCuti->tipe_cutis->id,
