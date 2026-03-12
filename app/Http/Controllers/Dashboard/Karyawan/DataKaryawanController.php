@@ -981,7 +981,8 @@ class DataKaryawanController extends Controller
         ], Response::HTTP_NOT_FOUND);
       }
 
-      $baseUrl = env('STORAGE_SERVER_DOMAIN');
+      // $baseUrl = env('STORAGE_SERVER_DOMAIN');
+      $baseUrl = 'https://192.168.0.20/RskiSistem24/file-storage/public';
       $formattedData = $dataKaryawan->map(function ($karyawan) use ($isSuperAdmin, $baseUrl) {
         $dataKeluargas = $karyawan->data_keluargas;
         $ayah = $dataKeluargas->where('hubungan', 'Ayah')->first();
