@@ -203,7 +203,8 @@ class DataJadwalController extends Controller
             $nonShift = NonShift::first();
 
             $groupedSchedules = $jadwal->groupBy('user_id');
-            $baseUrl = env('STORAGE_SERVER_DOMAIN');
+            // $baseUrl = env('STORAGE_SERVER_DOMAIN');
+            $baseUrl = 'https://192.168.0.20/RskiSistem24/file-storage/public';
             $result = $users->map(function ($user) use ($groupedSchedules, $date_range, $nonShift, $hariLibur, $request, $baseUrl) {
                 $user_schedule_array = array_fill_keys($date_range, null);
 
