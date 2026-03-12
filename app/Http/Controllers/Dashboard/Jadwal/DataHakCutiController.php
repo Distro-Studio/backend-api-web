@@ -309,7 +309,7 @@ class DataHakCutiController extends Controller
                                 ->where('user_id', $userId)
                                 // ->where('verifikator_1', 1)
                                 ->where('verifikator_2', 1)
-                                ->get();
+                                ->sum('durasi');;
                         } else {
                             $usedKuota = Cuti::query()
                                 ->where('tipe_cuti_id', $hakCuti->tipe_cuti_id)
@@ -322,14 +322,14 @@ class DataHakCutiController extends Controller
                                         AND STR_TO_DATE(tgl_to, '%d-%m-%Y') >= ?
                                     ", [$endDate, $startDate]);
                                 })
-                                ->get();
+                                ->sum('durasi');;
                         }
 
                         return [
                             'id' => $hakCuti->tipe_cutis->id,
                             'nama' => $hakCuti->tipe_cutis->nama,
                             'kuota' => $hakCuti->kuota,
-                            'used_kuota' => count($usedKuota),
+                            'used_kuota' => $usedKuota,
                             'is_need_requirement' => $hakCuti->tipe_cutis->is_need_requirement,
                             'keterangan' => $hakCuti->tipe_cutis->keterangan,
                             'cuti_administratif' => $hakCuti->tipe_cutis->cuti_administratif,
