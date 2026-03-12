@@ -303,7 +303,7 @@ class DataHakCutiController extends Controller
                     })->map(function ($hakCuti) use ($startDate, $endDate) {
                         $userId = $hakCuti->data_karyawans->user_id ?? null;
 
-                        if($hakCuti->tipe_cutis->is_alltime) {
+                        if($hakCuti->tipe_cutis->is_alltime == 1) {
                             $usedKuota = Cuti::query()
                                 ->where('tipe_cuti_id', $hakCuti->tipe_cuti_id)
                                 ->where('user_id', $userId)
