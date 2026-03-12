@@ -1330,7 +1330,8 @@ class DataKaryawanController extends Controller
       }
 
       // Format the karyawan data
-      $baseUrl = env('STORAGE_SERVER_DOMAIN');
+      // $baseUrl = env('STORAGE_SERVER_DOMAIN');
+      $baseUrl = 'https://192.168.0.20/RskiSistem24/file-storage/public';
       $formattedData = [
         'id' => $karyawan->id,
         'user' => [
