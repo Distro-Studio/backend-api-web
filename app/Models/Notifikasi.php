@@ -19,6 +19,7 @@ class Notifikasi extends Model
         'user_id' => 'integer',
         'is_read' => 'integer',
         'is_verifikasi' => 'integer',
+        'deleted_superadmin' => 'integer',
     ];
 
     /**

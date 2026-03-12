@@ -53,6 +53,7 @@ class InboxController extends Controller
                     ->whereHas('users', function ($q) {
                         $q->where('status_aktif', 2);
                     })
+                    ->whereNot('deleted_superadmin', 1) // Hanya tampilkan notifikasi yang belum dihapus oleh superadmin
                     ->orderBy('is_read', 'asc')
                     ->orderBy('created_at', 'desc')
                     ->get();
@@ -143,7 +144,7 @@ class InboxController extends Controller
 
         // Check if the notifikasi is unread, then mark it as read
         if (!$notifikasi->is_read) {
-            $notifikasi->is_read = true;
+            $notifikasi->is_read = 1;
             $notifikasi->save();
         }
 
@@ -167,10 +168,20 @@ class InboxController extends Controller
     public function destroyRead()
     {
         $user = Auth::user();
-        $deletedCount = Notifikasi::where('user_id', $user->id)
-            ->where('is_read', 1)
-            ->delete();
 
+        if ($user->role_id == 1) {
+            // Super Admin: lihat semua notifikasi dari semua user aktif
+            $deletedCount = Notifikasi::where('deleted_superadmin', 0)
+                ->where('is_read', 1)
+                ->update(['deleted_superadmin' => 1]);
+        } else {
+            // User biasa: hanya notifikasi miliknya sendiri
+            $deletedCount = Notifikasi::where('user_id', $user->id)
+                ->where('is_read', 1)
+                ->delete();
+
+        }
+        
         return response()->json([
             'status' => Response::HTTP_OK,
             'message' => "Berhasil menghapus {$deletedCount} notifikasi yang sudah dibaca.",

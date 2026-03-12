@@ -136,6 +136,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('/get-unread-notifikasi', [InboxController::class, 'calculatedUnread']);
         Route::get('/notifikasi', [InboxController::class, 'index']);
         Route::get('/notifikasi/{id}', [InboxController::class, 'show']);
+        Route::delete('/notifikasi/delete-all-regular', [InboxController::class, 'destroyAllRegular']);
+        Route::delete('/notifikasi/delete-all-verifikasi', [InboxController::class, 'destroyAllVerifikasi']);
         Route::delete('/notifikasi/delete-read-notifikasi', [InboxController::class, 'destroyRead']);
         Route::get('/download-template-jadwal', [DataJadwalController::class, 'downloadJadwalTemplate']);
         Route::get('/download-template-karyawan', [DataKaryawanController::class, 'downloadKaryawanTemplate']);
