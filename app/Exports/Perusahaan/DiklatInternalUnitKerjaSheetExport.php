@@ -70,9 +70,13 @@ class DiklatInternalUnitKerjaSheetExport implements FromCollection, WithHeadings
         }
 
         foreach (['Y-m-d H:i:s', 'Y-m-d', 'd-m-Y H:i:s', 'd-m-Y'] as $format) {
-            $date = Carbon::createFromFormat($format, (string) $value);
-            if ($date !== false) {
-                return $date->format('d-m-Y');
+            try {
+                $date = Carbon::createFromFormat($format, (string) $value);
+                if ($date !== false) {
+                    return $date->format('d-m-Y');
+                }
+            } catch (\Throwable $th) {
+                continue;
             }
         }
 
@@ -90,13 +94,21 @@ class DiklatInternalUnitKerjaSheetExport implements FromCollection, WithHeadings
         }
 
         foreach (['H:i:s', 'H:i'] as $format) {
-            $time = Carbon::createFromFormat($format, (string) $value);
-            if ($time !== false) {
-                return $time->format('H:i');
+            try {
+                $time = Carbon::createFromFormat($format, (string) $value);
+                if ($time !== false) {
+                    return $time->format('H:i');
+                }
+            } catch (\Throwable $th) {
+                continue;
             }
         }
 
-        return (string) $value;
+        try {
+            return Carbon::parse($value)->format('H:i');
+        } catch (\Throwable $th) {
+            return (string) $value;
+        }
     }
 
     private function formatDuration($seconds): string
