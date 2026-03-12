@@ -43,7 +43,7 @@ class User extends Authenticatable
         'id' => 'integer',
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
-        // 'foto_profil' => 'integer',
+        'foto_profil' => 'integer',
         'role_id' => 'integer',
         'data_karyawan_id' => 'integer',
         'data_completion_step' => 'integer',
@@ -300,12 +300,12 @@ class User extends Authenticatable
         return $this->hasMany(Pengumuman::class, 'user_id', 'id');
     }
 
-    protected function fotoProfil(): Attribute
-    {
-        return Attribute::make(
-            get: fn ($value) => $value 
-                ? "https://192.168.0.20/RskiSistem24/file-storage/public/" . ltrim($value, '/') 
-                : null,
-        );
-    }
+    // protected function fotoProfil(): Attribute
+    // {
+    //     return Attribute::make(
+    //         get: fn ($value) => $value 
+    //             ? "https://192.168.0.20/RskiSistem24/file-storage/public/" . ltrim($value, '/') 
+    //             : null,
+    //     );
+    // }
 }
