@@ -1297,7 +1297,7 @@ class DiklatController extends Controller
         try {
             return Excel::download(new DiklatInternalExport($tgl_mulai, $tgl_selesai, $request->all()), 'perusahaan-diklat-internal.xls');
         } catch (\Throwable $e) {
-            return response()->json(new WithoutDataResource(Response::HTTP_INTERNAL_SERVER_ERROR, 'Terjadi kesalahan pada sistem. Silakan coba lagi nanti atau hubungi SIM RS.'), Response::HTTP_INTERNAL_SERVER_ERROR);
+            return response()->json(new WithoutDataResource(Response::HTTP_INTERNAL_SERVER_ERROR, 'Terjadi kesalahan pada sistem. Silakan coba lagi nanti atau hubungi SIM RS. '. $e->getMessage()), Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 
