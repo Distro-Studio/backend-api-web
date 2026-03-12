@@ -168,7 +168,7 @@ class InboxController extends Controller
     {
         $user = Auth::user();
         $deletedCount = Notifikasi::where('user_id', $user->id)
-            ->where('is_read', true)
+            ->where('is_read', 1)
             ->delete();
 
         return response()->json([
