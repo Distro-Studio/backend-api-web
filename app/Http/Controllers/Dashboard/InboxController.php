@@ -132,9 +132,9 @@ class InboxController extends Controller
 
         $notifikasi = Notifikasi::where('id', $id)
             ->where('user_id', $user->id)
-            ->whereHas('users', function ($q) {
-                $q->where('status_aktif', 2);
-            })
+            // ->whereHas('users', function ($q) {
+            //     $q->where('status_aktif', 2);
+            // })
             ->first();
 
         if (!$notifikasi) {
