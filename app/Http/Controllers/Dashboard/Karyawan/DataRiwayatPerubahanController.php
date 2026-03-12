@@ -273,7 +273,8 @@ class DataRiwayatPerubahanController extends Controller
             return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Data perubahan karyawan tidak ditemukan.'), Response::HTTP_NOT_FOUND);
         }
 
-        $baseUrl = env('STORAGE_SERVER_DOMAIN');
+        // $baseUrl = env('STORAGE_SERVER_DOMAIN');
+        $baseUrl = 'https://192.168.0.20/RskiSistem24/file-storage/public';
         $formattedData = $dataPerubahan->map(function ($data_perubahan) use ($baseUrl) {
             $relasiUser = $data_perubahan->data_karyawans->users ?? null;
             $relasiVerifikator = $data_perubahan->verifikator_1_users ?? null;
