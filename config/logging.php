@@ -130,7 +130,7 @@ return [
         // Tambahan Log
         'storage_server_log' => [
             'driver' => 'single',
-            'path' => storage_path('logs/storage_server/storage_server_log.log'),
+            'path' => storage_path('logs/storage_server/storage_server.log'),
             'level' => env('LOG_LEVEL', 'debug'),
             'replace_placeholders' => true,
         ],
@@ -152,6 +152,13 @@ return [
         'reset_hak_cuti_lainnya' => [
             'driver' => 'single',
             'path' => storage_path('logs/hak_cuti/reset_hak_cuti_lainnya.log'),
+            'level' => env('LOG_LEVEL', 'debug'),
+            'replace_placeholders' => true,
+        ],
+
+        'import_presensi' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/imports/import-presensi.log'),
             'level' => env('LOG_LEVEL', 'debug'),
             'replace_placeholders' => true,
         ],
