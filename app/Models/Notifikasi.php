@@ -20,6 +20,7 @@ class Notifikasi extends Model
         'is_read' => 'integer',
         'is_verifikasi' => 'integer',
         'deleted_superadmin' => 'integer',
+        'notification_key' => 'string',
     ];
 
     /**
