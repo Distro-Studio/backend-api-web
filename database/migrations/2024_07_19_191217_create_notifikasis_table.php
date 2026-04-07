@@ -16,6 +16,7 @@ return new class extends Migration
             $table->foreignId('kategori_notifikasi_id')->constrained('kategori_notifikasis');
             $table->foreignId('user_id')->constrained('users'); // penerima
             $table->text('message');
+            $table->string('notification_key')->nullable()->index();
             $table->boolean('is_read')->default(false); // true = read, false = unread
             $table->boolean('is_verifikasi')->default(false);
             $table->timestamps();

@@ -4,6 +4,7 @@ namespace App\Console;
 
 use App\Console\Commands\DetectChangeEnv;
 use App\Console\Commands\NotificationAnakBPJS;
+use App\Console\Commands\NotificationPKS;
 use App\Console\Commands\NotificationSIP;
 use App\Console\Commands\NotificationSTR;
 use App\Console\Commands\ResetHakCuti;
@@ -27,6 +28,7 @@ class Kernel extends ConsoleKernel
         ResetMasaDiklat::class,
         NotificationSIP::class,
         NotificationSTR::class,
+        NotificationPKS::class,
         NotificationAnakBPJS::class,
         UpdateAutoAlfaPresensi::class,
         ResetHakCuti::class
@@ -74,6 +76,11 @@ class Kernel extends ConsoleKernel
 
         // Notification STR
         $schedule->command('app:notification-warning-str')
+            ->timezone('Asia/Jakarta')
+            ->dailyAt('01:00');
+
+        // Notification PKS
+        $schedule->command('app:notification-warning-pks')
             ->timezone('Asia/Jakarta')
             ->dailyAt('01:00');
 
