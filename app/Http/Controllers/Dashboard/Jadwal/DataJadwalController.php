@@ -1333,44 +1333,79 @@ class DataJadwalController extends Controller
 
     public function exportJadwalKaryawanShift(Request $request)
     {
+        if (! Gate::allows('export jadwalKaryawan')) {
+            return response()->json(
+                new WithoutDataResource(
+                    Response::HTTP_FORBIDDEN,
+                    'Anda tidak memiliki hak akses untuk melakukan proses ini.'
+                ),
+                Response::HTTP_FORBIDDEN
+            );
+        }
+
+        set_time_limit(300);
+
+        $tgl_mulai = $request->input('tgl_mulai');
+        $tgl_selesai = $request->input('tgl_selesai');
+
+        if (empty($tgl_mulai) || empty($tgl_selesai)) {
+            return response()->json(
+                new WithoutDataResource(
+                    Response::HTTP_BAD_REQUEST,
+                    'Periode tanggal mulai dan tanggal selesai tidak boleh kosong.'
+                ),
+                Response::HTTP_BAD_REQUEST
+            );
+        }
+
         try {
-            if (!Gate::allows('export jadwalKaryawan')) {
-                return response()->json(new WithoutDataResource(Response::HTTP_FORBIDDEN, 'Anda tidak memiliki hak akses untuk melakukan proses ini.'), Response::HTTP_FORBIDDEN);
-            }
-
-            // Mendapatkan filter rentang tanggal
-            $tgl_mulai = $request->input('tgl_mulai');
-            $tgl_selesai = $request->input('tgl_selesai');
-            if (empty($tgl_mulai) || empty($tgl_selesai)) {
-                return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Periode tanggal mulai dan tanggal selesai tidak boleh kosong.'), Response::HTTP_BAD_REQUEST);
-            }
-
-            try {
-                $startDate = Carbon::createFromFormat('d-m-Y', $tgl_mulai)->startOfDay();
-                $endDate = Carbon::createFromFormat('d-m-Y', $tgl_selesai)->endOfDay();
-            } catch (\Exception $e) {
-                return response()->json(new WithoutDataResource(Response::HTTP_BAD_REQUEST, 'Tanggal yang dimasukkan tidak valid.'), Response::HTTP_BAD_REQUEST);
-            }
-
-            // Ambil data jadwal berdasarkan rentang tanggal
-            $dataJadwal = Jadwal::whereBetween('tgl_mulai', [$startDate, $endDate])
-                ->orWhereBetween('tgl_selesai', [$startDate, $endDate])
-                ->get();
-            if ($dataJadwal->isEmpty()) {
-                return response()->json(new WithoutDataResource(Response::HTTP_NOT_FOUND, 'Tidak ada data jadwal karyawan shift yang tersedia untuk diekspor.'), Response::HTTP_NOT_FOUND);
-            }
-
-            try {
-                return Excel::download(new JadwalShiftExport($startDate, $endDate), 'jadwal-shift-karyawan.xls');
-            } catch (\Throwable $e) {
-                return response()->json(new WithoutDataResource(Response::HTTP_INTERNAL_SERVER_ERROR, 'Terjadi kesalahan pada sistem. Silakan coba lagi nanti atau hubungi SIM RS.'), Response::HTTP_INTERNAL_SERVER_ERROR);
-            }
+            // Karena di tabel jadwals disimpan string format Y-m-d,
+            // lebih aman kita ubah ke Y-m-d, bukan startOfDay/endOfDay.
+            $startDate = Carbon::createFromFormat('d-m-Y', $tgl_mulai, 'Asia/Jakarta')->format('Y-m-d');
+            $endDate = Carbon::createFromFormat('d-m-Y', $tgl_selesai, 'Asia/Jakarta')->format('Y-m-d');
         } catch (\Exception $e) {
-            Log::error('| Jadwal | - Error saat export data jadwal karyawan shift: ' . $e->getMessage());
-            return response()->json([
-                'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
-                'message' => 'Terjadi kesalahan pada sistem. Silakan coba lagi nanti atau hubungi SIM RS.',
-            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+            return response()->json(
+                new WithoutDataResource(
+                    Response::HTTP_BAD_REQUEST,
+                    'Tanggal yang dimasukkan tidak valid.'
+                ),
+                Response::HTTP_BAD_REQUEST
+            );
+        }
+
+        try {
+            $filters = $request->all();
+
+            $jadwalCount = JadwalShiftExport::buildQuery($startDate, $endDate, $filters)->count();
+
+            if ($jadwalCount === 0) {
+                return response()->json(
+                    new WithoutDataResource(
+                        Response::HTTP_NOT_FOUND,
+                        'Tidak ada data jadwal karyawan shift yang tersedia untuk diekspor.'
+                    ),
+                    Response::HTTP_NOT_FOUND
+                );
+            }
+
+            return Excel::download(
+                new JadwalShiftExport($startDate, $endDate, $filters),
+                'jadwal-shift-karyawan.xls'
+            );
+        } catch (\Throwable $e) {
+            Log::error('| Jadwal | - Error saat export data jadwal karyawan shift: ' . $e->getMessage(), [
+                'tgl_mulai' => $tgl_mulai,
+                'tgl_selesai' => $tgl_selesai,
+                'filters' => $request->all(),
+            ]);
+
+            return response()->json(
+                new WithoutDataResource(
+                    Response::HTTP_INTERNAL_SERVER_ERROR,
+                    'Terjadi kesalahan pada sistem. Silakan coba lagi nanti atau hubungi SIM RS.'
+                ),
+                Response::HTTP_INTERNAL_SERVER_ERROR
+            );
         }
     }
 
