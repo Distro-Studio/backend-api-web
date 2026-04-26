@@ -1324,7 +1324,7 @@ class DataCutiController extends Controller
                         if (!$isUnlimited) {
                             // Kurangi kuota hanya jika bukan unlimited
                             $durasi = $cuti->durasi;
-                            $hakCuti->kuota = max(0, $hakCuti->kuota - $durasi);
+                            // $hakCuti->kuota = max(0, $hakCuti->kuota - $durasi);
                             $hakCuti->used_kuota = $hakCuti->used_kuota + $durasi;
                             $hakCuti->save();
                             $cuti->sisa_kuota = max(0, $hakCuti->kuota);
