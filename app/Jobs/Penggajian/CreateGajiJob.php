@@ -29,7 +29,258 @@ class CreateGajiJob implements ShouldQueue
         $this->riwayat_penggajian_id = $riwayat_penggajian_id;
     }
 
-    // Ini v2 (detail gajis)
+    // public function handle(): void
+    // {
+    //     $currentDate = Carbon::now('Asia/Jakarta');
+    //     $currentMonth = $currentDate->month;
+    //     $currentYear = $currentDate->year;
+
+    //     // Ambil nilai status dari tabel status_gajis
+    //     $statusBelumDipublikasi = DB::table('status_gajis')->where('label', 'Belum Dipublikasi')->value('id');
+    //     $statusSudahDipublikasi = DB::table('status_gajis')->where('label', 'Sudah Dipublikasi')->value('id');
+    //     $kategori_penghasilan_dasar = DB::table('kategori_gajis')->where('label', 'Penghasilan Dasar')->value('id');
+    //     $kategori_penambah = DB::table('kategori_gajis')->where('label', 'Penambah')->value('id');
+    //     $kategori_pengurang = DB::table('kategori_gajis')->where('label', 'Pengurang')->value('id');
+
+    //     // Cek apakah ada THR untuk periode saat ini
+    //     $thrExists = DB::table('run_thrs')
+    //         ->whereMonth('tgl_run_thr', $currentMonth)
+    //         ->whereYear('tgl_run_thr', $currentYear)
+    //         ->exists();
+    //     Log::info("THR Exists: " . $thrExists);
+
+    //     // Ambil semua data_karyawan_id dari tabel run_thrs untuk periode saat ini
+    //     $thrKaryawanIds = [];
+    //     if ($thrExists) {
+    //         $thrKaryawanIds = DB::table('run_thrs')
+    //             ->whereMonth('tgl_run_thr', $currentMonth)
+    //             ->whereYear('tgl_run_thr', $currentYear)
+    //             ->pluck('data_karyawan_id')
+    //             ->toArray();
+    //     }
+    //     Log::info("THR Karyawan IDs: " . implode(', ', $thrKaryawanIds));
+
+    //     $query = DB::table('data_karyawans')
+    //         ->join('kelompok_gajis', 'data_karyawans.kelompok_gaji_id', '=', 'kelompok_gajis.id')
+    //         ->leftJoin('penggajians', 'data_karyawans.id', '=', 'penggajians.data_karyawan_id')
+    //         ->join('status_karyawans', 'data_karyawans.status_karyawan_id', '=', 'status_karyawans.id')
+    //         ->leftJoin('kompetensis', DB::raw('COALESCE(data_karyawans.kompetensi_id, 0)'), '=', 'kompetensis.id')
+    //         ->select(
+    //             'data_karyawans.id as data_karyawan_id',
+    //             'data_karyawans.status_karyawan_id',
+    //             DB::raw('COALESCE(kelompok_gajis.besaran_gaji, 0) as gaji_pokok'),
+
+    //             // TUNJANGAN JABATAN DIAMBIL DARI TABEL JABATAN
+    //             DB::raw('COALESCE(data_karyawans.tunjangan_jabatan, 0) as tunjangan_jabatan'),
+    //             DB::raw('COALESCE(data_karyawans.tunjangan_fungsional, 0) as tunjangan_fungsional'),
+    //             DB::raw('COALESCE(data_karyawans.tunjangan_khusus, 0) as tunjangan_khusus'),
+    //             DB::raw('COALESCE(data_karyawans.tunjangan_lainnya, 0) as tunjangan_lainnya'),
+    //             DB::raw('COALESCE(data_karyawans.uang_makan, 0) as uang_makan'),
+    //             DB::raw('COALESCE(data_karyawans.uang_lembur, 0) as uang_lembur'),
+    //             'data_karyawans.ptkp_id as ptkp_id',
+    //             'status_karyawans.label as status_karyawan',
+    //             'data_karyawans.tgl_masuk as tgl_masuk',
+    //             'data_karyawans.user_id as user_id'
+    //         );
+
+    //     if (!empty($this->data_karyawan_ids)) {
+    //         $query->whereIn('data_karyawans.id', $this->data_karyawan_ids);
+    //     }
+
+    //     $dataKaryawans = $query->get();
+
+    //     // Ambil jadwal penggajian dari tabel jadwal_penggajians
+    //     $jadwalPenggajian = DB::table('jadwal_penggajians')
+    //         ->select('tgl_mulai')
+    //         ->orderBy('tgl_mulai', 'desc')
+    //         ->first();
+
+    //     $tgl_mulai = Carbon::create($currentYear, $currentMonth, $jadwalPenggajian->tgl_mulai);
+
+    //     foreach ($dataKaryawans as $dataKaryawan) {
+    //         $data_karyawan_id = $dataKaryawan->data_karyawan_id;
+
+    //         // Hitung reward (BOR, Bonus Presensi dan Lembur)
+    //         $rewardBOR = $this->calculatedRewardBOR($data_karyawan_id, $this->sertakan_bor);
+    //         $rewardBonusPresensi = $this->calculatedRewardPresensi($data_karyawan_id);
+    //         $rewardLembur = $this->calculatedLembur($dataKaryawan);
+    //         $totalReward = $rewardBOR + $rewardBonusPresensi + $rewardLembur;
+
+    //         // uang makan sebulan
+    //         // $uangMakanSebulan = $this->calculatedUangMakanSebulan($dataKaryawan);
+
+    //         // Potongan tagihan
+    //         $potonganTagihan = $this->calculatedTagihanPotongan($dataKaryawan);
+    //         $totalPotonganPerBulan = $potonganTagihan['total_potongan_per_bulan'];
+    //         $potonganDetails = $potonganTagihan['potongan_detail_gaji'];
+
+    //         // Tentukan apakah THR perlu dihitung
+    //         $penghasilanTHR = in_array($data_karyawan_id, $thrKaryawanIds) ? $this->calculatedTHR($dataKaryawan) : 0;
+    //         Log::info("THR: " . $penghasilanTHR);
+
+    //         // Hitung penghasilan THR, bruto, total tunjangan, dan total premi
+    //         $totalTunjangan = $this->calculatedTotalTunjangan($dataKaryawan);
+    //         $penghasilanBruto = $this->calculatedPenghasilanBruto($dataKaryawan, $totalTunjangan);
+    //         $penghasilanBrutoTotal = $this->calculatedPenghasilanBrutoTotal($dataKaryawan, $totalReward, $penghasilanTHR);
+    //         // $penghasilanBrutoTotal = $this->calculatedPenghasilanBrutoTotal($dataKaryawan, $totalReward, $penghasilanTHR, $uangMakanSebulan);
+    //         $totalPremi = $this->calculatedPremi($data_karyawan_id, $penghasilanBruto, $penghasilanBrutoTotal, $dataKaryawan->gaji_pokok);
+
+    //         // Tentukan status penggajian
+    //         $status_penggajian = $currentDate->greaterThanOrEqualTo($tgl_mulai) ? $statusSudahDipublikasi : $statusBelumDipublikasi;
+
+    //         // Hitung PPh 21 bulanan dan PPh 21 Desember
+    //         $currentMonth = Carbon::now('Asia/Jakarta')->month;
+    //         $penggajianData = [
+    //             'riwayat_penggajian_id' => $this->riwayat_penggajian_id,
+    //             'data_karyawan_id' => $data_karyawan_id,
+    //             'tgl_penggajian' => Carbon::now('Asia/Jakarta'),
+    //             'gaji_pokok' => $dataKaryawan->gaji_pokok,
+    //             'total_tunjangan' => $totalTunjangan,
+    //             'reward' => $totalReward,
+    //             'gaji_bruto' => $penghasilanBrutoTotal,
+    //             'total_premi' => $totalPremi,
+    //             'status_gaji_id' => $status_penggajian
+    //         ];
+
+    //         if ($currentMonth >= 1 && $currentMonth <= 11) {
+    //             // Januari - November
+    //             $pph21Bulanan = $this->calculatedPPH21ForMonths($penghasilanBrutoTotal, $dataKaryawan->ptkp_id);
+    //             $takeHomePay = $penghasilanBrutoTotal - $totalPremi - $pph21Bulanan - $totalPotonganPerBulan;
+    //             $penggajianData['pph_21'] = $pph21Bulanan;
+    //             $penggajianData['take_home_pay'] = $takeHomePay;
+
+    //             $penggajian = Penggajian::updateOrCreate(
+    //                 [
+    //                     'data_karyawan_id' => $data_karyawan_id,
+    //                     'tgl_penggajian' => Carbon::now('Asia/Jakarta'),
+    //                 ],
+    //                 $penggajianData
+    //             );
+
+    //             Log::info("| TAKE HOME PAY | Karyawan ID {$data_karyawan_id} bulan [{$currentMonth}] adalah {$takeHomePay}.");
+    //         } elseif ($currentMonth == 12) {
+    //             // Desember
+    //             $pph21Desember = $this->calculatedPPH21ForDecember($dataKaryawan, $potonganTagihan['total_potongan_per_bulan'], $penghasilanBrutoTotal, $totalPremi);
+    //             $takeHomePayDesember = $penghasilanBrutoTotal - $totalPremi - $pph21Desember;
+    //             $penggajianData['pph_21'] = $pph21Desember;
+    //             $penggajianData['take_home_pay'] = $takeHomePayDesember;
+
+    //             $penggajian = Penggajian::updateOrCreate(
+    //                 [
+    //                     'data_karyawan_id' => $data_karyawan_id,
+    //                     'tgl_penggajian' => Carbon::now('Asia/Jakarta'),
+    //                 ],
+    //                 $penggajianData
+    //             );
+
+    //             Log::info("| TAKE HOME PAY DESEMBER | Karyawan ID {$data_karyawan_id} bulan Desember adalah {$takeHomePayDesember}.");
+    //         } else {
+    //             Log::error("Perhitungan tidak valid untuk karyawan ID {$data_karyawan_id}.");
+    //         }
+
+    //         $details = [
+    //             [
+    //                 'penggajian_id' => $penggajian->id,
+    //                 'kategori_gaji_id' => $kategori_penghasilan_dasar,
+    //                 'nama_detail' => 'Gaji Pokok',
+    //                 'besaran' => $dataKaryawan->gaji_pokok == 0 ? null : $dataKaryawan->gaji_pokok
+    //             ],
+    //             [
+    //                 'penggajian_id' => $penggajian->id,
+    //                 'kategori_gaji_id' => $kategori_penambah,
+    //                 'nama_detail' => 'Tunjangan Jabatan',
+    //                 'besaran' => $dataKaryawan->tunjangan_jabatan == 0 ? null : $dataKaryawan->tunjangan_jabatan
+    //             ],
+    //             [
+    //                 'penggajian_id' => $penggajian->id,
+    //                 'kategori_gaji_id' => $kategori_penambah,
+    //                 'nama_detail' => 'Tunjangan Fungsional',
+    //                 'besaran' => $dataKaryawan->tunjangan_fungsional == 0 ? null : $dataKaryawan->tunjangan_fungsional
+    //             ],
+    //             [
+    //                 'penggajian_id' => $penggajian->id,
+    //                 'kategori_gaji_id' => $kategori_penambah,
+    //                 'nama_detail' => 'Tunjangan Khusus',
+    //                 'besaran' => $dataKaryawan->tunjangan_khusus == 0 ? null : $dataKaryawan->tunjangan_khusus
+    //             ],
+    //             [
+    //                 'penggajian_id' => $penggajian->id,
+    //                 'kategori_gaji_id' => $kategori_penambah,
+    //                 'nama_detail' => 'Tunjangan Lainnya',
+    //                 'besaran' => $dataKaryawan->tunjangan_lainnya == 0 ? null : $dataKaryawan->tunjangan_lainnya
+    //             ],
+    //             [
+    //                 'penggajian_id' => $penggajian->id,
+    //                 'kategori_gaji_id' => $kategori_penambah,
+    //                 'nama_detail' => 'Uang Lembur',
+    //                 'besaran' => $rewardLembur == 0 ? null : $rewardLembur
+    //             ],
+    //             [
+    //                 'penggajian_id' => $penggajian->id,
+    //                 'kategori_gaji_id' => $kategori_penambah,
+    //                 'nama_detail' => 'Uang Makan',
+    //                 'besaran' => $dataKaryawan->uang_makan == 0 ? null : $dataKaryawan->uang_makan
+    //             ],
+    //             [
+    //                 'penggajian_id' => $penggajian->id,
+    //                 'kategori_gaji_id' => $kategori_penambah,
+    //                 'nama_detail' => 'Reward BOR',
+    //                 'besaran' => $rewardBOR == 0 ? null : $rewardBOR
+    //             ],
+    //             [
+    //                 'penggajian_id' => $penggajian->id,
+    //                 'kategori_gaji_id' => $kategori_penambah,
+    //                 'nama_detail' => 'Reward Absensi',
+    //                 'besaran' => $rewardBonusPresensi == 0 ? null : $rewardBonusPresensi
+    //             ],
+    //             [
+    //                 'penggajian_id' => $penggajian->id,
+    //                 'kategori_gaji_id' => $kategori_penambah,
+    //                 'nama_detail' => 'THR',
+    //                 'besaran' => $penghasilanTHR == 0 ? null : $penghasilanTHR
+    //             ],
+    //             [
+    //                 'penggajian_id' => $penggajian->id,
+    //                 'kategori_gaji_id' => $kategori_pengurang,
+    //                 'nama_detail' => 'PPh21',
+    //                 'besaran' => $currentMonth == 12 ? ($pph21Desember == 0 ? null : $pph21Desember) : ($pph21Bulanan == 0 ? null : $pph21Bulanan)
+    //             ]
+    //         ];
+
+    //         // detail premi
+    //         $premis = DB::table('pengurang_gajis')
+    //             ->join('premis', 'pengurang_gajis.premi_id', '=', 'premis.id')
+    //             ->where('pengurang_gajis.data_karyawan_id', $data_karyawan_id)
+    //             ->whereNull('pengurang_gajis.deleted_at')
+    //             ->select('premis.*')
+    //             ->get();
+
+    //         foreach ($premis as $premi) {
+    //             $premiAmount = $this->calculatedPremiDetail($premi, $penghasilanBruto, $penghasilanBrutoTotal, $dataKaryawan->gaji_pokok, $data_karyawan_id);
+    //             $details[] = [
+    //                 'penggajian_id' => $penggajian->id,
+    //                 'kategori_gaji_id' => $kategori_pengurang,
+    //                 'nama_detail' => $premi->nama_premi,
+    //                 'besaran' => $premiAmount == 0 ? null : $premiAmount
+    //             ];
+    //         }
+
+    //         foreach ($potonganDetails as $detail) {
+    //             $details[] = [
+    //                 'penggajian_id' => $penggajian->id,
+    //                 'kategori_gaji_id' => $kategori_pengurang,
+    //                 'nama_detail' => $detail['nama_detail'],
+    //                 'besaran' => $detail['besaran'],
+    //             ];
+    //         }
+
+    //         foreach ($details as $detail) {
+    //             DetailGaji::create($detail);
+    //         }
+    //     }
+    // }
+
+    // Ini v3 (detail gajis)
     public function handle(): void
     {
         $currentDate = Carbon::now('Asia/Jakarta');
@@ -78,7 +329,8 @@ class CreateGajiJob implements ShouldQueue
                 DB::raw('COALESCE(data_karyawans.tunjangan_lainnya, 0) as tunjangan_lainnya'),
                 DB::raw('COALESCE(data_karyawans.uang_makan, 0) as uang_makan'),
                 DB::raw('COALESCE(data_karyawans.uang_lembur, 0) as uang_lembur'),
-                'data_karyawans.ptkp_id as ptkp_id',
+                DB::raw('COALESCE(data_karyawans.ptkp_id, 0) as ptkp_id'),
+
                 'status_karyawans.label as status_karyawan',
                 'data_karyawans.tgl_masuk as tgl_masuk',
                 'data_karyawans.user_id as user_id'
@@ -143,11 +395,25 @@ class CreateGajiJob implements ShouldQueue
                 'status_gaji_id' => $status_penggajian
             ];
 
+            // KEBIJAKAN PTKP BOLEH NULL
+            $ptkpId = (int) ($dataKaryawan->ptkp_id ?? 0);
+            $dataKaryawan->ptkp_id = $ptkpId;
+
+            $pph21Bulanan = 0;
+            $pph21Desember = 0;
+            $pph21 = 0;
+
             if ($currentMonth >= 1 && $currentMonth <= 11) {
                 // Januari - November
-                $pph21Bulanan = $this->calculatedPPH21ForMonths($penghasilanBrutoTotal, $dataKaryawan->ptkp_id);
-                Log::info("| PPH 21 | Karyawan ID {$data_karyawan_id} bulan [{$currentMonth}] adalah {$pph21Bulanan}.");
+                if ($ptkpId > 0) {
+                    $pph21Bulanan = $this->calculatedPPH21ForMonths($penghasilanBrutoTotal, $ptkpId);
+                } else {
+                    Log::warning("| PPH21 SKIPPED | Karyawan ID {$data_karyawan_id} tidak memiliki PTKP. PPh21 diset 0.");
+                }
+
+                $pph21 = $pph21Bulanan;
                 $takeHomePay = $penghasilanBrutoTotal - $totalPremi - $pph21Bulanan - $totalPotonganPerBulan;
+
                 $penggajianData['pph_21'] = $pph21Bulanan;
                 $penggajianData['take_home_pay'] = $takeHomePay;
 
@@ -162,8 +428,20 @@ class CreateGajiJob implements ShouldQueue
                 Log::info("| TAKE HOME PAY | Karyawan ID {$data_karyawan_id} bulan [{$currentMonth}] adalah {$takeHomePay}.");
             } elseif ($currentMonth == 12) {
                 // Desember
-                $pph21Desember = $this->calculatedPPH21ForDecember($dataKaryawan, $potonganTagihan['total_potongan_per_bulan'], $penghasilanBrutoTotal, $totalPremi);
+                if ($ptkpId > 0) {
+                    $pph21Desember = $this->calculatedPPH21ForDecember(
+                        $dataKaryawan,
+                        $potonganTagihan['total_potongan_per_bulan'],
+                        $penghasilanBrutoTotal,
+                        $totalPremi
+                    );
+                } else {
+                    Log::warning("| PPH21 DESEMBER SKIPPED | Karyawan ID {$data_karyawan_id} tidak memiliki PTKP. PPh21 Desember diset 0.");
+                }
+
+                $pph21 = $pph21Desember;
                 $takeHomePayDesember = $penghasilanBrutoTotal - $totalPremi - $pph21Desember;
+
                 $penggajianData['pph_21'] = $pph21Desember;
                 $penggajianData['take_home_pay'] = $takeHomePayDesember;
 
@@ -178,6 +456,7 @@ class CreateGajiJob implements ShouldQueue
                 Log::info("| TAKE HOME PAY DESEMBER | Karyawan ID {$data_karyawan_id} bulan Desember adalah {$takeHomePayDesember}.");
             } else {
                 Log::error("Perhitungan tidak valid untuk karyawan ID {$data_karyawan_id}.");
+                continue;
             }
 
             $details = [
@@ -245,7 +524,7 @@ class CreateGajiJob implements ShouldQueue
                     'penggajian_id' => $penggajian->id,
                     'kategori_gaji_id' => $kategori_pengurang,
                     'nama_detail' => 'PPh21',
-                    'besaran' => $currentMonth == 12 ? ($pph21Desember == 0 ? null : $pph21Desember) : ($pph21Bulanan == 0 ? null : $pph21Bulanan)
+                    'besaran' => $pph21 == 0 ? null : $pph21
                 ]
             ];
 
@@ -609,28 +888,133 @@ class CreateGajiJob implements ShouldQueue
         return $premiAmount;
     }
 
+    // private function calculatedPPH21ForMonths($penghasilanBrutoTotal, $ptkp_id)
+    // {
+    //     // Langkah 1: Ambil data PTKP dari data_karyawans
+    //     $ptkp = DB::table('ptkps')->where('id', $ptkp_id)->first();
+
+    //     // Langkah 2: Cocokkan kategori_ter_id pada tabel ptkps dengan id kategori ter pada tabel kategori_ters
+    //     $kategoriTer = DB::table('kategori_ters')->where('id', $ptkp->kategori_ter_id)->first();
+
+    //     // Langkah 3: Ambil nilai percentage pada tabel ters dengan syarat kategori_ter_id dan gaji bruto antara from_ter dan to_ter
+    //     $ters = DB::table('ters')
+    //         ->select('percentage')
+    //         ->where('kategori_ter_id', $kategoriTer->id)
+    //         ->where('from_ter', '<=', $penghasilanBrutoTotal)
+    //         ->where('to_ter', '>=', $penghasilanBrutoTotal)
+    //         ->first();
+
+    //     $pph21Bulanan = ($ters->percentage / 100) * $penghasilanBrutoTotal;
+    //     return ceil($pph21Bulanan);
+    // }
+
     private function calculatedPPH21ForMonths($penghasilanBrutoTotal, $ptkp_id)
     {
-        // Langkah 1: Ambil data PTKP dari data_karyawans
-        $ptkp = DB::table('ptkps')->where('id', $ptkp_id)->first();
+        $ptkp_id = (int) ($ptkp_id ?? 0);
 
-        // Langkah 2: Cocokkan kategori_ter_id pada tabel ptkps dengan id kategori ter pada tabel kategori_ters
-        $kategoriTer = DB::table('kategori_ters')->where('id', $ptkp->kategori_ter_id)->first();
+        if ($ptkp_id <= 0) {
+            return 0;
+        }
 
-        // Langkah 3: Ambil nilai percentage pada tabel ters dengan syarat kategori_ter_id dan gaji bruto antara from_ter dan to_ter
+        $ptkp = DB::table('ptkps')
+            ->where('id', $ptkp_id)
+            ->whereNull('deleted_at')
+            ->first();
+
+        if (!$ptkp) {
+            Log::warning("| PPH21 MONTHLY SKIPPED | PTKP ID {$ptkp_id} tidak ditemukan atau sudah dihapus.");
+            return 0;
+        }
+
+        $kategoriTer = DB::table('kategori_ters')
+            ->where('id', $ptkp->kategori_ter_id)
+            ->whereNull('deleted_at')
+            ->first();
+
+        if (!$kategoriTer) {
+            Log::warning("| PPH21 MONTHLY SKIPPED | Kategori TER ID {$ptkp->kategori_ter_id} tidak ditemukan.");
+            return 0;
+        }
+
         $ters = DB::table('ters')
             ->select('percentage')
             ->where('kategori_ter_id', $kategoriTer->id)
             ->where('from_ter', '<=', $penghasilanBrutoTotal)
-            ->where('to_ter', '>=', $penghasilanBrutoTotal)
+            ->where(function ($query) use ($penghasilanBrutoTotal) {
+                $query->where('to_ter', '>=', $penghasilanBrutoTotal)
+                    ->orWhereNull('to_ter');
+            })
+            ->whereNull('deleted_at')
             ->first();
 
+        if (!$ters) {
+            Log::warning("| PPH21 MONTHLY SKIPPED | Tarif TER tidak ditemukan. Kategori TER ID {$kategoriTer->id}, bruto {$penghasilanBrutoTotal}.");
+            return 0;
+        }
+
         $pph21Bulanan = ($ters->percentage / 100) * $penghasilanBrutoTotal;
+
         return ceil($pph21Bulanan);
     }
 
+    // private function calculatedPPH21ForDecember($dataKaryawan, $potonganTagihan, $penghasilanBrutoTotal, $totalPremis)
+    // {
+    //     // 1. Hitung bruto dan premi Desember
+    //     $penghasilanBrutoTotalDesember = $penghasilanBrutoTotal;
+    //     $totalPremiDesember = $totalPremis;
+    //     // $penghasilanBrutoTotalDesember = $this->calculatedPenghasilanBrutoTotal($dataKaryawan, $reward, $penghasilanTHR, $uangMakanSebulan);
+    //     // $totalPremiDesember = $this->calculatedPremi($dataKaryawan->data_karyawan_id, $penghasilanBruto, $penghasilanBrutoTotalDesember, $dataKaryawan->gaji_pokok);
+    //     // $totalPotonganTagihanDesember = $this->calculatedTagihanPotongan($dataKaryawan);
+    //     // $totalPotonganTagihanDesember = $this->calculatedTagihanPotongan($dataKaryawan);
+    //     $totalPotonganTagihan = $potonganTagihan;
+    //     $currentYear = Carbon::now('Asia/Jakarta')->year;
+
+    //     // 2. Jumlahkan bruto dan premi dari Januari hingga Desember
+    //     $totalBruto = DB::table('penggajians')
+    //         ->where('data_karyawan_id', $dataKaryawan->data_karyawan_id)
+    //         ->whereYear('tgl_penggajian', $currentYear)
+    //         ->sum('gaji_bruto') + $penghasilanBrutoTotalDesember;
+
+    //     $totalPremi = DB::table('penggajians')
+    //         ->where('data_karyawan_id', $dataKaryawan->data_karyawan_id)
+    //         ->whereYear('tgl_penggajian', $currentYear)
+    //         ->sum('total_premi') + $totalPremiDesember + $totalPotonganTagihan;
+
+    //     // 3. Kurangi total bruto dengan total premi
+    //     $penghasilanNeto = $totalBruto - $totalPremi;
+
+    //     // 4. Kurangi dengan biaya jabatan (5% dari total bruto)
+    //     $biayaJabatan = 0.05 * $totalBruto;
+    //     $biayaJabatan = min($biayaJabatan, 500000); // Batas maksimum Rp500.000
+    //     $penghasilanNetoSetelahBiayaJabatan = $penghasilanNeto - $biayaJabatan;
+
+    //     // 5. Kurangi dengan nilai PTKP
+    //     $nilaiPTKP = DB::table('ptkps')
+    //         ->where('id', $dataKaryawan->ptkp_id)
+    //         ->value('nilai');
+    //     $penghasilanKenaPajak = $penghasilanNetoSetelahBiayaJabatan - $nilaiPTKP;
+
+    //     // 6. Kalikan dengan tarif pajak 2021
+    //     $pph21Tahunan = $this->calculatedPenghasilanKenaPajak($penghasilanKenaPajak);
+
+    //     // 7. Kurangi dengan jumlah PPh bulanan dari Januari hingga November
+    //     $pph21BulananTotal = DB::table('penggajians')
+    //         ->where('data_karyawan_id', $dataKaryawan->data_karyawan_id)
+    //         ->whereBetween('tgl_penggajian', [Carbon::create($currentYear, 1, 1), Carbon::create($currentYear, 11, 30)])
+    //         ->sum('pph_21');
+    //     $pph21Desember = $pph21Tahunan - $pph21BulananTotal;
+    //     return ceil($pph21Desember);
+    // }
+
     private function calculatedPPH21ForDecember($dataKaryawan, $potonganTagihan, $penghasilanBrutoTotal, $totalPremis)
     {
+        $ptkpId = (int) ($dataKaryawan->ptkp_id ?? 0);
+
+        if ($ptkpId <= 0) {
+            Log::warning("| PPH21 DECEMBER SKIPPED | Karyawan ID {$dataKaryawan->data_karyawan_id} tidak memiliki PTKP. PPh21 Desember diset 0.");
+            return 0;
+        }
+
         // 1. Hitung bruto dan premi Desember
         $penghasilanBrutoTotalDesember = $penghasilanBrutoTotal;
         $totalPremiDesember = $totalPremis;
@@ -662,8 +1046,14 @@ class CreateGajiJob implements ShouldQueue
 
         // 5. Kurangi dengan nilai PTKP
         $nilaiPTKP = DB::table('ptkps')
-            ->where('id', $dataKaryawan->ptkp_id)
+            ->where('id', $ptkpId)
+            ->whereNull('deleted_at')
             ->value('nilai');
+
+        if (is_null($nilaiPTKP)) {
+            Log::warning("| PPH21 DECEMBER SKIPPED | Nilai PTKP tidak ditemukan untuk PTKP ID {$ptkpId}. PPh21 Desember diset 0.");
+            return 0;
+        }
         $penghasilanKenaPajak = $penghasilanNetoSetelahBiayaJabatan - $nilaiPTKP;
 
         // 6. Kalikan dengan tarif pajak 2021
