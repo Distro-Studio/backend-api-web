@@ -262,12 +262,12 @@ class PenggajianController extends Controller
         $awalBulan = Carbon::now('Asia/Jakarta')->startOfMonth();
         $currentDateTime = Carbon::now('Asia/Jakarta');
 
-        if ($currentDateTime->lessThan($awalBulan) || $currentDateTime->greaterThan($tgl_akhir)) {
-            return response()->json(new WithoutDataResource(
-                Response::HTTP_BAD_REQUEST,
-                "Penggajian hanya dapat dilakukan mulai tanggal 1 hingga tanggal '{$tgl_mulai->format('d-m-Y')}' sampai jam 23:59."
-            ), Response::HTTP_BAD_REQUEST);
-        }
+        // if ($currentDateTime->lessThan($awalBulan) || $currentDateTime->greaterThan($tgl_akhir)) {
+        //     return response()->json(new WithoutDataResource(
+        //         Response::HTTP_BAD_REQUEST,
+        //         "Penggajian hanya dapat dilakukan mulai tanggal 1 hingga tanggal '{$tgl_mulai->format('d-m-Y')}' sampai jam 23:59."
+        //     ), Response::HTTP_BAD_REQUEST);
+        // }
 
         // Validasi untuk memastikan penggajian belum dilakukan pada periode ini
         $existingRiwayat = DB::table('riwayat_penggajians')
