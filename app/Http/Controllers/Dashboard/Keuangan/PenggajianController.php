@@ -262,12 +262,12 @@ class PenggajianController extends Controller
         $awalBulan = Carbon::now('Asia/Jakarta')->startOfMonth();
         $currentDateTime = Carbon::now('Asia/Jakarta');
 
-        // if ($currentDateTime->lessThan($awalBulan) || $currentDateTime->greaterThan($tgl_akhir)) {
-        //     return response()->json(new WithoutDataResource(
-        //         Response::HTTP_BAD_REQUEST,
-        //         "Penggajian hanya dapat dilakukan mulai tanggal 1 hingga tanggal '{$tgl_mulai->format('d-m-Y')}' sampai jam 23:59."
-        //     ), Response::HTTP_BAD_REQUEST);
-        // }
+        if ($currentDateTime->lessThan($awalBulan) || $currentDateTime->greaterThan($tgl_akhir)) {
+            return response()->json(new WithoutDataResource(
+                Response::HTTP_BAD_REQUEST,
+                "Penggajian hanya dapat dilakukan mulai tanggal 1 hingga tanggal '{$tgl_mulai->format('d-m-Y')}' sampai jam 23:59."
+            ), Response::HTTP_BAD_REQUEST);
+        }
 
         // Validasi untuk memastikan penggajian belum dilakukan pada periode ini
         $existingRiwayat = DB::table('riwayat_penggajians')
@@ -338,7 +338,7 @@ class PenggajianController extends Controller
             // Rollback transaksi jika terjadi kesalahan
             DB::rollBack();
             Log::error('| Penggajian | - Error function store: ' . $e->getMessage());
-            return response()->json(new WithoutDataResource(Response::HTTP_INTERNAL_SERVER_ERROR, 'Terjadi kesalahan pada sistem. Silakan coba lagi nanti atau hubungi SIM RS.' . $e->getMessage()), Response::HTTP_INTERNAL_SERVER_ERROR);
+            return response()->json(new WithoutDataResource(Response::HTTP_INTERNAL_SERVER_ERROR, 'Terjadi kesalahan pada sistem. Silakan coba lagi nanti atau hubungi SIM RS.'), Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 
