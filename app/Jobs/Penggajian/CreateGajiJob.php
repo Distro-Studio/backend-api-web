@@ -146,6 +146,7 @@ class CreateGajiJob implements ShouldQueue
             if ($currentMonth >= 1 && $currentMonth <= 11) {
                 // Januari - November
                 $pph21Bulanan = $this->calculatedPPH21ForMonths($penghasilanBrutoTotal, $dataKaryawan->ptkp_id);
+                Log::info("| PPH 21 | Karyawan ID {$data_karyawan_id} bulan [{$currentMonth}] adalah {$pph21Bulanan}.");
                 $takeHomePay = $penghasilanBrutoTotal - $totalPremi - $pph21Bulanan - $totalPotonganPerBulan;
                 $penggajianData['pph_21'] = $pph21Bulanan;
                 $penggajianData['take_home_pay'] = $takeHomePay;
